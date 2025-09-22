@@ -14,19 +14,45 @@
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
 
+using namespace DirectX;
+
 // D3D12 extension library.
 #include "d3dx12.h"
+
+#include "Helper.h"
+
+#define WIDTH 600
+#define HEIGHT 400
 
 using Microsoft::WRL::ComPtr;
 
 class HelloTriangle
 {
 public:
+    HelloTriangle();
     void OnInit();
     void OnUpdate();
 
+    // Samples override the event handlers to handle specific messages.
+    virtual void OnKeyDown(UINT8 /*key*/)   {}
+    virtual void OnKeyUp(UINT8 /*key*/)     {}
+
+    // Accessors.
+    UINT GetWidth() const           { return m_Width; }
+    UINT GetHeight() const          { return m_Height; }
+    const WCHAR* GetTitle() const   { return m_title.c_str(); }
+
+    void ParseCommandLineArgs(_In_reads_(argc) WCHAR* argv[], int argc);
+
+    UINT m_Width;
+    UINT m_Height;
+    float m_AspectRatio;
+
+    // Adapter info.
+    bool m_UseWarpDevice;
+
 private:
-    static const UINT FrameCount = 2;
+    static constexpr UINT c_FrameCount = 2;
 
     struct Vertex
     {
@@ -34,12 +60,21 @@ private:
         XMFLOAT4 color;
     };
 
+    std::wstring getAssetFullPath(LPCWSTR assetName) const;
+
+    void getHardwareAdapter(
+        _In_ IDXGIFactory1* pFactory,
+        _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter,
+        bool requestHighPerformanceAdapter = false);
+
+    void setCustomWindowText(LPCWSTR text);
+
     // Pipeline objects.
     CD3DX12_VIEWPORT m_viewport;
     CD3DX12_RECT m_scissorRect;
     ComPtr<IDXGISwapChain3> m_swapChain;
     ComPtr<ID3D12Device> m_device;
-    ComPtr<ID3D12Resource> m_renderTargets[FrameCount];
+    ComPtr<ID3D12Resource> m_renderTargets[c_FrameCount];
     ComPtr<ID3D12CommandAllocator> m_commandAllocator;
     ComPtr<ID3D12CommandQueue> m_commandQueue;
     ComPtr<ID3D12RootSignature> m_rootSignature;
@@ -58,10 +93,16 @@ private:
     ComPtr<ID3D12Fence> m_fence;
     UINT64 m_fenceValue;
 
-    void LoadPipeline();
-    void LoadAssets();
-    void PopulateCommandList();
-    void WaitForPreviousFrame();
+    // Root assets path.
+    std::wstring m_assetsPath;
+
+    // Window title.
+    std::wstring m_title;
+
+    void loadPipeline();
+    void loadAssets();
+    void populateCommandList();
+    void waitForPreviousFrame();
 };
 
 

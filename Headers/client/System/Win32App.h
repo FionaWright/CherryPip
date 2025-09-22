@@ -21,8 +21,8 @@
 #include <wrl.h>
 #include <shellapi.h>
 
-#include "HelloTriangle.h"
-#include "Helper.h"
+#include "../App/HelloTriangle.h"
+#include "../../Helper.h"
 
 class Win32App
 {

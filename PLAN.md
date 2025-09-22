@@ -1,9 +1,11 @@
 # TODO:
 
 -[x] Run Program  
--[ ] Run DX12/WinAPI
--[ ] Render RGB triangle
+-[x] Run DX12/WinAPI
+-[x] Render RGB triangle
+-[ ] Clean up code and encapsulate into HWI
 -[ ] Render spinning cube
+-[ ] Implement Dear ImGui
 
 https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d12-raytracing-samples-win32/
 

@@ -30,11 +30,15 @@ set(D3D12_LIBS
 )
 
 add_executable(PT WIN32 main.cpp
-        HelloTriangle.cpp
-        HelloTriangle.h
-        Win32App.cpp
-        Win32App.h
-        Helper.h)
+        src/App/HelloTriangle.cpp
+        Headers/App/HelloTriangle.h
+        src/client/System/Win32App.cpp
+        Headers/client/System/Win32App.h
+        Helper.h
+        src/client/HWI/D3D.cpp
+        Headers/client/HWI/D3D.h)
+
+include_directories(Headers)
 
 target_link_libraries(PT PRIVATE ${D3D12_LIBS})
 

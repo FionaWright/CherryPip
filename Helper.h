@@ -9,7 +9,7 @@
 
 // D3D12 extension library.
 #include "d3dx12.h"
-#include "HelloTriangle.h"
+#include "Headers/App/HelloTriangle.h"
 
 using Microsoft::WRL::ComPtr;
 #include <dxcapi.h>

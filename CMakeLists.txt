@@ -72,3 +72,10 @@ add_custom_command(TARGET PT POST_BUILD
         ${DXC_DIR}/bin/x64/dxil.dll
         $<TARGET_FILE_DIR:PT>
 )
+
+# Copy the Assets folder into the build output dir after building
+add_custom_command(TARGET PT POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/Assets
+        $<TARGET_FILE_DIR:PT>/Assets
+)

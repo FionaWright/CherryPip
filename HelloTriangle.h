@@ -19,8 +19,6 @@ using namespace DirectX;
 // D3D12 extension library.
 #include "d3dx12.h"
 
-#include "Helper.h"
-
 #define WIDTH 600
 #define HEIGHT 400
 
@@ -50,6 +48,8 @@ public:
 
     // Adapter info.
     bool m_UseWarpDevice;
+
+    static ID3D12Device* s_device;
 
 private:
     static constexpr UINT c_FrameCount = 2;
@@ -81,6 +81,7 @@ private:
     ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
     ComPtr<ID3D12PipelineState> m_pipelineState;
     ComPtr<ID3D12GraphicsCommandList> m_commandList;
+    ComPtr<ID3D12InfoQueue> m_infoQueue;
     UINT m_rtvDescriptorSize;
 
     // App resources.

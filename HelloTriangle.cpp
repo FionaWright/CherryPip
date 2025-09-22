@@ -2,6 +2,10 @@
 #include "Win32App.h"
 #include <dxcapi.h>
 
+#include "Helper.h"
+
+ID3D12Device* HelloTriangle::s_device;
+
 HelloTriangle::HelloTriangle()
     : m_Width(WIDTH),
       m_Height(HEIGHT),
@@ -22,6 +26,7 @@ void HelloTriangle::OnInit()
     WCHAR assetsPath[512];
     GetAssetsPath(assetsPath, _countof(assetsPath));
     m_assetsPath = assetsPath;
+    m_assetsPath += L"Assets/";
 
     m_AspectRatio = static_cast<float>(WIDTH) / static_cast<float>(HEIGHT);
 
@@ -59,9 +64,6 @@ void HelloTriangle::loadAssets()
 
     // Create the pipeline state, which includes compiling and loading shaders.
     {
-        ComPtr<ID3DBlob> vertexShader;
-        ComPtr<ID3DBlob> pixelShader;
-
 #if defined(_DEBUG)
         // Enable better shader debugging with the graphics debugging tools.
         UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
@@ -69,10 +71,12 @@ void HelloTriangle::loadAssets()
         UINT compileFlags = 0;
 #endif
 
-        ComPtr<IDxcBlob> blobVS = CompileShaderDXC(getAssetFullPath(L"shaders.hlsl").c_str(), L"VSMain", L"vs_5_0", compileFlags);
-        ComPtr<IDxcBlob> blobPS = CompileShaderDXC(getAssetFullPath(L"shaders.hlsl").c_str(), L"PSMain", L"ps_5_0", compileFlags);
-        ThrowIfFailed(blobVS.As(&vertexShader));
-        ThrowIfFailed(blobPS.As(&pixelShader));
+        ComPtr<IDxcBlob> vertexShader = CompileShaderDXC(getAssetFullPath(L"shaders.hlsl").c_str(), L"VSMain", L"vs_6_5", compileFlags);
+        ComPtr<IDxcBlob> pixelShader = CompileShaderDXC(getAssetFullPath(L"shaders.hlsl").c_str(), L"PSMain", L"ps_6_5", compileFlags);
+
+        std::cout << "VS size = " << vertexShader->GetBufferSize() << std::endl;
+        std::cout << "PS size = " << pixelShader->GetBufferSize() << std::endl;
+
 
         // Define the vertex input layout.
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
@@ -85,10 +89,11 @@ void HelloTriangle::loadAssets()
         D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
         psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
         psoDesc.pRootSignature = m_rootSignature.Get();
-        psoDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader.Get());
-        psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader.Get());
+        psoDesc.VS = { vertexShader->GetBufferPointer(), vertexShader->GetBufferSize() };
+        psoDesc.PS = { pixelShader->GetBufferPointer(), pixelShader->GetBufferSize() };
         psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
         psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+        psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
         psoDesc.DepthStencilState.DepthEnable = FALSE;
         psoDesc.DepthStencilState.StencilEnable = FALSE;
         psoDesc.SampleMask = UINT_MAX;
@@ -96,7 +101,13 @@ void HelloTriangle::loadAssets()
         psoDesc.NumRenderTargets = 1;
         psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
         psoDesc.SampleDesc.Count = 1;
-        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
+        HRESULT hr = m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState));
+        if (FAILED(hr)) {
+            std::cerr << "PSO creation failed: 0x" << std::hex << hr << std::endl;
+            DumpDebugMessages(m_device.Get());
+            ThrowIfFailed(hr); // still throw for consistency
+        }
+
     }
 
     // Create the command list.
@@ -209,6 +220,19 @@ void HelloTriangle::loadPipeline()
             IID_PPV_ARGS(&m_device)
             ));
     }
+
+    s_device = m_device.Get();
+
+#ifdef _DEBUG
+    if (SUCCEEDED(m_device.As(&m_infoQueue)))
+    {
+        m_infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE);
+        m_infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, TRUE);
+        m_infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, FALSE);
+
+        // You can also filter messages if it's too noisy
+    }
+#endif
 
     // Describe and create the command queue.
     D3D12_COMMAND_QUEUE_DESC queueDesc = {};

@@ -9,6 +9,11 @@
 
 // D3D12 extension library.
 #include "d3dx12.h"
+#include "HelloTriangle.h"
+
+using Microsoft::WRL::ComPtr;
+#include <dxcapi.h>
+#include <fstream>
 
 inline std::string wstringtoString(const std::wstring& wstr)
 {
@@ -36,10 +41,31 @@ private:
     const HRESULT m_hr;
 };
 
+inline void DumpDebugMessages(ID3D12Device* device)
+{
+    ComPtr<ID3D12InfoQueue> infoQueue;
+    if (SUCCEEDED(device->QueryInterface(IID_PPV_ARGS(&infoQueue))))
+    {
+        const UINT64 messageCount = infoQueue->GetNumStoredMessages();
+        for (UINT64 i = 0; i < messageCount; ++i)
+        {
+            SIZE_T messageLength = 0;
+            infoQueue->GetMessage(i, nullptr, &messageLength);
+            std::vector<char> bytes(messageLength);
+            auto* message = reinterpret_cast<D3D12_MESSAGE*>(bytes.data());
+            infoQueue->GetMessage(i, message, &messageLength);
+            std::cout << "D3D12: " << message->pDescription << std::endl;
+        }
+        infoQueue->ClearStoredMessages();
+    }
+}
+
 inline void ThrowIfFailed(HRESULT hr)
 {
     if (FAILED(hr))
     {
+        DumpDebugMessages(HelloTriangle::s_device);
+        std::cout << "ERR: " + HrToString(hr) << std::endl;
         throw HrException(hr);
     }
 }
@@ -252,8 +278,15 @@ void ResetUniquePtrArray(T* uniquePtrArray)
     }
 }
 
-using Microsoft::WRL::ComPtr;
-#include <dxcapi.h>
+inline std::vector<uint8_t> ReadFileToByteVector(const std::wstring& filename) {
+    std::ifstream file(filename, std::ios::binary | std::ios::ate);
+    if (!file) throw std::runtime_error("Failed to open file");
+    auto size = static_cast<size_t>(file.tellg());
+    std::vector<uint8_t> data(size);
+    file.seekg(0);
+    file.read(reinterpret_cast<char*>(data.data()), size);
+    return data;
+}
 
 inline ComPtr<IDxcBlob> CompileShaderDXC(
     const std::wstring& filePath,
@@ -276,12 +309,11 @@ inline ComPtr<IDxcBlob> CompileShaderDXC(
         std::cerr << "Failed to get DxcCreateInstance\n";
     }
 
-    // TODO: Follow GPT thing
-
     // Create DXC objects
-    ComPtr<IDxcCompiler> compiler;
+    ComPtr<IDxcCompiler3> compiler;
     ComPtr<IDxcLibrary> library;
     ComPtr<IDxcIncludeHandler> includeHandler;
+    ComPtr<IDxcUtils> utils;
     try {
         ThrowIfFailed(DxcCreateInstanceFn(CLSID_DxcCompiler, IID_PPV_ARGS(&compiler)));
     } catch (const std::exception& e) {
@@ -291,41 +323,41 @@ inline ComPtr<IDxcBlob> CompileShaderDXC(
     }
 
     ThrowIfFailed(DxcCreateInstanceFn(CLSID_DxcLibrary, IID_PPV_ARGS(&library)));
+    ThrowIfFailed(DxcCreateInstanceFn(CLSID_DxcUtils, IID_PPV_ARGS(&utils)));
     ThrowIfFailed(library->CreateIncludeHandler(&includeHandler));
 
-    // Load the shader source
-    ComPtr<IDxcBlobEncoding> source;
-    ThrowIfFailed(library->CreateBlobFromFile(filePath.c_str(), nullptr, &source));
+    auto shaderBytes = ReadFileToByteVector(filePath);
 
-    // Compile
-    ComPtr<IDxcOperationResult> result;
-    ThrowIfFailed(compiler->Compile(
-        source.Get(),
-        filePath.c_str(),
-        entryPoint,
-        targetProfile,
-        nullptr, 0,  // arguments
-        nullptr, 0,  // defines
-        includeHandler.Get(),
-        &result
-    ));
+    DxcBuffer buffer;
+    buffer.Ptr = shaderBytes.data();
+    buffer.Size = shaderBytes.size();
+    buffer.Encoding = DXC_CP_UTF8; // or DXC_CP_ACP if ASCII
 
-    HRESULT hr;
-    ThrowIfFailed(result->GetStatus(&hr));
-    if (FAILED(hr))
-    {
-        ComPtr<IDxcBlobEncoding> errors;
-        result->GetErrorBuffer(&errors);
-        if (errors)
-        {
-            OutputDebugStringA((const char*)errors->GetBufferPointer());
-        }
-        ThrowIfFailed(hr);
+    // Compile vertex shader
+    ComPtr<IDxcResult> result;
+    const wchar_t* args[] = { L"-E", entryPoint, L"-T", targetProfile };
+    if (FAILED(compiler->Compile(&buffer, args, _countof(args), includeHandler.Get(), IID_PPV_ARGS(&result)))) {
+        std::cerr << "Vertex shader compile failed\n";
+        return nullptr;
     }
 
-    ComPtr<IDxcBlob> compiledShader;
-    ThrowIfFailed(result->GetResult(&compiledShader));
-    return compiledShader;
+    // Get compiled blob
+    ComPtr<IDxcBlobUtf8> errors;
+    if (FAILED(result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errors), nullptr))) {
+        std::cerr << "Failed to get shader errors\n";
+        return nullptr;
+    }
+    if (errors && errors->GetStringLength() > 0) {
+        std::cout << "Shader compile warnings/errors:\n" << errors->GetStringPointer() << "\n";
+    }
+
+    ComPtr<IDxcBlob> vertexShaderBlob;
+    if (FAILED(result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&vertexShaderBlob), nullptr))) {
+        std::cerr << "Failed to get compiled shader\n";
+        return nullptr;
+    }
+
+    return vertexShaderBlob;
 }
 
 #endif

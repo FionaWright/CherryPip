@@ -33,6 +33,8 @@ add_executable(PT WIN32
         src/main.cpp
         Apps/HelloTriangle/src/HelloTriangle.cpp
         Apps/HelloTriangle/Headers/HelloTriangle.h
+        Apps/SpinningCube/src/SpinningCube.cpp
+        Apps/SpinningCube/Headers/SpinningCube.h
         src/client/System/Win32App.cpp
         Headers/client/System/Win32App.h
         Headers/Helper.h

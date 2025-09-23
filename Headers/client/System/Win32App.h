@@ -24,8 +24,9 @@
 
 class D3D;
 
-#include "../../../Apps/HelloTriangle/Headers/HelloTriangle.h"
-#include "../../Helper.h"
+#include "Headers/Helper.h"
+
+class HelloTriangle;
 
 class Win32App
 {

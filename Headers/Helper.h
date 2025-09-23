@@ -9,7 +9,7 @@
 
 // D3D12 extension library.
 #include "d3dx12.h"
-#include "../Apps/HelloTriangle/Headers/HelloTriangle.h"
+#include "Apps/HelloTriangle/Headers/HelloTriangle.h"
 
 using Microsoft::WRL::ComPtr;
 #include <dxcapi.h>
@@ -64,7 +64,7 @@ inline void ThrowIfFailed(HRESULT hr)
 {
     if (FAILED(hr))
     {
-        DumpDebugMessages(HelloTriangle::s_device);
+        //DumpDebugMessages(HelloTriangle::s_device);
         std::cout << "ERR: " + HrToString(hr) << std::endl;
         throw HrException(hr);
     }

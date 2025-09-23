@@ -1,13 +1,13 @@
-#include "Apps/HelloTriangle/Headers/HelloTriangle.h"
+#include "Apps/SpinningCube/Headers/SpinningCube.h"
 #include "System/Win32App.h"
 #include <dxcapi.h>
 
 #include "../../../Headers/Helper.h"
 #include "HWI/D3D.h"
 
-ID3D12Device* HelloTriangle::s_device;
+ID3D12Device* SpinningCube::s_device;
 
-HelloTriangle::HelloTriangle()
+SpinningCube::SpinningCube()
     : m_Width(WIDTH),
       m_Height(HEIGHT),
       m_AspectRatio(0),
@@ -15,7 +15,7 @@ HelloTriangle::HelloTriangle()
 {
 }
 
-void HelloTriangle::OnInit(D3D* d3d)
+void SpinningCube::OnInit(D3D* d3d)
 {
     WCHAR assetsPath[512];
     GetAssetsPath(assetsPath, _countof(assetsPath));
@@ -29,7 +29,7 @@ void HelloTriangle::OnInit(D3D* d3d)
     d3d->Flush();
 }
 
-void HelloTriangle::OnUpdate(D3D* d3d)
+void SpinningCube::OnUpdate(D3D* d3d)
 {
     ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetNewCommandList();
 
@@ -39,7 +39,7 @@ void HelloTriangle::OnUpdate(D3D* d3d)
     d3d->Present();
 }
 
-void HelloTriangle::loadAssets(ID3D12Device* device)
+void SpinningCube::loadAssets(ID3D12Device* device)
 {
     // Create an empty root signature.
     {
@@ -141,7 +141,7 @@ void HelloTriangle::loadAssets(ID3D12Device* device)
     }
 }
 
-void HelloTriangle::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
+void SpinningCube::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 {
     // Command list allocators can only be reset when the associated
     // command lists have finished execution on the GPU; apps should use
@@ -187,7 +187,7 @@ void HelloTriangle::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmd
 }
 
 // Helper function for setting the window's title text.
-void HelloTriangle::setCustomWindowText(LPCWSTR text)
+void SpinningCube::setCustomWindowText(LPCWSTR text)
 {
     std::wstring windowText = m_title + L": " + text;
     SetWindowText(Win32App::GetHwnd(), wstringtoString(windowText).c_str());
@@ -195,7 +195,7 @@ void HelloTriangle::setCustomWindowText(LPCWSTR text)
 
 // Helper function for parsing any supplied command line args.
 _Use_decl_annotations_
-void HelloTriangle::ParseCommandLineArgs(WCHAR* argv[], int argc)
+void SpinningCube::ParseCommandLineArgs(WCHAR* argv[], int argc)
 {
     for (int i = 1; i < argc; ++i)
     {
@@ -208,7 +208,7 @@ void HelloTriangle::ParseCommandLineArgs(WCHAR* argv[], int argc)
     }
 }
 
-std::wstring HelloTriangle::getAssetFullPath(LPCWSTR assetName) const
+std::wstring SpinningCube::getAssetFullPath(LPCWSTR assetName) const
 {
     return m_assetsPath + assetName;
 }

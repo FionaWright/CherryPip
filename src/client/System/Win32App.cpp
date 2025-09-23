@@ -3,6 +3,7 @@
 //
 
 #include "System/Win32App.h"
+#include "Apps/HelloTriangle/Headers/HelloTriangle.h"
 
 #include "HWI/D3D.h"
 

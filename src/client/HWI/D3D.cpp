@@ -202,16 +202,15 @@ void D3D::Init(size_t width, size_t height)
             ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
         }
     }
+
+    for (int i = 0; i < c_FrameCount; i++)
+        m_frameBufferFences[i] = 0;
 }
 
 ComPtr<ID3D12GraphicsCommandList> D3D::GetNewCommandList() const
 {
     ComPtr<ID3D12GraphicsCommandList> cmdList = nullptr;
     ThrowIfFailed(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), nullptr, IID_PPV_ARGS(&cmdList)));
-
-    // Command lists are created in the recording state, but there is nothing
-    // to record yet. The main loop expects it to be closed, so close it now.
-    //ThrowIfFailed(cmdList->Close());
 
     return cmdList;
 }
@@ -225,13 +224,14 @@ void D3D::ExecuteCommandList(ID3D12GraphicsCommandList* cmdList) const
 void D3D::Present()
 {
     ThrowIfFailed(m_swapChain->Present(1, 0));
+    const UINT64 fence = m_fenceValue;
+    ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), fence));
+    m_frameBufferFences[m_frameIndex] = fence;
+    m_fenceValue++;
 
-    // WAITING FOR THE FRAME TO COMPLETE BEFORE CONTINUING IS NOT BEST PRACTICE.
-    // This is code implemented as such for simplicity. The D3D12HelloFrameBuffering
-    // sample illustrates how to use fences for efficient resource usage and to
-    // maximize GPU utilization.
+    m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 
-    Flush();
+    WaitForSignal(m_frameBufferFences[m_frameIndex]);
 }
 
 void D3D::Flush()
@@ -247,6 +247,13 @@ void D3D::Flush()
         ThrowIfFailed(m_fence->SetEventOnCompletion(fence, m_fenceEvent));
         WaitForSingleObject(m_fenceEvent, INFINITE);
     }
+}
 
-    m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
+void D3D::WaitForSignal(UINT64 fence) const
+{
+    if (m_fence->GetCompletedValue() < fence)
+    {
+        ThrowIfFailed(m_fence->SetEventOnCompletion(fence, m_fenceEvent));
+        WaitForSingleObject(m_fenceEvent, INFINITE);
+    }
 }

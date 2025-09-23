@@ -41,10 +41,11 @@ public:
     void ExecuteCommandList(ID3D12GraphicsCommandList* cmdList) const;
     void Present();
     void Flush();
+    void WaitForSignal(UINT64 fence) const;
 
 private:
 
-    static constexpr UINT c_FrameCount = 2;
+    static constexpr UINT c_FrameCount = 3;
 
     // Pipeline objects.
     ComPtr<IDXGISwapChain3> m_swapChain;
@@ -63,6 +64,7 @@ private:
     HANDLE m_fenceEvent = {};
     ComPtr<ID3D12Fence> m_fence;
     UINT64 m_fenceValue = 0;
+    UINT64 m_frameBufferFences[c_FrameCount] = {};
 };
 
 #endif //PT_D3D_H

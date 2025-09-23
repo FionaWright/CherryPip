@@ -189,4 +189,64 @@ void D3D::Init(size_t width, size_t height)
     }
 
     ThrowIfFailed(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator)));
+
+    // Create synchronization objects and wait until assets have been uploaded to the GPU.
+    {
+        ThrowIfFailed(m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
+        m_fenceValue = 1;
+
+        // Create an event handle to use for frame synchronization.
+        m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+        if (m_fenceEvent == nullptr)
+        {
+            ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
+        }
+    }
+}
+
+ComPtr<ID3D12GraphicsCommandList> D3D::GetNewCommandList() const
+{
+    ComPtr<ID3D12GraphicsCommandList> cmdList = nullptr;
+    ThrowIfFailed(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), nullptr, IID_PPV_ARGS(&cmdList)));
+
+    // Command lists are created in the recording state, but there is nothing
+    // to record yet. The main loop expects it to be closed, so close it now.
+    //ThrowIfFailed(cmdList->Close());
+
+    return cmdList;
+}
+
+void D3D::ExecuteCommandList(ID3D12GraphicsCommandList* cmdList) const
+{
+    ID3D12CommandList* ppCommandLists[] = { cmdList };
+    m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+}
+
+void D3D::Present()
+{
+    ThrowIfFailed(m_swapChain->Present(1, 0));
+
+    // WAITING FOR THE FRAME TO COMPLETE BEFORE CONTINUING IS NOT BEST PRACTICE.
+    // This is code implemented as such for simplicity. The D3D12HelloFrameBuffering
+    // sample illustrates how to use fences for efficient resource usage and to
+    // maximize GPU utilization.
+
+    Flush();
+}
+
+void D3D::Flush()
+{
+    // Signal and increment the fence value.
+    const UINT64 fence = m_fenceValue;
+    ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), fence));
+    m_fenceValue++;
+
+    // Wait until the previous frame is finished.
+    if (m_fence->GetCompletedValue() < fence)
+    {
+        ThrowIfFailed(m_fence->SetEventOnCompletion(fence, m_fenceEvent));
+        WaitForSingleObject(m_fenceEvent, INFINITE);
+    }
+
+    m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 }

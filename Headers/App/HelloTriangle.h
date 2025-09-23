@@ -16,6 +16,8 @@
 
 using namespace DirectX;
 
+class D3D;
+
 // D3D12 extension library.
 #include "d3dx12.h"
 
@@ -28,8 +30,8 @@ class HelloTriangle
 {
 public:
     HelloTriangle();
-    void OnInit();
-    void OnUpdate();
+    void OnInit(D3D* d3d);
+    void OnUpdate(D3D* d3d);
 
     // Samples override the event handlers to handle specific messages.
     virtual void OnKeyDown(UINT8 /*key*/)   {}
@@ -64,6 +66,8 @@ private:
     // App resources.
     ComPtr<ID3D12Resource> m_vertexBuffer;
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
+    ComPtr<ID3D12RootSignature> m_rootSignature;
+    ComPtr<ID3D12PipelineState> m_pipelineState;
 
     // Root assets path.
     std::wstring m_assetsPath;
@@ -71,9 +75,8 @@ private:
     // Window title.
     std::wstring m_title;
     
-    void loadAssets();
-    void populateCommandList();
-    void waitForPreviousFrame();
+    void loadAssets(ID3D12Device* device);
+    void populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
 };
 
 

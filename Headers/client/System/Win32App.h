@@ -20,8 +20,11 @@
 #include <string>
 #include <wrl.h>
 #include <shellapi.h>
+#include <memory>
 
-#include "../App/HelloTriangle.h"
+class D3D;
+
+#include "App/HelloTriangle.h"
 #include "../../Helper.h"
 
 class Win32App
@@ -35,6 +38,7 @@ protected:
 
 private:
     static HWND m_hwnd;
+    static std::unique_ptr<D3D> m_d3d;
 };
 
 

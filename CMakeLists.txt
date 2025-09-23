@@ -39,6 +39,7 @@ add_executable(PT WIN32 main.cpp
         Headers/client/HWI/D3D.h)
 
 include_directories(Headers)
+include_directories(Headers/client)
 
 target_link_libraries(PT PRIVATE ${D3D12_LIBS})
 

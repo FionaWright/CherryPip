@@ -32,22 +32,27 @@ public:
 
     ID3D12Device* GetDevice() const { return m_device.Get(); }
 
+    ComPtr<ID3D12GraphicsCommandList> GetNewCommandList() const;
+    ID3D12Resource* GetCurrRTV() const { return m_renderTargets[m_frameIndex].Get(); }
+    D3D12_CPU_DESCRIPTOR_HANDLE GetRtvHeapStart() const { return m_rtvHeap->GetCPUDescriptorHandleForHeapStart(); }
+    UINT GetFrameIndex() const { return m_frameIndex; }
+    UINT GetRtvDescriptorSize() const { return m_rtvDescriptorSize;}
+
+    void ExecuteCommandList(ID3D12GraphicsCommandList* cmdList) const;
+    void Present();
+    void Flush();
+
 private:
 
     static constexpr UINT c_FrameCount = 2;
 
     // Pipeline objects.
-    CD3DX12_VIEWPORT m_viewport = {};
-    CD3DX12_RECT m_scissorRect = {};
     ComPtr<IDXGISwapChain3> m_swapChain;
     ComPtr<ID3D12Device> m_device;
     ComPtr<ID3D12Resource> m_renderTargets[c_FrameCount];
     ComPtr<ID3D12CommandAllocator> m_commandAllocator;
     ComPtr<ID3D12CommandQueue> m_commandQueue;
-    ComPtr<ID3D12RootSignature> m_rootSignature;
     ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
-    ComPtr<ID3D12PipelineState> m_pipelineState;
-    ComPtr<ID3D12GraphicsCommandList> m_commandList;
     ComPtr<ID3D12InfoQueue> m_infoQueue;
     UINT m_rtvDescriptorSize = 0;
 

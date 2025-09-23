@@ -2,9 +2,12 @@
 // Created by fiona on 22/09/2025.
 //
 
-#include "../../Headers/System/Win32App.h"
+#include "System/Win32App.h"
+
+#include "HWI/D3D.h"
 
 HWND Win32App::m_hwnd = nullptr;
+std::unique_ptr<D3D> Win32App::m_d3d = nullptr;
 
 int Win32App::Run(HelloTriangle* pSample, HINSTANCE hInstance, int nCmdShow)
 {
@@ -41,8 +44,11 @@ int Win32App::Run(HelloTriangle* pSample, HINSTANCE hInstance, int nCmdShow)
         hInstance,
         pSample);
 
+    m_d3d = std::make_unique<D3D>();
+    m_d3d->Init(WIDTH, HEIGHT);
+
     // Initialize the sample. OnInit is defined in each child-implementation of HelloTriangle.
-    pSample->OnInit();
+    pSample->OnInit(m_d3d.get());
 
     ShowWindow(m_hwnd, nCmdShow);
 
@@ -94,7 +100,7 @@ LRESULT CALLBACK Win32App::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LP
     case WM_PAINT:
         if (pSample)
         {
-            pSample->OnUpdate();
+            pSample->OnUpdate(m_d3d.get());
         }
         return 0;
 

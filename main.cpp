@@ -6,8 +6,8 @@
 
 #include <iostream>
 
-#include "Headers/App/HelloTriangle.h"
-#include "Headers/System/Win32App.h"
+#include "App/HelloTriangle.h"
+#include "System/Win32App.h"
 
 _Use_decl_annotations_
 

@@ -29,17 +29,19 @@ set(D3D12_LIBS
         dxgi.lib   # comes from Windows SDK
 )
 
-add_executable(PT WIN32 main.cpp
-        src/App/HelloTriangle.cpp
-        Headers/App/HelloTriangle.h
+add_executable(PT WIN32
+        src/main.cpp
+        Apps/HelloTriangle/src/HelloTriangle.cpp
+        Apps/HelloTriangle/Headers/HelloTriangle.h
         src/client/System/Win32App.cpp
         Headers/client/System/Win32App.h
-        Helper.h
+        Headers/Helper.h
         src/client/HWI/D3D.cpp
         Headers/client/HWI/D3D.h)
 
 include_directories(Headers)
 include_directories(Headers/client)
+include_directories(${CMAKE_SOURCE_DIR})
 
 target_link_libraries(PT PRIVATE ${D3D12_LIBS})
 

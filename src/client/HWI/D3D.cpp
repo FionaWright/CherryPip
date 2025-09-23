@@ -3,7 +3,7 @@
 //
 
 #include "HWI/D3D.h"
-#include "../Helper.h"
+#include "../../../Headers/Helper.h"
 #include "System/Win32App.h"
 
 // Helper function for acquiring the first available hardware adapter that supports Direct3D 12.

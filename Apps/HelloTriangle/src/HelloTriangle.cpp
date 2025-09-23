@@ -1,8 +1,8 @@
-#include "App/HelloTriangle.h"
+#include "Apps/HelloTriangle/Headers/HelloTriangle.h"
 #include "System/Win32App.h"
 #include <dxcapi.h>
 
-#include "../../Helper.h"
+#include "../../../Headers/Helper.h"
 #include "HWI/D3D.h"
 
 ID3D12Device* HelloTriangle::s_device;

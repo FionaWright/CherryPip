@@ -39,7 +39,15 @@ add_executable(PT WIN32
         Headers/client/System/Win32App.h
         Headers/Helper.h
         src/client/HWI/D3D.cpp
-        Headers/client/HWI/D3D.h)
+        Headers/client/HWI/D3D.h
+        src/client/System/FileHelper.cpp
+        Headers/client/System/FileHelper.h
+        src/client/HWI/Shader.cpp
+        Headers/client/HWI/Shader.h
+        src/client/Render/Camera.cpp
+        Headers/client/Render/Camera.h
+        Apps/App.cpp
+        Apps/App.h)
 
 include_directories(Headers)
 include_directories(Headers/client)
@@ -82,9 +90,19 @@ add_custom_command(TARGET PT POST_BUILD
         $<TARGET_FILE_DIR:PT>
 )
 
-# Copy the Assets folder into the build output dir after building
-add_custom_command(TARGET PT POST_BUILD
+file(GLOB_RECURSE ASSET_FILES "${CMAKE_SOURCE_DIR}/Assets/*")
+
+add_custom_command(
+        OUTPUT ${CMAKE_BINARY_DIR}/Assets.stamp
+        COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:PT>/Assets
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_SOURCE_DIR}/Assets
         $<TARGET_FILE_DIR:PT>/Assets
+        COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_BINARY_DIR}/Assets.stamp
+        DEPENDS ${ASSET_FILES}
 )
+
+add_custom_target(CopyAssets ALL
+        DEPENDS ${CMAKE_BINARY_DIR}/Assets.stamp
+)
+add_dependencies(CopyAssets PT)

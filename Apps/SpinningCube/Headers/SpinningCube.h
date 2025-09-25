@@ -1,83 +1,54 @@
-#ifndef PT_HELLOTRIANGLE_H
-#define PT_HELLOTRIANGLE_H
+#ifndef PT_SPINNINGCUBE_H
+#define PT_SPINNINGCUBE_H
 
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-
-// Windows Runtime Library. Needed for ComPtr<> template class.
-#include <wrl.h>
-
-// DirectX 12 specific headers.
-#include <d3d12.h>
-#include <dxgi1_5.h>
-#include <dxgi1_6.h>
-#include <d3dcompiler.h>
-#include <DirectXMath.h>
-
-using namespace DirectX;
-
-class D3D;
-
-// D3D12 extension library.
-#include "d3dx12.h"
+#include "Apps/App.h"
+#include "HWI/Shader.h"
+#include "Render/Camera.h"
 
 #define WIDTH 600
 #define HEIGHT 400
 
 using Microsoft::WRL::ComPtr;
 
-class SpinningCube
+class SpinningCube : public App
 {
 public:
     SpinningCube();
-    void OnInit(D3D* d3d);
-    void OnUpdate(D3D* d3d);
+    void OnInit(D3D* d3d) override;
+    void OnUpdate(D3D* d3d) override;
 
     // Samples override the event handlers to handle specific messages.
     virtual void OnKeyDown(UINT8 /*key*/)   {}
     virtual void OnKeyUp(UINT8 /*key*/)     {}
 
-    // Accessors.
-    UINT GetWidth() const           { return m_Width; }
-    UINT GetHeight() const          { return m_Height; }
     const WCHAR* GetTitle() const   { return m_title.c_str(); }
 
-    void ParseCommandLineArgs(_In_reads_(argc) WCHAR* argv[], int argc);
+    void ParseCommandLineArgs(_In_reads_(argc) WCHAR* argv[], int argc) override;
 
-    UINT m_Width;
-    UINT m_Height;
     float m_AspectRatio;
 
-    static ID3D12Device* s_device;
-
 private:
-    static constexpr UINT c_FrameCount = 2;
+    static constexpr UINT c_FrameCount = 3;
 
-    struct Vertex
-    {
-        XMFLOAT3 position;
-        XMFLOAT4 color;
-    };
-
-    std::wstring getAssetFullPath(LPCWSTR assetName) const;
-
-    void setCustomWindowText(LPCWSTR text);
+    void setCustomWindowText(LPCWSTR text) const;
 
     // App resources.
     ComPtr<ID3D12Resource> m_vertexBuffer;
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
     ComPtr<ID3D12RootSignature> m_rootSignature;
-    ComPtr<ID3D12PipelineState> m_pipelineState;
+    ComPtr<ID3D12DescriptorHeap> m_cbvSrvUavHeap;
+    UINT m_descriptorIncSize = 0;
+    ID3D12Resource* m_cbv;
 
-    // Root assets path.
-    std::wstring m_assetsPath;
+    Shader m_shaderNormals;
+    Camera m_camera;
 
     // Window title.
     std::wstring m_title;
     
-    void loadAssets(ID3D12Device* device);
+    void loadAssets(D3D* d3d);
     void populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
 };
 
 
-#endif //PT_HELLOTRIANGLE_H
+#endif //PT_SPINNINGCUBE_H

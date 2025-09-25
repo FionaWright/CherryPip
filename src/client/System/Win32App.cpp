@@ -3,15 +3,18 @@
 //
 
 #include "System/Win32App.h"
-#include "Apps/HelloTriangle/Headers/HelloTriangle.h"
+#include "Apps/App.h"
 
 #include "HWI/D3D.h"
+#include "System/FileHelper.h"
 
 HWND Win32App::m_hwnd = nullptr;
 std::unique_ptr<D3D> Win32App::m_d3d = nullptr;
 
-int Win32App::Run(HelloTriangle* pSample, HINSTANCE hInstance, int nCmdShow)
+int Win32App::Run(App* pSample, HINSTANCE hInstance, int nCmdShow)
 {
+    FileHelper::Init();
+
     // Parse the command line parameters
     int argc;
     LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
@@ -28,7 +31,10 @@ int Win32App::Run(HelloTriangle* pSample, HINSTANCE hInstance, int nCmdShow)
     windowClass.lpszClassName = "HelloTriangleClass";
     RegisterClassEx(&windowClass);
 
-    RECT windowRect = { 0, 0, static_cast<LONG>(pSample->GetWidth()), static_cast<LONG>(pSample->GetHeight()) };
+    size_t width = 600;
+    size_t height = 400;
+
+    RECT windowRect = { 0, 0, static_cast<LONG>(width), static_cast<LONG>(height) };
     AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
 
     // Create the window and store a handle to it.
@@ -48,7 +54,6 @@ int Win32App::Run(HelloTriangle* pSample, HINSTANCE hInstance, int nCmdShow)
     m_d3d = std::make_unique<D3D>();
     m_d3d->Init(WIDTH, HEIGHT);
 
-    // Initialize the sample. OnInit is defined in each child-implementation of HelloTriangle.
     pSample->OnInit(m_d3d.get());
 
     ShowWindow(m_hwnd, nCmdShow);
@@ -72,7 +77,7 @@ int Win32App::Run(HelloTriangle* pSample, HINSTANCE hInstance, int nCmdShow)
 // Main message handler for the sample.
 LRESULT CALLBACK Win32App::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    HelloTriangle* pSample = reinterpret_cast<HelloTriangle*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    App* pSample = reinterpret_cast<App*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
     switch (message)
     {
@@ -87,14 +92,14 @@ LRESULT CALLBACK Win32App::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LP
     case WM_KEYDOWN:
         if (pSample)
         {
-            pSample->OnKeyDown(static_cast<UINT8>(wParam));
+            //pSample->OnKeyDown(static_cast<UINT8>(wParam));
         }
         return 0;
 
     case WM_KEYUP:
         if (pSample)
         {
-            pSample->OnKeyUp(static_cast<UINT8>(wParam));
+            //pSample->OnKeyUp(static_cast<UINT8>(wParam));
         }
         return 0;
 

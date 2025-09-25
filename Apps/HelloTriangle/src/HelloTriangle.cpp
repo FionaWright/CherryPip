@@ -4,24 +4,16 @@
 
 #include "../../../Headers/Helper.h"
 #include "HWI/D3D.h"
-
-ID3D12Device* HelloTriangle::s_device;
+#include "System/FileHelper.h"
 
 HelloTriangle::HelloTriangle()
-    : m_Width(WIDTH),
-      m_Height(HEIGHT),
-      m_AspectRatio(0),
+    : m_AspectRatio(0),
       m_vertexBufferView()
 {
 }
 
 void HelloTriangle::OnInit(D3D* d3d)
 {
-    WCHAR assetsPath[512];
-    GetAssetsPath(assetsPath, _countof(assetsPath));
-    m_assetsPath = assetsPath;
-    m_assetsPath += L"Assets/";
-
     m_AspectRatio = static_cast<float>(WIDTH) / static_cast<float>(HEIGHT);
 
     loadAssets(d3d->GetDevice());
@@ -39,6 +31,12 @@ void HelloTriangle::OnUpdate(D3D* d3d)
     d3d->Present();
 }
 
+struct Vertex
+{
+    XMFLOAT3 position;
+    XMFLOAT4 color;
+};
+
 void HelloTriangle::loadAssets(ID3D12Device* device)
 {
     // Create an empty root signature.
@@ -48,8 +46,8 @@ void HelloTriangle::loadAssets(ID3D12Device* device)
 
         ComPtr<ID3DBlob> signature;
         ComPtr<ID3DBlob> error;
-        ThrowIfFailed(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
-        ThrowIfFailed(device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)));
+        V(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
+        V(device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)));
     }
 
     // Create the pipeline state, which includes compiling and loading shaders.
@@ -61,8 +59,8 @@ void HelloTriangle::loadAssets(ID3D12Device* device)
         UINT compileFlags = 0;
 #endif
 
-        ComPtr<IDxcBlob> vertexShader = CompileShaderDXC(getAssetFullPath(L"Shaders/Basic_Color.hlsl").c_str(), L"VSMain", L"vs_6_5", compileFlags);
-        ComPtr<IDxcBlob> pixelShader = CompileShaderDXC(getAssetFullPath(L"Shaders/Basic_Color.hlsl").c_str(), L"PSMain", L"ps_6_5", compileFlags);
+        ComPtr<IDxcBlob> vertexShader = CompileShaderDXC(FileHelper::GetAssetShaderFullPath(L"Basic_Color.hlsl").c_str(), L"VSMain", L"vs_6_5", compileFlags);
+        ComPtr<IDxcBlob> pixelShader = CompileShaderDXC(FileHelper::GetAssetShaderFullPath(L"Basic_Color.hlsl").c_str(), L"PSMain", L"ps_6_5", compileFlags);
 
         std::cout << "VS size = " << vertexShader->GetBufferSize() << std::endl;
         std::cout << "PS size = " << pixelShader->GetBufferSize() << std::endl;
@@ -95,7 +93,7 @@ void HelloTriangle::loadAssets(ID3D12Device* device)
         if (FAILED(hr)) {
             std::cerr << "PSO creation failed: 0x" << std::hex << hr << std::endl;
             DumpDebugMessages(device);
-            ThrowIfFailed(hr); // still throw for consistency
+            V(hr); // still throw for consistency
         }
 
     }
@@ -119,7 +117,7 @@ void HelloTriangle::loadAssets(ID3D12Device* device)
         // recommended. Every time the GPU needs it, the upload heap will be marshalled
         // over. Please read up on Default Heap usage. An upload heap is used here for
         // code simplicity and because there are very few verts to actually transfer.
-        ThrowIfFailed(device->CreateCommittedResource(
+        V(device->CreateCommittedResource(
             &prop,
             D3D12_HEAP_FLAG_NONE,
             &buffer,
@@ -130,7 +128,7 @@ void HelloTriangle::loadAssets(ID3D12Device* device)
         // Copy the triangle data to the vertex buffer.
         UINT8* pVertexDataBegin;
         CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
-        ThrowIfFailed(m_vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
+        V(m_vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
         memcpy(pVertexDataBegin, triangleVertices, sizeof(triangleVertices));
         m_vertexBuffer->Unmap(0, nullptr);
 
@@ -143,16 +141,6 @@ void HelloTriangle::loadAssets(ID3D12Device* device)
 
 void HelloTriangle::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 {
-    // Command list allocators can only be reset when the associated
-    // command lists have finished execution on the GPU; apps should use
-    // fences to determine GPU execution progress.
-    //ThrowIfFailed(m_commandAllocator->Reset());
-
-    // However, when ExecuteCommandList() is called on a particular command
-    // list, that command list can then be reset at any time and must be before
-    // re-recording.
-    //ThrowIfFailed(m_commandList->Reset(m_commandAllocator.Get(), m_pipelineState.Get()));
-
     ID3D12Resource* rtv = d3d->GetCurrRTV();
 
     CD3DX12_VIEWPORT viewport(0.0f, 0.0f, static_cast<float>(WIDTH), static_cast<float>(HEIGHT));
@@ -183,11 +171,11 @@ void HelloTriangle::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmd
     auto barrier2 = CD3DX12_RESOURCE_BARRIER::Transition(rtv, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
     cmdList->ResourceBarrier(1, &barrier2);
 
-    ThrowIfFailed(cmdList->Close());
+    V(cmdList->Close());
 }
 
 // Helper function for setting the window's title text.
-void HelloTriangle::setCustomWindowText(LPCWSTR text)
+void HelloTriangle::setCustomWindowText(LPCWSTR text) const
 {
     std::wstring windowText = m_title + L": " + text;
     SetWindowText(Win32App::GetHwnd(), wstringtoString(windowText).c_str());
@@ -206,9 +194,4 @@ void HelloTriangle::ParseCommandLineArgs(WCHAR* argv[], int argc)
             m_title = m_title + L" (WARP)";
         }
     }
-}
-
-std::wstring HelloTriangle::getAssetFullPath(LPCWSTR assetName) const
-{
-    return m_assetsPath + assetName;
 }

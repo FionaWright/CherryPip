@@ -23,15 +23,14 @@
 #include <memory>
 
 class D3D;
+class App;
 
 #include "Headers/Helper.h"
-
-class HelloTriangle;
 
 class Win32App
 {
 public:
-    static int Run(HelloTriangle* pSample, HINSTANCE hInstance, int nCmdShow);
+    static int Run(App* pSample, HINSTANCE hInstance, int nCmdShow);
     static HWND GetHwnd() { return m_hwnd; }
 
 protected:

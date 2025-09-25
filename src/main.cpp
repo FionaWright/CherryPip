@@ -6,7 +6,8 @@
 
 #include <iostream>
 
-#include "../Apps/HelloTriangle/Headers/HelloTriangle.h"
+#include "Apps/HelloTriangle/Headers/HelloTriangle.h"
+#include "Apps/SpinningCube/Headers/SpinningCube.h"
 #include "System/Win32App.h"
 
 _Use_decl_annotations_
@@ -21,7 +22,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
     freopen_s(&fp, "CONOUT$", "w", stdout);
     std::cout << "Debug output here\n";
 
-    HelloTriangle sample;
+    SpinningCube sample;
     int rslt = Win32App::Run(&sample, hInstance, nCmdShow);
 
     CoUninitialize();

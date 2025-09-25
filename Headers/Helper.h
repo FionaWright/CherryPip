@@ -60,34 +60,13 @@ inline void DumpDebugMessages(ID3D12Device* device)
     }
 }
 
-inline void ThrowIfFailed(HRESULT hr)
+inline void V(HRESULT hr)
 {
     if (FAILED(hr))
     {
         //DumpDebugMessages(HelloTriangle::s_device);
         std::cout << "ERR: " + HrToString(hr) << std::endl;
         throw HrException(hr);
-    }
-}
-
-inline void GetAssetsPath(_Out_writes_(pathSize) WCHAR* path, UINT pathSize)
-{
-    if (path == nullptr)
-    {
-        throw std::exception();
-    }
-
-    DWORD size = GetModuleFileNameW(nullptr, path, pathSize);
-    if (size == 0 || size == pathSize)
-    {
-        // Method failed or path was truncated.
-        throw std::exception();
-    }
-
-    WCHAR* lastSlash = wcsrchr(path, L'\\');
-    if (lastSlash)
-    {
-        *(lastSlash + 1) = L'\0';
     }
 }
 
@@ -251,7 +230,7 @@ inline Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(
     {
         OutputDebugStringA((char*)errors->GetBufferPointer());
     }
-    ThrowIfFailed(hr);
+    V(hr);
 
     return byteCode;
 }
@@ -315,16 +294,16 @@ inline ComPtr<IDxcBlob> CompileShaderDXC(
     ComPtr<IDxcIncludeHandler> includeHandler;
     ComPtr<IDxcUtils> utils;
     try {
-        ThrowIfFailed(DxcCreateInstanceFn(CLSID_DxcCompiler, IID_PPV_ARGS(&compiler)));
+        V(DxcCreateInstanceFn(CLSID_DxcCompiler, IID_PPV_ARGS(&compiler)));
     } catch (const std::exception& e) {
         std::cout << e.what() << std::endl;
     } catch (...) {
         OutputDebugStringA("Unknown exception in DxcCreateInstance");
     }
 
-    ThrowIfFailed(DxcCreateInstanceFn(CLSID_DxcLibrary, IID_PPV_ARGS(&library)));
-    ThrowIfFailed(DxcCreateInstanceFn(CLSID_DxcUtils, IID_PPV_ARGS(&utils)));
-    ThrowIfFailed(library->CreateIncludeHandler(&includeHandler));
+    V(DxcCreateInstanceFn(CLSID_DxcLibrary, IID_PPV_ARGS(&library)));
+    V(DxcCreateInstanceFn(CLSID_DxcUtils, IID_PPV_ARGS(&utils)));
+    V(library->CreateIncludeHandler(&includeHandler));
 
     auto shaderBytes = ReadFileToByteVector(filePath);
 
@@ -359,5 +338,49 @@ inline ComPtr<IDxcBlob> CompileShaderDXC(
 
     return vertexShaderBlob;
 }
+
+inline ComPtr<ID3D12RootSignature> CreateRootSignature(CD3DX12_ROOT_PARAMETER1* params, UINT paramCount, const D3D12_STATIC_SAMPLER_DESC* pSamplers, UINT samplerCount, ID3D12Device* device)
+{
+    HRESULT hr;
+
+    D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
+    featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
+    hr = device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData));
+    if (FAILED(hr))
+    {
+        featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
+    }
+
+    // Allow input layout and deny unnecessary access to certain pipeline stages.
+    D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
+        D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS;
+
+    CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDescription;
+    rootSignatureDescription.Init_1_1(paramCount, params, samplerCount, pSamplers, rootSignatureFlags);
+
+    ComPtr<ID3DBlob> rootSignatureBlob;
+    ComPtr<ID3DBlob> errorBlob;
+    hr = D3DX12SerializeVersionedRootSignature(&rootSignatureDescription, featureData.HighestVersion, &rootSignatureBlob, &errorBlob);
+    if (FAILED(hr))
+    {
+        if (errorBlob)
+        {
+            std::string errorMsg = static_cast<char*>(errorBlob->GetBufferPointer());
+            std::wstring wideErrorMsg(errorMsg.begin(), errorMsg.end());
+            wideErrorMsg = L"RootSig Error: " + wideErrorMsg;
+            OutputDebugStringW(wideErrorMsg.c_str());
+        }
+        throw std::exception();
+    }
+
+    ComPtr<ID3D12RootSignature> rootSig;
+    hr = device->CreateRootSignature(0, rootSignatureBlob->GetBufferPointer(), rootSignatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSig));
+    V(hr);
+
+    return rootSig;
+}
+
 
 #endif

@@ -8,6 +8,7 @@
 - [ ] Render spinning cube (Multiple Apps)
 - [ ] Implement better console/logging
 - [ ] Implement Dear ImGui
+- [ ] Build shaders in cmake
 - [ ] Global & App Options menu
 - [ ] Add destructors and scene switching 
 - [ ] GLTF Model Importing (fastgltf)

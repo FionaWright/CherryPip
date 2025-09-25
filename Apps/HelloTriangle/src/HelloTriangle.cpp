@@ -52,20 +52,6 @@ void HelloTriangle::loadAssets(ID3D12Device* device)
 
     // Create the pipeline state, which includes compiling and loading shaders.
     {
-#if defined(_DEBUG)
-        // Enable better shader debugging with the graphics debugging tools.
-        UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-#else
-        UINT compileFlags = 0;
-#endif
-
-        ComPtr<IDxcBlob> vertexShader = CompileShaderDXC(FileHelper::GetAssetShaderFullPath(L"Basic_Color.hlsl").c_str(), L"VSMain", L"vs_6_5", compileFlags);
-        ComPtr<IDxcBlob> pixelShader = CompileShaderDXC(FileHelper::GetAssetShaderFullPath(L"Basic_Color.hlsl").c_str(), L"PSMain", L"ps_6_5", compileFlags);
-
-        std::cout << "VS size = " << vertexShader->GetBufferSize() << std::endl;
-        std::cout << "PS size = " << pixelShader->GetBufferSize() << std::endl;
-
-
         // Define the vertex input layout.
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
         {
@@ -73,29 +59,7 @@ void HelloTriangle::loadAssets(ID3D12Device* device)
             { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
         };
 
-        // Describe and create the graphics pipeline state object (PSO).
-        D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-        psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
-        psoDesc.pRootSignature = m_rootSignature.Get();
-        psoDesc.VS = { vertexShader->GetBufferPointer(), vertexShader->GetBufferSize() };
-        psoDesc.PS = { pixelShader->GetBufferPointer(), pixelShader->GetBufferSize() };
-        psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-        psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-        psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-        psoDesc.DepthStencilState.DepthEnable = FALSE;
-        psoDesc.DepthStencilState.StencilEnable = FALSE;
-        psoDesc.SampleMask = UINT_MAX;
-        psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-        psoDesc.NumRenderTargets = 1;
-        psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-        psoDesc.SampleDesc.Count = 1;
-        HRESULT hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState));
-        if (FAILED(hr)) {
-            std::cerr << "PSO creation failed: 0x" << std::hex << hr << std::endl;
-            DumpDebugMessages(device);
-            V(hr); // still throw for consistency
-        }
-
+        m_shader.Init(L"Basic_Color.hlsl", L"Basic_Color.hlsl", { inputElementDescs, _countof(inputElementDescs)}, device, m_rootSignature.Get());
     }
 
     // Create the vertex buffer.
@@ -150,7 +114,7 @@ void HelloTriangle::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmd
     cmdList->SetGraphicsRootSignature(m_rootSignature.Get());
     cmdList->RSSetViewports(1, &viewport);
     cmdList->RSSetScissorRects(1, &scissorRect);
-    cmdList->SetPipelineState(m_pipelineState.Get());
+    cmdList->SetPipelineState(m_shader.GetPSO());
 
     // Indicate that the back buffer will be used as a render target.
     auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(rtv, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -178,7 +142,7 @@ void HelloTriangle::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmd
 void HelloTriangle::setCustomWindowText(LPCWSTR text) const
 {
     std::wstring windowText = m_title + L": " + text;
-    SetWindowText(Win32App::GetHwnd(), wstringtoString(windowText).c_str());
+    SetWindowText(Win32App::GetHwnd(), wstringToString(windowText).c_str());
 }
 
 // Helper function for parsing any supplied command line args.

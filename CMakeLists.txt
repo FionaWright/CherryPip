@@ -54,7 +54,9 @@ add_executable(PT WIN32
         Headers/client/Render/CameraController.h
         src/client/System/Input.cpp
         Headers/client/System/Input.h
-        Headers/client/System/Keycodes.h)
+        Headers/client/System/Keycodes.h
+        src/client/HWI/RootSig.cpp
+        Headers/client/HWI/RootSig.h)
 
 include_directories(Headers)
 include_directories(Headers/client)

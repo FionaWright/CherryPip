@@ -10,12 +10,13 @@
 // D3D12 extension library.
 #include "d3dx12.h"
 #include "Apps/HelloTriangle/Headers/HelloTriangle.h"
+#include "System/FileHelper.h"
 
 using Microsoft::WRL::ComPtr;
 #include <dxcapi.h>
 #include <fstream>
 
-inline std::string wstringtoString(const std::wstring& wstr)
+inline std::string wstringToString(const std::wstring& wstr)
 {
     //setup converter
     using convert_type = std::codecvt_utf8<wchar_t>;
@@ -32,7 +33,7 @@ inline std::string HrToString(HRESULT hr)
     return std::string(s_str);
 }
 
-class HrException : public std::runtime_error
+class HrException final : public std::runtime_error
 {
 public:
     HrException(HRESULT hr) : std::runtime_error(HrToString(hr)), m_hr(hr) {}
@@ -65,111 +66,9 @@ inline void V(HRESULT hr)
     if (FAILED(hr))
     {
         //DumpDebugMessages(HelloTriangle::s_device);
-        std::cout << "ERR: " + HrToString(hr) << std::endl;
+        std::cout << "[ERROR]: " + HrToString(hr) << std::endl;
         throw HrException(hr);
     }
-}
-
-inline HRESULT ReadDataFromFile(LPCWSTR filename, byte** data, UINT* size)
-{
-    using namespace Microsoft::WRL;
-
-#if WINVER >= _WIN32_WINNT_WIN8
-    CREATEFILE2_EXTENDED_PARAMETERS extendedParams = {};
-    extendedParams.dwSize = sizeof(CREATEFILE2_EXTENDED_PARAMETERS);
-    extendedParams.dwFileAttributes = FILE_ATTRIBUTE_NORMAL;
-    extendedParams.dwFileFlags = FILE_FLAG_SEQUENTIAL_SCAN;
-    extendedParams.dwSecurityQosFlags = SECURITY_ANONYMOUS;
-    extendedParams.lpSecurityAttributes = nullptr;
-    extendedParams.hTemplateFile = nullptr;
-
-    Wrappers::FileHandle file(CreateFile2(filename, GENERIC_READ, FILE_SHARE_READ, OPEN_EXISTING, &extendedParams));
-#else
-    Wrappers::FileHandle file(CreateFile(filename, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN | SECURITY_SQOS_PRESENT | SECURITY_ANONYMOUS, nullptr));
-#endif
-    if (file.Get() == INVALID_HANDLE_VALUE)
-    {
-        throw std::exception();
-    }
-
-    FILE_STANDARD_INFO fileInfo = {};
-    if (!GetFileInformationByHandleEx(file.Get(), FileStandardInfo, &fileInfo, sizeof(fileInfo)))
-    {
-        throw std::exception();
-    }
-
-    if (fileInfo.EndOfFile.HighPart != 0)
-    {
-        throw std::exception();
-    }
-
-    *data = reinterpret_cast<byte*>(malloc(fileInfo.EndOfFile.LowPart));
-    *size = fileInfo.EndOfFile.LowPart;
-
-    if (!ReadFile(file.Get(), *data, fileInfo.EndOfFile.LowPart, nullptr, nullptr))
-    {
-        throw std::exception();
-    }
-
-    return S_OK;
-}
-
-inline HRESULT ReadDataFromDDSFile(LPCWSTR filename, byte** data, UINT* offset, UINT* size)
-{
-    if (FAILED(ReadDataFromFile(filename, data, size)))
-    {
-        return E_FAIL;
-    }
-
-    // DDS files always start with the same magic number.
-    static const UINT DDS_MAGIC = 0x20534444;
-    UINT magicNumber = *reinterpret_cast<const UINT*>(*data);
-    if (magicNumber != DDS_MAGIC)
-    {
-        return E_FAIL;
-    }
-
-    struct DDS_PIXELFORMAT
-    {
-        UINT size;
-        UINT flags;
-        UINT fourCC;
-        UINT rgbBitCount;
-        UINT rBitMask;
-        UINT gBitMask;
-        UINT bBitMask;
-        UINT aBitMask;
-    };
-
-    struct DDS_HEADER
-    {
-        UINT size;
-        UINT flags;
-        UINT height;
-        UINT width;
-        UINT pitchOrLinearSize;
-        UINT depth;
-        UINT mipMapCount;
-        UINT reserved1[11];
-        DDS_PIXELFORMAT ddsPixelFormat;
-        UINT caps;
-        UINT caps2;
-        UINT caps3;
-        UINT caps4;
-        UINT reserved2;
-    };
-
-    auto ddsHeader = reinterpret_cast<const DDS_HEADER*>(*data + sizeof(UINT));
-    if (ddsHeader->size != sizeof(DDS_HEADER) || ddsHeader->ddsPixelFormat.size != sizeof(DDS_PIXELFORMAT))
-    {
-        return E_FAIL;
-    }
-
-    const ptrdiff_t ddsDataOffset = sizeof(UINT) + sizeof(DDS_HEADER);
-    *offset = ddsDataOffset;
-    *size = *size - ddsDataOffset;
-
-    return S_OK;
 }
 
 // Assign a name to the object to aid with debugging.
@@ -207,35 +106,6 @@ inline UINT CalculateConstantBufferByteSize(UINT byteSize)
     return (byteSize + (D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1)) & ~(D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1);
 }
 
-#ifdef D3D_COMPILE_STANDARD_FILE_INCLUDE
-inline Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(
-    const std::wstring& filename,
-    const D3D_SHADER_MACRO* defines,
-    const std::string& entrypoint,
-    const std::string& target)
-{
-    UINT compileFlags = 0;
-#if defined(_DEBUG) || defined(DBG)
-    compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-#endif
-
-    HRESULT hr;
-
-    Microsoft::WRL::ComPtr<ID3DBlob> byteCode = nullptr;
-    Microsoft::WRL::ComPtr<ID3DBlob> errors;
-    hr = D3DCompileFromFile(filename.c_str(), defines, D3D_COMPILE_STANDARD_FILE_INCLUDE,
-        entrypoint.c_str(), target.c_str(), compileFlags, 0, &byteCode, &errors);
-
-    if (errors != nullptr)
-    {
-        OutputDebugStringA((char*)errors->GetBufferPointer());
-    }
-    V(hr);
-
-    return byteCode;
-}
-#endif
-
 // Resets all elements in a ComPtr array.
 template<class T>
 void ResetComPtrArray(T* comPtrArray)
@@ -246,7 +116,6 @@ void ResetComPtrArray(T* comPtrArray)
     }
 }
 
-
 // Resets all elements in a unique_ptr array.
 template<class T>
 void ResetUniquePtrArray(T* uniquePtrArray)
@@ -256,131 +125,5 @@ void ResetUniquePtrArray(T* uniquePtrArray)
         i.reset();
     }
 }
-
-inline std::vector<uint8_t> ReadFileToByteVector(const std::wstring& filename) {
-    std::ifstream file(filename, std::ios::binary | std::ios::ate);
-    if (!file) throw std::runtime_error("Failed to open file");
-    auto size = static_cast<size_t>(file.tellg());
-    std::vector<uint8_t> data(size);
-    file.seekg(0);
-    file.read(reinterpret_cast<char*>(data.data()), size);
-    return data;
-}
-
-inline ComPtr<IDxcBlob> CompileShaderDXC(
-    const std::wstring& filePath,
-    LPCWSTR entryPoint,
-    LPCWSTR targetProfile,
-    UINT compileFlags)
-{
-    HMODULE dxCompilerDLL = LoadLibrary("dxcompiler.dll");
-    if (!dxCompilerDLL) {
-        DWORD err = GetLastError();
-        std::cout << "LoadLibrary failed: " << err << "\n";
-    } else {
-        std::cout << "dxcompiler.dll loaded successfully!\n";
-    }
-
-    // Get DxcCreateInstance function
-    auto DxcCreateInstanceFn = reinterpret_cast<HRESULT(__stdcall*)(REFCLSID, REFIID, LPVOID*)>(
-        GetProcAddress(dxCompilerDLL, "DxcCreateInstance"));
-    if (!DxcCreateInstanceFn) {
-        std::cerr << "Failed to get DxcCreateInstance\n";
-    }
-
-    // Create DXC objects
-    ComPtr<IDxcCompiler3> compiler;
-    ComPtr<IDxcLibrary> library;
-    ComPtr<IDxcIncludeHandler> includeHandler;
-    ComPtr<IDxcUtils> utils;
-    try {
-        V(DxcCreateInstanceFn(CLSID_DxcCompiler, IID_PPV_ARGS(&compiler)));
-    } catch (const std::exception& e) {
-        std::cout << e.what() << std::endl;
-    } catch (...) {
-        OutputDebugStringA("Unknown exception in DxcCreateInstance");
-    }
-
-    V(DxcCreateInstanceFn(CLSID_DxcLibrary, IID_PPV_ARGS(&library)));
-    V(DxcCreateInstanceFn(CLSID_DxcUtils, IID_PPV_ARGS(&utils)));
-    V(library->CreateIncludeHandler(&includeHandler));
-
-    auto shaderBytes = ReadFileToByteVector(filePath);
-
-    DxcBuffer buffer;
-    buffer.Ptr = shaderBytes.data();
-    buffer.Size = shaderBytes.size();
-    buffer.Encoding = DXC_CP_UTF8; // or DXC_CP_ACP if ASCII
-
-    // Compile vertex shader
-    ComPtr<IDxcResult> result;
-    const wchar_t* args[] = { L"-E", entryPoint, L"-T", targetProfile };
-    if (FAILED(compiler->Compile(&buffer, args, _countof(args), includeHandler.Get(), IID_PPV_ARGS(&result)))) {
-        std::cerr << "Vertex shader compile failed\n";
-        return nullptr;
-    }
-
-    // Get compiled blob
-    ComPtr<IDxcBlobUtf8> errors;
-    if (FAILED(result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errors), nullptr))) {
-        std::cerr << "Failed to get shader errors\n";
-        return nullptr;
-    }
-    if (errors && errors->GetStringLength() > 0) {
-        std::cout << "Shader compile warnings/errors:\n" << errors->GetStringPointer() << "\n";
-    }
-
-    ComPtr<IDxcBlob> vertexShaderBlob;
-    if (FAILED(result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&vertexShaderBlob), nullptr))) {
-        std::cerr << "Failed to get compiled shader\n";
-        return nullptr;
-    }
-
-    return vertexShaderBlob;
-}
-
-inline ComPtr<ID3D12RootSignature> CreateRootSignature(CD3DX12_ROOT_PARAMETER1* params, UINT paramCount, const D3D12_STATIC_SAMPLER_DESC* pSamplers, UINT samplerCount, ID3D12Device* device)
-{
-    HRESULT hr;
-
-    D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
-    featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
-    hr = device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData));
-    if (FAILED(hr))
-    {
-        featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
-    }
-
-    // Allow input layout and deny unnecessary access to certain pipeline stages.
-    D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
-        D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
-        D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
-        D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS;
-
-    CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDescription;
-    rootSignatureDescription.Init_1_1(paramCount, params, samplerCount, pSamplers, rootSignatureFlags);
-
-    ComPtr<ID3DBlob> rootSignatureBlob;
-    ComPtr<ID3DBlob> errorBlob;
-    hr = D3DX12SerializeVersionedRootSignature(&rootSignatureDescription, featureData.HighestVersion, &rootSignatureBlob, &errorBlob);
-    if (FAILED(hr))
-    {
-        if (errorBlob)
-        {
-            std::string errorMsg = static_cast<char*>(errorBlob->GetBufferPointer());
-            std::wstring wideErrorMsg(errorMsg.begin(), errorMsg.end());
-            wideErrorMsg = L"RootSig Error: " + wideErrorMsg;
-            OutputDebugStringW(wideErrorMsg.c_str());
-        }
-        throw std::exception();
-    }
-
-    ComPtr<ID3D12RootSignature> rootSig;
-    hr = device->CreateRootSignature(0, rootSignatureBlob->GetBufferPointer(), rootSignatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSig));
-    V(hr);
-
-    return rootSig;
-}
-
 
 #endif

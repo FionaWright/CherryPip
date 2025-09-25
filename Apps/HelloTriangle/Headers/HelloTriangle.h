@@ -2,6 +2,7 @@
 #define PT_HELLOTRIANGLE_H
 
 #include "Apps/App.h"
+#include "HWI/Shader.h"
 
 #define WIDTH 600
 #define HEIGHT 400
@@ -33,7 +34,8 @@ private:
     ComPtr<ID3D12Resource> m_vertexBuffer;
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
     ComPtr<ID3D12RootSignature> m_rootSignature;
-    ComPtr<ID3D12PipelineState> m_pipelineState;
+
+    Shader m_shader;
 
     // Window title.
     std::wstring m_title;

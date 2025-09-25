@@ -101,7 +101,7 @@ void SpinningCube::loadAssets(D3D* d3d)
         range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
         param.InitAsDescriptorTable(1, &range);
 
-        m_rootSignature = CreateRootSignature(&param, 1, nullptr, 0, device);
+        m_rootSig.Init(&param, 1, nullptr, 0, device);
     }
 
     {
@@ -112,7 +112,7 @@ void SpinningCube::loadAssets(D3D* d3d)
         };
         D3D12_INPUT_LAYOUT_DESC ild = { inputElementDescs, _countof(inputElementDescs) };
 
-        m_shaderNormals.Init(L"Basic3D_NormalsVS.hlsl", L"Basic3D_NormalsPS.hlsl", ild, device, m_rootSignature.Get());
+        m_shaderNormals.Init(L"Basic3D_NormalsVS.hlsl", L"Basic3D_NormalsPS.hlsl", ild, device, m_rootSig.Get());
     }
 
     // Create the vertex buffer.
@@ -212,7 +212,7 @@ void SpinningCube::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdL
     CD3DX12_RECT scissorRect(0, 0, WIDTH, HEIGHT);
 
     // Set necessary state.
-    cmdList->SetGraphicsRootSignature(m_rootSignature.Get());
+    cmdList->SetGraphicsRootSignature(m_rootSig.Get());
     cmdList->RSSetViewports(1, &viewport);
     cmdList->RSSetScissorRects(1, &scissorRect);
     cmdList->SetPipelineState(m_shaderNormals.GetPSO());
@@ -268,7 +268,7 @@ void SpinningCube::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdL
 void SpinningCube::setCustomWindowText(LPCWSTR text) const
 {
     std::wstring windowText = m_title + L": " + text;
-    SetWindowText(Win32App::GetHwnd(), wstringtoString(windowText).c_str());
+    SetWindowText(Win32App::GetHwnd(), wstringToString(windowText).c_str());
 }
 
 // Helper function for parsing any supplied command line args.

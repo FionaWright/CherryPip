@@ -7,6 +7,78 @@
 #include "Helper.h"
 #include "System/FileHelper.h"
 
+inline ComPtr<IDxcBlob> CompileShaderDXC(
+    const std::wstring& filePath,
+    LPCWSTR entryPoint,
+    LPCWSTR targetProfile,
+    UINT compileFlags)
+{
+    HMODULE dxCompilerDLL = LoadLibrary("dxcompiler.dll");
+    if (!dxCompilerDLL) {
+        DWORD err = GetLastError();
+        std::cout << "LoadLibrary failed: " << err << "\n";
+    } else {
+        std::cout << "dxcompiler.dll loaded successfully!\n";
+    }
+
+    // Get DxcCreateInstance function
+    auto DxcCreateInstanceFn = reinterpret_cast<HRESULT(__stdcall*)(REFCLSID, REFIID, LPVOID*)>(
+        GetProcAddress(dxCompilerDLL, "DxcCreateInstance"));
+    if (!DxcCreateInstanceFn) {
+        std::cerr << "Failed to get DxcCreateInstance\n";
+    }
+
+    // Create DXC objects
+    ComPtr<IDxcCompiler3> compiler;
+    ComPtr<IDxcLibrary> library;
+    ComPtr<IDxcIncludeHandler> includeHandler;
+    ComPtr<IDxcUtils> utils;
+    try {
+        V(DxcCreateInstanceFn(CLSID_DxcCompiler, IID_PPV_ARGS(&compiler)));
+    } catch (const std::exception& e) {
+        std::cout << e.what() << std::endl;
+    } catch (...) {
+        OutputDebugStringA("Unknown exception in DxcCreateInstance");
+    }
+
+    V(DxcCreateInstanceFn(CLSID_DxcLibrary, IID_PPV_ARGS(&library)));
+    V(DxcCreateInstanceFn(CLSID_DxcUtils, IID_PPV_ARGS(&utils)));
+    V(library->CreateIncludeHandler(&includeHandler));
+
+    const auto shaderBytes = FileHelper::ReadFileToByteVector(filePath);
+
+    DxcBuffer buffer;
+    buffer.Ptr = shaderBytes.data();
+    buffer.Size = shaderBytes.size();
+    buffer.Encoding = DXC_CP_UTF8; // or DXC_CP_ACP if ASCII
+
+    // Compile vertex shader
+    ComPtr<IDxcResult> result;
+    const wchar_t* args[] = { L"-E", entryPoint, L"-T", targetProfile };
+    if (FAILED(compiler->Compile(&buffer, args, _countof(args), includeHandler.Get(), IID_PPV_ARGS(&result)))) {
+        std::cerr << "Vertex shader compile failed\n";
+        return nullptr;
+    }
+
+    // Get compiled blob
+    ComPtr<IDxcBlobUtf8> errors;
+    if (FAILED(result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errors), nullptr))) {
+        std::cerr << "Failed to get shader errors\n";
+        return nullptr;
+    }
+    if (errors && errors->GetStringLength() > 0) {
+        std::cout << "Shader compile warnings/errors:\n" << errors->GetStringPointer() << "\n";
+    }
+
+    ComPtr<IDxcBlob> vertexShaderBlob;
+    if (FAILED(result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&vertexShaderBlob), nullptr))) {
+        std::cerr << "Failed to get compiled shader\n";
+        return nullptr;
+    }
+
+    return vertexShaderBlob;
+}
+
 void Shader::Init(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D12Device* device, ID3D12RootSignature* rootSig)
 {
 #if defined(_DEBUG)

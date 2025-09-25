@@ -2,6 +2,7 @@
 #define PT_SPINNINGCUBE_H
 
 #include "Apps/App.h"
+#include "HWI/RootSig.h"
 #include "HWI/Shader.h"
 #include "Render/CameraController.h"
 #include "Render/Transform.h"
@@ -37,12 +38,13 @@ private:
     ComPtr<ID3D12Resource> m_vertexBuffer;
     UINT m_vertexCount = 0;
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
-    ComPtr<ID3D12RootSignature> m_rootSignature;
+
     ComPtr<ID3D12DescriptorHeap> m_cbvSrvUavHeap;
     UINT m_descriptorIncSize = 0;
     ComPtr<ID3D12Resource> m_cbv;
 
     Shader m_shaderNormals;
+    RootSig m_rootSig;
     CameraController m_camera;
     Transform m_transformCube;
 

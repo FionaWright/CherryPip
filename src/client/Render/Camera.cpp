@@ -7,10 +7,10 @@
 void Camera::Init(XMFLOAT3 pos, XMFLOAT3 lookat)
 {
     m_up = XMFLOAT3(0.0f, 1.0f, 0.0f);
-    m_forward = XMFLOAT3(0.0f, 0.0f, 1.0f);
+    m_forward = XMFLOAT3(0.0f, 0.0f, -1.0f);
     m_right = XMFLOAT3(1.0f, 0.0f, 0.0f);
 
-    m_pos = XMFLOAT3(0, 0, -5);
+    m_pos = XMFLOAT3(0, 0, 5);
 }
 
 XMMATRIX Camera::GetViewMatrix() const

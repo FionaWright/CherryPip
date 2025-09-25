@@ -91,9 +91,6 @@ void SpinningCube::loadAssets(D3D* d3d)
         auto cbvHandle = m_cbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart();
         //cbvHandle.ptr += incrementSize * (heapStart);
         device->CreateConstantBufferView(&cbvDesc, cbvHandle);
-
-        //auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_cbv, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-        //cmdList->ResourceBarrier(1, &barrier);
     }
 
     {
@@ -169,6 +166,7 @@ void SpinningCube::loadAssets(D3D* d3d)
             { {  0.25f,  0.25f, -0.25f }, { 0.0f, 0.0f, -1.0f, 1.0f } },
         };
 
+        m_vertexCount = _countof(cubeVertices);
         constexpr UINT vertexBufferSize = sizeof(cubeVertices);
 
         auto prop = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
@@ -224,9 +222,11 @@ void SpinningCube::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdL
     float nearPlane = 0.1f;
     float farPlane = 100.0f;
 
+    m_transformCube.Rotate({0, 0.1f, 0});
+
     CbvMatrices matrices = {};
-    matrices.M = XMMatrixIdentity();
-    matrices.MTI = XMMatrixIdentity();
+    matrices.M = m_transformCube.GetModelMatrix();
+    matrices.MTI = XMMatrixInverse(nullptr, XMMatrixTranspose(matrices.M));
     matrices.V = m_camera.GetViewMatrix();
     matrices.P = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), m_AspectRatio, nearPlane, farPlane);
 
@@ -253,7 +253,7 @@ void SpinningCube::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdL
     cmdList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
     cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     cmdList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-    cmdList->DrawInstanced(3, 1, 0, 0);
+    cmdList->DrawInstanced(m_vertexCount, 1, 0, 0);
 
     // Indicate that the back buffer will now be used to present.
     auto barrier2 = CD3DX12_RESOURCE_BARRIER::Transition(rtv, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);

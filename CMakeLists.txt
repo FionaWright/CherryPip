@@ -47,7 +47,9 @@ add_executable(PT WIN32
         src/client/Render/Camera.cpp
         Headers/client/Render/Camera.h
         Apps/App.cpp
-        Apps/App.h)
+        Apps/App.h
+        src/client/Render/Transform.cpp
+        Headers/client/Render/Transform.h)
 
 include_directories(Headers)
 include_directories(Headers/client)

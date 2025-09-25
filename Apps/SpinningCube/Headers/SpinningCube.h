@@ -4,6 +4,7 @@
 #include "Apps/App.h"
 #include "HWI/Shader.h"
 #include "Render/Camera.h"
+#include "Render/Transform.h"
 
 #define WIDTH 600
 #define HEIGHT 400
@@ -34,14 +35,16 @@ private:
 
     // App resources.
     ComPtr<ID3D12Resource> m_vertexBuffer;
+    UINT m_vertexCount = 0;
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
     ComPtr<ID3D12RootSignature> m_rootSignature;
     ComPtr<ID3D12DescriptorHeap> m_cbvSrvUavHeap;
     UINT m_descriptorIncSize = 0;
-    ID3D12Resource* m_cbv;
+    ComPtr<ID3D12Resource> m_cbv;
 
     Shader m_shaderNormals;
     Camera m_camera;
+    Transform m_transformCube;
 
     // Window title.
     std::wstring m_title;

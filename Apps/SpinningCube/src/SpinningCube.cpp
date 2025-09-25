@@ -29,6 +29,8 @@ void SpinningCube::OnUpdate(D3D* d3d)
 
     d3d->ExecuteCommandList(cmdList.Get());
     d3d->Present();
+
+    m_camera.UpdateCamera();
 }
 
 struct Vertex

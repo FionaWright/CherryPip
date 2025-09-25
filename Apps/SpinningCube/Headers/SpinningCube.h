@@ -3,7 +3,7 @@
 
 #include "Apps/App.h"
 #include "HWI/Shader.h"
-#include "Render/Camera.h"
+#include "Render/CameraController.h"
 #include "Render/Transform.h"
 
 #define WIDTH 600
@@ -43,7 +43,7 @@ private:
     ComPtr<ID3D12Resource> m_cbv;
 
     Shader m_shaderNormals;
-    Camera m_camera;
+    CameraController m_camera;
     Transform m_transformCube;
 
     // Window title.

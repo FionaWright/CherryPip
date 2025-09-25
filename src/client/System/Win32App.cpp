@@ -7,6 +7,7 @@
 
 #include "HWI/D3D.h"
 #include "System/FileHelper.h"
+#include "System/Input.h"
 
 HWND Win32App::m_hwnd = nullptr;
 std::unique_ptr<D3D> Win32App::m_d3d = nullptr;
@@ -89,30 +90,75 @@ LRESULT CALLBACK Win32App::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LP
         }
         return 0;
 
+    case WM_SYSKEYDOWN:
     case WM_KEYDOWN:
-        if (pSample)
         {
-            //pSample->OnKeyDown(static_cast<UINT8>(wParam));
+            Input::AddKey(static_cast<KeyCode::Key>(wParam));
         }
-        return 0;
+        break;
 
+    case WM_SYSKEYUP:
     case WM_KEYUP:
-        if (pSample)
         {
-            //pSample->OnKeyUp(static_cast<UINT8>(wParam));
+            Input::RemoveKey(static_cast<KeyCode::Key>(wParam));
         }
-        return 0;
+        break;
+
+    case WM_MOUSEMOVE:
+        {
+            const float x = static_cast<float>(static_cast<int>(static_cast<short>(LOWORD(lParam))));
+            const float y = static_cast<float>(static_cast<int>(static_cast<short>(HIWORD(lParam))));
+
+            Input::SetMousePos(XMFLOAT2(x, y));
+
+            POINT clientToScreenPoint;
+            clientToScreenPoint.x = static_cast<LONG>(x);
+            clientToScreenPoint.y = static_cast<LONG>(y);
+            ScreenToClient(hWnd, &clientToScreenPoint);
+
+            XMFLOAT2 client;
+            client.x = static_cast<float>(clientToScreenPoint.x);
+            client.y = static_cast<float>(clientToScreenPoint.y);
+            Input::SetMousePosClient(client);
+        }
+        break;
+
+    case WM_LBUTTONDOWN:
+    case WM_RBUTTONDOWN:
+    case WM_MBUTTONDOWN:
+    case WM_LBUTTONUP:
+    case WM_RBUTTONUP:
+    case WM_MBUTTONUP:
+        {
+            const bool lButton = (wParam & MK_LBUTTON) != 0;
+            const bool rButton = (wParam & MK_RBUTTON) != 0;
+            const bool mButton = (wParam & MK_MBUTTON) != 0;
+
+            Input::SetMouseLeftState(lButton);
+            Input::SetMouseRightState(rButton);
+            Input::SetMouseMiddleState(mButton);
+        }
+        break;
+
+    case WM_MOUSEWHEEL:
+        {
+            const float zDelta = static_cast<int>(static_cast<short>(HIWORD(wParam))) / static_cast<float>(WHEEL_DELTA);
+            Input::SetMouseWheelDelta(zDelta);
+        }
+        break;
 
     case WM_PAINT:
         if (pSample)
         {
             pSample->OnUpdate(m_d3d.get());
         }
+        Input::ProgressFrame();
         return 0;
 
     case WM_DESTROY:
         PostQuitMessage(0);
         return 0;
+    default: ;
     }
 
     // Handle any messages the switch statement didn't.

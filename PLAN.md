@@ -5,7 +5,7 @@
 - [x] Render RGB triangle
 - [x] Clean up code and encapsulate into HWI
 - [x] Add frame buffering
-- [ ] Render spinning cube (Multiple Apps)
+- [x] Render spinning cube (Multiple Apps)
 - [ ] Implement better console/logging
 - [ ] Implement Dear ImGui
 - [ ] Build shaders in cmake

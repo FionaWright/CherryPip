@@ -6,7 +6,7 @@
 - [x] Clean up code and encapsulate into HWI
 - [x] Add frame buffering
 - [x] Render spinning cube (Multiple Apps)
-- [ ] Implement better console/logging
+- [x] Implement better console/logging
 - [ ] Implement Dear ImGui
 - [ ] Build shaders in cmake
 - [ ] Global & App Options menu

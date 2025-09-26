@@ -3,8 +3,9 @@
 //
 
 #include "HWI/D3D.h"
-#include "../../../Headers/Helper.h"
+#include "Headers/Helper.h"
 #include "System/Win32App.h"
+#include "System/DebugOutputRedirector.h"
 
 // Helper function for acquiring the first available hardware adapter that supports Direct3D 12.
 // If no such adapter can be found, *ppAdapter will be set to nullptr.
@@ -125,6 +126,18 @@ void D3D::Init(size_t width, size_t height)
         m_infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE);
         m_infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, TRUE);
         m_infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, FALSE);
+
+        DWORD cookie = 0;
+        HRESULT hr = m_infoQueue->RegisterMessageCallback(
+            DebugMessageCallback,
+            D3D12_MESSAGE_CALLBACK_FLAG_NONE,
+            &std::cout,   // passed to callback as `context`
+            &cookie);
+
+        if (FAILED(hr))
+        {
+            std::cerr << "Failed to register debug callback. HRESULT = " << std::hex << hr << std::endl;
+        }
 
         // You can also filter messages if it's too noisy
     }

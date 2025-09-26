@@ -54,7 +54,7 @@ private:
     ComPtr<ID3D12CommandAllocator> m_commandAllocator;
     ComPtr<ID3D12CommandQueue> m_commandQueue;
     ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
-    ComPtr<ID3D12InfoQueue> m_infoQueue;
+    ComPtr<ID3D12InfoQueue1> m_infoQueue;
     UINT m_rtvDescriptorSize = 0;
 
     bool m_useWarpDevice = false;

@@ -66,6 +66,9 @@ add_executable(PT WIN32
         Headers/client/System/Gui.h
         src/client/System/Config.cpp
         Headers/client/System/Config.h
+        src/client/HWI/Model.cpp
+        Headers/client/HWI/Model.h
+        src/client/System/ModelLoaderGLTF.cpp
 )
 
 file(GLOB THIRD_PARTY_SOURCES CONFIGURE_DEPENDS
@@ -141,3 +144,22 @@ add_custom_target(CopyAssets ALL
         DEPENDS ${CMAKE_BINARY_DIR}/Assets.stamp
 )
 add_dependencies(CopyAssets PT)
+
+FetchContent_Declare(
+        fastgltf
+        URL https://github.com/spnda/fastgltf/archive/refs/tags/v0.9.0.zip
+)
+FetchContent_MakeAvailable(fastgltf)
+
+file(GLOB FASTGLTF_SOURCES CONFIGURE_DEPENDS
+        "${fastgltf_SOURCE_DIR}/src/*.cpp"
+        "${fastgltf_SOURCE_DIR}/include/fastgltf/*.hpp"
+        "${fastgltf_SOURCE_DIR}/deps/simdjson/*"
+)
+target_sources(PT PRIVATE
+        ${FASTGLTF_SOURCES}
+)
+target_include_directories(PT PRIVATE
+        "${fastgltf_SOURCE_DIR}/include"
+        "${fastgltf_SOURCE_DIR}/deps/simdjson"
+)

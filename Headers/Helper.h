@@ -42,30 +42,10 @@ private:
     const HRESULT m_hr;
 };
 
-inline void DumpDebugMessages(ID3D12Device* device)
-{
-    ComPtr<ID3D12InfoQueue> infoQueue;
-    if (SUCCEEDED(device->QueryInterface(IID_PPV_ARGS(&infoQueue))))
-    {
-        const UINT64 messageCount = infoQueue->GetNumStoredMessages();
-        for (UINT64 i = 0; i < messageCount; ++i)
-        {
-            SIZE_T messageLength = 0;
-            infoQueue->GetMessage(i, nullptr, &messageLength);
-            std::vector<char> bytes(messageLength);
-            auto* message = reinterpret_cast<D3D12_MESSAGE*>(bytes.data());
-            infoQueue->GetMessage(i, message, &messageLength);
-            std::cout << "D3D12: " << message->pDescription << std::endl;
-        }
-        infoQueue->ClearStoredMessages();
-    }
-}
-
-inline void V(HRESULT hr)
+inline void V(const HRESULT hr)
 {
     if (FAILED(hr))
     {
-        //DumpDebugMessages(HelloTriangle::s_device);
         std::cout << "[ERROR]: " + HrToString(hr) << std::endl;
         throw HrException(hr);
     }

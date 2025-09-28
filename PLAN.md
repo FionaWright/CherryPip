@@ -7,13 +7,12 @@
 - [x] Add frame buffering
 - [x] Render spinning cube (Multiple Apps)
 - [x] Implement better console/logging
-- [ ] Implement Dear ImGui
+- [x] Implement Dear ImGui
 - [ ] Build shaders in cmake
-- [ ] Global & App Options menu
 - [ ] Add destructors and scene switching 
 - [ ] GLTF Model Importing (fastgltf)
-- [ ] PBR Test
-- [ ] Basic Ray-Tracer
+- [ ] Hot reloading
+- [ ] Basic Ray-Tracer (Ray-Query)
 - [ ] Furnace Test
 - [ ] PT Debug Views & Systems
 - [ ] GPU-Accelerated BVH

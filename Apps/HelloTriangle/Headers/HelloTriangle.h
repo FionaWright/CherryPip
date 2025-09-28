@@ -4,9 +4,6 @@
 #include "Apps/App.h"
 #include "HWI/Shader.h"
 
-#define WIDTH 600
-#define HEIGHT 400
-
 using Microsoft::WRL::ComPtr;
 
 class HelloTriangle : public App
@@ -41,7 +38,7 @@ private:
     std::wstring m_title;
     
     void loadAssets(ID3D12Device* device);
-    void populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
+    void populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList* cmdList) const;
 };
 
 

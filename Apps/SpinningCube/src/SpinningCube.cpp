@@ -4,6 +4,7 @@
 
 #include "../../../Headers/Helper.h"
 #include "HWI/D3D.h"
+#include "System/Config.h"
 #include "System/FileHelper.h"
 #include "System/Gui.h"
 
@@ -15,7 +16,7 @@ SpinningCube::SpinningCube()
 
 void SpinningCube::OnInit(D3D* d3d)
 {
-    m_AspectRatio = static_cast<float>(WIDTH) / static_cast<float>(HEIGHT);
+    m_AspectRatio = static_cast<float>(Config::GetSystem().WindowWidth) / static_cast<float>(Config::GetSystem().WindowHeight);
 
     m_camera.Init({}, {});
 
@@ -209,8 +210,9 @@ void SpinningCube::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdL
 {
     ID3D12Resource* rtv = d3d->GetCurrRTV();
 
-    CD3DX12_VIEWPORT viewport(0.0f, 0.0f, static_cast<float>(WIDTH), static_cast<float>(HEIGHT));
-    CD3DX12_RECT scissorRect(0, 0, WIDTH, HEIGHT);
+    // Render at offset for ImGui
+    CD3DX12_VIEWPORT viewport(static_cast<float>(Config::GetSystem().WindowImGuiWidth), 0.0f, static_cast<float>(Config::GetSystem().WindowWidth), static_cast<float>(Config::GetSystem().WindowHeight));
+    CD3DX12_RECT scissorRect(Config::GetSystem().WindowImGuiWidth, 0, Config::GetSystem().WindowWidth + Config::GetSystem().WindowImGuiWidth, Config::GetSystem().WindowHeight);
 
     // Set necessary state.
     cmdList->SetGraphicsRootSignature(m_rootSig.Get());
@@ -253,7 +255,7 @@ void SpinningCube::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdL
 
     // Record commands.
     const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
-    cmdList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+    cmdList->ClearRenderTargetView(rtvHandle, clearColor, 1, &scissorRect);
     cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     cmdList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
     cmdList->DrawInstanced(m_vertexCount, 1, 0, 0);

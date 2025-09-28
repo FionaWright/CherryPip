@@ -7,9 +7,6 @@
 #include "Render/CameraController.h"
 #include "Render/Transform.h"
 
-#define WIDTH 600
-#define HEIGHT 400
-
 using Microsoft::WRL::ComPtr;
 
 class SpinningCube : public App

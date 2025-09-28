@@ -8,11 +8,12 @@
 
 #include "Apps/HelloTriangle/Headers/HelloTriangle.h"
 #include "Apps/SpinningCube/Headers/SpinningCube.h"
+#include "System/Config.h"
 #include "System/Win32App.h"
 
 _Use_decl_annotations_
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR args, int nCmdShow)
 {
     HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
     if (FAILED(hr))
@@ -22,6 +23,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
     FILE* fp;
     freopen_s(&fp, "CONOUT$", "w", stdout);
     std::cout << "Debug output here\n";
+
+    Config::ParseCommandLineArgs(args);
 
     SpinningCube sample;
     int rslt = Win32App::Run(&sample, hInstance, nCmdShow);

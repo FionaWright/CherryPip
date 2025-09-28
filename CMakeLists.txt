@@ -64,6 +64,8 @@ add_executable(PT WIN32
         Headers/client/System/DebugOutputRedirector.h
         src/client/System/Gui.cpp
         Headers/client/System/Gui.h
+        src/client/System/Config.cpp
+        Headers/client/System/Config.h
 )
 
 file(GLOB THIRD_PARTY_SOURCES CONFIGURE_DEPENDS

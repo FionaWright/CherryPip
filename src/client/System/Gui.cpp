@@ -8,6 +8,7 @@
 #include "imgui.h"
 #include "imgui/backends/imgui_impl_win32.h"
 #include "imgui/backends/imgui_impl_dx12.h"
+#include "System/Config.h"
 
 Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> Gui::ms_cbvSrvUavHeap;
 
@@ -57,7 +58,7 @@ void Gui::BeginFrame()
     ImGui::NewFrame();
 
     ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
-    ImGui::SetNextWindowSize(ImVec2(500, 800), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(Config::GetSystem().WindowImGuiWidth, Config::GetSystem().WindowHeight), ImGuiCond_Always);
 
     ImGui::Begin("GUI", nullptr, ImGuiWindowFlags_None);
     //ms_windowSize = ImGui::GetWindowSize();

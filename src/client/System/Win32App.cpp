@@ -11,6 +11,7 @@
 #include "System/Input.h"
 
 #include "imgui/backends/imgui_impl_win32.h"
+#include "System/Config.h"
 
 HWND Win32App::m_hwnd = nullptr;
 std::unique_ptr<D3D> Win32App::m_d3d = nullptr;
@@ -35,10 +36,8 @@ int Win32App::Run(App* pSample, HINSTANCE hInstance, int nCmdShow)
     windowClass.lpszClassName = "HelloTriangleClass";
     RegisterClassEx(&windowClass);
 
-    size_t width = 600;
-    size_t height = 400;
-
-    RECT windowRect = { 0, 0, static_cast<LONG>(width), static_cast<LONG>(height) };
+    const uint32_t windowWidth = Config::GetSystem().WindowWidth + Config::GetSystem().WindowImGuiWidth;
+    RECT windowRect = { 0, 0, static_cast<LONG>(windowWidth), static_cast<LONG>(Config::GetSystem().WindowHeight) };
     AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
 
     // Create the window and store a handle to it.
@@ -62,7 +61,7 @@ int Win32App::Run(App* pSample, HINSTANCE hInstance, int nCmdShow)
     std::cout << "HWND = " << m_hwnd << std::endl;
 
     m_d3d = std::make_unique<D3D>();
-    m_d3d->Init(WIDTH, HEIGHT);
+    m_d3d->Init(windowWidth, Config::GetSystem().WindowHeight);
 
     pSample->OnInit(m_d3d.get());
 

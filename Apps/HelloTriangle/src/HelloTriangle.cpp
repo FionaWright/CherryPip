@@ -4,6 +4,7 @@
 
 #include "../../../Headers/Helper.h"
 #include "HWI/D3D.h"
+#include "System/Config.h"
 #include "System/FileHelper.h"
 
 HelloTriangle::HelloTriangle()
@@ -14,7 +15,7 @@ HelloTriangle::HelloTriangle()
 
 void HelloTriangle::OnInit(D3D* d3d)
 {
-    m_AspectRatio = static_cast<float>(WIDTH) / static_cast<float>(HEIGHT);
+    m_AspectRatio = static_cast<float>(Config::GetSystem().WindowWidth) / static_cast<float>(Config::GetSystem().WindowHeight);
 
     loadAssets(d3d->GetDevice());
 
@@ -23,7 +24,7 @@ void HelloTriangle::OnInit(D3D* d3d)
 
 void HelloTriangle::OnUpdate(D3D* d3d)
 {
-    ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
+    const ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
     populateCommandList(d3d, cmdList.Get());
 
@@ -103,12 +104,12 @@ void HelloTriangle::loadAssets(ID3D12Device* device)
     }
 }
 
-void HelloTriangle::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
+void HelloTriangle::populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList* cmdList) const
 {
     ID3D12Resource* rtv = d3d->GetCurrRTV();
 
-    CD3DX12_VIEWPORT viewport(0.0f, 0.0f, static_cast<float>(WIDTH), static_cast<float>(HEIGHT));
-    CD3DX12_RECT scissorRect(0, 0, static_cast<LONG>(WIDTH), static_cast<LONG>(HEIGHT));
+    CD3DX12_VIEWPORT viewport(0.0f, 0.0f, static_cast<float>(Config::GetSystem().WindowWidth), static_cast<float>(Config::GetSystem().WindowHeight));
+    CD3DX12_RECT scissorRect(0, 0, static_cast<LONG>(Config::GetSystem().WindowWidth), static_cast<LONG>(Config::GetSystem().WindowHeight));
 
     // Set necessary state.
     cmdList->SetGraphicsRootSignature(m_rootSignature.Get());

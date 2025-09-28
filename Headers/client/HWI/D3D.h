@@ -17,6 +17,8 @@
 #include <dxgi1_6.h>
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
+#include <fstream>
+#include <queue>
 
 using namespace DirectX;
 
@@ -28,20 +30,24 @@ using Microsoft::WRL::ComPtr;
 class D3D
 {
 public:
+    ~D3D();
     void Init(size_t width, size_t height);
+    ComPtr<ID3D12GraphicsCommandList> CreateCmdList(ID3D12CommandAllocator* allocator) const;
 
     ID3D12Device* GetDevice() const { return m_device.Get(); }
 
-    ComPtr<ID3D12GraphicsCommandList> GetNewCommandList() const;
     ID3D12Resource* GetCurrRTV() const { return m_renderTargets[m_frameIndex].Get(); }
     D3D12_CPU_DESCRIPTOR_HANDLE GetRtvHeapStart() const { return m_rtvHeap->GetCPUDescriptorHandleForHeapStart(); }
     UINT GetFrameIndex() const { return m_frameIndex; }
     UINT GetRtvDescriptorSize() const { return m_rtvDescriptorSize;}
 
-    void ExecuteCommandList(ID3D12GraphicsCommandList* cmdList) const;
+    ComPtr<ID3D12CommandAllocator> CreateAllocator(D3D12_COMMAND_LIST_TYPE type) const;
+    ComPtr<ID3D12GraphicsCommandList> GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE type);
+    void ExecuteCommandList(ID3D12GraphicsCommandList* cmdList);
     void Present();
     void Flush();
     void WaitForSignal(UINT64 fence) const;
+    bool IsFenceComplete(UINT64 fenceVal) const;
 
 private:
 
@@ -51,11 +57,19 @@ private:
     ComPtr<IDXGISwapChain3> m_swapChain;
     ComPtr<ID3D12Device> m_device;
     ComPtr<ID3D12Resource> m_renderTargets[c_FrameCount];
-    ComPtr<ID3D12CommandAllocator> m_commandAllocator;
-    ComPtr<ID3D12CommandQueue> m_commandQueue;
     ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
-    ComPtr<ID3D12InfoQueue1> m_infoQueue;
     UINT m_rtvDescriptorSize = 0;
+
+    struct CommandAllocatorEntry
+    {
+        UINT64 Fence;
+        ComPtr<ID3D12CommandAllocator> Allocator;
+    };
+
+    std::queue<CommandAllocatorEntry> m_commandAllocatorQueue;
+    std::queue<ComPtr<ID3D12GraphicsCommandList>> m_commandListQueue;
+
+    ComPtr<ID3D12CommandQueue> m_commandQueue;
 
     bool m_useWarpDevice = false;
 
@@ -65,6 +79,10 @@ private:
     ComPtr<ID3D12Fence> m_fence;
     UINT64 m_fenceValue = 0;
     UINT64 m_frameBufferFences[c_FrameCount] = {};
+
+    // Debugging
+    ComPtr<ID3D12InfoQueue1> m_infoQueue;
+    std::ofstream m_logFile;
 };
 
 #endif //PT_D3D_H

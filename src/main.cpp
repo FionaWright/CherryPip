@@ -15,7 +15,8 @@ _Use_decl_annotations_
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 {
     HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-    if (FAILED(hr)) return -1;
+    if (FAILED(hr))
+        return -1;
 
     AllocConsole();
     FILE* fp;

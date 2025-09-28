@@ -23,7 +23,7 @@ void HelloTriangle::OnInit(D3D* d3d)
 
 void HelloTriangle::OnUpdate(D3D* d3d)
 {
-    ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetNewCommandList();
+    ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
     populateCommandList(d3d, cmdList.Get());
 

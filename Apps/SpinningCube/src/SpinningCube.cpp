@@ -5,6 +5,7 @@
 #include "../../../Headers/Helper.h"
 #include "HWI/D3D.h"
 #include "System/FileHelper.h"
+#include "System/Gui.h"
 
 SpinningCube::SpinningCube()
     : m_AspectRatio(0),
@@ -23,7 +24,7 @@ void SpinningCube::OnInit(D3D* d3d)
 
 void SpinningCube::OnUpdate(D3D* d3d)
 {
-    ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetNewCommandList();
+    ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
     populateCommandList(d3d, cmdList.Get());
 
@@ -50,7 +51,7 @@ struct CbvMatrices
 void SpinningCube::loadAssets(D3D* d3d)
 {
     ID3D12Device* device = d3d->GetDevice();
-    ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetNewCommandList();
+    ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
     {
         m_descriptorIncSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -256,6 +257,8 @@ void SpinningCube::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdL
     cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     cmdList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
     cmdList->DrawInstanced(m_vertexCount, 1, 0, 0);
+
+    Gui::Render(cmdList);
 
     // Indicate that the back buffer will now be used to present.
     auto barrier2 = CD3DX12_RESOURCE_BARRIER::Transition(rtv, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);

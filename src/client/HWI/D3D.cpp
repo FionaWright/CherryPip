@@ -75,6 +75,12 @@ void getHardwareAdapter(
     *ppAdapter = adapter.Detach();
 }
 
+D3D::~D3D()
+{
+    if (m_logFile.is_open())
+        m_logFile.close();
+}
+
 void D3D::Init(size_t width, size_t height)
 {
     UINT dxgiFactoryFlags = 0;
@@ -123,9 +129,11 @@ void D3D::Init(size_t width, size_t height)
 #ifdef _DEBUG
     if (SUCCEEDED(m_device.As(&m_infoQueue)))
     {
-        m_infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE);
-        m_infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, TRUE);
-        m_infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, FALSE);
+        m_logFile.open("d3d12log.txt");
+
+        V(m_infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE));
+        V(m_infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, TRUE));
+        V(m_infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, FALSE));
 
         DWORD cookie = 0;
         HRESULT hr = m_infoQueue->RegisterMessageCallback(
@@ -133,10 +141,19 @@ void D3D::Init(size_t width, size_t height)
             D3D12_MESSAGE_CALLBACK_FLAG_NONE,
             &std::cout,   // passed to callback as `context`
             &cookie);
-
         if (FAILED(hr))
         {
-            std::cerr << "Failed to register debug callback. HRESULT = " << std::hex << hr << std::endl;
+            std::cerr << "Failed to register debug callback to window. HRESULT = " << std::hex << hr << std::endl;
+        }
+
+        hr = m_infoQueue->RegisterMessageCallback(
+            DebugMessageCallback,
+            D3D12_MESSAGE_CALLBACK_FLAG_NONE,
+            &m_logFile,   // passed to callback as `context`
+            &cookie);
+        if (FAILED(hr))
+        {
+            std::cerr << "Failed to register debug callback to log file. HRESULT = " << std::hex << hr << std::endl;
         }
 
         // You can also filter messages if it's too noisy
@@ -201,8 +218,6 @@ void D3D::Init(size_t width, size_t height)
         }
     }
 
-    V(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator)));
-
     // Create synchronization objects and wait until assets have been uploaded to the GPU.
     {
         V(m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
@@ -220,18 +235,72 @@ void D3D::Init(size_t width, size_t height)
         m_frameBufferFences[i] = 0;
 }
 
-ComPtr<ID3D12GraphicsCommandList> D3D::GetNewCommandList() const
+ComPtr<ID3D12GraphicsCommandList> D3D::CreateCmdList(ID3D12CommandAllocator* allocator) const
 {
     ComPtr<ID3D12GraphicsCommandList> cmdList = nullptr;
-    V(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), nullptr, IID_PPV_ARGS(&cmdList)));
+    V(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, allocator, nullptr, IID_PPV_ARGS(&cmdList)));
 
     return cmdList;
 }
 
-void D3D::ExecuteCommandList(ID3D12GraphicsCommandList* cmdList) const
+ComPtr<ID3D12CommandAllocator> D3D::CreateAllocator(const D3D12_COMMAND_LIST_TYPE type) const
 {
+    ComPtr<ID3D12CommandAllocator> commandAllocator;
+    V(m_device->CreateCommandAllocator(type, IID_PPV_ARGS(&commandAllocator)));
+    return commandAllocator;
+}
+
+ComPtr<ID3D12GraphicsCommandList> D3D::GetAvailableCmdList(const D3D12_COMMAND_LIST_TYPE type)
+{
+    ComPtr<ID3D12CommandAllocator> commandAllocator;
+    ComPtr<ID3D12GraphicsCommandList> cmdList;
+
+    if (!m_commandAllocatorQueue.empty() && IsFenceComplete(m_commandAllocatorQueue.front().Fence))
+    {
+        commandAllocator = m_commandAllocatorQueue.front().Allocator;
+        m_commandAllocatorQueue.pop();
+
+        V(commandAllocator->Reset());
+    }
+    else
+    {
+        commandAllocator = CreateAllocator(type);
+    }
+
+    if (!m_commandListQueue.empty())
+    {
+        cmdList = m_commandListQueue.front();
+        m_commandListQueue.pop();
+
+        V(cmdList->Reset(commandAllocator.Get(), nullptr));
+    }
+    else
+    {
+        cmdList = CreateCmdList(commandAllocator.Get());
+    }
+
+    // Associate the command allocator with the command list so that it can be
+    // retrieved when the command list is executed.
+    V(cmdList->SetPrivateDataInterface(__uuidof(ID3D12CommandAllocator), commandAllocator.Get()));
+    return cmdList;
+}
+
+void D3D::ExecuteCommandList(ID3D12GraphicsCommandList* cmdList)
+{
+    ID3D12CommandAllocator* commandAllocator;
+    UINT dataSize = sizeof(commandAllocator);
+
+    V(cmdList->GetPrivateData(__uuidof(ID3D12CommandAllocator), &dataSize, &commandAllocator));
+
     ID3D12CommandList* ppCommandLists[] = { cmdList };
     m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+
+    const UINT64 fence = m_fenceValue;
+    V(m_commandQueue->Signal(m_fence.Get(), fence));
+    m_fenceValue++;
+    m_commandAllocatorQueue.push({fence,commandAllocator});
+    m_commandListQueue.push(cmdList);
+    commandAllocator->Release();
 }
 
 void D3D::Present()
@@ -269,4 +338,9 @@ void D3D::WaitForSignal(UINT64 fence) const
         V(m_fence->SetEventOnCompletion(fence, m_fenceEvent));
         WaitForSingleObject(m_fenceEvent, INFINITE);
     }
+}
+
+bool D3D::IsFenceComplete(const UINT64 fenceVal) const
+{
+    return m_fence->GetCompletedValue() >= fenceVal;
 }

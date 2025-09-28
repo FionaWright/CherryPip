@@ -7,7 +7,10 @@
 
 #include "HWI/D3D.h"
 #include "System/FileHelper.h"
+#include "System/Gui.h"
 #include "System/Input.h"
+
+#include "imgui/backends/imgui_impl_win32.h"
 
 HWND Win32App::m_hwnd = nullptr;
 std::unique_ptr<D3D> Win32App::m_d3d = nullptr;
@@ -52,12 +55,20 @@ int Win32App::Run(App* pSample, HINSTANCE hInstance, int nCmdShow)
         hInstance,
         pSample);
 
+    if (!m_hwnd)
+    {
+        MessageBox(nullptr, "Failed to create window!", "Error", MB_OK);
+    }
+    std::cout << "HWND = " << m_hwnd << std::endl;
+
     m_d3d = std::make_unique<D3D>();
     m_d3d->Init(WIDTH, HEIGHT);
 
     pSample->OnInit(m_d3d.get());
 
     ShowWindow(m_hwnd, nCmdShow);
+
+    Gui::Init(m_hwnd, m_d3d->GetDevice(), 3);
 
     // Main sample loop.
     MSG msg = {};
@@ -75,9 +86,14 @@ int Win32App::Run(App* pSample, HINSTANCE hInstance, int nCmdShow)
     return static_cast<char>(msg.wParam);
 }
 
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 // Main message handler for the sample.
 LRESULT CALLBACK Win32App::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam))
+        return true;
+
     App* pSample = reinterpret_cast<App*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
     switch (message)

@@ -3,6 +3,10 @@ project(PT)
 
 set(CMAKE_CXX_STANDARD 20)
 
+# Set O0 for debug builds
+set(CMAKE_C_FLAGS_DEBUG   "${CMAKE_C_FLAGS_DEBUG} /Od /Zi")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Od /Zi")
+
 # Use the Release CRT for all configurations
 if(MSVC)
     foreach(flag_var
@@ -57,7 +61,26 @@ add_executable(PT WIN32
         Headers/client/System/Keycodes.h
         src/client/HWI/RootSig.cpp
         Headers/client/HWI/RootSig.h
-        Headers/client/System/DebugOutputRedirector.h)
+        Headers/client/System/DebugOutputRedirector.h
+        src/client/System/Gui.cpp
+        Headers/client/System/Gui.h
+)
+
+file(GLOB THIRD_PARTY_SOURCES CONFIGURE_DEPENDS
+        "${CMAKE_SOURCE_DIR}/ThirdParty/imgui/*.cpp"
+        "${CMAKE_SOURCE_DIR}/ThirdParty/imgui/*.h"
+)
+target_sources(PT PRIVATE
+        ${THIRD_PARTY_SOURCES}
+        "${CMAKE_SOURCE_DIR}/ThirdParty/imgui/backends/imgui_impl_dx12.h"
+        "${CMAKE_SOURCE_DIR}/ThirdParty/imgui/backends/imgui_impl_dx12.cpp"
+        "${CMAKE_SOURCE_DIR}/ThirdParty/imgui/backends/imgui_impl_win32.cpp"
+        "${CMAKE_SOURCE_DIR}/ThirdParty/imgui/backends/imgui_impl_win32.h"
+)
+target_include_directories(PT PRIVATE
+        "${CMAKE_SOURCE_DIR}/ThirdParty"
+        "${CMAKE_SOURCE_DIR}/ThirdParty/imgui"
+)
 
 include_directories(Headers)
 include_directories(Headers/client)

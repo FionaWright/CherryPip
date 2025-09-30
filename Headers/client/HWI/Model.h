@@ -14,6 +14,12 @@ using namespace DirectX;
 
 class Model
 {
+public:
+    bool Init(ID3D12GraphicsCommandList2* cmdList, std::wstring filepath);
+    bool Init(ID3D12GraphicsCommandList2* cmdList, std::string filepath);
+    void Init(size_t vertexCount, size_t indexCount, size_t vertexInputSize, float boundingRadius, XMFLOAT3 centroid);
+    void SetBuffers(ID3D12GraphicsCommandList2* cmdList, const void* vBufferData, const void* iBufferData);
+
 private:
     ComPtr<ID3D12Resource> m_vertexBuffer;
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {};
@@ -30,10 +36,6 @@ private:
     XMFLOAT3 m_centroid = {};
     bool m_loadedData = false;
     std::string m_filepath = "";
-    bool Init(ID3D12GraphicsCommandList2* cmdList, std::wstring filepath);
-    bool Init(ID3D12GraphicsCommandList2* cmdList, std::string filepath);
-    void Init(size_t vertexCount, size_t indexCount, size_t vertexInputSize, float boundingRadius, XMFLOAT3 centroid);
-    void SetBuffers(ID3D12GraphicsCommandList2* cmdList, const void* vBufferData, const void* iBufferData);
 };
 
 

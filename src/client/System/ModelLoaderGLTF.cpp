@@ -4,6 +4,7 @@
 
 #include "fastgltf/tools.hpp"
 #include "HWI/Model.h"
+#include "MathUtils.h"
 
 namespace filesystem = std::filesystem;
 

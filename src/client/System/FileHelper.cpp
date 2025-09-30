@@ -37,6 +37,11 @@ std::wstring FileHelper::GetAssetFullPath(LPCWSTR assetName)
     return m_assetsPath + assetName;
 }
 
+std::wstring FileHelper::GetAssetTextureFullPath(LPCWSTR assetName)
+{
+    return m_assetsPath + L"Textures/" + assetName;
+}
+
 std::wstring FileHelper::GetAssetShaderFullPath(LPCWSTR assetName)
 {
     return m_assetsPath + L"Shaders/" + assetName;

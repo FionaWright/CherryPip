@@ -33,12 +33,16 @@ set(D3D12_LIBS
         dxgi.lib   # comes from Windows SDK
 )
 
+# TODO: Make this automatic (?)
 add_executable(PT WIN32
         src/main.cpp
         Apps/HelloTriangle/src/HelloTriangle.cpp
         Apps/HelloTriangle/Headers/HelloTriangle.h
         Apps/SpinningCube/src/SpinningCube.cpp
         Apps/SpinningCube/Headers/SpinningCube.h
+        Apps/TextureCube/Headers/TextureCube.h
+        Apps/TextureCube/src/TextureCube.cpp
+
         src/client/System/Win32App.cpp
         Headers/client/System/Win32App.h
         Headers/Helper.h
@@ -66,14 +70,24 @@ add_executable(PT WIN32
         Headers/client/System/Gui.h
         src/client/System/Config.cpp
         Headers/client/System/Config.h
-        src/client/HWI/Model.cpp
-        Headers/client/HWI/Model.h
-        src/client/System/ModelLoaderGLTF.cpp
+        #src/client/HWI/Model.cpp
+        #Headers/client/HWI/Model.h
+        #src/client/System/ModelLoaderGLTF.cpp
+        src/MathUtils.cpp
+        Headers/MathUtils.h
+        src/client/HWI/Texture.cpp
+        Headers/client/HWI/Texture.h
+        src/client/HWI/D12Resource.cpp
+        Headers/client/HWI/D12Resource.h
+        src/client/System/TextureLoader.cpp
+        Headers/client/System/TextureLoader.h
 )
 
 file(GLOB THIRD_PARTY_SOURCES CONFIGURE_DEPENDS
         "${CMAKE_SOURCE_DIR}/ThirdParty/imgui/*.cpp"
         "${CMAKE_SOURCE_DIR}/ThirdParty/imgui/*.h"
+        "${CMAKE_SOURCE_DIR}/ThirdParty/spng/*"
+        "${CMAKE_SOURCE_DIR}/ThirdParty/zlib/*"
 )
 target_sources(PT PRIVATE
         ${THIRD_PARTY_SOURCES}
@@ -85,6 +99,8 @@ target_sources(PT PRIVATE
 target_include_directories(PT PRIVATE
         "${CMAKE_SOURCE_DIR}/ThirdParty"
         "${CMAKE_SOURCE_DIR}/ThirdParty/imgui"
+        "${CMAKE_SOURCE_DIR}/ThirdParty/spng"
+        "${CMAKE_SOURCE_DIR}/ThirdParty/zlib"
 )
 
 include_directories(Headers)
@@ -163,3 +179,8 @@ target_include_directories(PT PRIVATE
         "${fastgltf_SOURCE_DIR}/include"
         "${fastgltf_SOURCE_DIR}/deps/simdjson"
 )
+
+find_library(DXGUID_LIB dxguid.lib PATHS [HINTS ENV PROGRAMFILES ENV PROGRAMFILES(X86)])
+find_library(UUID_LIB uuid.lib PATHS [HINTS ENV PROGRAMFILES ENV PROGRAMFILES(X86)])
+
+target_link_libraries(PT PRIVATE ${DXGUID_LIB} ${UUID_LIB})

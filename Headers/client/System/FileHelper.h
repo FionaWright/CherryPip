@@ -14,6 +14,7 @@ class FileHelper
 public:
     static void Init();
     static std::wstring GetAssetFullPath(LPCWSTR assetName);
+    static std::wstring GetAssetTextureFullPath(LPCWSTR assetName);
     static std::wstring GetAssetShaderFullPath(LPCWSTR assetName);
 
     static std::vector<uint8_t> ReadFileToByteVector(const std::wstring& filename);

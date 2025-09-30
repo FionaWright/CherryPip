@@ -114,7 +114,7 @@ void SpinningCube::loadAssets(D3D* d3d)
         };
         D3D12_INPUT_LAYOUT_DESC ild = { inputElementDescs, _countof(inputElementDescs) };
 
-        m_shaderNormals.Init(L"Basic3D_NormalsVS.hlsl", L"Basic3D_NormalsPS.hlsl", ild, device, m_rootSig.Get());
+        m_shaderNormals.InitVsPs(L"Basic3D_NormalsVS.hlsl", L"Basic3D_NormalsPS.hlsl", ild, device, m_rootSig.Get());
     }
 
     // Create the vertex buffer.

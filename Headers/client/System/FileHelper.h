@@ -13,6 +13,7 @@ class FileHelper
 {
 public:
     static void Init();
+    static std::wstring GetAssetsPath() { return m_assetsPath; }
     static std::wstring GetAssetFullPath(LPCWSTR assetName);
     static std::wstring GetAssetTextureFullPath(LPCWSTR assetName);
     static std::wstring GetAssetShaderFullPath(LPCWSTR assetName);

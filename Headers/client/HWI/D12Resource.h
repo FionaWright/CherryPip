@@ -16,7 +16,7 @@ public:
     void Init(ID3D12Device* device, const D3D12_RESOURCE_DESC& resourceDesc, const D3D12_RESOURCE_STATES& initialState);
     void Upload(ID3D12GraphicsCommandList* cmdList, uint8_t** pData, size_t totalBytes, size_t rowPitch) const;
 
-    void Transition(ID3D12GraphicsCommandList* cmdList, const D3D12_RESOURCE_STATES& newState, UINT subresourceIdx = 0);
+    void Transition(ID3D12GraphicsCommandList* cmdList, const D3D12_RESOURCE_STATES& newState, UINT subresourceIdx = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
 
     ID3D12Resource* GetResource() const { return m_resource.Get(); };
     D3D12_RESOURCE_STATES GetCurrentState() const { return m_currentState; };

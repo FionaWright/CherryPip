@@ -62,7 +62,7 @@ void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std
 
     const int maxDim = std::max<int>(m_width, m_height);
 
-    D3D12_RESOURCE_DESC desc;
+    D3D12_RESOURCE_DESC desc = {};
     desc.Width = m_width;
     desc.Height = m_height;
     desc.Format = format;
@@ -75,12 +75,12 @@ void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std
 
     m_resource.Init(device, desc, D3D12_RESOURCE_STATE_COPY_DEST);
 
-    const int rowPitch = m_width * BitsPerPixel(format);
+    const int rowPitch = m_width * (BitsPerPixel(format) / 8);
     const int totalBytes = rowPitch * m_height;
     m_resource.Upload(cmdList, &pData, totalBytes, rowPitch);
 
-    //wstring debugName(filePath.begin(), filePath.end());
-    //m_textureResource->SetName(debugName.c_str());
+    std::wstring debugName(filePath.begin(), filePath.end());
+    m_resource.GetResource()->SetName(debugName.c_str());
 
     if (desc.MipLevels > 1)
     {

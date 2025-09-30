@@ -8,13 +8,15 @@
 #include <d3dx12_core.h>
 #include <d3dx12_resource_helpers.h>
 
+#include "Helper.h"
+
 //#include "Helper.h"
 
 void D12Resource::Init(ID3D12Device* device, const D3D12_RESOURCE_DESC& resourceDesc,
                        const D3D12_RESOURCE_STATES& initialState)
 {
     const auto defaultHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-    //V(device->CreateCommittedResource(&defaultHeapProp, D3D12_HEAP_FLAG_NONE, &resourceDesc, initialState, nullptr,IID_PPV_ARGS(&m_resource)));
+    V(device->CreateCommittedResource(&defaultHeapProp, D3D12_HEAP_FLAG_NONE, &resourceDesc, initialState, nullptr,IID_PPV_ARGS(&m_resource)));
     m_currentState = initialState;
     m_desc = resourceDesc;
 
@@ -24,7 +26,7 @@ void D12Resource::Init(ID3D12Device* device, const D3D12_RESOURCE_DESC& resource
 
     const auto uploadHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
     const auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
-    //V(device->CreateCommittedResource(&uploadHeapProp, D3D12_HEAP_FLAG_NONE, &bufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_uploadHeap)));
+    V(device->CreateCommittedResource(&uploadHeapProp, D3D12_HEAP_FLAG_NONE, &bufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_uploadHeap)));
 }
 
 void D12Resource::Upload(ID3D12GraphicsCommandList* cmdList, uint8_t** pData, const size_t totalBytes,
@@ -55,7 +57,7 @@ void D12Resource::Upload(ID3D12GraphicsCommandList* cmdList, uint8_t** pData, co
 void D12Resource::Transition(ID3D12GraphicsCommandList* cmdList, const D3D12_RESOURCE_STATES& newState,
                              const UINT subresourceIdx)
 {
-    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+    const CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
         m_resource.Get(), m_currentState, newState, subresourceIdx);
     cmdList->ResourceBarrier(1, &barrier);
     m_currentState = newState;

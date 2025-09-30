@@ -16,7 +16,8 @@ TextureCube::TextureCube()
 
 void TextureCube::OnInit(D3D* d3d)
 {
-    m_AspectRatio = static_cast<float>(Config::GetSystem().WindowWidth) / static_cast<float>(Config::GetSystem().WindowHeight);
+    m_AspectRatio = static_cast<float>(Config::GetSystem().WindowWidth) / static_cast<float>(Config::GetSystem().
+        WindowHeight);
 
     m_camera.Init({}, {});
 
@@ -39,6 +40,7 @@ struct Vertex
 {
     XMFLOAT3 position;
     XMFLOAT4 normal;
+    XMFLOAT2 uv;
 };
 
 struct CbvMatrices
@@ -58,7 +60,7 @@ void TextureCube::loadAssets(D3D* d3d)
         m_descriptorIncSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
         D3D12_DESCRIPTOR_HEAP_DESC desc = {};
         desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-        desc.NumDescriptors = 1 * c_FrameCount;
+        desc.NumDescriptors = 2 * c_FrameCount;
         desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         desc.NodeMask = 0;
 
@@ -86,35 +88,51 @@ void TextureCube::loadAssets(D3D* d3d)
         bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
         bufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-        device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &bufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_cbv));
+        device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &bufferDesc,
+                                        D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_cbv));
 
         D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
         cbvDesc.BufferLocation = m_cbv->GetGPUVirtualAddress();
         cbvDesc.SizeInBytes = static_cast<UINT>(alignedSize);
 
-        auto cbvHandle = m_cbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart();
-        //cbvHandle.ptr += incrementSize * (heapStart);
+        int incrementSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        auto cbvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_cbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), 0,
+                                                       incrementSize);
         device->CreateConstantBufferView(&cbvDesc, cbvHandle);
     }
 
+    // Init Root Sig
     {
-        CD3DX12_ROOT_PARAMETER1 param;
-        CD3DX12_DESCRIPTOR_RANGE1 range;
-        range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-        param.InitAsDescriptorTable(1, &range);
+        CD3DX12_ROOT_PARAMETER1 params[2];
+        CD3DX12_DESCRIPTOR_RANGE1 ranges[2];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+        params[0].InitAsDescriptorTable(1, &ranges[0]);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+        params[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);
 
-        m_rootSig.Init(&param, 1, nullptr, 0, device);
+        D3D12_STATIC_SAMPLER_DESC samplers[1];
+        samplers[0] = {};
+        samplers[0].Filter = D3D12_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
+        samplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        samplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        samplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+        samplers[0].ShaderRegister = 0;
+
+        m_rootSig.Init(params, _countof(params), samplers, _countof(samplers), device);
     }
 
+    // Init Shader/PSO
     {
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
         {
-            { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-            { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+            {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+            {"NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+            {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
         };
-        D3D12_INPUT_LAYOUT_DESC ild = { inputElementDescs, _countof(inputElementDescs) };
+        D3D12_INPUT_LAYOUT_DESC ild = {inputElementDescs, _countof(inputElementDescs)};
 
-        m_shaderNormals.Init(L"Basic3D_NormalsVS.hlsl", L"Basic3D_NormalsPS.hlsl", ild, device, m_rootSig.Get());
+        m_shaderNormals.InitVsPs(L"Basic3D_TexVS.hlsl", L"Basic3D_TexPS.hlsl", ild, device, m_rootSig.Get());
     }
 
     // Create the vertex buffer.
@@ -122,52 +140,58 @@ void TextureCube::loadAssets(D3D* d3d)
         Vertex cubeVertices[] =
         {
             // +X face
-            { { 0.25f, -0.25f, -0.25f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
-            { { 0.25f,  0.25f, -0.25f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
-            { { 0.25f,  0.25f,  0.25f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
-            { { 0.25f, -0.25f, -0.25f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
-            { { 0.25f,  0.25f,  0.25f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
-            { { 0.25f, -0.25f,  0.25f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
+            {{0.25f, -0.25f, -0.25f}, {1, 0, 0, 1}, {1, 1}}, // bottom-right
+            {{0.25f, 0.25f, -0.25f}, {1, 0, 0, 1}, {1, 0}}, // top-right
+            {{0.25f, 0.25f, 0.25f}, {1, 0, 0, 1}, {0, 0}}, // top-left
+
+            {{0.25f, -0.25f, -0.25f}, {1, 0, 0, 1}, {1, 1}}, // bottom-right
+            {{0.25f, 0.25f, 0.25f}, {1, 0, 0, 1}, {0, 0}}, // top-left
+            {{0.25f, -0.25f, 0.25f}, {1, 0, 0, 1}, {0, 1}}, // bottom-left
 
             // -X face
-            { { -0.25f, -0.25f,  0.25f }, { -1.0f, 0.0f, 0.0f, 1.0f } },
-            { { -0.25f,  0.25f,  0.25f }, { -1.0f, 0.0f, 0.0f, 1.0f } },
-            { { -0.25f,  0.25f, -0.25f }, { -1.0f, 0.0f, 0.0f, 1.0f } },
-            { { -0.25f, -0.25f,  0.25f }, { -1.0f, 0.0f, 0.0f, 1.0f } },
-            { { -0.25f,  0.25f, -0.25f }, { -1.0f, 0.0f, 0.0f, 1.0f } },
-            { { -0.25f, -0.25f, -0.25f }, { -1.0f, 0.0f, 0.0f, 1.0f } },
+            {{-0.25f, -0.25f, 0.25f}, {-1, 0, 0, 1}, {1, 1}}, // bottom-right
+            {{-0.25f, 0.25f, 0.25f}, {-1, 0, 0, 1}, {1, 0}}, // top-right
+            {{-0.25f, 0.25f, -0.25f}, {-1, 0, 0, 1}, {0, 0}}, // top-left
+
+            {{-0.25f, -0.25f, 0.25f}, {-1, 0, 0, 1}, {1, 1}}, // bottom-right
+            {{-0.25f, 0.25f, -0.25f}, {-1, 0, 0, 1}, {0, 0}}, // top-left
+            {{-0.25f, -0.25f, -0.25f}, {-1, 0, 0, 1}, {0, 1}}, // bottom-left
 
             // +Y face
-            { { -0.25f, 0.25f, -0.25f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
-            { { -0.25f, 0.25f,  0.25f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
-            { {  0.25f, 0.25f,  0.25f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
-            { { -0.25f, 0.25f, -0.25f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
-            { {  0.25f, 0.25f,  0.25f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
-            { {  0.25f, 0.25f, -0.25f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
+            {{-0.25f, 0.25f, -0.25f}, {0, 1, 0, 1}, {0, 1}}, // bottom-left
+            {{-0.25f, 0.25f, 0.25f}, {0, 1, 0, 1}, {0, 0}}, // top-left
+            {{0.25f, 0.25f, 0.25f}, {0, 1, 0, 1}, {1, 0}}, // top-right
+
+            {{-0.25f, 0.25f, -0.25f}, {0, 1, 0, 1}, {0, 1}}, // bottom-left
+            {{0.25f, 0.25f, 0.25f}, {0, 1, 0, 1}, {1, 0}}, // top-right
+            {{0.25f, 0.25f, -0.25f}, {0, 1, 0, 1}, {1, 1}}, // bottom-right
 
             // -Y face
-            { { -0.25f, -0.25f,  0.25f }, { 0.0f, -1.0f, 0.0f, 1.0f } },
-            { { -0.25f, -0.25f, -0.25f }, { 0.0f, -1.0f, 0.0f, 1.0f } },
-            { {  0.25f, -0.25f, -0.25f }, { 0.0f, -1.0f, 0.0f, 1.0f } },
-            { { -0.25f, -0.25f,  0.25f }, { 0.0f, -1.0f, 0.0f, 1.0f } },
-            { {  0.25f, -0.25f, -0.25f }, { 0.0f, -1.0f, 0.0f, 1.0f } },
-            { {  0.25f, -0.25f,  0.25f }, { 0.0f, -1.0f, 0.0f, 1.0f } },
+            {{-0.25f, -0.25f, 0.25f}, {0, -1, 0, 1}, {0, 1}}, // bottom-left
+            {{-0.25f, -0.25f, -0.25f}, {0, -1, 0, 1}, {0, 0}}, // top-left
+            {{0.25f, -0.25f, -0.25f}, {0, -1, 0, 1}, {1, 0}}, // top-right
+
+            {{-0.25f, -0.25f, 0.25f}, {0, -1, 0, 1}, {0, 1}}, // bottom-left
+            {{0.25f, -0.25f, -0.25f}, {0, -1, 0, 1}, {1, 0}}, // top-right
+            {{0.25f, -0.25f, 0.25f}, {0, -1, 0, 1}, {1, 1}}, // bottom-right
 
             // +Z face
-            { { -0.25f, -0.25f, 0.25f }, { 0.0f, 0.0f, 1.0f, 1.0f } },
-            { {  0.25f, -0.25f, 0.25f }, { 0.0f, 0.0f, 1.0f, 1.0f } },
-            { {  0.25f,  0.25f, 0.25f }, { 0.0f, 0.0f, 1.0f, 1.0f } },
-            { { -0.25f, -0.25f, 0.25f }, { 0.0f, 0.0f, 1.0f, 1.0f } },
-            { {  0.25f,  0.25f, 0.25f }, { 0.0f, 0.0f, 1.0f, 1.0f } },
-            { { -0.25f,  0.25f, 0.25f }, { 0.0f, 0.0f, 1.0f, 1.0f } },
+            {{-0.25f, -0.25f, 0.25f}, {0, 0, 1, 1}, {0, 1}}, // bottom-left
+            {{0.25f, -0.25f, 0.25f}, {0, 0, 1, 1}, {1, 1}}, // bottom-right
+            {{0.25f, 0.25f, 0.25f}, {0, 0, 1, 1}, {1, 0}}, // top-right
+
+            {{-0.25f, -0.25f, 0.25f}, {0, 0, 1, 1}, {0, 1}}, // bottom-left
+            {{0.25f, 0.25f, 0.25f}, {0, 0, 1, 1}, {1, 0}}, // top-right
+            {{-0.25f, 0.25f, 0.25f}, {0, 0, 1, 1}, {0, 0}}, // top-left
 
             // -Z face
-            { {  0.25f, -0.25f, -0.25f }, { 0.0f, 0.0f, -1.0f, 1.0f } },
-            { { -0.25f, -0.25f, -0.25f }, { 0.0f, 0.0f, -1.0f, 1.0f } },
-            { { -0.25f,  0.25f, -0.25f }, { 0.0f, 0.0f, -1.0f, 1.0f } },
-            { {  0.25f, -0.25f, -0.25f }, { 0.0f, 0.0f, -1.0f, 1.0f } },
-            { { -0.25f,  0.25f, -0.25f }, { 0.0f, 0.0f, -1.0f, 1.0f } },
-            { {  0.25f,  0.25f, -0.25f }, { 0.0f, 0.0f, -1.0f, 1.0f } },
+            {{0.25f, -0.25f, -0.25f}, {0, 0, -1, 1}, {1, 1}}, // bottom-right
+            {{-0.25f, -0.25f, -0.25f}, {0, 0, -1, 1}, {0, 1}}, // bottom-left
+            {{-0.25f, 0.25f, -0.25f}, {0, 0, -1, 1}, {0, 0}}, // top-left
+
+            {{0.25f, -0.25f, -0.25f}, {0, 0, -1, 1}, {1, 1}}, // bottom-right
+            {{-0.25f, 0.25f, -0.25f}, {0, 0, -1, 1}, {0, 0}}, // top-left
+            {{0.25f, 0.25f, -0.25f}, {0, 0, -1, 1}, {1, 0}}, // top-right
         };
 
         m_vertexCount = _countof(cubeVertices);
@@ -190,7 +214,7 @@ void TextureCube::loadAssets(D3D* d3d)
 
         // Copy the triangle data to the vertex buffer.
         UINT8* pVertexDataBegin;
-        CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
+        CD3DX12_RANGE readRange(0, 0); // We do not intend to read from this resource on the CPU.
         V(m_vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
         memcpy(pVertexDataBegin, cubeVertices, sizeof(cubeVertices));
         m_vertexBuffer->Unmap(0, nullptr);
@@ -201,9 +225,25 @@ void TextureCube::loadAssets(D3D* d3d)
         m_vertexBufferView.SizeInBytes = vertexBufferSize;
     }
 
-    m_tex.Init(d3d->GetDevice(), cmdList.Get(), FileHelper::GetAssetTextureFullPath(L"TestTex.png").c_str(), DXGI_FORMAT_R8G8B8A8_UINT, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    m_tex.Init(d3d->GetDevice(), cmdList.Get(), FileHelper::GetAssetTextureFullPath(L"TestTex.png"),
+               DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 
-    cmdList->Close();
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Format = m_tex.GetFormat();
+    srvDesc.Texture2D.MipLevels = m_tex.GetDesc().MipLevels;
+    srvDesc.Texture2D.MostDetailedMip = 0;
+    srvDesc.Texture2D.PlaneSlice = 0;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+    int incrementSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    auto cbvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_cbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), 1,
+                                                   incrementSize);
+    device->CreateShaderResourceView(m_tex.GetResource(), &srvDesc, cbvHandle);
+
+    m_tex.Transition(cmdList.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
+    V(cmdList->Close());
     d3d->ExecuteCommandList(cmdList.Get());
     d3d->Flush();
 }
@@ -213,8 +253,12 @@ void TextureCube::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLi
     ID3D12Resource* rtv = d3d->GetCurrRTV();
 
     // Render at offset for ImGui
-    CD3DX12_VIEWPORT viewport(static_cast<float>(Config::GetSystem().WindowImGuiWidth), 0.0f, static_cast<float>(Config::GetSystem().WindowWidth), static_cast<float>(Config::GetSystem().WindowHeight));
-    CD3DX12_RECT scissorRect(Config::GetSystem().WindowImGuiWidth, 0, Config::GetSystem().WindowWidth + Config::GetSystem().WindowImGuiWidth, Config::GetSystem().WindowHeight);
+    CD3DX12_VIEWPORT viewport(static_cast<float>(Config::GetSystem().WindowImGuiWidth), 0.0f,
+                              static_cast<float>(Config::GetSystem().WindowWidth),
+                              static_cast<float>(Config::GetSystem().WindowHeight));
+    CD3DX12_RECT scissorRect(Config::GetSystem().WindowImGuiWidth, 0,
+                             Config::GetSystem().WindowWidth + Config::GetSystem().WindowImGuiWidth,
+                             Config::GetSystem().WindowHeight);
 
     // Set necessary state.
     cmdList->SetGraphicsRootSignature(m_rootSig.Get());
@@ -243,12 +287,17 @@ void TextureCube::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLi
     std::memcpy(dstData, &matrices, sizeof(CbvMatrices));
     m_cbv->Unmap(0, nullptr);
 
-    D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = m_cbvSrvUavHeap->GetGPUDescriptorHandleForHeapStart();
-    CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(gpuHandle, 0, m_descriptorIncSize);
+    CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(m_cbvSrvUavHeap->GetGPUDescriptorHandleForHeapStart(), 0,
+                                            m_descriptorIncSize);
     cmdList->SetGraphicsRootDescriptorTable(0, cbvHandle);
 
+    CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvUavHeap->GetGPUDescriptorHandleForHeapStart(), 1,
+                                            m_descriptorIncSize);
+    cmdList->SetGraphicsRootDescriptorTable(1, srvHandle);
+
     // Indicate that the back buffer will be used as a render target.
-    auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(rtv, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(rtv, D3D12_RESOURCE_STATE_PRESENT,
+                                                        D3D12_RESOURCE_STATE_RENDER_TARGET);
     cmdList->ResourceBarrier(1, &barrier);
 
     // Note: HERE AS WELL
@@ -256,7 +305,7 @@ void TextureCube::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLi
     cmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
     // Record commands.
-    const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
+    const float clearColor[] = {0.0f, 0.2f, 0.4f, 1.0f};
     cmdList->ClearRenderTargetView(rtvHandle, clearColor, 1, &scissorRect);
     cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     cmdList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
@@ -265,7 +314,8 @@ void TextureCube::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLi
     Gui::Render(cmdList);
 
     // Indicate that the back buffer will now be used to present.
-    auto barrier2 = CD3DX12_RESOURCE_BARRIER::Transition(rtv, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+    auto barrier2 = CD3DX12_RESOURCE_BARRIER::Transition(rtv, D3D12_RESOURCE_STATE_RENDER_TARGET,
+                                                         D3D12_RESOURCE_STATE_PRESENT);
     cmdList->ResourceBarrier(1, &barrier2);
 
     V(cmdList->Close());
@@ -280,6 +330,7 @@ void TextureCube::setCustomWindowText(LPCWSTR text) const
 
 // Helper function for parsing any supplied command line args.
 _Use_decl_annotations_
+
 void TextureCube::ParseCommandLineArgs(WCHAR* argv[], int argc)
 {
     for (int i = 1; i < argc; ++i)

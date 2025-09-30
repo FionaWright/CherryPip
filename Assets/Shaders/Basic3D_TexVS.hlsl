@@ -8,7 +8,7 @@ struct VsIn
 struct VsOut
 {
     float4 position : SV_POSITION;
-    float3 normal : NORMAL;
+    float3 normal : TEXCOORD1;
     float2 uv : TEXCOORD0;
 };
 
@@ -33,6 +33,7 @@ VsOut VSMain(VsIn input)
     pos = mul(c_matrices.V, pos);
 
     output.position = mul(c_matrices.P, pos);
+    output.uv = input.uv;
 
     return output;
 }

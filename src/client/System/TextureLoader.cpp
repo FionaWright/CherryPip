@@ -47,7 +47,7 @@ constexpr bool FLIP_TGA_UPSIDE_DOWN = false;
 constexpr bool FLIP_TGA_RIGHTSIDE_LEFT = false;
 
 ComPtr<ID3D12RootSignature> TextureLoader::ms_mipMapRootSig;
-ComPtr<ID3D12PipelineState> TextureLoader::ms_mipMapPSO;
+Shader TextureLoader::ms_mipMapShader;
 std::vector<ComPtr<ID3D12DescriptorHeap>> TextureLoader::ms_trackedDescHeaps;
 
 void TextureLoader::LoadTex(const std::string& filePath, int& width, int& height, uint8_t** pData, bool& hasAlpha, int& channels, bool flipUpsideDown, bool isNormalMap)
@@ -895,7 +895,7 @@ void TextureLoader::CreateMipMaps(ID3D12Device* device, ID3D12GraphicsCommandLis
     ID3D12DescriptorHeap* heaps = heapForCS.Get();
     cmdList->SetComputeRootSignature(ms_mipMapRootSig.Get());
     cmdList->SetDescriptorHeaps(1, &heaps);
-    cmdList->SetPipelineState(ms_mipMapPSO.Get());
+    cmdList->SetPipelineState(ms_mipMapShader.GetPSO());
 
     auto cpuHandle = heapForCS->GetCPUDescriptorHandleForHeapStart();
     auto gpuHandle = heapForCS->GetGPUDescriptorHandleForHeapStart();
@@ -946,7 +946,7 @@ void TextureLoader::CreateMipMaps(ID3D12Device* device, ID3D12GraphicsCommandLis
     }
 }
 
-void TextureLoader::Init(ID3D12Device* device, const std::wstring& assetsPath)
+void TextureLoader::Init(D3D* d3d, const std::wstring& shadersPath)
 {
     //The compute shader expects 2 floats, the source texture and the destination texture
     CD3DX12_DESCRIPTOR_RANGE srvCbvRanges[2];
@@ -981,18 +981,11 @@ void TextureLoader::Init(ID3D12Device* device, const std::wstring& assetsPath)
     rootSignatureDesc.Init(_countof(rootParameters), rootParameters, 1, &samplerDesc, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
     V(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
 
+    ID3D12Device* device = d3d->GetDevice();
+
     V(device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&ms_mipMapRootSig)));
 
-    ComPtr<ID3DBlob> cBlob;
-    //wstring path = Application::GetEXEDirectoryPath() + (SettingsManager::ms_Dynamic.MipMapDebugMode ? L"/CreateMipMapsDebug.cso" : L"/CreateMipMaps.cso");
-    const wstring path = assetsPath + L"/Shaders/CreateMipMaps.cso";
-    V(D3DReadFileToBlob(path.c_str(), &cBlob));
-
-    D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
-    psoDesc.pRootSignature = ms_mipMapRootSig.Get();
-    psoDesc.CS = { static_cast<UINT8*>(cBlob->GetBufferPointer()), cBlob->GetBufferSize() };
-
-    V(device->CreateComputePipelineState(&psoDesc, IID_PPV_ARGS(&ms_mipMapPSO)));
+    ms_mipMapShader.InitCs(L"CreateMipMapsCS.hlsl", device, ms_mipMapRootSig.Get());
 }
 
 bool TextureLoader::manuallyDetermineHasAlpha(size_t bytes, int channels, uint8_t* pData)

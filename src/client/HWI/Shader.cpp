@@ -79,7 +79,7 @@ inline ComPtr<IDxcBlob> CompileShaderDXC(
     return vertexShaderBlob;
 }
 
-void Shader::Init(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D12Device* device, ID3D12RootSignature* rootSig)
+void Shader::InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D12Device* device, ID3D12RootSignature* rootSig)
 {
 #if defined(_DEBUG)
     UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
@@ -87,8 +87,8 @@ void Shader::Init(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D12Dev
     UINT compileFlags = 0;
 #endif
 
-    ComPtr<IDxcBlob> vertexShader = CompileShaderDXC(FileHelper::GetAssetShaderFullPath(vs).c_str(), L"VSMain", L"vs_6_5", compileFlags);
-    ComPtr<IDxcBlob> pixelShader = CompileShaderDXC(FileHelper::GetAssetShaderFullPath(ps).c_str(), L"PSMain", L"ps_6_5", compileFlags);
+    ComPtr<IDxcBlob> vertexShader = CompileShaderDXC(FileHelper::GetAssetShaderFullPath(vs).c_str(), L"VSMain", L"vs_6_6", compileFlags);
+    ComPtr<IDxcBlob> pixelShader = CompileShaderDXC(FileHelper::GetAssetShaderFullPath(ps).c_str(), L"PSMain", L"ps_6_6", compileFlags);
     
     D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
     psoDesc.InputLayout = ild;
@@ -106,4 +106,20 @@ void Shader::Init(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D12Dev
     psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
     psoDesc.SampleDesc.Count = 1;
     V(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pso)));
+}
+
+void Shader::InitCs(LPCWSTR cs, ID3D12Device* device, ID3D12RootSignature* rootSig)
+{
+#if defined(_DEBUG)
+    UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#else
+    UINT compileFlags = 0;
+#endif
+
+    ComPtr<IDxcBlob> computeShader = CompileShaderDXC(FileHelper::GetAssetShaderFullPath(cs).c_str(), L"CSMain", L"cs_6_6", compileFlags);
+
+    D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
+    psoDesc.pRootSignature = rootSig;
+    psoDesc.CS = { computeShader->GetBufferPointer(), computeShader->GetBufferSize() };
+    V(device->CreateComputePipelineState(&psoDesc, IID_PPV_ARGS(&m_pso)));
 }

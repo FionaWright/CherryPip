@@ -8,6 +8,7 @@
 
 #include "Apps/HelloTriangle/Headers/HelloTriangle.h"
 #include "Apps/SpinningCube/Headers/SpinningCube.h"
+#include "Apps/TextureCube/Headers/TextureCube.h"
 #include "System/Config.h"
 #include "System/Win32App.h"
 
@@ -26,7 +27,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR args, int nCmdShow)
 
     Config::ParseCommandLineArgs(args);
 
-    SpinningCube sample;
+    TextureCube sample;
     int rslt = Win32App::Run(&sample, hInstance, nCmdShow);
 
     CoUninitialize();

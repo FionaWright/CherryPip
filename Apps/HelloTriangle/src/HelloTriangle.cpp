@@ -60,7 +60,7 @@ void HelloTriangle::loadAssets(ID3D12Device* device)
             { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
         };
 
-        m_shader.Init(L"Basic_Color.hlsl", L"Basic_Color.hlsl", { inputElementDescs, _countof(inputElementDescs)}, device, m_rootSignature.Get());
+        m_shader.InitVsPs(L"Basic_Color.hlsl", L"Basic_Color.hlsl", { inputElementDescs, _countof(inputElementDescs)}, device, m_rootSignature.Get());
     }
 
     // Create the vertex buffer.

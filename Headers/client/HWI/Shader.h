@@ -10,7 +10,8 @@
 class Shader
 {
 public:
-    void Init(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D12Device* device, ID3D12RootSignature* rootSig);
+    void InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D12Device* device, ID3D12RootSignature* rootSig);
+    void InitCs(LPCWSTR cs, ID3D12Device* device, ID3D12RootSignature* rootSig);
 
     ID3D12PipelineState* GetPSO() const { return m_pso.Get(); }
 

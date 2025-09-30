@@ -12,6 +12,7 @@
 
 #include "imgui/backends/imgui_impl_win32.h"
 #include "System/Config.h"
+#include "System/TextureLoader.h"
 
 HWND Win32App::m_hwnd = nullptr;
 std::unique_ptr<D3D> Win32App::m_d3d = nullptr;
@@ -62,6 +63,7 @@ int Win32App::Run(App* pSample, HINSTANCE hInstance, int nCmdShow)
 
     m_d3d = std::make_unique<D3D>();
     m_d3d->Init(windowWidth, Config::GetSystem().WindowHeight);
+    TextureLoader::Init(m_d3d.get(), FileHelper::GetAssetsPath() + L"/Shaders");
 
     pSample->OnInit(m_d3d.get());
 

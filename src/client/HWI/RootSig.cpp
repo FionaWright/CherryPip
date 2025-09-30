@@ -34,9 +34,9 @@ void RootSig::Init(const CD3DX12_ROOT_PARAMETER1* params, const UINT paramCount,
         if (errorBlob)
         {
             std::string errorMsg = static_cast<char*>(errorBlob->GetBufferPointer());
-            std::wstring wideErrorMsg(errorMsg.begin(), errorMsg.end());
-            wideErrorMsg = L"RootSig Error: " + wideErrorMsg;
-            OutputDebugStringW(wideErrorMsg.c_str());
+            //std::wstring wideErrorMsg(errorMsg.begin(), errorMsg.end());
+            //wideErrorMsg = L"RootSig Error: " + wideErrorMsg;
+            std::cout << errorMsg.c_str() << std::endl;
         }
         throw std::exception();
     }

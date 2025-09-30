@@ -10,6 +10,8 @@
 #include <vector>
 
 #include <wrl/client.h>
+
+#include "HWI/Shader.h"
 using Microsoft::WRL::ComPtr;
 
 class D12Resource;
@@ -29,13 +31,13 @@ class TextureLoader
 
 	static void CreateMipMaps(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, D12Resource* resource);
 
-	static void Init(ID3D12Device* device, const std::wstring& assetsPath);
+	static void Init(D3D* d3d, const std::wstring& shadersPath);
 
 private:
 	static bool manuallyDetermineHasAlpha(size_t bytes, int channels, uint8_t* pData);
 
 	static ComPtr<ID3D12RootSignature> ms_mipMapRootSig;
-	static ComPtr<ID3D12PipelineState> ms_mipMapPSO;
+	static Shader ms_mipMapShader;
 
 	static std::vector<ComPtr<ID3D12DescriptorHeap>> ms_trackedDescHeaps;
 };

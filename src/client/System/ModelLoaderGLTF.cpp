@@ -8,8 +8,9 @@
 #include "HWI/D3D.h"
 #include "HWI/Texture.h"
 
-#include "CBV.h"
 #include "DualIncludes/CBV.h"
+#include "HWI/Material.h"
+#include "Render/Object.h"
 
 namespace filesystem = std::filesystem;
 
@@ -27,9 +28,9 @@ Transform ModelLoaderGLTF::toTransform(fastgltf::TRS& trs)
 	transform.SetPosition(pos.x(), pos.y(), pos.z());
 
 	auto& rot = trs.rotation;
-	XMFLOAT4 rotFloat4 = XMFLOAT4(rot.x(), rot.y(), rot.z(), rot.w());
-	XMVECTOR rotVec = XMLoadFloat4(&rotFloat4);
-	XMMATRIX rotationMatrix = XMMatrixRotationQuaternion(rotVec);
+	const XMFLOAT4 rotFloat4 = XMFLOAT4(rot.x(), rot.y(), rot.z(), rot.w());
+	const XMVECTOR rotVec = XMLoadFloat4(&rotFloat4);
+	const XMMATRIX rotationMatrix = XMMatrixRotationQuaternion(rotVec);
 	float pitch = std::atan2(rotationMatrix.r[1].m128_f32[2], rotationMatrix.r[2].m128_f32[2]);
 	float yaw = std::atan2(-rotationMatrix.r[0].m128_f32[2], std::sqrt(rotationMatrix.r[1].m128_f32[2] * rotationMatrix.r[1].m128_f32[2] + rotationMatrix.r[2].m128_f32[2] * rotationMatrix.r[2].m128_f32[2]));
 	float roll = std::atan2(rotationMatrix.r[0].m128_f32[1], rotationMatrix.r[0].m128_f32[0]);
@@ -42,7 +43,7 @@ Transform ModelLoaderGLTF::toTransform(fastgltf::TRS& trs)
 }
 
 template<typename Func>
-void loadGLTFVertexData(vector<VertexInputDataGLTF>& vBuffer, Asset& asset, const fastgltf::Primitive& primitive, const char* attribute, Func func)
+void loadGLTFVertexData(std::vector<VertexInputDataGLTF>& vBuffer, Asset& asset, const fastgltf::Primitive& primitive, const char* attribute, Func func)
 {
 	const fastgltf::Attribute* attributeObj = primitive.findAttribute(attribute);
 	assert(attributeObj != primitive.attributes.cend());
@@ -56,14 +57,14 @@ void loadGLTFVertexData(vector<VertexInputDataGLTF>& vBuffer, Asset& asset, cons
 	const size_t dataStride = bufferView.byteStride.value_or(byteSize);
 
 	const uint8_t* pData = nullptr;
-	vector<uint8_t> pTempFileData;
+	std::vector<uint8_t> pTempFileData;
 
 	if (bufferData.index() == 3)
 		pData = std::get<fastgltf::sources::Array>(bufferData).bytes.data() + dataOffset;
 	else if (bufferData.index() == 2)
 	{
 		auto& uri = std::get<fastgltf::sources::URI>(bufferData);
-		string path(uri.uri.path());
+		std::string path(uri.uri.path());
 		std::ifstream file("Assets/Models/" + path, std::ios::binary);
 
 		assert(file.is_open());
@@ -93,7 +94,7 @@ void loadGLTFVertexData(vector<VertexInputDataGLTF>& vBuffer, Asset& asset, cons
 	}
 }
 
-void ModelLoaderGLTF::loadGLTFIndices(vector<uint32_t>& iBuffer, Asset& asset, const fastgltf::Primitive& primitive)
+void ModelLoaderGLTF::loadGLTFIndices(std::vector<uint32_t>& iBuffer, Asset& asset, const fastgltf::Primitive& primitive)
 {
 	const auto& accessor = (*asset)->accessors[primitive.indicesAccessor.value()];
 	const auto& bufferView = (*asset)->bufferViews[*accessor.bufferViewIndex];
@@ -104,14 +105,14 @@ void ModelLoaderGLTF::loadGLTFIndices(vector<uint32_t>& iBuffer, Asset& asset, c
 	const size_t dataStride = bufferView.byteStride.value_or(indexByteSize);
 
 	const uint8_t* pData = nullptr;
-	vector<uint8_t> pTempFileData;
+	std::vector<uint8_t> pTempFileData;
 
 	if (bufferData.index() == 3)
 		pData = std::get<fastgltf::sources::Array>(bufferData).bytes.data() + dataOffset;
 	else if (bufferData.index() == 2)
 	{
 		auto& uri = std::get<fastgltf::sources::URI>(bufferData);
-		string path(uri.uri.path());
+		std::string path(uri.uri.path());
 		std::ifstream file("Assets/Models/" + path, std::ios::binary);
 
 		if (!file.is_open())
@@ -198,7 +199,7 @@ void ModelLoaderGLTF::loadGLTFIndices(vector<uint32_t>& iBuffer, Asset& asset, c
 
 void ModelLoaderGLTF::loadModel(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, Asset& asset, const fastgltf::Primitive& primitive, Model* model)
 {
-	vector<VertexInputDataGLTF> vertexBuffer;
+	std::vector<VertexInputDataGLTF> vertexBuffer;
 
 	loadGLTFVertexData(vertexBuffer, asset, primitive, "POSITION", [](const uint8_t* address, VertexInputDataGLTF* output) {
 		output->Position = *reinterpret_cast<const XMFLOAT3*>(address);
@@ -258,21 +259,21 @@ void ModelLoaderGLTF::loadModel(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, A
 
 	boundingRadiusSq = std::sqrt(boundingRadiusSq);
 
-	vector<uint32_t> indexBuffer;
+	std::vector<uint32_t> indexBuffer;
 	loadGLTFIndices(indexBuffer, asset, primitive);
 
 	model->Init(vertexBuffer.size(), indexBuffer.size(), sizeof(VertexInputDataGLTF), boundingRadiusSq, centroidFloat3);
 	model->SetBuffers(cmdList, vertexBuffer.data(), indexBuffer.data());	
 }
 
-string ModelLoaderGLTF::loadTexture(Asset& asset, const size_t textureIndex)
+std::string ModelLoaderGLTF::loadTexture(Asset& asset, const size_t textureIndex)
 {
 	fastgltf::Texture& tex = (*asset)->textures[textureIndex];
 	fastgltf::Image& image = (*asset)->images[tex.imageIndex.value()];
 
 	if (image.data.index() == 2)
 	{
-		string texName(std::get<fastgltf::sources::URI>(image.data).uri.path());
+		std::string texName(std::get<fastgltf::sources::URI>(image.data).uri.path());
 		size_t slashIndex = texName.find_last_of('/');
 
 		if (slashIndex != std::string::npos)
@@ -293,7 +294,7 @@ string ModelLoaderGLTF::loadTexture(Asset& asset, const size_t textureIndex)
 	return "";
 }
 
-void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, Asset& asset, const fastgltf::Primitive& primitive, string modelNameExtensionless, fastgltf::Node& node, GLTFLoadArgs args, string id, size_t meshIndex, size_t primitiveIndex)
+void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, Heap* heap, Asset& asset, const fastgltf::Primitive& primitive, std::string modelNameExtensionless, fastgltf::Node& node, GLTFLoadArgs args, std::string id, size_t meshIndex, size_t primitiveIndex)
 {
 	std::shared_ptr<Model> model;
     loadModel(d3d, cmdList, asset, primitive, model.get());
@@ -301,8 +302,6 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList2* cmdLis
 	fastgltf::Material& mat = (*asset)->materials[primitive.materialIndex.value_or(0)];
 
 	UINT shaderIndex = -1;
-	UINT batchIndex = -1;
-	bool useGlassSRVs = false;
 
 	for (size_t i = 0; i < args.Overrides.size(); i++)
 	{
@@ -322,12 +321,10 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList2* cmdLis
 			continue;
 
 		shaderIndex = args.Overrides[i].ShaderIndex;
-		batchIndex = args.Overrides[i].BatchIndex;
-		useGlassSRVs = args.Overrides[i].UseGlassSRVs;
 		break;
 	}
 
-	string diffuseTexPath = "";
+	std::string diffuseTexPath = "";
 	if (mat.pbrData.baseColorTexture.has_value())
 		diffuseTexPath = modelNameExtensionless + "/" + loadTexture(asset, mat.pbrData.baseColorTexture.value().textureIndex);
 	else if (mat.iridescence)
@@ -338,7 +335,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList2* cmdLis
 	/*if (SettingsManager::ms_Misc.BistroLowQualityTexDiffuseEnabled && modelNameExtensionless == "Bistro")
 	{
 		size_t hyphenIndex = diffuseTexPath.find_last_of('-');
-		string newDiffusePath = diffuseTexPath;
+		std::string newDiffusePath = diffuseTexPath;
 
 		if (hyphenIndex != std::string::npos)
 			newDiffusePath = modelNameExtensionless + "/" + diffuseTexPath.substr(hyphenIndex + 1, diffuseTexPath.size() - hyphenIndex - 1);
@@ -354,7 +351,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList2* cmdLis
 	std::shared_ptr<Texture> diffuseTex = std::make_shared<Texture>();
 	diffuseTex->Init(d3d->GetDevice(), cmdList, diffuseTexPath, DXGI_FORMAT_R8G8B8A8_UNORM);
 
-	string normalTexPath = "";
+	std::string normalTexPath = "";
 	if (mat.normalTexture.has_value())
 		normalTexPath = modelNameExtensionless + "/" + loadTexture(asset, mat.normalTexture.value().textureIndex);
 	else
@@ -363,7 +360,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList2* cmdLis
 	/*if (SettingsManager::ms_Misc.BistroLowQualityTexNormalEnabled && modelNameExtensionless == "Bistro")
 	{
 		size_t hyphenIndex = normalTexPath.find_last_of('-');
-		string newNormalPath = normalTexPath;
+		std::string newNormalPath = normalTexPath;
 
 		if (hyphenIndex != std::string::npos)
 			newNormalPath = modelNameExtensionless + "/" + normalTexPath.substr(hyphenIndex + 1, normalTexPath.size() - hyphenIndex - 1);
@@ -379,7 +376,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList2* cmdLis
 	std::shared_ptr<Texture> normalTex = std::make_shared<Texture>();
 	diffuseTex->Init(d3d->GetDevice(), cmdList, diffuseTexPath, DXGI_FORMAT_R8G8B8A8_UNORM);
 
-	string specTexPath = "";
+	std::string specTexPath = "";
 	if (mat.specular && mat.specular.get()->specularTexture.has_value())
 		specTexPath = modelNameExtensionless + "/" + loadTexture(asset, mat.specular.get()->specularTexture.value().textureIndex);
 	else if (mat.pbrData.metallicRoughnessTexture.has_value())
@@ -389,100 +386,86 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList2* cmdLis
 
 	//std::shared_ptr<Texture> specTex = AssetFactory::CreateTexture(specTexPath, cmdList, false, false, true);
 
-	string thickTexPath = "";
-	if (mat.iridescence && mat.iridescence->iridescenceThicknessTexture.has_value())
-		thickTexPath = modelNameExtensionless + "/" + loadTexture(asset, mat.iridescence->iridescenceThicknessTexture.value().textureIndex);
-	else
-		thickTexPath = "WhitePOT.png";
+	std::vector<UINT> cbvSizesDraw = { sizeof(CbvMatrices) };
+	std::vector<std::shared_ptr<Texture>> textures = { diffuseTex };
 
-	//std::shared_ptr<Texture> thickTex = AssetFactory::CreateTexture(thickTexPath, cmdList);
+	std::shared_ptr<Material> material = std::make_shared<Material>();
+	material->Init(heap);
+	material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices));
+	material->AddSRV(d3d->GetDevice(), heap, diffuseTex);
 
-	string iridTexPath = "";
-	if (mat.iridescence && mat.iridescence->iridescenceTexture.has_value())
-		iridTexPath = modelNameExtensionless + "/" + loadTexture(asset, mat.iridescence->iridescenceTexture.value().textureIndex);
-	else
-		iridTexPath = "WhitePOT.png";
-
-	//std::shared_ptr<Texture> iridTex = AssetFactory::CreateTexture(iridTexPath, cmdList);
-
-	//std::shared_ptr<Texture> blueNoiseTex = AssetFactory::CreateTexture("BlueNoise.png", cmdList);
-	//std::shared_ptr<Texture> brdfIntTex = AssetFactory::CreateTexture("BRDF Integration Map.png", cmdList);
-
-	vector<UINT> cbvSizesDraw = { sizeof(CbvMatrices) };
-	vector<std::shared_ptr<Texture>> textures = { diffuseTex };
-
-	std::unique_lock<std::mutex> lock(ms_batchAddMutex);
-	std::shared_ptr<Material> material = AssetFactory::CreateMaterial();
-	material->AddCBVs(d3d, cmdList, cbvSizesDraw, false);
-	material->AddCBVs(d3d, cmdList, cbvSizesFrame, true);
-	material->AddSRVs(d3d, textures);
-	material->AddDynamicSRVs("Shadow Map", 1);
-	lock.unlock();
-
-	material->SetCBV_PerDraw(1, &matProperties, sizeof(MaterialPropertiesCB));
-	material->SetCBV_PerDraw(2, &thinFilm, sizeof(ThinFilmCB));
-	material->AttachProperties(matProperties);
-	material->AttachThinFilm(thinFilm);	
-
-	string nodeName(node.name);
+	std::string nodeName(node.name);
 	nodeName = id + "::" + nodeName;
 
-	bool alphaRequirementMet = SettingsManager::ms_Misc.RequireAlphaTextureForDoubleSided ? material->GetHasAlpha() : true;
+	//bool alphaRequirementMet = SettingsManager::ms_Misc.RequireAlphaTextureForDoubleSided ? material->GetHasAlpha() : true;
+	bool alphaRequirementMet = false;
 	bool isAT = alphaRequirementMet || mat.doubleSided;
 
 	if (shaderIndex == -1)
 		shaderIndex = isAT ? args.DefaultShaderATIndex : args.DefaultShaderIndex;
-	if (batchIndex == -1)
-		batchIndex = args.DefaultBatchIndex;
+	//if (batchIndex == -1)
+	//	batchIndex = args.DefaultBatchIndex;
 
 	auto& shaderUsed = args.Shaders[shaderIndex];
-	GameObject go(nodeName, model, shaderUsed, material);
-	go.SetTransform(args.Transform);
 
-	if (useGlassSRVs)
+	std::shared_ptr<Transform> transform = std::make_shared<Transform>();
+	*transform = args.Transform;
+
+	std::shared_ptr<Object> obj = std::make_shared<Object>();
+	obj->Init(transform, shaderUsed, args.Root, model, material);
+
+	/*if (useGlassSRVs)
 		go.ForceSetTransparent(true);
 	else
-		go.ForceSetAT(isAT);
+		go.ForceSetAT(isAT);*/
 
-	std::unique_lock<std::mutex> lock2(ms_batchAddMutex);
-	args.Batches[batchIndex]->AddGameObject(go);
+	//args.Batches[batchIndex]->AddGameObject(go);
+	args.Objects.push_back(obj);
 }
 
-void ModelLoaderGLTF::LoadNode(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, Asset& asset, string modelNameExtensionless, fastgltf::Node& node, GLTFLoadArgs args)
+void ModelLoaderGLTF::loadNode(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, Heap* heap, Asset& asset, std::string modelNameExtensionless, fastgltf::Node& node, GLTFLoadArgs args)
 {
-	Transform localTransform;
-	if (node.transform.index() == 0)
-	{
-		fastgltf::TRS& trs = std::get<fastgltf::TRS>(node.transform);
-		localTransform = ToTransform(trs);
-	}
-	else
-	{
+	if (node.transform.index() != 0)
 		throw std::exception("Unsupported transform type");
-	}
 
-	Transform worldTransform = localTransform;
-	worldTransform.Position.x = -localTransform.Position.x;
+	fastgltf::TRS& trs = std::get<fastgltf::TRS>(node.transform);
 
-	worldTransform.Position = Add(worldTransform.Position, args.Transform.Position);
-	worldTransform.Rotation = Add(worldTransform.Rotation, args.Transform.Rotation);
-	worldTransform.Scale = Mult(worldTransform.Scale, args.Transform.Scale);
+	Transform localTransform = toTransform(trs);
+	Transform worldTransform = {};
+
+	XMFLOAT3 pos = localTransform.GetPosition();
+	pos.x = -pos.x;
+	pos = Add(pos, args.Transform.GetPosition());
+
+	worldTransform.SetPosition(pos);
+
+	XMFLOAT3 rot = localTransform.GetRotation();
+	rot = Add(rot, args.Transform.GetRotation());
+
+	worldTransform.SetRotation(rot);
+
+	XMFLOAT3 scale = localTransform.GetScale();
+	scale = Mult(scale, args.Transform.GetScale());
+
+	worldTransform.SetScale(scale);
 
 	size_t childCount = node.children.size();
 	for (size_t i = 0; i < childCount; i++)
 	{
 		fastgltf::Node& childNode = (*asset)->nodes[node.children[i]];
 		args.Transform = worldTransform;
-		LoadNode(d3d, cmdList, asset, modelNameExtensionless, childNode, args);
+		loadNode(d3d, cmdList, heap, asset, modelNameExtensionless, childNode, args);
 	}
 
 	if (!node.meshIndex.has_value())
 		return;
 
-	worldTransform.Position = Mult(worldTransform.Position, worldTransform.Scale);
+	pos = Mult(pos, scale);
+	worldTransform.SetPosition(pos);
+
 	args.Transform = worldTransform;
 
-	string nodeName(node.name);
+	std::string nodeName(node.name);
 	if (args.CullingWhiteList.size() > 0)
 	{
 		bool found = false;
@@ -507,28 +490,25 @@ void ModelLoaderGLTF::LoadNode(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, As
 	for (size_t i = 0; i < mesh.primitives.size(); i++)
 	{
 		std::string id = modelNameExtensionless + "::NODE(" + std::to_string(meshIndex) + ")::PRIMITIVE(" + std::to_string(i) + ")";
-		if (SettingsManager::ms_DX12.Async.AsyncGLTFLoadingEnabled)
-			threads.emplace_back(std::jthread(LoadPrimitive, d3d, cmdList, std::ref(asset), std::ref(mesh.primitives[i]), modelNameExtensionless, std::ref(node), args, id, meshIndex, i));
-		else
-			LoadPrimitive(d3d, cmdList, asset, mesh.primitives[i], modelNameExtensionless, node, args, id, meshIndex, i);
+		loadPrimitive(d3d, cmdList, heap, asset, mesh.primitives[i], modelNameExtensionless, node, args, id, meshIndex, i);
 	}
 }
 
-void ModelLoaderGLTF::LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, string modelName, GLTFLoadArgs& args)
+void ModelLoaderGLTF::LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, Heap* heap, const std::string& name, GLTFLoadArgs& args)
 {
-	string path = "Assets/Models/" + modelName;
+	std::string path = "Assets/Models/" + name;
 
-	size_t dotIndex = modelName.find_last_of('.');
-	if (dotIndex == string::npos)
+	size_t dotIndex = name.find_last_of('.');
+	if (dotIndex == std::string::npos)
 		throw std::exception("Invalid model name");
 
-	string modelNameExtensionless = modelName.substr(0, dotIndex);
+	std::string modelNameExtensionless = name.substr(0, dotIndex);
 
 	fastgltf::Expected<fastgltf::GltfDataBuffer> data = fastgltf::GltfDataBuffer::FromPath(path);
 
 	if (data.error() == fastgltf::Error::InvalidPath)
 	{
-		AlkaliGUIManager::LogErrorMessage("Error loading GLTF model (path=\"" + path + "\")");
+		std::cout << "Error loading GLTF model (path=\"" + path + "\")" << std::endl;
 		return;
 	}
 
@@ -541,13 +521,13 @@ void ModelLoaderGLTF::LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList2* cmdLi
 		ms_initialisedParser = true;
 	}
 
-	fastgltf::Options options = fastgltf::Options::DecomposeNodeMatrices;
+	constexpr fastgltf::Options options = fastgltf::Options::DecomposeNodeMatrices;
 
 	Asset asset = std::make_shared<fastgltf::Expected<fastgltf::Asset>>(ms_parser.loadGltf(data.get(), path, options));
 
 	if (asset->error() == fastgltf::Error::InvalidPath)
 	{
-		AlkaliGUIManager::LogErrorMessage("Error loading GLTF model (path=\"" + path + "\")");
+		std::cout << "Error loading GLTF model (path=\"" + path + "\")" << std::endl;
 		return;
 	}
 
@@ -562,23 +542,23 @@ void ModelLoaderGLTF::LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList2* cmdLi
 	{
 		fastgltf::Scene& scene = (*asset)->scenes[i];
 
-		size_t nodeCount = scene.nodeIndices.size();
+		const size_t nodeCount = scene.nodeIndices.size();
 		for (size_t n = 0; n < nodeCount; n++)
 		{
-			size_t nodeIndex = scene.nodeIndices[n];
+			const size_t nodeIndex = scene.nodeIndices[n];
 			fastgltf::Node& node = (*asset)->nodes[nodeIndex];
-			LoadNode(d3d, cmdList, asset, modelNameExtensionless, node, args);
+			loadNode(d3d, cmdList, heap, asset, modelNameExtensionless, node, args);
 		}
 	}
 }
 
-void ModelLoaderGLTF::LoadModelsFromNode(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, Asset& asset, string modelNameExtensionless, fastgltf::Node& node, vector<std::shared_ptr<Model>>& modelList)
+void ModelLoaderGLTF::loadModelsFromNode(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, Asset& asset, std::string modelNameExtensionless, fastgltf::Node& node, std::vector<std::shared_ptr<Model>>& modelList)
 {
-	size_t childCount = node.children.size();
+	const size_t childCount = node.children.size();
 	for (size_t i = 0; i < childCount; i++)
 	{
 		fastgltf::Node& childNode = (*asset)->nodes[node.children[i]];
-		LoadModelsFromNode(d3d, cmdList, asset, modelNameExtensionless, childNode, modelList);
+		loadModelsFromNode(d3d, cmdList, asset, modelNameExtensionless, childNode, modelList);
 	}
 
 	if (!node.meshIndex.has_value())
@@ -592,34 +572,30 @@ void ModelLoaderGLTF::LoadModelsFromNode(D3D* d3d, ID3D12GraphicsCommandList2* c
 		std::string id = modelNameExtensionless + "::NODE(" + std::to_string(meshIndex) + ")::PRIMITIVE(" + std::to_string(i) + ")";
 
 		std::shared_ptr<Model> model;
-		if (!ResourceTracker::TryGetModel(id, model))
+		/*if (!ResourceTracker::TryGetModel(id, model))
 		{
-			bool successfulAsyncPush = SettingsManager::ms_DX12.Async.Enabled && SettingsManager::ms_DX12.Async.LoadModels && LoadManager::TryPushModel(model.get(), asset, meshIndex, i);
-			if (!successfulAsyncPush)
-			{
-				LoadModel(d3d, cmdList, asset, mesh.primitives[i], model.get());
-				model->MarkLoaded();
-			}
-		}
+			loadModel(d3d, cmdList, asset, mesh.primitives[i], model.get());
+		}*/
+		loadModel(d3d, cmdList, asset, mesh.primitives[i], model.get());
 		modelList.push_back(model);
 	}
 }
 
-vector<std::shared_ptr<Model>> ModelLoaderGLTF::LoadModelsFromGLTF(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, string modelName)
+std::vector<std::shared_ptr<Model>> ModelLoaderGLTF::LoadModelsFromGLTF(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, std::string modelName)
 {
-	string path = "Assets/Models/" + modelName;
+	std::string path = "Assets/Models/" + modelName;
 
 	size_t dotIndex = modelName.find_last_of('.');
-	if (dotIndex == string::npos)
+	if (dotIndex == std::string::npos)
 		throw std::exception("Invalid model name");
 
-	string modelNameExtensionless = modelName.substr(0, dotIndex);
+	std::string modelNameExtensionless = modelName.substr(0, dotIndex);
 
 	fastgltf::Expected<fastgltf::GltfDataBuffer> data = fastgltf::GltfDataBuffer::FromPath(path);
 	if (data.error() != fastgltf::Error::None)
 		throw new std::exception("FastGLTF error");
 
-	fastgltf::Options options = fastgltf::Options::None;
+	constexpr fastgltf::Options options = fastgltf::Options::None;
 
 	Asset asset = std::make_shared<fastgltf::Expected<fastgltf::Asset>>(ms_parser.loadGltf(data.get(), path, options));
 	auto error = asset->error();
@@ -630,18 +606,18 @@ vector<std::shared_ptr<Model>> ModelLoaderGLTF::LoadModelsFromGLTF(D3D* d3d, ID3
 	if (error != fastgltf::Error::None)
 		throw new std::exception("FastGLTF error");
 
-	vector<std::shared_ptr<Model>> modelList;
+	std::vector<std::shared_ptr<Model>> modelList;
 
 	for (int i = 0; i < (*asset)->scenes.size(); i++)
 	{
 		fastgltf::Scene& scene = (*asset)->scenes[i];
 
-		size_t nodeCount = scene.nodeIndices.size();
+		const size_t nodeCount = scene.nodeIndices.size();
 		for (size_t n = 0; n < nodeCount; n++)
 		{
-			size_t nodeIndex = scene.nodeIndices[n];
+			const size_t nodeIndex = scene.nodeIndices[n];
 			fastgltf::Node& node = (*asset)->nodes[nodeIndex];
-			LoadModelsFromNode(d3d, cmdList, asset, modelNameExtensionless, node, modelList);
+			loadModelsFromNode(d3d, cmdList, asset, modelNameExtensionless, node, modelList);
 		}
 	}
 

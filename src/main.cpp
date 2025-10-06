@@ -5,6 +5,7 @@
 #include <windows.h>
 
 #include <iostream>
+#include <span>
 
 #include "Apps/HelloTriangle/Headers/HelloTriangle.h"
 #include "Apps/SpinningCube/Headers/SpinningCube.h"

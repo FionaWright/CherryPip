@@ -47,7 +47,7 @@ void Material::AddCBV(ID3D12Device* device, Heap* heap, size_t size)
     m_cbvs.push_back(cbv);
 }
 
-void Material::AddSRV(ID3D12Device* device, Heap* heap, Texture* tex)
+void Material::AddSRV(ID3D12Device* device, Heap* heap, std::shared_ptr<Texture> tex)
 {
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.Format = tex->GetFormat();
@@ -60,7 +60,8 @@ void Material::AddSRV(ID3D12Device* device, Heap* heap, Texture* tex)
     const UINT idx = heap->GetNextDescriptor();
     heap->InitSRV(device, tex->GetResource(), srvDesc, idx);
 
-    m_srvs.push_back({idx});
+    SRV srv = { tex, idx};
+    m_srvs.push_back(srv);
 }
 
 void Material::UpdateCBV(const UINT regIdx, const void* data) const

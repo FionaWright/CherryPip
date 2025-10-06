@@ -51,12 +51,11 @@ void TextureCube::loadAssets(D3D* d3d)
     ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
     std::shared_ptr<RootSig> rootSig = std::make_shared<RootSig>();
-    std::shared_ptr<Texture> tex = std::make_shared<Texture>();
     std::shared_ptr<Shader> shader = std::make_shared<Shader>();
     std::shared_ptr<Transform> transform = std::make_shared<Transform>();
     std::shared_ptr<Material> mat = std::make_shared<Material>();
 
-    m_cube.Init(transform, tex, shader, rootSig, nullptr, mat);
+    m_cube.Init(transform, shader, rootSig, nullptr, mat);
 
     m_heap.Init(device, 256);
 
@@ -187,10 +186,11 @@ void TextureCube::loadAssets(D3D* d3d)
         m_vertexBufferView.SizeInBytes = vertexBufferSize;
     }
 
+    std::shared_ptr<Texture> tex = std::make_shared<Texture>();
     tex->Init(d3d->GetDevice(), cmdList.Get(), FileHelper::GetAssetTextureFullPath(L"TestTex.png"),
                DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 
-    mat->AddSRV(device, &m_heap, tex.get());
+    mat->AddSRV(device, &m_heap, tex);
 
     tex->Transition(cmdList.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 

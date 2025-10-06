@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 4.0)
 project(PT)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Set O0 for debug builds
 set(CMAKE_C_FLAGS_DEBUG   "${CMAKE_C_FLAGS_DEBUG} /Od /Zi")
@@ -9,6 +11,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Od /Zi")
 
 # Use the Release CRT for all configurations
 if(MSVC)
+    add_compile_options(/permissive- /Zc:preprocessor /Zc:__cplusplus)
     foreach(flag_var
             CMAKE_C_FLAGS_DEBUG
             CMAKE_CXX_FLAGS_DEBUG)
@@ -172,15 +175,8 @@ FetchContent_Declare(
         URL https://github.com/spnda/fastgltf/archive/refs/tags/v0.9.0.zip
 )
 FetchContent_MakeAvailable(fastgltf)
+target_link_libraries(PT PRIVATE fastgltf)
 
-file(GLOB FASTGLTF_SOURCES CONFIGURE_DEPENDS
-        "${fastgltf_SOURCE_DIR}/src/*.cpp"
-        "${fastgltf_SOURCE_DIR}/include/fastgltf/*.hpp"
-        "${fastgltf_SOURCE_DIR}/deps/simdjson/*"
-)
-target_sources(PT PRIVATE
-        ${FASTGLTF_SOURCES}
-)
 target_include_directories(PT PRIVATE
         "${fastgltf_SOURCE_DIR}/include"
         "${fastgltf_SOURCE_DIR}/deps/simdjson"

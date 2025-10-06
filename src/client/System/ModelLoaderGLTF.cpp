@@ -5,6 +5,11 @@
 #include "fastgltf/tools.hpp"
 #include "HWI/Model.h"
 #include "MathUtils.h"
+#include "HWI/D3D.h"
+#include "HWI/Texture.h"
+
+#include "CBV.h"
+#include "DualIncludes/CBV.h"
 
 namespace filesystem = std::filesystem;
 
@@ -39,10 +44,10 @@ Transform ModelLoaderGLTF::toTransform(fastgltf::TRS& trs)
 template<typename Func>
 void loadGLTFVertexData(vector<VertexInputDataGLTF>& vBuffer, Asset& asset, const fastgltf::Primitive& primitive, const char* attribute, Func func)
 {
-	const auto attributeObj = primitive.findAttribute(attribute);
+	const fastgltf::Attribute* attributeObj = primitive.findAttribute(attribute);
 	assert(attributeObj != primitive.attributes.cend());
 
-	const auto& accessor = (*asset)->accessors.at(attributeObj->second);
+	const auto& accessor = (*asset)->accessors.at(attributeObj->accessorIndex);
 	const auto& bufferView = (*asset)->bufferViews.at(*accessor.bufferViewIndex);
 	const auto& bufferData = (*asset)->buffers.at(bufferView.bufferIndex).data;
 
@@ -346,7 +351,8 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList2* cmdLis
 			diffuseTexPath = newDiffusePath;
 	}*/
 
-	std::shared_ptr<Texture> diffuseTex = AssetFactory::CreateTexture(diffuseTexPath, cmdList);
+	std::shared_ptr<Texture> diffuseTex = std::make_shared<Texture>();
+	diffuseTex->Init(d3d->GetDevice(), cmdList, diffuseTexPath, DXGI_FORMAT_R8G8B8A8_UNORM);
 
 	string normalTexPath = "";
 	if (mat.normalTexture.has_value())
@@ -370,7 +376,8 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList2* cmdLis
 			normalTexPath = newNormalPath;
 	}*/
 
-	std::shared_ptr<Texture> normalTex = AssetFactory::CreateTexture(normalTexPath, cmdList, false, true);
+	std::shared_ptr<Texture> normalTex = std::make_shared<Texture>();
+	diffuseTex->Init(d3d->GetDevice(), cmdList, diffuseTexPath, DXGI_FORMAT_R8G8B8A8_UNORM);
 
 	string specTexPath = "";
 	if (mat.specular && mat.specular.get()->specularTexture.has_value())
@@ -380,7 +387,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList2* cmdLis
 	else
 		specTexPath = "DefaultSpecular.png";
 
-	std::shared_ptr<Texture> specTex = AssetFactory::CreateTexture(specTexPath, cmdList, false, false, true);
+	//std::shared_ptr<Texture> specTex = AssetFactory::CreateTexture(specTexPath, cmdList, false, false, true);
 
 	string thickTexPath = "";
 	if (mat.iridescence && mat.iridescence->iridescenceThicknessTexture.has_value())
@@ -388,7 +395,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList2* cmdLis
 	else
 		thickTexPath = "WhitePOT.png";
 
-	std::shared_ptr<Texture> thickTex = AssetFactory::CreateTexture(thickTexPath, cmdList);
+	//std::shared_ptr<Texture> thickTex = AssetFactory::CreateTexture(thickTexPath, cmdList);
 
 	string iridTexPath = "";
 	if (mat.iridescence && mat.iridescence->iridescenceTexture.has_value())
@@ -396,47 +403,13 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList2* cmdLis
 	else
 		iridTexPath = "WhitePOT.png";
 
-	std::shared_ptr<Texture> iridTex = AssetFactory::CreateTexture(iridTexPath, cmdList);
+	//std::shared_ptr<Texture> iridTex = AssetFactory::CreateTexture(iridTexPath, cmdList);
 
-	std::shared_ptr<Texture> blueNoiseTex = AssetFactory::CreateTexture("BlueNoise.png", cmdList);
-	std::shared_ptr<Texture> brdfIntTex = AssetFactory::CreateTexture("BRDF Integration Map.png", cmdList);
+	//std::shared_ptr<Texture> blueNoiseTex = AssetFactory::CreateTexture("BlueNoise.png", cmdList);
+	//std::shared_ptr<Texture> brdfIntTex = AssetFactory::CreateTexture("BRDF Integration Map.png", cmdList);
 
-	vector<UINT> cbvSizesDraw = { sizeof(MatricesCB), sizeof(MaterialPropertiesCB), sizeof(ThinFilmCB) };
-	vector<UINT> cbvSizesFrame = PER_FRAME_PBR_SIZES();
-	vector<std::shared_ptr<Texture>> textures;
-	if (useGlassSRVs)
-		textures = { normalTex, specTex, args.IrradianceMap, args.SkyboxTex, blueNoiseTex, brdfIntTex, thickTex, iridTex };
-	else
-		textures = { diffuseTex, normalTex, specTex, args.IrradianceMap, args.SkyboxTex, blueNoiseTex, brdfIntTex };
-
-	MaterialPropertiesCB matProperties;
-#if PACK_COLORS
-	if (useGlassSRVs)
-		matProperties.BaseColorFactor = PackColor(XMFLOAT3(0.0118f, 0.0118f, 0.0118f));
-	else
-		matProperties.BaseColorFactor = PackColor(XMFLOAT3(mat.pbrData.baseColorFactor.x(), mat.pbrData.baseColorFactor.y(), mat.pbrData.baseColorFactor.z()));
-#else
-	if (useGlassSRVs)
-		matProperties.BaseColorFactor = XMFLOAT3(0.0118f, 0.0118f, 0.0118f);
-	else
-		matProperties.BaseColorFactor = XMFLOAT3(mat.pbrData.baseColorFactor.x(), mat.pbrData.baseColorFactor.y(), mat.pbrData.baseColorFactor.z());
-#endif
-
-	matProperties.Roughness = Approx(mat.pbrData.roughnessFactor, 0.552786410f) ? 1.0f : mat.pbrData.roughnessFactor;
-	matProperties.AlphaCutoff = mat.alphaCutoff;
-	matProperties.Metallic = mat.pbrData.metallicFactor;
-
-	ThinFilmCB thinFilm;
-
-	if (mat.iridescence)
-	{
-		thinFilm.Enabled = true;
-		thinFilm.ThicknessMax = mat.iridescence->iridescenceThicknessMaximum;
-		thinFilm.ThicknessMin = mat.iridescence->iridescenceThicknessMinimum;
-		thinFilm.n1 = mat.iridescence->iridescenceIor;
-		thinFilm.n2 = mat.ior;
-		thinFilm.CalculateDelta();
-	}
+	vector<UINT> cbvSizesDraw = { sizeof(CbvMatrices) };
+	vector<std::shared_ptr<Texture>> textures = { diffuseTex };
 
 	std::unique_lock<std::mutex> lock(ms_batchAddMutex);
 	std::shared_ptr<Material> material = AssetFactory::CreateMaterial();

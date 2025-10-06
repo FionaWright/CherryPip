@@ -7,6 +7,8 @@
 #include "System/Config.h"
 #include "System/FileHelper.h"
 #include "System/Gui.h"
+#include "DualIncludes/CBV.h"
+#include "HWI/Material.h"
 
 TextureCube::TextureCube()
     : m_AspectRatio(0),
@@ -43,63 +45,23 @@ struct Vertex
     XMFLOAT2 uv;
 };
 
-struct CbvMatrices
-{
-    XMMATRIX M; // Model
-    XMMATRIX MTI; // Model Transpose Inverse (For Normals)
-    XMMATRIX V; // View
-    XMMATRIX P; // Projection
-};
-
 void TextureCube::loadAssets(D3D* d3d)
 {
     ID3D12Device* device = d3d->GetDevice();
     ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
-    {
-        m_descriptorIncSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        D3D12_DESCRIPTOR_HEAP_DESC desc = {};
-        desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-        desc.NumDescriptors = 2 * c_FrameCount;
-        desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-        desc.NodeMask = 0;
+    std::shared_ptr<RootSig> rootSig = std::make_shared<RootSig>();
+    std::shared_ptr<Texture> tex = std::make_shared<Texture>();
+    std::shared_ptr<Shader> shader = std::make_shared<Shader>();
+    std::shared_ptr<Transform> transform = std::make_shared<Transform>();
+    std::shared_ptr<Material> mat = std::make_shared<Material>();
 
-        V(device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_cbvSrvUavHeap)));
+    m_cube.Init(transform, tex, shader, rootSig, nullptr, mat);
 
-        // ===
+    m_heap.Init(device, 256);
 
-        size_t alignedSize = (sizeof(CbvMatrices) + 255) & ~255; // Ceilings the size to the nearest 256
-
-        D3D12_HEAP_PROPERTIES heapProps = {};
-        heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
-        heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-        heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-        heapProps.CreationNodeMask = 1;
-        heapProps.VisibleNodeMask = 1;
-
-        D3D12_RESOURCE_DESC bufferDesc = {};
-        bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-        bufferDesc.Width = alignedSize;
-        bufferDesc.Height = 1;
-        bufferDesc.DepthOrArraySize = 1;
-        bufferDesc.MipLevels = 1;
-        bufferDesc.Format = DXGI_FORMAT_UNKNOWN;
-        bufferDesc.SampleDesc.Count = 1;
-        bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-        bufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-
-        device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &bufferDesc,
-                                        D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_cbv));
-
-        D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-        cbvDesc.BufferLocation = m_cbv->GetGPUVirtualAddress();
-        cbvDesc.SizeInBytes = static_cast<UINT>(alignedSize);
-
-        int incrementSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        auto cbvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_cbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), 0,
-                                                       incrementSize);
-        device->CreateConstantBufferView(&cbvDesc, cbvHandle);
-    }
+    mat->Init(&m_heap);
+    mat->AddCBV(device, &m_heap, sizeof(CbvMatrices));
 
     // Init Root Sig
     {
@@ -119,7 +81,7 @@ void TextureCube::loadAssets(D3D* d3d)
         samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
         samplers[0].ShaderRegister = 0;
 
-        m_rootSig.Init(params, _countof(params), samplers, _countof(samplers), device);
+        rootSig->Init(params, _countof(params), samplers, _countof(samplers), device);
     }
 
     // Init Shader/PSO
@@ -132,7 +94,7 @@ void TextureCube::loadAssets(D3D* d3d)
         };
         D3D12_INPUT_LAYOUT_DESC ild = {inputElementDescs, _countof(inputElementDescs)};
 
-        m_shaderNormals.InitVsPs(L"Basic3D_TexVS.hlsl", L"Basic3D_TexPS.hlsl", ild, device, m_rootSig.Get());
+        shader->InitVsPs(L"Basic3D_TexVS.hlsl", L"Basic3D_TexPS.hlsl", ild, device, rootSig->Get());
     }
 
     // Create the vertex buffer.
@@ -225,31 +187,27 @@ void TextureCube::loadAssets(D3D* d3d)
         m_vertexBufferView.SizeInBytes = vertexBufferSize;
     }
 
-    m_tex.Init(d3d->GetDevice(), cmdList.Get(), FileHelper::GetAssetTextureFullPath(L"TestTex.png"),
+    tex->Init(d3d->GetDevice(), cmdList.Get(), FileHelper::GetAssetTextureFullPath(L"TestTex.png"),
                DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 
-    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-    srvDesc.Format = m_tex.GetFormat();
-    srvDesc.Texture2D.MipLevels = m_tex.GetDesc().MipLevels;
-    srvDesc.Texture2D.MostDetailedMip = 0;
-    srvDesc.Texture2D.PlaneSlice = 0;
-    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    mat->AddSRV(device, &m_heap, tex.get());
 
-    int incrementSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-    auto cbvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_cbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), 1,
-                                                   incrementSize);
-    device->CreateShaderResourceView(m_tex.GetResource(), &srvDesc, cbvHandle);
-
-    m_tex.Transition(cmdList.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    tex->Transition(cmdList.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
     V(cmdList->Close());
     d3d->ExecuteCommandList(cmdList.Get());
     d3d->Flush();
 }
 
-void TextureCube::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
+void TextureCube::populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 {
+    float fov = 60.0f;
+    float nearPlane = 0.1f;
+    float farPlane = 100.0f;
+    CbvMatrices matrices = {};
+    matrices.V = m_camera.GetViewMatrix();
+    matrices.P = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), m_AspectRatio, nearPlane, farPlane);
+
     ID3D12Resource* rtv = d3d->GetCurrRTV();
 
     // Render at offset for ImGui
@@ -260,40 +218,12 @@ void TextureCube::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLi
                              Config::GetSystem().WindowWidth + Config::GetSystem().WindowImGuiWidth,
                              Config::GetSystem().WindowHeight);
 
-    // Set necessary state.
-    cmdList->SetGraphicsRootSignature(m_rootSig.Get());
     cmdList->RSSetViewports(1, &viewport);
     cmdList->RSSetScissorRects(1, &scissorRect);
-    cmdList->SetPipelineState(m_shaderNormals.GetPSO());
 
-    ID3D12DescriptorHeap* heap = m_cbvSrvUavHeap.Get();
-    cmdList->SetDescriptorHeaps(1, &heap);
+    m_heap.SetHeap(cmdList);
 
-    float fov = 60.0f;
-    float nearPlane = 0.1f;
-    float farPlane = 100.0f;
-
-    m_transformCube.Rotate({0, 0.1f, 0});
-
-    CbvMatrices matrices = {};
-    matrices.M = m_transformCube.GetModelMatrix();
-    matrices.MTI = XMMatrixInverse(nullptr, XMMatrixTranspose(matrices.M));
-    matrices.V = m_camera.GetViewMatrix();
-    matrices.P = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), m_AspectRatio, nearPlane, farPlane);
-
-    void* dstData = nullptr;
-    D3D12_RANGE readRange = {};
-    m_cbv->Map(0, &readRange, &dstData);
-    std::memcpy(dstData, &matrices, sizeof(CbvMatrices));
-    m_cbv->Unmap(0, nullptr);
-
-    CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(m_cbvSrvUavHeap->GetGPUDescriptorHandleForHeapStart(), 0,
-                                            m_descriptorIncSize);
-    cmdList->SetGraphicsRootDescriptorTable(0, cbvHandle);
-
-    CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvUavHeap->GetGPUDescriptorHandleForHeapStart(), 1,
-                                            m_descriptorIncSize);
-    cmdList->SetGraphicsRootDescriptorTable(1, srvHandle);
+    m_cube.GetTransform()->Rotate({0, 0.1, 0});
 
     // Indicate that the back buffer will be used as a render target.
     auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(rtv, D3D12_RESOURCE_STATE_PRESENT,
@@ -304,10 +234,10 @@ void TextureCube::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLi
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(d3d->GetRtvHeapStart(), d3d->GetFrameIndex(), d3d->GetRtvDescriptorSize());
     cmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
-    // Record commands.
-    const float clearColor[] = {0.0f, 0.2f, 0.4f, 1.0f};
+    constexpr float clearColor[] = {0.0f, 0.2f, 0.4f, 1.0f};
     cmdList->ClearRenderTargetView(rtvHandle, clearColor, 1, &scissorRect);
-    cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    m_cube.Render(cmdList, matrices);
     cmdList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
     cmdList->DrawInstanced(m_vertexCount, 1, 0, 0);
 

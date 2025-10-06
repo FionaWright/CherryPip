@@ -70,8 +70,8 @@ add_executable(PT WIN32
         Headers/client/System/Gui.h
         src/client/System/Config.cpp
         Headers/client/System/Config.h
-        #src/client/HWI/Model.cpp
-        #Headers/client/HWI/Model.h
+        src/client/HWI/Model.cpp
+        Headers/client/HWI/Model.h
         #src/client/System/ModelLoaderGLTF.cpp
         src/MathUtils.cpp
         Headers/MathUtils.h
@@ -81,6 +81,12 @@ add_executable(PT WIN32
         Headers/client/HWI/D12Resource.h
         src/client/System/TextureLoader.cpp
         Headers/client/System/TextureLoader.h
+        src/client/HWI/Material.cpp
+        Headers/client/HWI/Material.h
+        src/client/Render/Object.cpp
+        Headers/client/Render/Object.h
+        src/client/HWI/Heap.cpp
+        Headers/client/HWI/Heap.h
 )
 
 file(GLOB THIRD_PARTY_SOURCES CONFIGURE_DEPENDS

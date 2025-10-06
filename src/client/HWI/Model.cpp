@@ -6,6 +6,7 @@
 
 #include "Helper.h"
 
+/*
 bool Model::Init(ID3D12GraphicsCommandList2* cmdList, std::wstring filepath)
 {
     std::vector<VertexInputData> vertexBuffer;
@@ -60,3 +61,5 @@ void Model::SetBuffers(ID3D12GraphicsCommandList2* cmdList, const void* vBufferD
     ResourceManager::UploadCommittedResource(cmdList, m_VertexBuffer, &m_intermediateVertexBuffer, m_vertexCount, m_vertexInputSize, vBufferData);
     ResourceManager::UploadCommittedResource(cmdList, m_IndexBuffer, &m_intermediateIndexBuffer, m_indexCount, sizeof(int32_t), iBufferData);
 }
+
+*/

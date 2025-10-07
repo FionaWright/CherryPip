@@ -32,7 +32,7 @@ void D12Resource::Init(ID3D12Device* device, const D3D12_RESOURCE_DESC& resource
     V(device->CreateCommittedResource(&uploadHeapProp, D3D12_HEAP_FLAG_NONE, &bufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_uploadHeap)));
 }
 
-void D12Resource::Upload(ID3D12GraphicsCommandList* cmdList, uint8_t** pData, const size_t totalBytes,
+void D12Resource::Upload(ID3D12GraphicsCommandList* cmdList, const uint8_t** pData, const size_t totalBytes,
                          const size_t rowPitch) const
 {
     UINT immediateOffset = 0;

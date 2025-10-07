@@ -53,13 +53,8 @@ void ModelLoading::loadAssets(D3D* d3d)
 
     std::shared_ptr<RootSig> rootSig = std::make_shared<RootSig>();
     std::shared_ptr<Shader> shader = std::make_shared<Shader>();
-    //std::shared_ptr<Transform> transform = std::make_shared<Transform>();
-    //std::shared_ptr<Material> mat = std::make_shared<Material>();
 
-    m_heap.Init(device, 256);
-
-    //mat->Init(&m_heap);
-    //mat->AddCBV(device, &m_heap, sizeof(CbvMatrices));
+    m_heap.Init(device, 10000);
 
     // Init Root Sig
     {
@@ -111,7 +106,7 @@ void ModelLoading::loadAssets(D3D* d3d)
     args.Overrides = {};
     args.Root = rootSig;
     args.Shaders = { shader };
-    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, "Cube.glb", args);
+    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, "Madeline/Madeline.glb", args);
     m_objects = args.Objects;
 
     V(cmdList->Close());

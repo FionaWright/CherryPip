@@ -8,7 +8,7 @@
 - [x] Render spinning cube (Multiple Apps)
 - [x] Implement better console/logging
 - [x] Implement Dear ImGui
-- [ ] GLTF Model Importing (fastgltf)
+- [x] GLTF Model Importing (fastgltf)
 - [ ] Build shaders in cmake
 - [ ] Hot reloading
 - [ ] Add destructors and scene switching
@@ -23,3 +23,11 @@
 - [ ] Glass & Caustics
 
 https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d12-raytracing-samples-win32/
+
+## Mini-TODO:
+
+- Frustum Culling
+- Texture/Model reuse
+- Descriptor heap sharing
+- CBVMatrices caching
+- Copy Assets faster and without rebuild

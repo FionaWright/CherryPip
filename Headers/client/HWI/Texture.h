@@ -16,6 +16,8 @@ public:
     ~Texture();
     void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::string filePath, const DXGI_FORMAT format, const int arraySize = 1, const D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE);
     void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::wstring filePath, const DXGI_FORMAT format, const int arraySize = 1, const D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE);
+    void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const std::byte* pData, DXGI_FORMAT format,
+              int arraySize, D3D12_RESOURCE_FLAGS flags);
 
     void Transition(ID3D12GraphicsCommandList* cmdList, D3D12_RESOURCE_STATES newState, UINT subresourceIdx = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES) { m_resource.Transition(cmdList, newState, subresourceIdx); }
 

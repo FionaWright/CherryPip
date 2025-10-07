@@ -9,6 +9,7 @@
 void Heap::Init(ID3D12Device* device, size_t numDescriptors)
 {
     m_descriptorIncSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    m_heapSize = numDescriptors;
 
     D3D12_DESCRIPTOR_HEAP_DESC desc = {};
     desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -21,6 +22,9 @@ void Heap::Init(ID3D12Device* device, size_t numDescriptors)
 
 UINT Heap::GetNextDescriptor()
 {
+    if (m_currentHeapIndex == m_heapSize)
+        throw std::exception("Heap is too smol :(");
+
     const UINT idx = m_currentHeapIndex;
     m_currentHeapIndex++;
     return idx;

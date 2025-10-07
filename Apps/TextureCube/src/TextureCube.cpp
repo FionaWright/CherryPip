@@ -199,7 +199,7 @@ void TextureCube::loadAssets(D3D* d3d)
     d3d->Flush();
 }
 
-void TextureCube::populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList* cmdList)
+void TextureCube::populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList* cmdList) const
 {
     float fov = 60.0f;
     float nearPlane = 0.1f;

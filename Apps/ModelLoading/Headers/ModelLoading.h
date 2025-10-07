@@ -1,5 +1,5 @@
-#ifndef PT_TEXTURECUBE_H
-#define PT_TEXTURECUBE_H
+#ifndef PT_MODELLOADING_H
+#define PT_MODELLOADING_H
 
 #include "Apps/App.h"
 #include "HWI/Heap.h"
@@ -12,10 +12,10 @@
 
 using Microsoft::WRL::ComPtr;
 
-class TextureCube : public App
+class ModelLoading : public App
 {
 public:
-    TextureCube();
+    ModelLoading();
     void OnInit(D3D* d3d) override;
     void OnUpdate(D3D* d3d) override;
 
@@ -30,16 +30,9 @@ private:
 
     void setCustomWindowText(LPCWSTR text) const;
 
-    // App resources.
-    ComPtr<ID3D12Resource> m_vertexBuffer;
-    UINT m_vertexCount = 0;
-    D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
-
-    //ComPtr<ID3D12Resource> m_cbv;
-
     Heap m_heap;
     CameraController m_camera;
-    Object m_cube;
+    std::vector<std::shared_ptr<Object>> m_objects;
 
     // Window title.
     std::wstring m_title;
@@ -49,4 +42,4 @@ private:
 };
 
 
-#endif //PT_TEXTURECUBE_H
+#endif //PT_MODELLOADING_H

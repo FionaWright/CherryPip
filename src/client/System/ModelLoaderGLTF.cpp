@@ -198,7 +198,7 @@ void ModelLoaderGLTF::loadGLTFIndices(std::vector<uint32_t>& iBuffer, Asset& ass
 	}
 }
 
-void ModelLoaderGLTF::loadModel(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, Asset& asset, const fastgltf::Primitive& primitive, Model* model)
+void ModelLoaderGLTF::loadModel(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Asset& asset, const fastgltf::Primitive& primitive, Model* model)
 {
 	std::vector<VertexInputDataGLTF> vertexBuffer;
 
@@ -223,7 +223,7 @@ void ModelLoaderGLTF::loadModel(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, A
 	});
 
 	loadGLTFVertexData(vertexBuffer, asset, primitive, "TANGENT", [](const std::byte* address, VertexInputDataGLTF* output) {
-		const XMFLOAT4* data = reinterpret_cast<const XMFLOAT4*>(address);
+		const auto* data = reinterpret_cast<const XMFLOAT4*>(address);
 		float handedness = data->w > 0.0f ? 1.0f : -1.0f;
 		output->Tangent = Normalize(Mult(XMFLOAT3(data->x, data->y, data->z), handedness));
 		if (RIGHT_HANDED_TO_LEFT)
@@ -295,9 +295,9 @@ std::string ModelLoaderGLTF::loadTexture(const Asset& asset, const size_t textur
 	return "";
 }
 
-void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, Heap* heap, Asset& asset, const fastgltf::Primitive& primitive, std::string modelNameExtensionless, fastgltf::Node& node, GLTFLoadArgs args, std::string id, size_t meshIndex, size_t primitiveIndex)
+void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, Asset& asset, const fastgltf::Primitive& primitive, std::string modelNameExtensionless, fastgltf::Node& node, GLTFLoadArgs& args, std::string id, size_t meshIndex, size_t primitiveIndex)
 {
-	std::shared_ptr<Model> model;
+	std::shared_ptr<Model> model = std::make_shared<Model>();
     loadModel(d3d, cmdList, asset, primitive, model.get());
 
 	fastgltf::Material& mat = (*asset)->materials[primitive.materialIndex.value_or(0)];
@@ -331,7 +331,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList2* cmdLis
 	else if (mat.iridescence)
 		diffuseTexPath = "Transparent.png";
 	else
-		diffuseTexPath = "WhitePOT.png";
+		diffuseTexPath = "Assets/Textures/WhitePOT.png";
 
 	/*if (SettingsManager::ms_Misc.BistroLowQualityTexDiffuseEnabled && modelNameExtensionless == "Bistro")
 	{
@@ -350,13 +350,13 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList2* cmdLis
 	}*/
 
 	std::shared_ptr<Texture> diffuseTex = std::make_shared<Texture>();
-	diffuseTex->Init(d3d->GetDevice(), cmdList, diffuseTexPath, DXGI_FORMAT_R8G8B8A8_UNORM);
+	diffuseTex->Init(d3d->GetDevice(), cmdList, diffuseTexPath, DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 
 	std::string normalTexPath = "";
 	if (mat.normalTexture.has_value())
 		normalTexPath = modelNameExtensionless + "/" + loadTexture(asset, mat.normalTexture.value().textureIndex);
 	else
-		normalTexPath = "DefaultNormal.tga";
+		normalTexPath = "Assets/Textures/DefaultNormal.tga";
 
 	/*if (SettingsManager::ms_Misc.BistroLowQualityTexNormalEnabled && modelNameExtensionless == "Bistro")
 	{
@@ -374,8 +374,8 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList2* cmdLis
 			normalTexPath = newNormalPath;
 	}*/
 
-	std::shared_ptr<Texture> normalTex = std::make_shared<Texture>();
-	diffuseTex->Init(d3d->GetDevice(), cmdList, diffuseTexPath, DXGI_FORMAT_R8G8B8A8_UNORM);
+	//std::shared_ptr<Texture> normalTex = std::make_shared<Texture>();
+	//normalTex->Init(d3d->GetDevice(), cmdList, normalTexPath, DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 
 	std::string specTexPath = "";
 	if (mat.specular && mat.specular.get()->specularTexture.has_value())
@@ -383,12 +383,9 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList2* cmdLis
 	else if (mat.pbrData.metallicRoughnessTexture.has_value())
 		specTexPath = modelNameExtensionless + "/" + loadTexture(asset, mat.pbrData.metallicRoughnessTexture.value().textureIndex);
 	else
-		specTexPath = "DefaultSpecular.png";
+		specTexPath = "Assets/Textures/DefaultSpecular.png";
 
 	//std::shared_ptr<Texture> specTex = AssetFactory::CreateTexture(specTexPath, cmdList, false, false, true);
-
-	std::vector<UINT> cbvSizesDraw = { sizeof(CbvMatrices) };
-	std::vector<std::shared_ptr<Texture>> textures = { diffuseTex };
 
 	std::shared_ptr<Material> material = std::make_shared<Material>();
 	material->Init(heap);
@@ -400,7 +397,8 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList2* cmdLis
 
 	//bool alphaRequirementMet = SettingsManager::ms_Misc.RequireAlphaTextureForDoubleSided ? material->GetHasAlpha() : true;
 	bool alphaRequirementMet = false;
-	bool isAT = alphaRequirementMet || mat.doubleSided;
+	//bool isAT = alphaRequirementMet || mat.doubleSided;
+	bool isAT = false;
 
 	if (shaderIndex == -1)
 		shaderIndex = isAT ? args.DefaultShaderATIndex : args.DefaultShaderIndex;
@@ -424,7 +422,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList2* cmdLis
 	args.Objects.push_back(obj);
 }
 
-void ModelLoaderGLTF::loadNode(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, Heap* heap, Asset& asset, std::string modelNameExtensionless, fastgltf::Node& node, GLTFLoadArgs args)
+void ModelLoaderGLTF::loadNode(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, Asset& asset, std::string modelNameExtensionless, fastgltf::Node& node, GLTFLoadArgs& args)
 {
 	if (node.transform.index() != 0)
 		throw std::exception("Unsupported transform type");
@@ -495,7 +493,7 @@ void ModelLoaderGLTF::loadNode(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, He
 	}
 }
 
-void ModelLoaderGLTF::LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, Heap* heap, const std::string& name, GLTFLoadArgs& args)
+void ModelLoaderGLTF::LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, const std::string& name, GLTFLoadArgs& args)
 {
 	std::string path = "Assets/Models/" + name;
 
@@ -553,7 +551,7 @@ void ModelLoaderGLTF::LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList2* cmdLi
 	}
 }
 
-void ModelLoaderGLTF::loadModelsFromNode(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, Asset& asset, std::string modelNameExtensionless, fastgltf::Node& node, std::vector<std::shared_ptr<Model>>& modelList)
+void ModelLoaderGLTF::loadModelsFromNode(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Asset& asset, std::string modelNameExtensionless, fastgltf::Node& node, std::vector<std::shared_ptr<Model>>& modelList)
 {
 	const size_t childCount = node.children.size();
 	for (size_t i = 0; i < childCount; i++)
@@ -582,7 +580,7 @@ void ModelLoaderGLTF::loadModelsFromNode(D3D* d3d, ID3D12GraphicsCommandList2* c
 	}
 }
 
-std::vector<std::shared_ptr<Model>> ModelLoaderGLTF::LoadModelsFromGLTF(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, std::string modelName)
+std::vector<std::shared_ptr<Model>> ModelLoaderGLTF::LoadModelsFromGLTF(D3D* d3d, ID3D12GraphicsCommandList* cmdList, std::string modelName)
 {
 	std::string path = "Assets/Models/" + modelName;
 

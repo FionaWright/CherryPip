@@ -10,6 +10,7 @@
 #include "Apps/HelloTriangle/Headers/HelloTriangle.h"
 #include "Apps/SpinningCube/Headers/SpinningCube.h"
 #include "Apps/TextureCube/Headers/TextureCube.h"
+#include "Apps/ModelLoading/Headers/ModelLoading.h"
 #include "System/Config.h"
 #include "System/Win32App.h"
 
@@ -28,8 +29,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR args, int nCmdShow)
 
     Config::ParseCommandLineArgs(args);
 
-    TextureCube sample;
-    int rslt = Win32App::Run(&sample, hInstance, nCmdShow);
+    ModelLoading sample;
+    const int rslt = Win32App::Run(&sample, hInstance, nCmdShow);
 
     CoUninitialize();
 

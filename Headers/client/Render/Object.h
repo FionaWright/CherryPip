@@ -19,6 +19,7 @@ struct CbvMatrices;
 class Object
 {
 public:
+    ~Object();
     void Init(const std::shared_ptr<Transform>& transform,
               const std::shared_ptr<Shader>& shader, const std::shared_ptr<RootSig>& rootSig,
               const std::shared_ptr<Model>& model, const std::shared_ptr<Material>& mat);

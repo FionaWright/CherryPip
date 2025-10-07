@@ -6,14 +6,6 @@
 
 #include "Helper.h"
 
-struct VertexInputData
-{
-    XMFLOAT3 Position;
-    XMFLOAT2 UV;
-    XMFLOAT3 Normal;
-    XMFLOAT4 Tangent;
-};
-
 void Model::Init(ID3D12Device* device, const size_t vertexCount, const size_t indexCount, const size_t vertexInputSize, const float boundingRadius, const XMFLOAT3 centroid)
 {
     m_boundingSphereRadius = boundingRadius;
@@ -42,7 +34,7 @@ void Model::Init(ID3D12Device* device, const size_t vertexCount, const size_t in
     m_indexBufferView.SizeInBytes = static_cast<UINT>(bufferSizeIdx);
 }
 
-void Model::SetBuffers(ID3D12Device* device, ID3D12GraphicsCommandList2* cmdList, const void* vBufferData, const void* iBufferData)
+void Model::SetBuffers(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const void* vBufferData, const void* iBufferData)
 {
     constexpr UINT64 offset = 0;
     constexpr UINT startIndex = 0;
@@ -54,7 +46,7 @@ void Model::SetBuffers(ID3D12Device* device, ID3D12GraphicsCommandList2* cmdList
     V(device->CreateCommittedResource(&heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_intermediateVertexBuffer)));
     D3D12_SUBRESOURCE_DATA subresourceData = {};
     subresourceData.pData = vBufferData;
-    subresourceData.RowPitch = bufferSize;
+    subresourceData.RowPitch = static_cast<LONG_PTR>(bufferSize);
     subresourceData.SlicePitch = subresourceData.RowPitch;
     UpdateSubresources(cmdList, m_vertexBuffer.Get(), m_intermediateVertexBuffer.Get(), offset, startIndex, resourceCount, &subresourceData);
 
@@ -64,7 +56,7 @@ void Model::SetBuffers(ID3D12Device* device, ID3D12GraphicsCommandList2* cmdList
     V(device->CreateCommittedResource(&heapPropertiesIdx, D3D12_HEAP_FLAG_NONE, &resourceDescIdx, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_intermediateIndexBuffer)));
     subresourceData = {};
     subresourceData.pData = iBufferData;
-    subresourceData.RowPitch = bufferSizeIdx;
+    subresourceData.RowPitch = static_cast<LONG_PTR>(bufferSizeIdx);
     subresourceData.SlicePitch = subresourceData.RowPitch;
-    UpdateSubresources(cmdList, m_indexBuffer.Get(), m_intermediateVertexBuffer.Get(), offset, startIndex, resourceCount, &subresourceData);
+    UpdateSubresources(cmdList, m_indexBuffer.Get(), m_intermediateIndexBuffer.Get(), offset, startIndex, resourceCount, &subresourceData);
 }

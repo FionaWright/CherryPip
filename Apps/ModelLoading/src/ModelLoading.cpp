@@ -1,0 +1,194 @@
+#include "Apps/ModelLoading/Headers/ModelLoading.h"
+#include "System/Win32App.h"
+#include <dxcapi.h>
+
+#include "Headers/Helper.h"
+#include "HWI/D3D.h"
+#include "System/Config.h"
+#include "System/FileHelper.h"
+#include "System/Gui.h"
+#include "DualIncludes/CBV.h"
+#include "HWI/Material.h"
+#include "System/ModelLoaderGLTF.h"
+
+ModelLoading::ModelLoading()
+    : m_AspectRatio(0)
+{
+}
+
+void ModelLoading::OnInit(D3D* d3d)
+{
+    m_AspectRatio = static_cast<float>(Config::GetSystem().WindowWidth) / static_cast<float>(Config::GetSystem().
+        WindowHeight);
+
+    m_camera.Init({}, {});
+
+    loadAssets(d3d);
+}
+
+void ModelLoading::OnUpdate(D3D* d3d)
+{
+    ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
+
+    populateCommandList(d3d, cmdList.Get());
+
+    d3d->ExecuteCommandList(cmdList.Get());
+    d3d->Present();
+
+    m_camera.UpdateCamera();
+}
+
+struct Vertex
+{
+    XMFLOAT3 position;
+    XMFLOAT2 uv;
+    XMFLOAT3 normal;
+    XMFLOAT4 tangent;
+};
+
+void ModelLoading::loadAssets(D3D* d3d)
+{
+    ID3D12Device* device = d3d->GetDevice();
+    ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
+
+    std::shared_ptr<RootSig> rootSig = std::make_shared<RootSig>();
+    std::shared_ptr<Shader> shader = std::make_shared<Shader>();
+    //std::shared_ptr<Transform> transform = std::make_shared<Transform>();
+    //std::shared_ptr<Material> mat = std::make_shared<Material>();
+
+    m_heap.Init(device, 256);
+
+    //mat->Init(&m_heap);
+    //mat->AddCBV(device, &m_heap, sizeof(CbvMatrices));
+
+    // Init Root Sig
+    {
+        CD3DX12_ROOT_PARAMETER1 params[2];
+        CD3DX12_DESCRIPTOR_RANGE1 ranges[2];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+        params[0].InitAsDescriptorTable(1, &ranges[0]);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+        params[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);
+
+        D3D12_STATIC_SAMPLER_DESC samplers[1];
+        samplers[0] = {};
+        samplers[0].Filter = D3D12_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
+        samplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        samplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        samplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+        samplers[0].ShaderRegister = 0;
+
+        rootSig->Init(params, _countof(params), samplers, _countof(samplers), device);
+    }
+
+    // Init Shader/PSO
+    {
+        D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
+        {
+            {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+            {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+            {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+            {"TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+            {"BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        };
+        D3D12_INPUT_LAYOUT_DESC ild = {inputElementDescs, _countof(inputElementDescs)};
+
+        shader->InitVsPs(L"Basic3D_GltfVS.hlsl", L"Basic3D_GltfPS.hlsl", ild, device, rootSig->Get());
+    }
+
+    std::shared_ptr<Texture> tex = std::make_shared<Texture>();
+    tex->Init(d3d->GetDevice(), cmdList.Get(), FileHelper::GetAssetTextureFullPath(L"TestTex.png"),
+               DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+
+    tex->Transition(cmdList.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
+    GLTFLoadArgs args;
+    args.Transform = {};
+    args.CullingWhiteList = {};
+    args.DefaultShaderIndex = 0;
+    args.DefaultShaderATIndex = -1;
+    args.Overrides = {};
+    args.Root = rootSig;
+    args.Shaders = { shader };
+    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, "Cube.glb", args);
+    m_objects = args.Objects;
+
+    V(cmdList->Close());
+    d3d->ExecuteCommandList(cmdList.Get());
+    d3d->Flush();
+}
+
+void ModelLoading::populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList* cmdList) const
+{
+    float fov = 60.0f;
+    float nearPlane = 0.1f;
+    float farPlane = 100.0f;
+    CbvMatrices matrices = {};
+    matrices.V = m_camera.GetViewMatrix();
+    matrices.P = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), m_AspectRatio, nearPlane, farPlane);
+
+    ID3D12Resource* rtv = d3d->GetCurrRTV();
+
+    // Render at offset for ImGui
+    const CD3DX12_VIEWPORT viewport(static_cast<float>(Config::GetSystem().WindowImGuiWidth), 0.0f,
+                              static_cast<float>(Config::GetSystem().WindowWidth),
+                              static_cast<float>(Config::GetSystem().WindowHeight));
+    const CD3DX12_RECT scissorRect(Config::GetSystem().WindowImGuiWidth, 0,
+                             Config::GetSystem().WindowWidth + Config::GetSystem().WindowImGuiWidth,
+                             Config::GetSystem().WindowHeight);
+
+    cmdList->RSSetViewports(1, &viewport);
+    cmdList->RSSetScissorRects(1, &scissorRect);
+
+    m_heap.SetHeap(cmdList);
+
+    // Indicate that the back buffer will be used as a render target.
+    auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(rtv, D3D12_RESOURCE_STATE_PRESENT,
+                                                        D3D12_RESOURCE_STATE_RENDER_TARGET);
+    cmdList->ResourceBarrier(1, &barrier);
+
+    // Note: HERE AS WELL
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(d3d->GetRtvHeapStart(), d3d->GetFrameIndex(), d3d->GetRtvDescriptorSize());
+    cmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+
+    constexpr float clearColor[] = {0.0f, 0.2f, 0.4f, 1.0f};
+    cmdList->ClearRenderTargetView(rtvHandle, clearColor, 1, &scissorRect);
+
+    for (int i = 0; i < m_objects.size(); ++i)
+    {
+        m_objects[i]->Render(cmdList, matrices);
+    }
+
+    Gui::Render(cmdList);
+
+    // Indicate that the back buffer will now be used to present.
+    auto barrier2 = CD3DX12_RESOURCE_BARRIER::Transition(rtv, D3D12_RESOURCE_STATE_RENDER_TARGET,
+                                                         D3D12_RESOURCE_STATE_PRESENT);
+    cmdList->ResourceBarrier(1, &barrier2);
+
+    V(cmdList->Close());
+}
+
+// Helper function for setting the window's title text.
+void ModelLoading::setCustomWindowText(LPCWSTR text) const
+{
+    std::wstring windowText = m_title + L": " + text;
+    SetWindowText(Win32App::GetHwnd(), wstringToString(windowText).c_str());
+}
+
+// Helper function for parsing any supplied command line args.
+_Use_decl_annotations_
+
+void ModelLoading::ParseCommandLineArgs(WCHAR* argv[], int argc)
+{
+    for (int i = 1; i < argc; ++i)
+    {
+        if (_wcsnicmp(argv[i], L"-warp", wcslen(argv[i])) == 0 ||
+            _wcsnicmp(argv[i], L"/warp", wcslen(argv[i])) == 0)
+        {
+            //m_UseWarpDevice = true;
+            m_title = m_title + L" (WARP)";
+        }
+    }
+}

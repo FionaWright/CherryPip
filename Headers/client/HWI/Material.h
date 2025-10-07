@@ -29,9 +29,12 @@ struct SRV
 class Material
 {
 public:
+    ~Material();
     void Init(const Heap* heap);
     void AddCBV(ID3D12Device* device, Heap* heap, size_t size);
     void AddSRV(ID3D12Device* device, Heap* heap, std::shared_ptr<Texture> tex);
+
+    void TransitionSrvsToPS(ID3D12GraphicsCommandList* cmdList) const;
 
     void UpdateCBV(UINT regIdx, const void* data) const;
     void SetDescriptorTables(ID3D12GraphicsCommandList* cmdList) const;

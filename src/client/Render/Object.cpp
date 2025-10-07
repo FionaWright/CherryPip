@@ -4,7 +4,14 @@
 
 #include "Render/Object.h"
 
+#include <iostream>
+
 #include "DualIncludes/CBV.h"
+
+Object::~Object()
+{
+    std::cout << "Object Destroyed!" << std::endl;
+}
 
 void Object::Init(const std::shared_ptr<Transform>& transform,
                   const std::shared_ptr<Shader>& shader, const std::shared_ptr<RootSig>& rootSig,
@@ -31,10 +38,11 @@ void Object::Render(ID3D12GraphicsCommandList* cmdList, CbvMatrices& matrices) c
     matrices.MTI = XMMatrixInverse(nullptr, XMMatrixTranspose(matrices.M));
 
     m_material->UpdateCBV(0, &matrices);
-
+    m_material->TransitionSrvsToPS(cmdList);
     m_material->SetDescriptorTables(cmdList);
 
     cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    //cmdList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-    //cmdList->DrawInstanced(m_vertexCount, 1, 0, 0);
+    cmdList->IASetVertexBuffers(0, 1, &m_model->GetVertexBufferView());
+    cmdList->IASetIndexBuffer(&m_model->GetIndexBufferView());
+    cmdList->DrawIndexedInstanced(static_cast<UINT>(m_model->GetIndexCount()), 1, 0, 0, 0);
 }

@@ -10,7 +10,10 @@
 
 #include "Helper.h"
 
-//#include "Helper.h"
+D12Resource::~D12Resource()
+{
+    std::cout << "Resource destroyed!" << std::endl;
+}
 
 void D12Resource::Init(ID3D12Device* device, const D3D12_RESOURCE_DESC& resourceDesc,
                        const D3D12_RESOURCE_STATES& initialState)
@@ -57,6 +60,9 @@ void D12Resource::Upload(ID3D12GraphicsCommandList* cmdList, uint8_t** pData, co
 void D12Resource::Transition(ID3D12GraphicsCommandList* cmdList, const D3D12_RESOURCE_STATES& newState,
                              const UINT subresourceIdx)
 {
+    if (m_currentState == newState)
+        return;
+
     const CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
         m_resource.Get(), m_currentState, newState, subresourceIdx);
     cmdList->ResourceBarrier(1, &barrier);

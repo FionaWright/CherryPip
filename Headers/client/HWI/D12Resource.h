@@ -13,6 +13,7 @@ using Microsoft::WRL::ComPtr;
 class D12Resource
 {
 public:
+    ~D12Resource();
     void Init(ID3D12Device* device, const D3D12_RESOURCE_DESC& resourceDesc, const D3D12_RESOURCE_STATES& initialState);
     void Upload(ID3D12GraphicsCommandList* cmdList, uint8_t** pData, size_t totalBytes, size_t rowPitch) const;
 

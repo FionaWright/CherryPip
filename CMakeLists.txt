@@ -45,6 +45,8 @@ add_executable(PT WIN32
         Apps/SpinningCube/Headers/SpinningCube.h
         Apps/TextureCube/Headers/TextureCube.h
         Apps/TextureCube/src/TextureCube.cpp
+        Apps/ModelLoading/Headers/ModelLoading.h
+        Apps/ModelLoading/src/ModelLoading.cpp
 
         src/client/System/Win32App.cpp
         Headers/client/System/Win32App.h

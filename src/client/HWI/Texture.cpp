@@ -52,8 +52,13 @@ size_t BitsPerPixel(_In_ DXGI_FORMAT fmt)
     }
 }
 
+Texture::~Texture()
+{
+    std::cout << "Texture Destroyed!" << std::endl;
+}
+
 void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::string filePath,
-    const DXGI_FORMAT format, const int arraySize, const D3D12_RESOURCE_FLAGS flags)
+                   const DXGI_FORMAT format, const int arraySize, const D3D12_RESOURCE_FLAGS flags)
 {
     const std::wstring wstr = std::wstring(filePath.begin(), filePath.end());
     Init(device, cmdList, wstr, format, arraySize, flags);

@@ -7,6 +7,11 @@
 #include "Helper.h"
 #include "HWI/Heap.h"
 
+Material::~Material()
+{
+    std::cout << "Material Destroyed!" << std::endl;
+}
+
 void Material::Init(const Heap* heap)
 {
     m_cpuHandle = heap->GetCPUHandle();
@@ -62,6 +67,14 @@ void Material::AddSRV(ID3D12Device* device, Heap* heap, std::shared_ptr<Texture>
 
     SRV srv = { tex, idx};
     m_srvs.push_back(srv);
+}
+
+void Material::TransitionSrvsToPS(ID3D12GraphicsCommandList* cmdList) const
+{
+    for (int i = 0; i < m_srvs.size(); i++)
+    {
+        m_srvs[i].Texture->Transition(cmdList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    }
 }
 
 void Material::UpdateCBV(const UINT regIdx, const void* data) const

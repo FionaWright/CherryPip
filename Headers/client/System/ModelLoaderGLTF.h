@@ -48,8 +48,8 @@ struct GLTFLoadArgs
 	std::vector<std::shared_ptr<Shader>> Shaders;
 	std::vector<std::shared_ptr<Object>> Objects;
 
-	UINT DefaultShaderIndex = 0;
-	UINT DefaultShaderATIndex = 1;
+	int DefaultShaderIndex = 0;
+	int DefaultShaderATIndex = 1;
 
 	std::vector<std::string> CullingWhiteList;
 	std::vector<GLTFLoadOverride> Overrides;
@@ -58,17 +58,17 @@ struct GLTFLoadArgs
 class ModelLoaderGLTF
 {
 public:
-    static std::vector<std::shared_ptr<Model>> LoadModelsFromGLTF(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, std::string modelName);
-	static void LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, Heap* heap, const std::string& name, GLTFLoadArgs& args);
+    static std::vector<std::shared_ptr<Model>> LoadModelsFromGLTF(D3D* d3d, ID3D12GraphicsCommandList* cmdList, std::string modelName);
+	static void LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, const std::string& name, GLTFLoadArgs& args);
 
 private:
 	static Transform toTransform(fastgltf::TRS& trs);
 	static void loadGLTFIndices(std::vector<uint32_t>& iBuffer, Asset& asset, const fastgltf::Primitive& primitive);
-	static void loadModel(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, Asset& asset, const fastgltf::Primitive& primitive, Model* model);
+	static void loadModel(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Asset& asset, const fastgltf::Primitive& primitive, Model* model);
 	static std::string loadTexture(const Asset& asset, const size_t textureIndex);
-	static void loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, Heap* heap, Asset& asset, const fastgltf::Primitive& primitive, std::string modelNameExtensionless, fastgltf::Node& node, GLTFLoadArgs args, std::string id, size_t meshIndex, size_t primitiveIndex);
-	static void loadNode(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, Heap* heap, Asset& asset, std::string modelNameExtensionless, fastgltf::Node& node, GLTFLoadArgs args);
-	static void loadModelsFromNode(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, Asset& asset, std::string modelNameExtensionless, fastgltf::Node& node, std::vector<std::shared_ptr<Model>>& modelList);
+	static void loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, Asset& asset, const fastgltf::Primitive& primitive, std::string modelNameExtensionless, fastgltf::Node& node, GLTFLoadArgs& args, std::string id, size_t meshIndex, size_t primitiveIndex);
+	static void loadNode(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, Asset& asset, std::string modelNameExtensionless, fastgltf::Node& node, GLTFLoadArgs& args);
+	static void loadModelsFromNode(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Asset& asset, std::string modelNameExtensionless, fastgltf::Node& node, std::vector<std::shared_ptr<Model>>& modelList);
 
 	static fastgltf::Parser ms_parser;
 	static bool ms_initialisedParser;

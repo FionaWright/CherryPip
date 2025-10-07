@@ -15,10 +15,10 @@ using namespace DirectX;
 class Model
 {
 public:
-    bool Init(ID3D12GraphicsCommandList2* cmdList, std::wstring filepath);
-    bool Init(ID3D12GraphicsCommandList2* cmdList, std::string filepath);
-    void Init(size_t vertexCount, size_t indexCount, size_t vertexInputSize, float boundingRadius, XMFLOAT3 centroid);
-    void SetBuffers(ID3D12GraphicsCommandList2* cmdList, const void* vBufferData, const void* iBufferData);
+    //bool Init(ID3D12GraphicsCommandList2* cmdList, std::wstring filepath);
+    //bool Init(ID3D12GraphicsCommandList2* cmdList, std::string filepath);
+    void Init(ID3D12Device* device, const size_t vertexCount, const size_t indexCount, const size_t vertexInputSize, const float boundingRadius, const XMFLOAT3 centroid);
+    void SetBuffers(ID3D12Device* device, ID3D12GraphicsCommandList2* cmdList, const void* vBufferData, const void* iBufferData);
 
 private:
     ComPtr<ID3D12Resource> m_vertexBuffer;

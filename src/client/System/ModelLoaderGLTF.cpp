@@ -1,8 +1,9 @@
 #include "System/ModelLoaderGLTF.h"
 #include <direct.h>
 #include <filesystem>
+#include <iostream>
+#include <ostream>
 
-#include "fastgltf/tools.hpp"
 #include "HWI/Model.h"
 #include "MathUtils.h"
 #include "HWI/D3D.h"
@@ -56,8 +57,8 @@ void loadGLTFVertexData(std::vector<VertexInputDataGLTF>& vBuffer, Asset& asset,
 	const size_t byteSize = fastgltf::getElementByteSize(accessor.type, accessor.componentType);
 	const size_t dataStride = bufferView.byteStride.value_or(byteSize);
 
-	const uint8_t* pData = nullptr;
-	std::vector<uint8_t> pTempFileData;
+	const std::byte* pData = nullptr;
+	std::vector<std::byte> pTempFileData;
 
 	if (bufferData.index() == 3)
 		pData = std::get<fastgltf::sources::Array>(bufferData).bytes.data() + dataOffset;
@@ -89,7 +90,7 @@ void loadGLTFVertexData(std::vector<VertexInputDataGLTF>& vBuffer, Asset& asset,
 
 	for (size_t i = 0; i < vBuffer.size(); ++i)
 	{
-		auto address = pData + i * dataStride;
+		const std::byte* address = pData + i * dataStride;
 		func(address, &vBuffer[i]);
 	}
 }
@@ -104,8 +105,8 @@ void ModelLoaderGLTF::loadGLTFIndices(std::vector<uint32_t>& iBuffer, Asset& ass
 	const size_t indexByteSize = fastgltf::getElementByteSize(accessor.type, accessor.componentType);
 	const size_t dataStride = bufferView.byteStride.value_or(indexByteSize);
 
-	const uint8_t* pData = nullptr;
-	std::vector<uint8_t> pTempFileData;
+	const std::byte* pData = nullptr;
+	std::vector<std::byte> pTempFileData;
 
 	if (bufferData.index() == 3)
 		pData = std::get<fastgltf::sources::Array>(bufferData).bytes.data() + dataOffset;
@@ -143,24 +144,24 @@ void ModelLoaderGLTF::loadGLTFIndices(std::vector<uint32_t>& iBuffer, Asset& ass
 
 	for (size_t i = 0; i < iBuffer.size(); i += 3)
 	{
-		const uint8_t* const indexData0 = pData + (i + 0) * dataStride;
-		const uint8_t* const indexData1 = pData + (i + 1) * dataStride;
-		const uint8_t* const indexData2 = pData + (i + 2) * dataStride;
+		const std::byte* indexData0 = pData + (i + 0) * dataStride;
+		const std::byte* const indexData1 = pData + (i + 1) * dataStride;
+		const std::byte* const indexData2 = pData + (i + 2) * dataStride;
 
 		switch (indexByteSize)
 		{
 		case 1:
 			if (RIGHT_HANDED_TO_LEFT)
 			{
-				iBuffer[i + 2] = *indexData0;
-				iBuffer[i + 1] = *indexData1;
-				iBuffer[i + 0] = *indexData2;
+				iBuffer[i + 2] = static_cast<uint8_t>(*indexData0);
+				iBuffer[i + 1] = static_cast<uint8_t>(*indexData1);
+				iBuffer[i + 0] = static_cast<uint8_t>(*indexData2);
 				break;
 			}
 
-			iBuffer[i + 0] = *indexData0;
-			iBuffer[i + 1] = *indexData1;
-			iBuffer[i + 2] = *indexData2;
+			iBuffer[i + 0] = static_cast<uint8_t>(*indexData0);
+			iBuffer[i + 1] = static_cast<uint8_t>(*indexData1);
+			iBuffer[i + 2] = static_cast<uint8_t>(*indexData2);
 			break;
 
 		case 2:
@@ -201,27 +202,27 @@ void ModelLoaderGLTF::loadModel(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, A
 {
 	std::vector<VertexInputDataGLTF> vertexBuffer;
 
-	loadGLTFVertexData(vertexBuffer, asset, primitive, "POSITION", [](const uint8_t* address, VertexInputDataGLTF* output) {
+	loadGLTFVertexData(vertexBuffer, asset, primitive, "POSITION", [](const std::byte* address, VertexInputDataGLTF* output) {
 		output->Position = *reinterpret_cast<const XMFLOAT3*>(address);
 		if (RIGHT_HANDED_TO_LEFT)
 			output->Position.x = -output->Position.x;
 	});
 
-	size_t vertexCount = vertexBuffer.size();
+	const size_t vertexCount = vertexBuffer.size();
 	if (vertexCount == 0)
 		return;
 
-	loadGLTFVertexData(vertexBuffer, asset, primitive, "TEXCOORD_0", [](const uint8_t* address, VertexInputDataGLTF* output) {
+	loadGLTFVertexData(vertexBuffer, asset, primitive, "TEXCOORD_0", [](const std::byte* address, VertexInputDataGLTF* output) {
 		output->Texture = *reinterpret_cast<const XMFLOAT2*>(address);
 	});
 
-	loadGLTFVertexData(vertexBuffer, asset, primitive, "NORMAL", [](const uint8_t* address, VertexInputDataGLTF* output) {
+	loadGLTFVertexData(vertexBuffer, asset, primitive, "NORMAL", [](const std::byte* address, VertexInputDataGLTF* output) {
 		output->Normal = Normalize(*reinterpret_cast<const XMFLOAT3*>(address));
 		if (RIGHT_HANDED_TO_LEFT)
 			output->Normal.x = -output->Normal.x;
 	});
 
-	loadGLTFVertexData(vertexBuffer, asset, primitive, "TANGENT", [](const uint8_t* address, VertexInputDataGLTF* output) {
+	loadGLTFVertexData(vertexBuffer, asset, primitive, "TANGENT", [](const std::byte* address, VertexInputDataGLTF* output) {
 		const XMFLOAT4* data = reinterpret_cast<const XMFLOAT4*>(address);
 		float handedness = data->w > 0.0f ? 1.0f : -1.0f;
 		output->Tangent = Normalize(Mult(XMFLOAT3(data->x, data->y, data->z), handedness));
@@ -262,11 +263,11 @@ void ModelLoaderGLTF::loadModel(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, A
 	std::vector<uint32_t> indexBuffer;
 	loadGLTFIndices(indexBuffer, asset, primitive);
 
-	model->Init(vertexBuffer.size(), indexBuffer.size(), sizeof(VertexInputDataGLTF), boundingRadiusSq, centroidFloat3);
-	model->SetBuffers(cmdList, vertexBuffer.data(), indexBuffer.data());	
+	model->Init(d3d->GetDevice(), vertexBuffer.size(), indexBuffer.size(), sizeof(VertexInputDataGLTF), boundingRadiusSq, centroidFloat3);
+	model->SetBuffers(d3d->GetDevice(), cmdList, vertexBuffer.data(), indexBuffer.data());
 }
 
-std::string ModelLoaderGLTF::loadTexture(Asset& asset, const size_t textureIndex)
+std::string ModelLoaderGLTF::loadTexture(const Asset& asset, const size_t textureIndex)
 {
 	fastgltf::Texture& tex = (*asset)->textures[textureIndex];
 	fastgltf::Image& image = (*asset)->images[tex.imageIndex.value()];

@@ -3,10 +3,6 @@
 #include <d3d12.h>
 #include <DirectXMath.h>
 #include <string>
-#include <iostream>
-#include <fstream>
-#include <intsafe.h>
-#include <unordered_map>
 
 #include "fastgltf/core.hpp"
 #include "fastgltf/types.hpp"
@@ -69,7 +65,7 @@ private:
 	static Transform toTransform(fastgltf::TRS& trs);
 	static void loadGLTFIndices(std::vector<uint32_t>& iBuffer, Asset& asset, const fastgltf::Primitive& primitive);
 	static void loadModel(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, Asset& asset, const fastgltf::Primitive& primitive, Model* model);
-	static std::string loadTexture(Asset& asset, const size_t textureIndex);
+	static std::string loadTexture(const Asset& asset, const size_t textureIndex);
 	static void loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, Heap* heap, Asset& asset, const fastgltf::Primitive& primitive, std::string modelNameExtensionless, fastgltf::Node& node, GLTFLoadArgs args, std::string id, size_t meshIndex, size_t primitiveIndex);
 	static void loadNode(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, Heap* heap, Asset& asset, std::string modelNameExtensionless, fastgltf::Node& node, GLTFLoadArgs args);
 	static void loadModelsFromNode(D3D* d3d, ID3D12GraphicsCommandList2* cmdList, Asset& asset, std::string modelNameExtensionless, fastgltf::Node& node, std::vector<std::shared_ptr<Model>>& modelList);

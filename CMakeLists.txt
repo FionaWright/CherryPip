@@ -75,7 +75,7 @@ add_executable(PT WIN32
         Headers/client/System/Config.h
         src/client/HWI/Model.cpp
         Headers/client/HWI/Model.h
-        #src/client/System/ModelLoaderGLTF.cpp
+        src/client/System/ModelLoaderGLTF.cpp
         src/MathUtils.cpp
         Headers/MathUtils.h
         src/client/HWI/Texture.cpp
@@ -170,17 +170,27 @@ add_custom_target(CopyAssets ALL
 )
 add_dependencies(CopyAssets PT)
 
+target_compile_definitions(PT PRIVATE NOMINMAX)
+
+set(FASTGLTF_USE_CUSTOM_SMALLVECTOR OFF CACHE BOOL "" FORCE)
+set(FASTGLTF_ENABLE_TESTS OFF CACHE BOOL "" FORCE)
+set(FASTGLTF_ENABLE_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(FASTGLTF_ENABLE_DOCS OFF CACHE BOOL "" FORCE)
+set(FASTGLTF_ENABLE_GLTF_RS OFF CACHE BOOL "" FORCE)
+set(FASTGLTF_ENABLE_ASSIMP OFF CACHE BOOL "" FORCE)
+set(FASTGLTF_ENABLE_DEPRECATED_EXT ON CACHE BOOL "" FORCE)
+set(FASTGLTF_DISABLE_CUSTOM_MEMORY_POOL OFF CACHE BOOL "" FORCE)
+set(FASTGLTF_USE_64BIT_FLOAT OFF CACHE BOOL "" FORCE)
+set(FASTGLTF_COMPILE_AS_CPP20 OFF CACHE BOOL "" FORCE)
+set(FASTGLTF_ENABLE_CPP_MODULES OFF CACHE BOOL "" FORCE)
+set(FASTGLTF_USE_STD_MODULE OFF CACHE BOOL "" FORCE)
+
 FetchContent_Declare(
         fastgltf
         URL https://github.com/spnda/fastgltf/archive/refs/tags/v0.9.0.zip
 )
 FetchContent_MakeAvailable(fastgltf)
 target_link_libraries(PT PRIVATE fastgltf)
-
-target_include_directories(PT PRIVATE
-        "${fastgltf_SOURCE_DIR}/include"
-        "${fastgltf_SOURCE_DIR}/deps/simdjson"
-)
 
 find_library(DXGUID_LIB dxguid.lib PATHS [HINTS ENV PROGRAMFILES ENV PROGRAMFILES(X86)])
 find_library(UUID_LIB uuid.lib PATHS [HINTS ENV PROGRAMFILES ENV PROGRAMFILES(X86)])

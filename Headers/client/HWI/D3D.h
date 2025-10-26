@@ -72,6 +72,7 @@ private:
     ComPtr<ID3D12CommandQueue> m_commandQueue;
 
     bool m_useWarpDevice = false;
+    bool m_tearingSupport = false;
 
     // Synchronization objects.
     UINT m_frameIndex = 0;

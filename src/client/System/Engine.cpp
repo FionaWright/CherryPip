@@ -111,6 +111,13 @@ void Engine::RenderGUI()
         ImGui::TreePop();
     }
 
+    ImGui::Spacing();
+    ImGui::Unindent(IM_GUI_INDENTATION);
+    ImGui::SeparatorText("Settings##xx");
+    ImGui::Indent(IM_GUI_INDENTATION);
+
+    ImGui::Checkbox("VSync", &Config::GetSystem().VSyncEnabled);
+
     Gui::EndWindow();
 }
 

@@ -4,12 +4,14 @@
 
 #include "HWI/D3D.h"
 #include "Headers/Helper.h"
+#include "System/Config.h"
 #include "System/Win32App.h"
 #include "System/DebugOutputRedirector.h"
 
 // Helper function for acquiring the first available hardware adapter that supports Direct3D 12.
 // If no such adapter can be found, *ppAdapter will be set to nullptr.
 _Use_decl_annotations_
+
 void getHardwareAdapter(
     IDXGIFactory1* pFactory,
     IDXGIAdapter1** ppAdapter,
@@ -26,7 +28,8 @@ void getHardwareAdapter(
             UINT adapterIndex = 0;
             SUCCEEDED(factory6->EnumAdapterByGpuPreference(
                 adapterIndex,
-                requestHighPerformanceAdapter == true ? DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE : DXGI_GPU_PREFERENCE_UNSPECIFIED,
+                requestHighPerformanceAdapter == true ? DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE :
+                DXGI_GPU_PREFERENCE_UNSPECIFIED,
                 IID_PPV_ARGS(&adapter)));
             ++adapterIndex)
         {
@@ -49,7 +52,7 @@ void getHardwareAdapter(
         }
     }
 
-    if(adapter.Get() == nullptr)
+    if (adapter.Get() == nullptr)
     {
         for (UINT adapterIndex = 0; SUCCEEDED(pFactory->EnumAdapters1(adapterIndex, &adapter)); ++adapterIndex)
         {
@@ -112,7 +115,7 @@ void D3D::Init(size_t width, size_t height)
             warpAdapter.Get(),
             D3D_FEATURE_LEVEL_11_0,
             IID_PPV_ARGS(&m_device)
-            ));
+        ));
     }
     else
     {
@@ -123,8 +126,22 @@ void D3D::Init(size_t width, size_t height)
             hardwareAdapter.Get(),
             D3D_FEATURE_LEVEL_11_0,
             IID_PPV_ARGS(&m_device)
-            ));
+        ));
     }
+
+    ComPtr<IDXGIFactory4> factory4;
+    HRESULT hr = CreateDXGIFactory1(IID_PPV_ARGS(&factory4));
+    BOOL allowTearing = FALSE;
+    if (SUCCEEDED(hr))
+    {
+        ComPtr<IDXGIFactory5> factory5;
+        hr = factory4.As(&factory5);
+        if (SUCCEEDED(hr))
+        {
+            hr = factory5->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
+        }
+    }
+    m_tearingSupport = SUCCEEDED(hr) && allowTearing;
 
 #ifdef _DEBUG
     if (SUCCEEDED(m_device.As(&m_infoQueue)))
@@ -139,7 +156,7 @@ void D3D::Init(size_t width, size_t height)
         HRESULT hr = m_infoQueue->RegisterMessageCallback(
             DebugMessageCallback,
             D3D12_MESSAGE_CALLBACK_FLAG_NONE,
-            &std::cout,   // passed to callback as `context`
+            &std::cout, // passed to callback as `context`
             &cookie);
         if (FAILED(hr))
         {
@@ -149,7 +166,7 @@ void D3D::Init(size_t width, size_t height)
         hr = m_infoQueue->RegisterMessageCallback(
             DebugMessageCallback,
             D3D12_MESSAGE_CALLBACK_FLAG_NONE,
-            &m_logFile,   // passed to callback as `context`
+            &m_logFile, // passed to callback as `context`
             &cookie);
         if (FAILED(hr))
         {
@@ -176,16 +193,17 @@ void D3D::Init(size_t width, size_t height)
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
     swapChainDesc.SampleDesc.Count = 1;
+    swapChainDesc.Flags = m_tearingSupport ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 
     ComPtr<IDXGISwapChain1> swapChain;
     V(factory->CreateSwapChainForHwnd(
-        m_commandQueue.Get(),        // Swap chain needs the queue so that it can force a flush on it.
+        m_commandQueue.Get(), // Swap chain needs the queue so that it can force a flush on it.
         Win32App::GetHwnd(),
         &swapChainDesc,
         nullptr,
         nullptr,
         &swapChain
-        ));
+    ));
 
     // This sample does not support fullscreen transitions.
     V(factory->MakeWindowAssociation(Win32App::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
@@ -292,20 +310,23 @@ void D3D::ExecuteCommandList(ID3D12GraphicsCommandList* cmdList)
 
     V(cmdList->GetPrivateData(__uuidof(ID3D12CommandAllocator), &dataSize, &commandAllocator));
 
-    ID3D12CommandList* ppCommandLists[] = { cmdList };
+    ID3D12CommandList* ppCommandLists[] = {cmdList};
     m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
     const UINT64 fence = m_fenceValue;
     V(m_commandQueue->Signal(m_fence.Get(), fence));
     m_fenceValue++;
-    m_commandAllocatorQueue.push({fence,commandAllocator});
+    m_commandAllocatorQueue.push({fence, commandAllocator});
     m_commandListQueue.push(cmdList);
     commandAllocator->Release();
 }
 
 void D3D::Present()
 {
-    V(m_swapChain->Present(1, 0));
+    const UINT syncInterval = Config::GetSystem().VSyncEnabled ? 1 : 0;
+    const UINT presentFlags = m_tearingSupport && syncInterval == 0 ? DXGI_PRESENT_ALLOW_TEARING : 0;
+    V(m_swapChain->Present(syncInterval, presentFlags));
+
     const UINT64 fence = m_fenceValue;
     V(m_commandQueue->Signal(m_fence.Get(), fence));
     m_frameBufferFences[m_frameIndex] = fence;

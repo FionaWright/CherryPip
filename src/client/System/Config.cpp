@@ -25,6 +25,11 @@ std::vector<std::string> split(const std::string &s, const char delim) {
     return elems;
 }
 
+inline void LinkBool(const std::unordered_map<std::string, std::string>& map, bool& variable, const char* key)
+{
+    variable = map.contains(key) && map.at(key) != "false";
+}
+
 inline void LinkUInt(const std::unordered_map<std::string, std::string>& map, uint32_t& variable, const char* key)
 {
     if (map.contains(key))
@@ -42,7 +47,10 @@ void Config::ParseCommandLineArgs(const LPSTR args)
         std::string arg = splitArgs[i];
         const int eqIdx = arg.find('=');
         if (eqIdx == std::string::npos)
+        {
+            argsMap.insert({arg, ""});
             continue;
+        }
 
         const std::string key = arg.substr(0, eqIdx);
         const std::string value = arg.substr(eqIdx + 1);
@@ -53,6 +61,7 @@ void Config::ParseCommandLineArgs(const LPSTR args)
 
     LinkUInt(argsMap, ms_settingsSystem.RtvWidth, "--window_width");
     LinkUInt(argsMap, ms_settingsSystem.RtvHeight, "--window_height");
+    LinkBool(argsMap, ms_settingsSystem.VSyncEnabled, "--vsync");
 
     std::cout << "Window Width: " << ms_settingsSystem.RtvWidth << std::endl;
 }

@@ -14,6 +14,10 @@
 #include "System/Config.h"
 #include "System/TextureLoader.h"
 
+#ifdef _DEBUG
+#include "System/HotReloader.h"
+#endif
+
 HWND Win32App::m_hwnd = nullptr;
 std::unique_ptr<D3D> Win32App::m_d3d = nullptr;
 
@@ -87,6 +91,20 @@ int Win32App::Run(App* pSample, HINSTANCE hInstance, int nCmdShow)
     return static_cast<char>(msg.wParam);
 }
 
+void Frame(const HWND hWnd, D3D* d3d)
+{
+    if (App* pSample = reinterpret_cast<App*>(GetWindowLongPtr(hWnd, GWLP_USERDATA)))
+    {
+        pSample->OnUpdate(d3d);
+    }
+
+    Input::ProgressFrame();
+
+#ifdef _DEBUG
+    HotReloader::CheckFiles(d3d);
+#endif
+}
+
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 // Main message handler for the sample.
@@ -94,8 +112,6 @@ LRESULT CALLBACK Win32App::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LP
 {
     if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam))
         return true;
-
-    App* pSample = reinterpret_cast<App*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
     switch (message)
     {
@@ -165,11 +181,7 @@ LRESULT CALLBACK Win32App::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LP
         break;
 
     case WM_PAINT:
-        if (pSample)
-        {
-            pSample->OnUpdate(m_d3d.get());
-        }
-        Input::ProgressFrame();
+        Frame(hWnd, m_d3d.get());
         return 0;
 
     case WM_DESTROY:

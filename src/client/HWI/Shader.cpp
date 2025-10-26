@@ -7,6 +7,10 @@
 #include "Helper.h"
 #include "System/FileHelper.h"
 
+#ifdef _DEBUG
+#include "System/HotReloader.h"
+#endif
+
 inline ComPtr<IDxcBlob> CompileShaderDXC(
     const std::wstring& filePath,
     LPCWSTR entryPoint,
@@ -87,8 +91,11 @@ void Shader::InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D1
     UINT compileFlags = 0;
 #endif
 
-    ComPtr<IDxcBlob> vertexShader = CompileShaderDXC(FileHelper::GetAssetShaderFullPath(vs).c_str(), L"VSMain", L"vs_6_6", compileFlags);
-    ComPtr<IDxcBlob> pixelShader = CompileShaderDXC(FileHelper::GetAssetShaderFullPath(ps).c_str(), L"PSMain", L"ps_6_6", compileFlags);
+    std::wstring vsPath = FileHelper::GetAssetShaderFullPath(vs);
+    std::wstring psPath = FileHelper::GetAssetShaderFullPath(ps);
+
+    ComPtr<IDxcBlob> vertexShader = CompileShaderDXC(vsPath.c_str(), L"VSMain", L"vs_6_6", compileFlags);
+    ComPtr<IDxcBlob> pixelShader = CompileShaderDXC(psPath.c_str(), L"PSMain", L"ps_6_6", compileFlags);
     
     D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
     psoDesc.InputLayout = ild;
@@ -107,9 +114,13 @@ void Shader::InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D1
     psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
     psoDesc.SampleDesc.Count = 1;
     V(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pso)));
+
+#ifdef _DEBUG
+    HotReloader::AssignShaderVsPs(vs, ps, this, ild, rootSig);
+#endif
 }
 
-void Shader::InitCs(LPCWSTR cs, ID3D12Device* device, ID3D12RootSignature* rootSig)
+void Shader::InitCs(const LPCWSTR cs, ID3D12Device* device, ID3D12RootSignature* rootSig)
 {
 #if defined(_DEBUG)
     UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
@@ -117,10 +128,15 @@ void Shader::InitCs(LPCWSTR cs, ID3D12Device* device, ID3D12RootSignature* rootS
     UINT compileFlags = 0;
 #endif
 
-    ComPtr<IDxcBlob> computeShader = CompileShaderDXC(FileHelper::GetAssetShaderFullPath(cs).c_str(), L"CSMain", L"cs_6_6", compileFlags);
+    std::wstring csPath = FileHelper::GetAssetShaderFullPath(cs);
+    ComPtr<IDxcBlob> computeShader = CompileShaderDXC(csPath.c_str(), L"CSMain", L"cs_6_6", compileFlags);
 
     D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
     psoDesc.pRootSignature = rootSig;
     psoDesc.CS = { computeShader->GetBufferPointer(), computeShader->GetBufferSize() };
     V(device->CreateComputePipelineState(&psoDesc, IID_PPV_ARGS(&m_pso)));
+
+#ifdef _DEBUG
+    HotReloader::AssignShaderCs(cs, this, rootSig);
+#endif
 }

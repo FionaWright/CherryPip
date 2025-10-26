@@ -92,6 +92,8 @@ add_executable(PT WIN32
         Headers/client/Render/Object.h
         src/client/HWI/Heap.cpp
         Headers/client/HWI/Heap.h
+        src/client/System/HotReloader.cpp
+        src/client/System/HotReloader.h
 )
 
 file(GLOB THIRD_PARTY_SOURCES CONFIGURE_DEPENDS

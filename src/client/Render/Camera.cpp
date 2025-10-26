@@ -10,15 +10,18 @@ void Camera::Init(XMFLOAT3 pos, XMFLOAT3 lookat)
     m_forward = XMFLOAT3(0.0f, 0.0f, -1.0f);
     m_right = XMFLOAT3(1.0f, 0.0f, 0.0f);
 
+    m_yaw = atan2(m_forward.x, m_forward.z); // rotate around Y
+    m_pitch = atan2(-m_forward.y, sqrt(m_forward.x * m_forward.x + m_forward.z * m_forward.z)); // rotate around X
+
     m_pos = XMFLOAT3(0, 0, 5);
 }
 
 XMMATRIX Camera::GetViewMatrix() const
 {
-    XMVECTOR up = XMLoadFloat3(&m_up);
-    XMVECTOR dir = XMLoadFloat3(&m_forward);
+    const XMVECTOR up = XMLoadFloat3(&m_up);
+    const XMVECTOR dir = XMLoadFloat3(&m_forward);
 
-    XMVECTOR positionVector = XMLoadFloat3(&m_pos);
+    const XMVECTOR positionVector = XMLoadFloat3(&m_pos);
 
     return XMMatrixLookToLH(positionVector, dir, up);
 }

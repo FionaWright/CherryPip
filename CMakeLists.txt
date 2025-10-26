@@ -39,14 +39,8 @@ set(D3D12_LIBS
 # TODO: Make this automatic (?)
 add_executable(PT WIN32
         src/main.cpp
-        #Apps/HelloTriangle/src/HelloTriangle.cpp
-        #Apps/HelloTriangle/Headers/HelloTriangle.h
-        #Apps/SpinningCube/src/SpinningCube.cpp
-        #Apps/SpinningCube/Headers/SpinningCube.h
-        #Apps/TextureCube/Headers/TextureCube.h
-        #Apps/TextureCube/src/TextureCube.cpp
-        Apps/ModelLoading/Headers/ModelLoading.h
-        Apps/ModelLoading/src/ModelLoading.cpp
+        Apps/RasterViewer/Headers/RasterViewer.h
+        Apps/RasterViewer/src/RasterViewer.cpp
 
         src/client/System/Win32App.cpp
         Headers/client/System/Win32App.h

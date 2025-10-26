@@ -1,4 +1,4 @@
-#include "Apps/ModelLoading/Headers/ModelLoading.h"
+#include "Apps/RasterViewer/Headers/RasterViewer.h"
 #include "System/Win32App.h"
 #include <dxcapi.h>
 
@@ -12,12 +12,12 @@
 #include "HWI/Material.h"
 #include "System/ModelLoaderGLTF.h"
 
-ModelLoading::ModelLoading()
+RasterViewer::RasterViewer()
     : m_AspectRatio(0)
 {
 }
 
-void ModelLoading::OnInit(D3D* d3d)
+void RasterViewer::OnInit(D3D* d3d)
 {
     m_AspectRatio = static_cast<float>(Config::GetSystem().RtvWidth) / static_cast<float>(Config::GetSystem().
         RtvHeight);
@@ -27,7 +27,7 @@ void ModelLoading::OnInit(D3D* d3d)
     loadAssets(d3d);
 }
 
-void ModelLoading::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
+void RasterViewer::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 {
     populateCommandList(d3d, cmdList);
     m_camera.UpdateCamera();
@@ -41,7 +41,7 @@ struct Vertex
     XMFLOAT4 tangent;
 };
 
-void ModelLoading::loadAssets(D3D* d3d)
+void RasterViewer::loadAssets(D3D* d3d)
 {
     ID3D12Device* device = d3d->GetDevice();
     const ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
@@ -127,7 +127,7 @@ void ModelLoading::loadAssets(D3D* d3d)
     d3d->Flush();
 }
 
-void ModelLoading::populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList* cmdList) const
+void RasterViewer::populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList* cmdList) const
 {
     float fov = 60.0f;
     float nearPlane = 0.1f;
@@ -164,6 +164,6 @@ void ModelLoading::populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList
     }
 
     Gui::BeginWindow("App", ImVec2(0,0), ImVec2(Config::GetSystem().WindowAppGuiWidth, Config::GetSystem().RtvHeight));
-    ImGui::Text("APP-SIDE GUI (ModelLoading)");
+    ImGui::Text("APP-SIDE GUI (RasterViewer)");
     Gui::EndWindow();
 }

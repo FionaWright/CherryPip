@@ -12,10 +12,10 @@
 
 using Microsoft::WRL::ComPtr;
 
-class ModelLoading : public App
+class RasterViewer : public App
 {
 public:
-    ModelLoading();
+    RasterViewer();
     void OnInit(D3D* d3d) override;
     void OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList) override;
 

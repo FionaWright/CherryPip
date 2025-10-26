@@ -21,6 +21,7 @@ public:
     void SetRotation(const float x, const float y, const float z) { m_rotationEuler = {x, y, z}; }
     void SetScale(const XMFLOAT3& scale) { m_scale = scale; }
     void SetScale(const float x, const float y, const float z) { m_scale = {x, y, z}; }
+    void SetScale(const float x) { m_scale = {x, x, x}; }
 
     void Translate(const XMFLOAT3& offset);
     void Rotate(const XMFLOAT3& rotation);

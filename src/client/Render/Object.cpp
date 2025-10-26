@@ -36,8 +36,8 @@ void Object::Render(ID3D12GraphicsCommandList* cmdList, CbvMatrices& matrices) c
 
     matrices.M = m_transform->GetModelMatrix(); // TODO: Cache
     matrices.MTI = XMMatrixInverse(nullptr, XMMatrixTranspose(matrices.M));
-
     m_material->UpdateCBV(0, &matrices);
+
     m_material->TransitionSrvsToPS(cmdList);
     m_material->SetDescriptorTables(cmdList);
 

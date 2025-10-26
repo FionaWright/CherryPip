@@ -100,13 +100,15 @@ void ModelLoading::loadAssets(D3D* d3d)
 
     GLTFLoadArgs args;
     args.Transform = {};
+    args.Transform.SetScale(0.1f);
     args.CullingWhiteList = {};
     args.DefaultShaderIndex = 0;
     args.DefaultShaderATIndex = -1;
     args.Overrides = {};
     args.Root = rootSig;
     args.Shaders = { shader };
-    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, "Madeline/Madeline.glb", args);
+    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, "floatplane.glb", args);
+    //ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, "Bistro/Bistro.gltf", args);
     //ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, "Cube.glb", args);
     m_objects = args.Objects;
 

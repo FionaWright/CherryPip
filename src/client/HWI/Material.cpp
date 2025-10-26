@@ -9,6 +9,7 @@
 
 Material::~Material()
 {
+    // TODO: Unmap cbv.MappedGpuPtrs
     std::cout << "Material Destroyed!" << std::endl;
 }
 
@@ -19,35 +20,24 @@ void Material::Init(const Heap* heap)
     m_descriptorIncSize = heap->GetIncrementSize();
 }
 
-void Material::AddCBV(ID3D12Device* device, Heap* heap, size_t size)
+void Material::AddCBV(ID3D12Device* device, Heap* heap, const size_t size)
 {
     const size_t alignedSize = (size + 255) & ~255; // Ceilings the size to the nearest 256
 
     D3D12_HEAP_PROPERTIES heapProps = {};
     heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
-    heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-    heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-    heapProps.CreationNodeMask = 1;
-    heapProps.VisibleNodeMask = 1;
 
-    D3D12_RESOURCE_DESC bufferDesc = {};
-    bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    bufferDesc.Width = alignedSize;
-    bufferDesc.Height = 1;
-    bufferDesc.DepthOrArraySize = 1;
-    bufferDesc.MipLevels = 1;
-    bufferDesc.Format = DXGI_FORMAT_UNKNOWN;
-    bufferDesc.SampleDesc.Count = 1;
-    bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-    bufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+    const D3D12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(alignedSize);
 
     const UINT idx = heap->GetNextDescriptor();
-    CBV cbv = { nullptr, idx, size, alignedSize };
+    CBV cbv = { nullptr, idx, size, alignedSize, nullptr };
 
     V(device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &bufferDesc,
                                     D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&cbv.Resource)));
 
     heap->InitCBV(device, cbv.Resource.Get(), alignedSize, idx);
+
+    V(cbv.Resource->Map(0, nullptr, &cbv.MappedGpuPtr));
 
     m_cbvs.push_back(cbv);
 }
@@ -80,12 +70,7 @@ void Material::TransitionSrvsToPS(ID3D12GraphicsCommandList* cmdList) const
 void Material::UpdateCBV(const UINT regIdx, const void* data) const
 {
     const CBV& cbv = m_cbvs[regIdx];
-
-    void* dstData = nullptr;
-    D3D12_RANGE readRange = {};
-    V(cbv.Resource->Map(0, &readRange, &dstData));
-    std::memcpy(dstData, data, cbv.Size);
-    cbv.Resource->Unmap(0, nullptr);
+    std::memcpy(cbv.MappedGpuPtr, data, cbv.Size);
 }
 
 // TODO: Not general

@@ -27,7 +27,6 @@ void Transform::Scale(const XMFLOAT3& scale)
 
 XMMATRIX Transform::GetModelMatrix() const
 {
-    // TODO: Cache this by hashing member data and comparing
     const XMMATRIX T = XMMatrixTranslation(m_position.x, m_position.y, m_position.z);
     const XMMATRIX R = XMMatrixRotationRollPitchYaw(m_rotationEuler.x, m_rotationEuler.y, m_rotationEuler.z);
     const XMMATRIX S = XMMatrixScaling(m_scale.x, m_scale.y, m_scale.z);

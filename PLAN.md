@@ -28,6 +28,4 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 - Frustum Culling
 - Texture/Model reuse
-- Descriptor heap sharing
-- CBVMatrices caching
-- Show FPS, Current Scene
+- Descriptor heap sharing (Wait to see if it's worth it)

@@ -18,6 +18,8 @@ struct CBV
     const UINT HeapIndex;
     const size_t Size;
     const size_t AlignedSize;
+
+    void* MappedGpuPtr;
 };
 
 struct SRV

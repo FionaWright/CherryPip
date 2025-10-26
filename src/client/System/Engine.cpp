@@ -30,6 +30,9 @@ void Engine::Frame(const HWND hWnd)
 {
     Gui::BeginFrame();
 
+    const TimeArgs timeArgs = m_clock.GetTimeArgs();
+    CalculateFPS(timeArgs.ElapsedTime);
+
     if (App* pSample = reinterpret_cast<App*>(GetWindowLongPtr(hWnd, GWLP_USERDATA)))
     {
         Render(pSample);
@@ -44,7 +47,7 @@ void Engine::Frame(const HWND hWnd)
 #endif
 }
 
-void Engine::Render(App* pSample) const
+void Engine::Render(App* pSample)
 {
     ID3D12Resource* rtv = m_d3d->GetCurrRTV();
 
@@ -67,10 +70,80 @@ void Engine::Render(App* pSample) const
     m_d3d->Present();
 }
 
-void Engine::RenderGUI() const
+// TODO: Move somewhere else
+#define IM_GUI_INDENTATION 20
+void Engine::RenderGUI()
 {
     const float startGuiX = Config::GetSystem().WindowAppGuiWidth + Config::GetSystem().RtvWidth;
-    Gui::BeginWindow("Engine", ImVec2(startGuiX,0), ImVec2(Config::GetSystem().WindowEngineGuiWidth, Config::GetSystem().RtvHeight));
-    ImGui::Text("ENGINE-SIDE GUI");
+    Gui::BeginWindow("Engine##xx", ImVec2(startGuiX,0), ImVec2(Config::GetSystem().WindowEngineGuiWidth, Config::GetSystem().RtvHeight));
+
+    ImGui::SeparatorText("Stats##xx");
+    ImGui::Indent(IM_GUI_INDENTATION);
+
+    const std::string fpsTxt = "FPS (Over 10ms): " + std::to_string(m_fps10ms);
+    ImGui::Text("%s", fpsTxt.c_str());
+
+    const std::string fpsTxt5 = "FPS (Over 50ms): " + std::to_string(m_fps50ms);
+    ImGui::Text("%s", fpsTxt5.c_str());
+
+    const std::string fpsTxt10 = "FPS (Over 100ms): " + std::to_string(m_fps100ms);
+    ImGui::Text("%s", fpsTxt10.c_str());
+
+    static bool pauseFPSQueue = false;
+
+    const bool canUpdateQueue = m_fpsGuiQueue.size() == 0 || m_fps10ms != m_fpsGuiQueue.at(m_fpsGuiQueue.size() - 1);
+    if (canUpdateQueue && !pauseFPSQueue)
+    {
+        m_fpsGuiQueue.push_back(m_fps10ms);
+        if (m_fpsGuiQueue.size() > 300)
+            m_fpsGuiQueue.erase(m_fpsGuiQueue.begin());
+    }
+
+    if (ImGui::TreeNode("FPS Plot##xx"))
+    {
+        ImGui::Indent(IM_GUI_INDENTATION);
+
+        ImGui::PlotLines("##xx", m_fpsGuiQueue.data(), m_fpsGuiQueue.size(), 0, nullptr, 0, 3.4028235E38F, ImVec2(0, 150));
+
+        ImGui::Checkbox("Pause##xx", &pauseFPSQueue);
+
+        ImGui::Unindent(IM_GUI_INDENTATION);
+        ImGui::TreePop();
+    }
+
     Gui::EndWindow();
+}
+
+void Engine::CalculateFPS(const double deltaTime)
+{
+    m_fpsTimeSinceUpdate10ms += deltaTime;
+    m_fpsTimeSinceUpdate50ms += deltaTime;
+    m_fpsTimeSinceUpdate100ms += deltaTime;
+    m_fpsFramesSinceUpdate10ms++;
+    m_fpsFramesSinceUpdate50ms++;
+    m_fpsFramesSinceUpdate100ms++;
+
+    if (m_fpsTimeSinceUpdate10ms > 0.1)
+    {
+        m_fps10ms = m_fpsFramesSinceUpdate10ms / m_fpsTimeSinceUpdate10ms;
+
+        m_fpsFramesSinceUpdate10ms = 0;
+        m_fpsTimeSinceUpdate10ms = 0.0;
+    }
+
+    if (m_fpsTimeSinceUpdate50ms > 0.5)
+    {
+        m_fps50ms = m_fpsFramesSinceUpdate50ms / m_fpsTimeSinceUpdate50ms;
+
+        m_fpsFramesSinceUpdate50ms = 0;
+        m_fpsTimeSinceUpdate50ms = 0.0;
+    }
+
+    if (m_fpsTimeSinceUpdate100ms > 1.0)
+    {
+        m_fps100ms = m_fpsFramesSinceUpdate100ms / m_fpsTimeSinceUpdate100ms;
+
+        m_fpsFramesSinceUpdate100ms = 0;
+        m_fpsTimeSinceUpdate100ms = 0.0;
+    }
 }

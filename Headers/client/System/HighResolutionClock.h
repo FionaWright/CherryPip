@@ -9,7 +9,7 @@
 
 using std::chrono::high_resolution_clock;
 
-struct TimeEventArgs
+struct TimeArgs
 {
     double ElapsedTime;
     double TotalTime;
@@ -34,7 +34,7 @@ public:
     double GetTotalMilliSeconds() const;
     double GetTotalSeconds() const;
 
-    TimeEventArgs GetTimeArgs() const;
+    TimeArgs GetTimeArgs() const;
 
 private:
     high_resolution_clock::time_point m_t0;

@@ -21,7 +21,7 @@ class Config
 {
 public:
     static void ParseCommandLineArgs(LPSTR args);
-    static SettingsSystem GetSystem() { return ms_settingsSystem; }
+    static SettingsSystem& GetSystem() { return ms_settingsSystem; }
 
 private:
     static SettingsSystem ms_settingsSystem;

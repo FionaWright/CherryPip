@@ -65,9 +65,9 @@ double HighResolutionClock::GetTotalSeconds() const
     return m_totalTime.count() * 1e-9;
 }
 
-TimeEventArgs HighResolutionClock::GetTimeArgs() const
+TimeArgs HighResolutionClock::GetTimeArgs() const
 {
-    TimeEventArgs args;
+    TimeArgs args;
     args.ElapsedTime = GetDeltaSeconds();
     args.TotalTime = GetTotalSeconds();
     return args;

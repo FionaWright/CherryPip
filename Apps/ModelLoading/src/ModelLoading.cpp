@@ -28,7 +28,7 @@ void ModelLoading::OnInit(D3D* d3d)
 
 void ModelLoading::OnUpdate(D3D* d3d)
 {
-    ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
+    const ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
     populateCommandList(d3d, cmdList.Get());
 
@@ -49,7 +49,7 @@ struct Vertex
 void ModelLoading::loadAssets(D3D* d3d)
 {
     ID3D12Device* device = d3d->GetDevice();
-    ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
+    const ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
     std::shared_ptr<RootSig> rootSig = std::make_shared<RootSig>();
     std::shared_ptr<Shader> shader = std::make_shared<Shader>();
@@ -107,6 +107,7 @@ void ModelLoading::loadAssets(D3D* d3d)
     args.Root = rootSig;
     args.Shaders = { shader };
     ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, "Madeline/Madeline.glb", args);
+    //ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, "Cube.glb", args);
     m_objects = args.Objects;
 
     V(cmdList->Close());

@@ -64,9 +64,10 @@ void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std
     Init(device, cmdList, wstr, format, arraySize, flags);
 }
 
-void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::wstring filePath, const DXGI_FORMAT format, const int arraySize, const D3D12_RESOURCE_FLAGS flags)
+void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::wstring filePath,
+                   const DXGI_FORMAT format, const int arraySize, const D3D12_RESOURCE_FLAGS flags)
 {
-    uint8_t* pData;
+    uint8_t* pData = nullptr;
     bool hasAlpha = false, flip = false, isNormal = false;
     int channels = -1;
     const std::string nwPath = wstringToString(filePath);
@@ -89,7 +90,7 @@ void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std
 
     const int rowPitch = m_width * (BitsPerPixel(format) / 8);
     const int totalBytes = rowPitch * m_height;
-    m_resource.Upload(cmdList, &pData, totalBytes, rowPitch);
+    m_resource.Upload(cmdList, pData, totalBytes, rowPitch);
 
     std::wstring debugName(filePath.begin(), filePath.end());
     V(m_resource.GetResource()->SetName(debugName.c_str()));
@@ -101,8 +102,13 @@ void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std
     }
 }
 
-void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const std::byte* pData, const DXGI_FORMAT format, const int arraySize, const D3D12_RESOURCE_FLAGS flags)
+void Texture::InitPNG(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const uint8_t* inData,
+                      const size_t dataSize, const DXGI_FORMAT format, const int arraySize, const D3D12_RESOURCE_FLAGS flags)
 {
+    uint8_t* pData = nullptr;
+    int channels = -1;
+    TextureLoader::LoadPNG(inData, dataSize, m_width, m_height, &pData, channels);
+
     const int maxDim = std::max<int>(m_width, m_height);
 
     D3D12_RESOURCE_DESC desc = {};
@@ -120,7 +126,7 @@ void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, con
 
     const int rowPitch = m_width * (BitsPerPixel(format) / 8);
     const int totalBytes = rowPitch * m_height;
-    m_resource.Upload(cmdList, reinterpret_cast<const uint8_t**>(&pData), totalBytes, rowPitch);
+    m_resource.Upload(cmdList, pData, totalBytes, rowPitch);
 
     if (desc.MipLevels > 1)
     {

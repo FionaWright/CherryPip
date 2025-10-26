@@ -595,7 +595,7 @@ int GetChannelsFromColorType(int color_type)
     }
 }
 
-void TextureLoader::LoadPNG(std::string filePath, int& width, int& height, uint8_t** pData, int& channels)
+void TextureLoader::LoadPNG(const std::string& filePath, int& width, int& height, uint8_t** pData, int& channels)
 {
     FILE* file;
     fopen_s(&file, filePath.c_str(), "rb");
@@ -630,6 +630,37 @@ void TextureLoader::LoadPNG(std::string filePath, int& width, int& height, uint8
 
     spng_ctx_free(ctx);
     fclose(file);
+}
+
+void TextureLoader::LoadPNG(const uint8_t* inputData, const uint32_t dataSize, int& width, int& height, uint8_t** pData, int& channels)
+{
+    assert(inputData && dataSize > 0);
+
+    spng_ctx* ctx = spng_ctx_new(0);
+    assert(ctx);
+
+    spng_set_png_buffer(ctx, inputData, dataSize);
+
+    spng_ihdr ihdr;
+    spng_get_ihdr(ctx, &ihdr);
+
+    width = ihdr.width;
+    height = ihdr.height;
+    channels = GetChannelsFromColorType(ihdr.color_type);
+
+    spng_format format =
+        channels == 4 ? SPNG_FMT_RGBA8 :
+        channels == 3 ? SPNG_FMT_RGBA8 : // No existing RGB8 DXGI format so we have to leave the alpha empty
+        channels == 2 ? SPNG_FMT_GA8 :
+        SPNG_FMT_G8;
+
+    size_t outSize;
+    spng_decoded_image_size(ctx, format, &outSize);
+    *pData = new uint8_t[outSize];
+
+    spng_decode_image(ctx, *pData, outSize, format, 0);
+
+    spng_ctx_free(ctx);
 }
 
 XMFLOAT3 rgbeToFloat(const uint8_t* rgbe)

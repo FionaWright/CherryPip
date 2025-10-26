@@ -32,25 +32,45 @@ void D12Resource::Init(ID3D12Device* device, const D3D12_RESOURCE_DESC& resource
     V(device->CreateCommittedResource(&uploadHeapProp, D3D12_HEAP_FLAG_NONE, &bufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_uploadHeap)));
 }
 
+void D12Resource::Upload(ID3D12GraphicsCommandList* cmdList, const uint8_t* pData, const size_t totalBytes,
+                         const size_t rowPitch) const
+{
+    assert(m_desc.DepthOrArraySize == 1);
+
+    constexpr int c_mip0 = 0;
+    constexpr int c_slice0 = 0;
+    const UINT subresourceIndex = D3D12CalcSubresource(c_mip0, c_slice0, 0, m_desc.MipLevels, m_desc.DepthOrArraySize);
+
+    D3D12_SUBRESOURCE_DATA subresource = {};
+    subresource.pData = pData;
+    subresource.RowPitch = rowPitch;
+    subresource.SlicePitch = totalBytes;
+
+    constexpr UINT c_intermediateOffset = 0;
+    UpdateSubresources(cmdList, m_resource.Get(), m_uploadHeap.Get(), c_intermediateOffset, subresourceIndex, 1,
+                       &subresource);
+    delete pData;
+}
+
 void D12Resource::Upload(ID3D12GraphicsCommandList* cmdList, const uint8_t** pData, const size_t totalBytes,
                          const size_t rowPitch) const
 {
-    UINT immediateOffset = 0;
+    UINT intermediateOffset = 0;
 
     for (int a = 0; a < m_desc.DepthOrArraySize; a++)
     {
-        constexpr int c_mip = 0;
-        const UINT subresourceIndex = D3D12CalcSubresource(c_mip, a, 0, m_desc.MipLevels, m_desc.DepthOrArraySize);
+        constexpr int c_mip0 = 0;
+        const UINT subresourceIndex = D3D12CalcSubresource(c_mip0, a, 0, m_desc.MipLevels, m_desc.DepthOrArraySize);
 
         D3D12_SUBRESOURCE_DATA subresource = {};
         subresource.pData = pData[a];
         subresource.RowPitch = rowPitch;
         subresource.SlicePitch = totalBytes;
 
-        UpdateSubresources(cmdList, m_resource.Get(), m_uploadHeap.Get(), immediateOffset, subresourceIndex, 1,
+        UpdateSubresources(cmdList, m_resource.Get(), m_uploadHeap.Get(), intermediateOffset, subresourceIndex, 1,
                            &subresource);
 
-        immediateOffset += static_cast<UINT>(GetRequiredIntermediateSize(m_resource.Get(), subresourceIndex, 1));
+        intermediateOffset += static_cast<UINT>(GetRequiredIntermediateSize(m_resource.Get(), subresourceIndex, 1));
     }
 
     for (int a = 0; a < m_desc.DepthOrArraySize; a++)

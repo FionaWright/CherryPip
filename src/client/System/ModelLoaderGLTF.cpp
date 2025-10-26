@@ -12,6 +12,7 @@
 #include "DualIncludes/CBV.h"
 #include "HWI/Material.h"
 #include "Render/Object.h"
+#include "System/TextureLoader.h"
 
 namespace filesystem = std::filesystem;
 
@@ -267,7 +268,7 @@ void ModelLoaderGLTF::loadModel(D3D* d3d, ID3D12GraphicsCommandList* cmdList, co
 	model->SetBuffers(d3d->GetDevice(), cmdList, vertexBuffer.data(), indexBuffer.data());
 }
 
-std::variant<std::string, const std::byte*> ModelLoaderGLTF::loadTexture(const Asset& asset, const size_t textureIndex)
+std::variant<std::string, const std::byte*> ModelLoaderGLTF::loadTexture(const Asset& asset, const size_t textureIndex, size_t& outDataSize)
 {
 	fastgltf::Texture& tex = (*asset)->textures[textureIndex];
 	fastgltf::Image& image = (*asset)->images[tex.imageIndex.value()];
@@ -296,6 +297,7 @@ std::variant<std::string, const std::byte*> ModelLoaderGLTF::loadTexture(const A
 			throw std::exception("Not sure what to do with this");
 
 		const std::byte* pData = std::get<fastgltf::sources::Array>(bufferData).bytes.data() + bufferView.byteOffset;
+	    outDataSize = bufferView.byteLength;
 		return pData;
 	}
 
@@ -336,13 +338,12 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
 	}
 
 	std::variant<std::string, const std::byte*> diffuseTexInput = "";
+    size_t dataSize = 0;
 	if (mat.pbrData.baseColorTexture.has_value())
 	{
-		diffuseTexInput = loadTexture(asset, mat.pbrData.baseColorTexture.value().textureIndex);
-		if (std::holds_alternative<std::string>(diffuseTexInput))
-		{
-			diffuseTexInput = directory + get<std::string>(diffuseTexInput);
-		}
+		diffuseTexInput = loadTexture(asset, mat.pbrData.baseColorTexture.value().textureIndex, dataSize);
+	    if (std::holds_alternative<std::string>(diffuseTexInput))
+	        diffuseTexInput = directory + get<std::string>(diffuseTexInput);
 	}
 	else if (mat.iridescence)
 		diffuseTexInput = "Transparent.png";
@@ -372,14 +373,19 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
 	}
 	else
 	{
-		diffuseTex->Init(d3d->GetDevice(), cmdList, get<const std::byte*>(diffuseTexInput), DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+	    auto pData = get<const std::byte*>(diffuseTexInput);
+		diffuseTex->InitPNG(d3d->GetDevice(), cmdList, reinterpret_cast<const uint8_t*>(pData), dataSize, DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 	}
 
-	std::string normalTexPath = "";
-	if (mat.normalTexture.has_value())
-		normalTexPath = directory + loadTexture(asset, mat.normalTexture.value().textureIndex);
+    std::variant<std::string, const std::byte*> normalTexInput = "";
+    if (mat.normalTexture.has_value())
+    {
+        normalTexInput = loadTexture(asset, mat.normalTexture.value().textureIndex, dataSize);
+        if (std::holds_alternative<std::string>(normalTexInput))
+            normalTexInput = directory + get<std::string>(normalTexInput);
+    }
 	else
-		normalTexPath = "Assets/Textures/DefaultNormal.tga";
+		normalTexInput = "Assets/Textures/DefaultNormal.tga";
 
 	/*if (SettingsManager::ms_Misc.BistroLowQualityTexNormalEnabled && modelNameExtensionless == "Bistro")
 	{
@@ -397,16 +403,23 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
 			normalTexPath = newNormalPath;
 	}*/
 
-	//std::shared_ptr<Texture> normalTex = std::make_shared<Texture>();
-	//normalTex->Init(d3d->GetDevice(), cmdList, normalTexPath, DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    std::shared_ptr<Texture> normalTex = std::make_shared<Texture>();
+    if (std::holds_alternative<std::string>(normalTexInput))
+    {
+        //normalTex->Init(d3d->GetDevice(), cmdList, get<std::string>(normalTexInput), DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    }
+    else
+    {
+        //normalTex->InitPNG(d3d->GetDevice(), cmdList, get<const std::byte*>(normalTexInput), DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    }
 
-	std::string specTexPath = "";
+	/*std::string specTexPath = "";
 	if (mat.specular && mat.specular.get()->specularTexture.has_value())
 		specTexPath = directory + loadTexture(asset, mat.specular.get()->specularTexture.value().textureIndex);
 	else if (mat.pbrData.metallicRoughnessTexture.has_value())
 		specTexPath = directory + loadTexture(asset, mat.pbrData.metallicRoughnessTexture.value().textureIndex);
 	else
-		specTexPath = "Assets/Textures/DefaultSpecular.png";
+		specTexPath = "Assets/Textures/DefaultSpecular.png";*/
 
 	//std::shared_ptr<Texture> specTex = AssetFactory::CreateTexture(specTexPath, cmdList, false, false, true);
 

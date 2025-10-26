@@ -26,8 +26,9 @@ class TextureLoader
 	static void LoadDDS_DXT1(std::ifstream& fin, int& width, int& height, uint8_t** pData);
 	static void LoadDDS_DXT5(std::ifstream& fin, int& width, int& height, uint8_t** pData);
 	static void LoadDDS_ATI2(std::ifstream& fin, int& width, int& height, uint8_t** pData);
-	static void LoadPNG(std::string filePath, int& width, int& height, uint8_t** pData, int& channels);
-	static void LoadHDR(std::string filePath, int& width, int& height, std::vector<uint8_t*>& pDatas, int& channels);
+	static void LoadPNG(const std::string& filePath, int& width, int& height, uint8_t** pData, int& channels);
+    static void LoadPNG(const uint8_t* inputData, uint32_t dataSize, int& width, int& height, uint8_t** pData, int& channels);
+    static void LoadHDR(std::string filePath, int& width, int& height, std::vector<uint8_t*>& pDatas, int& channels);
 
 	static void CreateMipMaps(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, D12Resource* resource);
 

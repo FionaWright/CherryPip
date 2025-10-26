@@ -95,8 +95,10 @@ void Engine::RenderGUI()
     if (canUpdateQueue && !pauseFPSQueue)
     {
         m_fpsGuiQueue.push_back(m_fps10ms);
-        if (m_fpsGuiQueue.size() > 300)
-            m_fpsGuiQueue.erase(m_fpsGuiQueue.begin());
+        const float framesPer5Seconds = 5.0 * m_fps10ms;
+        const int overflowFrames = m_fpsGuiQueue.size() - framesPer5Seconds;
+        if (overflowFrames > 0)
+            m_fpsGuiQueue.erase(m_fpsGuiQueue.begin(), m_fpsGuiQueue.begin() + overflowFrames);
     }
 
     if (ImGui::TreeNode("FPS Plot##xx"))

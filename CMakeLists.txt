@@ -155,22 +155,22 @@ add_custom_command(TARGET PT POST_BUILD
         $<TARGET_FILE_DIR:PT>
 )
 
-file(GLOB_RECURSE ASSET_FILES "${CMAKE_SOURCE_DIR}/Assets/*")
-
-add_custom_command(
-        OUTPUT ${CMAKE_BINARY_DIR}/Assets.stamp
-        COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:PT>/Assets
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_SOURCE_DIR}/Assets
-        $<TARGET_FILE_DIR:PT>/Assets
-        COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_BINARY_DIR}/Assets.stamp
-        DEPENDS ${ASSET_FILES}
-)
-
-add_custom_target(CopyAssets ALL
-        DEPENDS ${CMAKE_BINARY_DIR}/Assets.stamp
-)
-add_dependencies(CopyAssets PT)
+if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_CONFIGURATION_TYPES MATCHES "Release")
+    add_custom_target(CopyAssets ALL
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/Assets"
+            "${CMAKE_BINARY_DIR}/Assets"
+            COMMENT "Copying assets for Release"
+    )
+    add_dependencies(PT CopyAssets)
+    target_compile_definitions(PT PRIVATE
+            ASSETS_SOURCE_DIR=L"${CMAKE_BINARY_DIR}/Assets"
+    )
+else()
+    target_compile_definitions(PT PRIVATE
+            ASSETS_SOURCE_DIR=L"${CMAKE_SOURCE_DIR}/Assets"
+    )
+endif()
 
 target_compile_definitions(PT PRIVATE NOMINMAX)
 

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <ostream>
 
+#include "Helper.h"
 #include "HWI/Model.h"
 #include "MathUtils.h"
 #include "HWI/D3D.h"
@@ -12,6 +13,7 @@
 #include "DualIncludes/CBV.h"
 #include "HWI/Material.h"
 #include "Render/Object.h"
+#include "System/FileHelper.h"
 #include "System/TextureLoader.h"
 
 namespace filesystem = std::filesystem;
@@ -529,15 +531,16 @@ void ModelLoaderGLTF::loadNode(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Hea
 	}
 }
 
-void ModelLoaderGLTF::LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, const std::string& name, GLTFLoadArgs& args)
+void ModelLoaderGLTF::LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, const std::wstring& name, GLTFLoadArgs& args)
 {
-	std::string path = "Assets/Models/" + name;
+	const std::wstring wpath = FileHelper::GetAssetModelFullPath(name.c_str());
+    const std::string path = wstringToString(wpath);
 
-	size_t dotIndex = name.find_last_of('.');
+	const size_t dotIndex = name.find_last_of('.');
 	if (dotIndex == std::string::npos)
 		throw std::exception("Invalid model name");
 
-	std::string modelNameExtensionless = name.substr(0, dotIndex);
+	const std::string modelNameExtensionless = wstringToString(name.substr(0, dotIndex));
 
 	fastgltf::Expected<fastgltf::GltfDataBuffer> data = fastgltf::GltfDataBuffer::FromPath(path);
 

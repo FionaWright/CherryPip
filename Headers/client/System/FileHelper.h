@@ -17,6 +17,7 @@ public:
     static std::wstring GetAssetFullPath(LPCWSTR assetName);
     static std::wstring GetAssetTextureFullPath(LPCWSTR assetName);
     static std::wstring GetAssetShaderFullPath(LPCWSTR assetName);
+    static std::wstring GetAssetModelFullPath(LPCWSTR assetName);
 
     static std::vector<uint8_t> ReadFileToByteVector(const std::wstring& filename);
     static HRESULT ReadDataFromFile(LPCWSTR filename, byte** data, UINT* size);

@@ -59,7 +59,7 @@ class ModelLoaderGLTF
 {
 public:
     static std::vector<std::shared_ptr<Model>> LoadModelsFromGLTF(D3D* d3d, ID3D12GraphicsCommandList* cmdList, std::string modelName);
-	static void LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, const std::string& name, GLTFLoadArgs& args);
+	static void LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, const std::wstring& name, GLTFLoadArgs& args);
 
 private:
 	static Transform toTransform(fastgltf::TRS& trs);

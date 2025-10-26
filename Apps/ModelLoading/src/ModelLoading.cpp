@@ -107,9 +107,9 @@ void ModelLoading::loadAssets(D3D* d3d)
     args.Overrides = {};
     args.Root = rootSig;
     args.Shaders = { shader };
-    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, "floatplane.glb", args);
-    //ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, "Bistro/Bistro.gltf", args);
-    //ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, "Cube.glb", args);
+    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
+    //ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Bistro/Bistro.gltf", args);
+    //ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Cube.glb", args);
     m_objects = args.Objects;
 
     V(cmdList->Close());

@@ -35,8 +35,9 @@ int Win32App::Run(App* pSample, HINSTANCE hInstance, int nCmdShow)
     windowClass.lpszClassName = "HelloTriangleClass";
     RegisterClassEx(&windowClass);
 
-    const uint32_t windowWidth = Config::GetSystem().WindowWidth + Config::GetSystem().WindowImGuiWidth;
-    RECT windowRect = { 0, 0, static_cast<LONG>(windowWidth), static_cast<LONG>(Config::GetSystem().WindowHeight) };
+    const uint32_t totalWindowWidth = Config::GetSystem().RtvWidth + Config::GetSystem().WindowAppGuiWidth + Config::GetSystem().WindowEngineGuiWidth;
+    const uint32_t totalWindowHeight = Config::GetSystem().RtvHeight;
+    RECT windowRect = { 0, 0, static_cast<LONG>(totalWindowWidth), static_cast<LONG>(Config::GetSystem().RtvHeight) };
     AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
 
     // Create the window and store a handle to it.
@@ -59,7 +60,7 @@ int Win32App::Run(App* pSample, HINSTANCE hInstance, int nCmdShow)
     }
     std::cout << "HWND = " << ms_hwnd << std::endl;
 
-    ms_engine = std::make_unique<Engine>(pSample, ms_hwnd, windowWidth);
+    ms_engine = std::make_unique<Engine>(pSample, ms_hwnd, totalWindowWidth, totalWindowHeight);
 
     ShowWindow(ms_hwnd, nCmdShow);
 

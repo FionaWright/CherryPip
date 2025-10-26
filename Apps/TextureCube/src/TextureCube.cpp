@@ -18,7 +18,7 @@ TextureCube::TextureCube()
 
 void TextureCube::OnInit(D3D* d3d)
 {
-    m_AspectRatio = static_cast<float>(Config::GetSystem().WindowWidth) / static_cast<float>(Config::GetSystem().
+    m_AspectRatio = static_cast<float>(Config::GetSystem().RtvWidth) / static_cast<float>(Config::GetSystem().
         WindowHeight);
 
     m_camera.Init({}, {});
@@ -212,10 +212,10 @@ void TextureCube::populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList*
 
     // Render at offset for ImGui
     CD3DX12_VIEWPORT viewport(static_cast<float>(Config::GetSystem().WindowImGuiWidth), 0.0f,
-                              static_cast<float>(Config::GetSystem().WindowWidth),
+                              static_cast<float>(Config::GetSystem().RtvWidth),
                               static_cast<float>(Config::GetSystem().WindowHeight));
     CD3DX12_RECT scissorRect(Config::GetSystem().WindowImGuiWidth, 0,
-                             Config::GetSystem().WindowWidth + Config::GetSystem().WindowImGuiWidth,
+                             Config::GetSystem().RtvWidth + Config::GetSystem().WindowImGuiWidth,
                              Config::GetSystem().WindowHeight);
 
     cmdList->RSSetViewports(1, &viewport);

@@ -7,14 +7,18 @@
 #include <d3d12.h>
 #include <wrl/client.h>
 
+struct ImVec2;
+
 class Gui
 {
 public:
     static void Init(HWND hwnd, ID3D12Device* device, int framesInFlight);
-
     static void BeginFrame();
-    static void RenderAppSide(ID3D12GraphicsCommandList* cmdList);
-    static void EndFrame(ID3D12GraphicsCommandList* cmdList);
+
+    static void BeginWindow(const char* name, const ImVec2& pos, const ImVec2& size);
+    static void EndWindow();
+
+    static void RenderAllWindows(ID3D12GraphicsCommandList* cmdList);
 
 private:
     static Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> ms_cbvSrvUavHeap;

@@ -14,8 +14,10 @@ class D3D;
 class Engine
 {
 public:
-    Engine(App* pSample, HWND hWnd, UINT windowWidth);
+    Engine(App* pSample, HWND hWnd, UINT windowWidth, UINT windowHeight);
     void Frame(HWND hWnd);
+    void Render(App* pSample) const;
+    void RenderGUI() const;
 
 private:
     std::unique_ptr<D3D> m_d3d;

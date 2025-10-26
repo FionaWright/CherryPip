@@ -2,6 +2,7 @@
 #include "System/Win32App.h"
 #include <dxcapi.h>
 
+#include "imgui.h"
 #include "Headers/Helper.h"
 #include "HWI/D3D.h"
 #include "System/Config.h"
@@ -18,8 +19,8 @@ ModelLoading::ModelLoading()
 
 void ModelLoading::OnInit(D3D* d3d)
 {
-    m_AspectRatio = static_cast<float>(Config::GetSystem().WindowWidth) / static_cast<float>(Config::GetSystem().
-        WindowHeight);
+    m_AspectRatio = static_cast<float>(Config::GetSystem().RtvWidth) / static_cast<float>(Config::GetSystem().
+        RtvHeight);
 
     m_camera.Init({}, {});
 
@@ -75,11 +76,26 @@ void ModelLoading::loadAssets(D3D* d3d)
     {
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
         {
-            {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-            {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-            {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-            {"TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-            {"BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+            {
+                "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
+                D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+            },
+            {
+                "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
+                D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+            },
+            {
+                "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
+                D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+            },
+            {
+                "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
+                D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+            },
+            {
+                "BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
+                D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+            },
         };
         D3D12_INPUT_LAYOUT_DESC ild = {inputElementDescs, _countof(inputElementDescs)};
 
@@ -88,7 +104,7 @@ void ModelLoading::loadAssets(D3D* d3d)
 
     std::shared_ptr<Texture> tex = std::make_shared<Texture>();
     tex->Init(d3d->GetDevice(), cmdList.Get(), FileHelper::GetAssetTextureFullPath(L"TestTex.png"),
-               DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+              DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 
     tex->Transition(cmdList.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
@@ -100,7 +116,7 @@ void ModelLoading::loadAssets(D3D* d3d)
     args.DefaultShaderATIndex = -1;
     args.Overrides = {};
     args.Root = rootSig;
-    args.Shaders = { shader };
+    args.Shaders = {shader};
     ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
     //ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Bistro/Bistro.gltf", args);
     //ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Cube.glb", args);
@@ -120,25 +136,20 @@ void ModelLoading::populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList
     matrices.V = m_camera.GetViewMatrix();
     matrices.P = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), m_AspectRatio, nearPlane, farPlane);
 
-    ID3D12Resource* rtv = d3d->GetCurrRTV();
+    const float fRtvWidth = static_cast<float>(Config::GetSystem().RtvWidth);
+    const float fRtvHeight = static_cast<float>(Config::GetSystem().RtvHeight);
+    const float fAppGuiWidth = static_cast<float>(Config::GetSystem().WindowAppGuiWidth);
 
     // Render at offset for ImGui
-    const CD3DX12_VIEWPORT viewport(static_cast<float>(Config::GetSystem().WindowImGuiWidth), 0.0f,
-                              static_cast<float>(Config::GetSystem().WindowWidth),
-                              static_cast<float>(Config::GetSystem().WindowHeight));
-    const CD3DX12_RECT scissorRect(Config::GetSystem().WindowImGuiWidth, 0,
-                             Config::GetSystem().WindowWidth + Config::GetSystem().WindowImGuiWidth,
-                             Config::GetSystem().WindowHeight);
+    const CD3DX12_VIEWPORT viewport(fAppGuiWidth, 0.0f, fRtvWidth, fRtvHeight);
+    const CD3DX12_RECT scissorRect(Config::GetSystem().WindowAppGuiWidth, 0,
+                                   Config::GetSystem().RtvWidth + Config::GetSystem().WindowAppGuiWidth,
+                                   Config::GetSystem().RtvHeight);
 
     cmdList->RSSetViewports(1, &viewport);
     cmdList->RSSetScissorRects(1, &scissorRect);
 
     m_heap.SetHeap(cmdList);
-
-    // Indicate that the back buffer will be used as a render target.
-    auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(rtv, D3D12_RESOURCE_STATE_PRESENT,
-                                                        D3D12_RESOURCE_STATE_RENDER_TARGET);
-    cmdList->ResourceBarrier(1, &barrier);
 
     // Note: HERE AS WELL
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(d3d->GetRtvHeapStart(), d3d->GetFrameIndex(), d3d->GetRtvDescriptorSize());
@@ -152,12 +163,7 @@ void ModelLoading::populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList
         m_objects[i]->Render(cmdList, matrices);
     }
 
-    Gui::RenderAppSide(cmdList);
-
-    // Indicate that the back buffer will now be used to present.
-    auto barrier2 = CD3DX12_RESOURCE_BARRIER::Transition(rtv, D3D12_RESOURCE_STATE_RENDER_TARGET,
-                                                         D3D12_RESOURCE_STATE_PRESENT);
-    cmdList->ResourceBarrier(1, &barrier2);
-
-    V(cmdList->Close());
+    Gui::BeginWindow("App", ImVec2(0,0), ImVec2(Config::GetSystem().WindowAppGuiWidth, Config::GetSystem().RtvHeight));
+    ImGui::Text("APP-SIDE GUI (ModelLoading)");
+    Gui::EndWindow();
 }

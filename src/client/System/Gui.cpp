@@ -10,9 +10,9 @@
 #include "imgui/backends/imgui_impl_dx12.h"
 #include "System/Config.h"
 
-Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> Gui::ms_cbvSrvUavHeap;
+ComPtr<ID3D12DescriptorHeap> Gui::ms_cbvSrvUavHeap;
 
-void Gui::Init(HWND hwnd, ID3D12Device* device, int framesInFlight)
+void Gui::Init(const HWND hwnd, ID3D12Device* device, const int framesInFlight)
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -42,31 +42,33 @@ void Gui::Init(HWND hwnd, ID3D12Device* device, int framesInFlight)
     ImGui_ImplDX12_CreateDeviceObjects();
 }
 
-void Gui::RenderAppSide(ID3D12GraphicsCommandList* cmdList)
-{
-    BeginFrame();
-
-    ImGui::Text("Hello World");
-
-    EndFrame(cmdList);
-}
-
+// Called once per frame / cmdList
 void Gui::BeginFrame()
 {
     ImGui_ImplDX12_NewFrame();
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
+}
 
-    ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
-    ImGui::SetNextWindowSize(ImVec2(Config::GetSystem().WindowImGuiWidth, Config::GetSystem().WindowHeight), ImGuiCond_Always);
+// Called for each window within a cmdList
+void Gui::BeginWindow(const char* name, const ImVec2& pos, const ImVec2& size)
+{
+    ImGui::SetNextWindowPos(pos, ImGuiCond_Always);
+    ImGui::SetNextWindowSize(size, ImGuiCond_Always);
 
-    ImGui::Begin("GUI", nullptr, ImGuiWindowFlags_None);
+    ImGui::Begin(name, nullptr, ImGuiWindowFlags_None);
     //ms_windowSize = ImGui::GetWindowSize();
 }
 
-void Gui::EndFrame(ID3D12GraphicsCommandList* cmdList)
+// Called for each window within a cmdList
+void Gui::EndWindow()
 {
     ImGui::End();
+}
+
+// Called once per frame / cmdList
+void Gui::RenderAllWindows(ID3D12GraphicsCommandList* cmdList)
+{
     ImGui::Render();
 
     ID3D12DescriptorHeap* pDescHeap = ms_cbvSrvUavHeap.Get();

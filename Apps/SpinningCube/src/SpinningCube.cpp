@@ -16,7 +16,7 @@ SpinningCube::SpinningCube()
 
 void SpinningCube::OnInit(D3D* d3d)
 {
-    m_AspectRatio = static_cast<float>(Config::GetSystem().WindowWidth) / static_cast<float>(Config::GetSystem().WindowHeight);
+    m_AspectRatio = static_cast<float>(Config::GetSystem().RtvWidth) / static_cast<float>(Config::GetSystem().RtvHeight);
 
     m_camera.Init({}, {});
 
@@ -211,8 +211,8 @@ void SpinningCube::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdL
     ID3D12Resource* rtv = d3d->GetCurrRTV();
 
     // Render at offset for ImGui
-    CD3DX12_VIEWPORT viewport(static_cast<float>(Config::GetSystem().WindowImGuiWidth), 0.0f, static_cast<float>(Config::GetSystem().WindowWidth), static_cast<float>(Config::GetSystem().WindowHeight));
-    CD3DX12_RECT scissorRect(Config::GetSystem().WindowImGuiWidth, 0, Config::GetSystem().WindowWidth + Config::GetSystem().WindowImGuiWidth, Config::GetSystem().WindowHeight);
+    CD3DX12_VIEWPORT viewport(static_cast<float>(Config::GetSystem().WindowImGuiWidth), 0.0f, static_cast<float>(Config::GetSystem().RtvWidth), static_cast<float>(Config::GetSystem().RtvHeight));
+    CD3DX12_RECT scissorRect(Config::GetSystem().WindowImGuiWidth, 0, Config::GetSystem().RtvWidth + Config::GetSystem().WindowImGuiWidth, Config::GetSystem().RtvHeight);
 
     // Set necessary state.
     cmdList->SetGraphicsRootSignature(m_rootSig.Get());

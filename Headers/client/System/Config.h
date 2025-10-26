@@ -10,10 +10,11 @@
 
 struct SettingsSystem
 {
-    uint32_t WindowWidth = 1020;
-    uint32_t WindowHeight = 575;
+    uint32_t RtvWidth = 1020;
+    uint32_t RtvHeight = 575;
 
-    uint32_t WindowImGuiWidth = 340;
+    uint32_t WindowAppGuiWidth = 340;
+    uint32_t WindowEngineGuiWidth = 340;
 };
 
 class Config

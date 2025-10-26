@@ -15,7 +15,7 @@ HelloTriangle::HelloTriangle()
 
 void HelloTriangle::OnInit(D3D* d3d)
 {
-    m_AspectRatio = static_cast<float>(Config::GetSystem().WindowWidth) / static_cast<float>(Config::GetSystem().WindowHeight);
+    m_AspectRatio = static_cast<float>(Config::GetSystem().RtvWidth) / static_cast<float>(Config::GetSystem().WindowHeight);
 
     loadAssets(d3d->GetDevice());
 
@@ -108,8 +108,8 @@ void HelloTriangle::populateCommandList(const D3D* d3d, ID3D12GraphicsCommandLis
 {
     ID3D12Resource* rtv = d3d->GetCurrRTV();
 
-    CD3DX12_VIEWPORT viewport(0.0f, 0.0f, static_cast<float>(Config::GetSystem().WindowWidth), static_cast<float>(Config::GetSystem().WindowHeight));
-    CD3DX12_RECT scissorRect(0, 0, static_cast<LONG>(Config::GetSystem().WindowWidth), static_cast<LONG>(Config::GetSystem().WindowHeight));
+    CD3DX12_VIEWPORT viewport(0.0f, 0.0f, static_cast<float>(Config::GetSystem().RtvWidth), static_cast<float>(Config::GetSystem().WindowHeight));
+    CD3DX12_RECT scissorRect(0, 0, static_cast<LONG>(Config::GetSystem().RtvWidth), static_cast<LONG>(Config::GetSystem().WindowHeight));
 
     // Set necessary state.
     cmdList->SetGraphicsRootSignature(m_rootSignature.Get());

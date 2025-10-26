@@ -7,9 +7,6 @@
 #include <iostream>
 #include <span>
 
-#include "Apps/HelloTriangle/Headers/HelloTriangle.h"
-#include "Apps/SpinningCube/Headers/SpinningCube.h"
-#include "Apps/TextureCube/Headers/TextureCube.h"
 #include "Apps/ModelLoading/Headers/ModelLoading.h"
 #include "System/Config.h"
 #include "System/Win32App.h"

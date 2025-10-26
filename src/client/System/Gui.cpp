@@ -42,7 +42,7 @@ void Gui::Init(HWND hwnd, ID3D12Device* device, int framesInFlight)
     ImGui_ImplDX12_CreateDeviceObjects();
 }
 
-void Gui::Render(ID3D12GraphicsCommandList* cmdList)
+void Gui::RenderAppSide(ID3D12GraphicsCommandList* cmdList)
 {
     BeginFrame();
 

@@ -18,18 +18,12 @@
 #include "System/HotReloader.h"
 #endif
 
-HWND Win32App::m_hwnd = nullptr;
-std::unique_ptr<D3D> Win32App::m_d3d = nullptr;
+HWND Win32App::ms_hwnd = nullptr;
+std::unique_ptr<Engine> Win32App::ms_engine = nullptr;
 
 int Win32App::Run(App* pSample, HINSTANCE hInstance, int nCmdShow)
 {
     FileHelper::Init();
-
-    // Parse the command line parameters
-    int argc;
-    LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
-    pSample->ParseCommandLineArgs(argv, argc);
-    LocalFree(argv);
 
     // Initialize the window class.
     WNDCLASSEX windowClass = { 0 };
@@ -46,7 +40,7 @@ int Win32App::Run(App* pSample, HINSTANCE hInstance, int nCmdShow)
     AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
 
     // Create the window and store a handle to it.
-    m_hwnd = CreateWindow(
+    ms_hwnd = CreateWindow(
         windowClass.lpszClassName,
         "TEST WINDOW",
         WS_OVERLAPPEDWINDOW,
@@ -59,21 +53,15 @@ int Win32App::Run(App* pSample, HINSTANCE hInstance, int nCmdShow)
         hInstance,
         pSample);
 
-    if (!m_hwnd)
+    if (!ms_hwnd)
     {
         MessageBox(nullptr, "Failed to create window!", "Error", MB_OK);
     }
-    std::cout << "HWND = " << m_hwnd << std::endl;
+    std::cout << "HWND = " << ms_hwnd << std::endl;
 
-    m_d3d = std::make_unique<D3D>();
-    m_d3d->Init(windowWidth, Config::GetSystem().WindowHeight);
-    TextureLoader::Init(m_d3d.get(), FileHelper::GetAssetsPath() + L"/Shaders");
+    ms_engine = std::make_unique<Engine>(pSample, ms_hwnd, windowWidth);
 
-    pSample->OnInit(m_d3d.get());
-
-    ShowWindow(m_hwnd, nCmdShow);
-
-    Gui::Init(m_hwnd, m_d3d->GetDevice(), 3);
+    ShowWindow(ms_hwnd, nCmdShow);
 
     // Main sample loop.
     MSG msg = {};
@@ -89,20 +77,6 @@ int Win32App::Run(App* pSample, HINSTANCE hInstance, int nCmdShow)
 
     // Return this part of the WM_QUIT message to Windows.
     return static_cast<char>(msg.wParam);
-}
-
-void Frame(const HWND hWnd, D3D* d3d)
-{
-    if (App* pSample = reinterpret_cast<App*>(GetWindowLongPtr(hWnd, GWLP_USERDATA)))
-    {
-        pSample->OnUpdate(d3d);
-    }
-
-    Input::ProgressFrame();
-
-#ifdef _DEBUG
-    HotReloader::CheckFiles(d3d);
-#endif
 }
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -181,7 +155,7 @@ LRESULT CALLBACK Win32App::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LP
         break;
 
     case WM_PAINT:
-        Frame(hWnd, m_d3d.get());
+        ms_engine->Frame(hWnd);
         return 0;
 
     case WM_DESTROY:

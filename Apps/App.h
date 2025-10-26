@@ -27,8 +27,7 @@ class App
 {
 public:
     virtual void OnInit(D3D* d3d) = 0;
-    virtual void OnUpdate(D3D* d3d) = 0;
-    virtual void ParseCommandLineArgs(_In_reads_(argc) WCHAR* argv[], int argc) = 0;
+    virtual void OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList) = 0;
 };
 
 #endif //PT_APP_H

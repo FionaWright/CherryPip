@@ -17,26 +17,22 @@ class ModelLoading : public App
 public:
     ModelLoading();
     void OnInit(D3D* d3d) override;
-    void OnUpdate(D3D* d3d) override;
+    void OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList) override;
 
-    const WCHAR* GetTitle() const   { return m_title.c_str(); }
-
-    void ParseCommandLineArgs(_In_reads_(argc) WCHAR* argv[], int argc) override;
+    const WCHAR* GetTitle() const { return m_title.c_str(); }
 
     float m_AspectRatio;
 
 private:
     static constexpr UINT c_FrameCount = 3;
 
-    void setCustomWindowText(LPCWSTR text) const;
-
     Heap m_heap;
     CameraController m_camera;
     std::vector<std::shared_ptr<Object>> m_objects;
 
     // Window title.
-    std::wstring m_title;
-    
+    std::wstring m_title = L"Model Loading";
+
     void loadAssets(D3D* d3d);
     void populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList* cmdList) const;
 };

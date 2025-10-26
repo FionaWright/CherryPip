@@ -13,7 +13,7 @@ public:
     static void Init(HWND hwnd, ID3D12Device* device, int framesInFlight);
 
     static void BeginFrame();
-    static void Render(ID3D12GraphicsCommandList* cmdList);
+    static void RenderAppSide(ID3D12GraphicsCommandList* cmdList);
     static void EndFrame(ID3D12GraphicsCommandList* cmdList);
 
 private:

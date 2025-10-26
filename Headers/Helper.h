@@ -9,7 +9,6 @@
 
 // D3D12 extension library.
 #include "d3dx12.h"
-#include "Apps/HelloTriangle/Headers/HelloTriangle.h"
 #include "System/FileHelper.h"
 
 using Microsoft::WRL::ComPtr;

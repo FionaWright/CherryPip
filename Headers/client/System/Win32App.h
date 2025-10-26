@@ -7,6 +7,7 @@
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers.
+#include "Engine.h"
 #endif
 
 #include <windows.h>
@@ -22,7 +23,7 @@
 #include <shellapi.h>
 #include <memory>
 
-class D3D;
+class Engine;
 class App;
 
 #include "Headers/Helper.h"
@@ -31,14 +32,14 @@ class Win32App
 {
 public:
     static int Run(App* pSample, HINSTANCE hInstance, int nCmdShow);
-    static HWND GetHwnd() { return m_hwnd; }
+    static HWND GetHwnd() { return ms_hwnd; }
 
 protected:
     static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 private:
-    static HWND m_hwnd;
-    static std::unique_ptr<D3D> m_d3d;
+    static HWND ms_hwnd;
+    static std::unique_ptr<Engine> ms_engine;
 };
 
 

@@ -10,7 +10,7 @@
 - [x] Implement Dear ImGui
 - [x] GLTF Model Importing (fastgltf)
 - [ ] Build shaders in cmake
-- [ ] Hot reloading
+- [x] Hot reloading
 - [ ] Add destructors and scene switching
 - [ ] Clean up CMAKE
 - [ ] Basic Ray-Tracer (Ray-Query)
@@ -30,4 +30,4 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Texture/Model reuse
 - Descriptor heap sharing
 - CBVMatrices caching
-- Copy Assets faster and without rebuild
+- Show FPS, Current Scene

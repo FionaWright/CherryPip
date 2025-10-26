@@ -260,7 +260,7 @@ void SpinningCube::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdL
     cmdList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
     cmdList->DrawInstanced(m_vertexCount, 1, 0, 0);
 
-    Gui::Render(cmdList);
+    Gui::RenderAppSide(cmdList);
 
     // Indicate that the back buffer will now be used to present.
     auto barrier2 = CD3DX12_RESOURCE_BARRIER::Transition(rtv, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);

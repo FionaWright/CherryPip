@@ -4,6 +4,7 @@
 
 #include "HWI/D12Resource.h"
 
+#include <cassert>
 #include <d3dx12_barriers.h>
 #include <d3dx12_core.h>
 #include <d3dx12_resource_helpers.h>

@@ -39,12 +39,12 @@ set(D3D12_LIBS
 # TODO: Make this automatic (?)
 add_executable(PT WIN32
         src/main.cpp
-        Apps/HelloTriangle/src/HelloTriangle.cpp
-        Apps/HelloTriangle/Headers/HelloTriangle.h
-        Apps/SpinningCube/src/SpinningCube.cpp
-        Apps/SpinningCube/Headers/SpinningCube.h
-        Apps/TextureCube/Headers/TextureCube.h
-        Apps/TextureCube/src/TextureCube.cpp
+        #Apps/HelloTriangle/src/HelloTriangle.cpp
+        #Apps/HelloTriangle/Headers/HelloTriangle.h
+        #Apps/SpinningCube/src/SpinningCube.cpp
+        #Apps/SpinningCube/Headers/SpinningCube.h
+        #Apps/TextureCube/Headers/TextureCube.h
+        #Apps/TextureCube/src/TextureCube.cpp
         Apps/ModelLoading/Headers/ModelLoading.h
         Apps/ModelLoading/src/ModelLoading.cpp
 
@@ -93,7 +93,12 @@ add_executable(PT WIN32
         src/client/HWI/Heap.cpp
         Headers/client/HWI/Heap.h
         src/client/System/HotReloader.cpp
-        src/client/System/HotReloader.h
+        Headers/client/System/HotReloader.h
+        src/client/System/HighResolutionClock.cpp
+        Headers/client/System/HighResolutionClock.h
+        src/client/System/HighResolutionClock.cpp
+        src/client/System/Engine.cpp
+        Headers/client/System/Engine.h
 )
 
 file(GLOB THIRD_PARTY_SOURCES CONFIGURE_DEPENDS

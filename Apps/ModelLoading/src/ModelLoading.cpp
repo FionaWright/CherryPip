@@ -26,15 +26,9 @@ void ModelLoading::OnInit(D3D* d3d)
     loadAssets(d3d);
 }
 
-void ModelLoading::OnUpdate(D3D* d3d)
+void ModelLoading::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 {
-    const ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
-
-    populateCommandList(d3d, cmdList.Get());
-
-    d3d->ExecuteCommandList(cmdList.Get());
-    d3d->Present();
-
+    populateCommandList(d3d, cmdList);
     m_camera.UpdateCamera();
 }
 
@@ -158,7 +152,7 @@ void ModelLoading::populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList
         m_objects[i]->Render(cmdList, matrices);
     }
 
-    Gui::Render(cmdList);
+    Gui::RenderAppSide(cmdList);
 
     // Indicate that the back buffer will now be used to present.
     auto barrier2 = CD3DX12_RESOURCE_BARRIER::Transition(rtv, D3D12_RESOURCE_STATE_RENDER_TARGET,
@@ -166,27 +160,4 @@ void ModelLoading::populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList
     cmdList->ResourceBarrier(1, &barrier2);
 
     V(cmdList->Close());
-}
-
-// Helper function for setting the window's title text.
-void ModelLoading::setCustomWindowText(LPCWSTR text) const
-{
-    std::wstring windowText = m_title + L": " + text;
-    SetWindowText(Win32App::GetHwnd(), wstringToString(windowText).c_str());
-}
-
-// Helper function for parsing any supplied command line args.
-_Use_decl_annotations_
-
-void ModelLoading::ParseCommandLineArgs(WCHAR* argv[], int argc)
-{
-    for (int i = 1; i < argc; ++i)
-    {
-        if (_wcsnicmp(argv[i], L"-warp", wcslen(argv[i])) == 0 ||
-            _wcsnicmp(argv[i], L"/warp", wcslen(argv[i])) == 0)
-        {
-            //m_UseWarpDevice = true;
-            m_title = m_title + L" (WARP)";
-        }
-    }
 }

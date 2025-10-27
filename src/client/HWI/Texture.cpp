@@ -86,7 +86,7 @@ void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std
     desc.SampleDesc.Quality = 1;
     desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 
-    m_resource.Init(device, desc, D3D12_RESOURCE_STATE_COPY_DEST);
+    m_resource.InitWithHeap(filePath.c_str(), device, desc, D3D12_RESOURCE_STATE_COPY_DEST);
 
     const int rowPitch = m_width * (BitsPerPixel(format) / 8);
     const int totalBytes = rowPitch * m_height;
@@ -122,7 +122,7 @@ void Texture::InitPNG(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, 
     desc.SampleDesc.Quality = 1;
     desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 
-    m_resource.Init(device, desc, D3D12_RESOURCE_STATE_COPY_DEST);
+    m_resource.InitWithHeap(L"PNG Texture", device, desc, D3D12_RESOURCE_STATE_COPY_DEST);
 
     const int rowPitch = m_width * (BitsPerPixel(format) / 8);
     const int totalBytes = rowPitch * m_height;

@@ -6,6 +6,7 @@
 
 #include "Helper.h"
 #include "HWI/Heap.h"
+#include "HWI/TLAS.h"
 
 Material::~Material()
 {
@@ -34,6 +35,7 @@ void Material::AddCBV(ID3D12Device* device, Heap* heap, const size_t size)
 
     V(device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &bufferDesc,
                                     D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&cbv.Resource)));
+    V(cbv.Resource->SetName(L"CBV"));
 
     heap->InitCBV(device, cbv.Resource.Get(), alignedSize, idx);
 
@@ -59,6 +61,20 @@ void Material::AddSRV(ID3D12Device* device, Heap* heap, std::shared_ptr<Texture>
     m_srvs.push_back(srv);
 }
 
+void Material::AddTLAS(ID3D12Device* device, Heap* heap, std::shared_ptr<TLAS> tlas)
+{
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
+    srvDesc.RaytracingAccelerationStructure.Location = tlas->GetResource()->GetGPUVirtualAddress();
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+    const UINT idx = heap->GetNextDescriptor();
+    heap->InitSRV(device, nullptr, srvDesc, idx);
+
+    const SRV_TLAS srv = { tlas, idx};
+    m_tlases.push_back(srv);
+}
+
 void Material::TransitionSrvsToPS(ID3D12GraphicsCommandList* cmdList) const
 {
     for (int i = 0; i < m_srvs.size(); i++)
@@ -76,11 +92,29 @@ void Material::UpdateCBV(const UINT regIdx, const void* data) const
 // TODO: Not general
 void Material::SetDescriptorTables(ID3D12GraphicsCommandList* cmdList) const
 {
-    const CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(m_gpuHandle, m_cbvs[0].HeapIndex,
-                                            m_descriptorIncSize);
-    cmdList->SetGraphicsRootDescriptorTable(0, cbvHandle);
+    int paramIdx = 0;
 
-    const CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(m_gpuHandle, m_srvs[0].HeapIndex,
+    if (m_cbvs.size() > 0)
+    {
+        const CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(m_gpuHandle, m_cbvs[0].HeapIndex,
                                             m_descriptorIncSize);
-    cmdList->SetGraphicsRootDescriptorTable(1, srvHandle);
+        cmdList->SetGraphicsRootDescriptorTable(paramIdx, cbvHandle);
+        paramIdx++;
+    }
+
+    if (m_srvs.size() > 0)
+    {
+        const CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(m_gpuHandle, m_srvs[0].HeapIndex,
+                                            m_descriptorIncSize);
+        cmdList->SetGraphicsRootDescriptorTable(paramIdx, srvHandle);
+        paramIdx++;
+    }
+
+    if (m_tlases.size() > 0)
+    {
+        const CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(m_gpuHandle, m_tlases[0].HeapIndex,
+                                            m_descriptorIncSize);
+        cmdList->SetGraphicsRootDescriptorTable(paramIdx, srvHandle);
+        paramIdx++;
+    }
 }

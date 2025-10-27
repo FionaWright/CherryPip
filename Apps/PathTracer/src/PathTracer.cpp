@@ -58,30 +58,19 @@ void PathTracer::loadAssets(D3D* d3d)
     ID3D12Device* device = d3d->GetDevice();
     const ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
-    std::shared_ptr<RootSig> rootSig = std::make_shared<RootSig>();
-    std::shared_ptr<Shader> shader = std::make_shared<Shader>();
+    m_rootSig = std::make_shared<RootSig>();
+    m_shader = std::make_shared<Shader>();
 
     m_heap.Init(device, 10000);
 
     // Init Root Sig
     {
-        CD3DX12_ROOT_PARAMETER1 params[2];
-        CD3DX12_DESCRIPTOR_RANGE1 ranges[2];
-        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-        params[0].InitAsDescriptorTable(1, &ranges[0]);
-        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-        params[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);
+        CD3DX12_ROOT_PARAMETER1 params[1];
+        CD3DX12_DESCRIPTOR_RANGE1 ranges[1];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+        params[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
 
-        D3D12_STATIC_SAMPLER_DESC samplers[1];
-        samplers[0] = {};
-        samplers[0].Filter = D3D12_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
-        samplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-        samplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-        samplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-        samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-        samplers[0].ShaderRegister = 0;
-
-        rootSig->Init(params, _countof(params), samplers, _countof(samplers), device);
+        m_rootSig->Init(params, _countof(params), nullptr, 0, device);
     }
 
     // Init Shader/PSO
@@ -95,23 +84,11 @@ void PathTracer::loadAssets(D3D* d3d)
             {
                 "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
                 D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
-            },
-            {
-                "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
-                D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
-            },
-            {
-                "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
-                D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
-            },
-            {
-                "BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
-                D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
-            },
+            }
         };
-        D3D12_INPUT_LAYOUT_DESC ild = {inputElementDescs, _countof(inputElementDescs)};
+        const D3D12_INPUT_LAYOUT_DESC ild = {inputElementDescs, _countof(inputElementDescs)};
 
-        shader->InitVsPs(L"Basic3D_GltfVS.hlsl", L"Basic3D_GltfPS.hlsl", ild, device, rootSig->Get());
+        m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/TestPS.hlsl", ild, device, m_rootSig->Get());
     }
 
     std::shared_ptr<Texture> tex = std::make_shared<Texture>();
@@ -123,16 +100,25 @@ void PathTracer::loadAssets(D3D* d3d)
     GLTFLoadArgs args;
     args.Transform = {};
     args.Transform.SetScale(0.1f);
-    args.CullingWhiteList = {};
     args.DefaultShaderIndex = 0;
     args.DefaultShaderATIndex = -1;
-    args.Overrides = {};
-    args.Root = rootSig;
-    args.Shaders = {shader};
+    args.ExportBlasModeEnabled = true;
     ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
-    //ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Bistro/Bistro.gltf", args);
-    //ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Cube.glb", args);
-    m_objects = args.Objects;
+    m_blasList = args.BLASs;
+
+    ComPtr<ID3D12Device5> device5;
+    V(d3d->GetDevice()->QueryInterface(IID_PPV_ARGS(&device5)));
+    ComPtr<ID3D12GraphicsCommandList4> cmdList4;
+    V(cmdList->QueryInterface(IID_PPV_ARGS(&cmdList4)));
+
+    m_tlas = std::make_shared<TLAS>();
+    m_tlas->Init(device5.Get(), cmdList4.Get(), m_blasList);
+
+    m_fullScreenTriangle.InitFullScreenTriangle(device, cmdList.Get());
+
+    m_material = std::make_shared<Material>();
+    m_material->Init(&m_heap);
+    m_material->AddTLAS(device, &m_heap, m_tlas);
 
     V(cmdList->Close());
     d3d->ExecuteCommandList(cmdList.Get());
@@ -141,13 +127,6 @@ void PathTracer::loadAssets(D3D* d3d)
 
 void PathTracer::populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList* cmdList) const
 {
-    float fov = 60.0f;
-    float nearPlane = 0.1f;
-    float farPlane = 100.0f;
-    CbvMatrices matrices = {};
-    matrices.V = m_camera.GetViewMatrix();
-    matrices.P = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), m_AspectRatio, nearPlane, farPlane);
-
     const float fRtvWidth = static_cast<float>(Config::GetSystem().RtvWidth);
     const float fRtvHeight = static_cast<float>(Config::GetSystem().RtvHeight);
     const float fAppGuiWidth = static_cast<float>(Config::GetSystem().WindowAppGuiWidth);
@@ -170,12 +149,22 @@ void PathTracer::populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList* 
     constexpr float clearColor[] = {0.0f, 0.2f, 0.4f, 1.0f};
     cmdList->ClearRenderTargetView(rtvHandle, clearColor, 1, &scissorRect);
 
-    for (int i = 0; i < m_objects.size(); ++i)
-    {
-        m_objects[i]->Render(cmdList, matrices);
-    }
+    PathTrace(d3d, cmdList);
 
-    Gui::BeginWindow("App", ImVec2(0,0), ImVec2(Config::GetSystem().WindowAppGuiWidth, Config::GetSystem().RtvHeight));
+    Gui::BeginWindow("App", ImVec2(0, 0), ImVec2(Config::GetSystem().WindowAppGuiWidth, Config::GetSystem().RtvHeight));
     ImGui::Text("APP-SIDE GUI (PathTracer)");
     Gui::EndWindow();
+}
+
+void PathTracer::PathTrace(const D3D* d3d, ID3D12GraphicsCommandList* cmdList) const
+{
+    cmdList->SetGraphicsRootSignature(m_rootSig->Get());
+    cmdList->SetPipelineState(m_shader->GetPSO());
+
+    m_material->SetDescriptorTables(cmdList);
+
+    cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    cmdList->IASetVertexBuffers(0, 1, &m_fullScreenTriangle.GetVertexBufferView());
+    cmdList->IASetIndexBuffer(&m_fullScreenTriangle.GetIndexBufferView());
+    cmdList->DrawIndexedInstanced(static_cast<UINT>(m_fullScreenTriangle.GetIndexCount()), 1, 0, 0, 0);
 }

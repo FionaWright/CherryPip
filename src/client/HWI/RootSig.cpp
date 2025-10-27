@@ -42,8 +42,8 @@ void RootSig::Init(const CD3DX12_ROOT_PARAMETER1* params, const UINT paramCount,
     }
 
     ComPtr<ID3D12RootSignature> rootSig;
-    hr = device->CreateRootSignature(0, rootSignatureBlob->GetBufferPointer(), rootSignatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSig));
-    V(hr);
+    V(device->CreateRootSignature(0, rootSignatureBlob->GetBufferPointer(), rootSignatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSig)));
+    V(rootSig->SetName(L"Root Signature"));
 
     m_rootSignature = rootSig;
 }

@@ -7,6 +7,7 @@
 #include <iostream>
 #include <span>
 
+#include "Apps/PathTracer/Headers/PathTracer.h"
 #include "Apps/RasterViewer/Headers/RasterViewer.h"
 #include "System/Config.h"
 #include "System/Win32App.h"
@@ -26,7 +27,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR args, int nCmdShow)
 
     Config::ParseCommandLineArgs(args);
 
-    RasterViewer sample;
+    PathTracer sample;
     const int rslt = Win32App::Run(&sample, hInstance, nCmdShow);
 
     CoUninitialize();

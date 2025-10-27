@@ -96,9 +96,9 @@ add_executable(PT WIN32
         src/client/System/Engine.cpp
         Headers/client/System/Engine.h
         src/client/HWI/BLAS.cpp
-        src/client/HWI/BLAS.h
+        Headers/client/HWI/BLAS.h
         src/client/HWI/TLAS.cpp
-        src/client/HWI/TLAS.h
+        Headers/client/HWI/TLAS.h
 )
 
 file(GLOB THIRD_PARTY_SOURCES CONFIGURE_DEPENDS

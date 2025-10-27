@@ -10,6 +10,7 @@
 #include "HWI/D12Resource.h"
 #include "HWI/Texture.h"
 
+class TLAS;
 class Heap;
 
 struct CBV
@@ -28,6 +29,12 @@ struct SRV
     UINT HeapIndex;
 };
 
+struct SRV_TLAS
+{
+    std::shared_ptr<TLAS> TLAS;
+    UINT HeapIndex;
+};
+
 class Material
 {
 public:
@@ -35,6 +42,7 @@ public:
     void Init(const Heap* heap);
     void AddCBV(ID3D12Device* device, Heap* heap, size_t size);
     void AddSRV(ID3D12Device* device, Heap* heap, std::shared_ptr<Texture> tex);
+    void AddTLAS(ID3D12Device* device, Heap* heap, std::shared_ptr<TLAS> tlas);
 
     void TransitionSrvsToPS(ID3D12GraphicsCommandList* cmdList) const;
 
@@ -48,6 +56,8 @@ private:
 
     std::vector<CBV> m_cbvs;
     std::vector<SRV> m_srvs;
+    std::vector<SRV_TLAS> m_tlases;
+
 };
 
 

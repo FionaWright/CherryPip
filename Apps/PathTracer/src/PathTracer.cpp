@@ -156,7 +156,7 @@ void PathTracer::populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList* 
     PathTrace(d3d, cmdList);
 
     {
-        Gui::BeginWindow("App", ImVec2(0, 0), ImVec2(Config::GetSystem().WindowAppGuiWidth, Config::GetSystem().RtvHeight));
+        Gui::BeginWindow("PathTracer", ImVec2(0, 0), ImVec2(Config::GetSystem().WindowAppGuiWidth, Config::GetSystem().RtvHeight));
         ImGui::Text("APP-SIDE GUI (PathTracer)");
         Gui::EndWindow();
     }

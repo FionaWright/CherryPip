@@ -18,6 +18,8 @@
 #include "System/HotReloader.h"
 #endif
 
+#include "Assets/Resources/Resources.h"
+
 HWND Win32App::ms_hwnd = nullptr;
 std::unique_ptr<Engine> Win32App::ms_engine = nullptr;
 
@@ -32,7 +34,9 @@ int Win32App::Run(App* pSample, HINSTANCE hInstance, int nCmdShow)
     windowClass.lpfnWndProc = WindowProc;
     windowClass.hInstance = hInstance;
     windowClass.hCursor = LoadCursor(NULL, IDC_ARROW);
-    windowClass.lpszClassName = "HelloTriangleClass";
+    windowClass.lpszClassName = "WindowClass";
+    windowClass.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APP_ICON));  // <-- your main icon
+    windowClass.hIconSm = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APP_ICON)); // small icon for title bar
     RegisterClassEx(&windowClass);
 
     const uint32_t totalWindowWidth = Config::GetSystem().RtvWidth + Config::GetSystem().WindowAppGuiWidth + Config::GetSystem().WindowEngineGuiWidth;
@@ -43,7 +47,7 @@ int Win32App::Run(App* pSample, HINSTANCE hInstance, int nCmdShow)
     // Create the window and store a handle to it.
     ms_hwnd = CreateWindow(
         windowClass.lpszClassName,
-        "TEST WINDOW",
+        "CherryPip",
         WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT,
         CW_USEDEFAULT,

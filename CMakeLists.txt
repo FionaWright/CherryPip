@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 4.0)
-project(PT)
+project(CherryPip)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -37,7 +37,7 @@ set(D3D12_LIBS
 )
 
 # TODO: Make this automatic (?)
-add_executable(PT WIN32
+add_executable(CherryPip WIN32
         src/main.cpp
         Apps/RasterViewer/Headers/RasterViewer.h
         Apps/RasterViewer/src/RasterViewer.cpp
@@ -101,6 +101,9 @@ add_executable(PT WIN32
         Headers/client/HWI/TLAS.h
         src/client/Debug/GPUEventScoped.cpp
         Headers/client/Debug/GPUEventScoped.h
+
+        Assets/Resources/CherryPip.rc
+        Assets/Resources/Resources.h
 )
 
 file(GLOB THIRD_PARTY_SOURCES CONFIGURE_DEPENDS
@@ -110,14 +113,14 @@ file(GLOB THIRD_PARTY_SOURCES CONFIGURE_DEPENDS
         "${CMAKE_SOURCE_DIR}/ThirdParty/zlib/*"
         "${CMAKE_SOURCE_DIR}/ThirdParty/WinPixEventRuntime.1.0.240308001/Include/WinPixEventRuntime/*"
 )
-target_sources(PT PRIVATE
+target_sources(CherryPip PRIVATE
         ${THIRD_PARTY_SOURCES}
         "${CMAKE_SOURCE_DIR}/ThirdParty/imgui/backends/imgui_impl_dx12.h"
         "${CMAKE_SOURCE_DIR}/ThirdParty/imgui/backends/imgui_impl_dx12.cpp"
         "${CMAKE_SOURCE_DIR}/ThirdParty/imgui/backends/imgui_impl_win32.cpp"
         "${CMAKE_SOURCE_DIR}/ThirdParty/imgui/backends/imgui_impl_win32.h"
 )
-target_include_directories(PT PRIVATE
+target_include_directories(CherryPip PRIVATE
         "${CMAKE_SOURCE_DIR}/ThirdParty"
         "${CMAKE_SOURCE_DIR}/ThirdParty/imgui"
         "${CMAKE_SOURCE_DIR}/ThirdParty/spng"
@@ -125,29 +128,29 @@ target_include_directories(PT PRIVATE
         "${CMAKE_SOURCE_DIR}/ThirdParty/WinPixEventRuntime.1.0.240308001/Include/"
 )
 
-add_custom_command(TARGET PT POST_BUILD
+add_custom_command(TARGET CherryPip POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
         "${CMAKE_SOURCE_DIR}/ThirdParty/WinPixEventRuntime.1.0.240308001/bin/x64/WinPixEventRuntime.dll"
-        $<TARGET_FILE_DIR:PT>
+        $<TARGET_FILE_DIR:CherryPip>
 )
-target_link_libraries(PT PRIVATE "${CMAKE_SOURCE_DIR}/ThirdParty/WinPixEventRuntime.1.0.240308001/bin/x64/WinPixEventRuntime.lib")
+target_link_libraries(CherryPip PRIVATE "${CMAKE_SOURCE_DIR}/ThirdParty/WinPixEventRuntime.1.0.240308001/bin/x64/WinPixEventRuntime.lib")
 
 include_directories(Headers)
 include_directories(Headers/client)
 include_directories(Assets/Shaders/DualIncludes)
 include_directories(${CMAKE_SOURCE_DIR})
 
-target_link_libraries(PT PRIVATE ${D3D12_LIBS})
+target_link_libraries(CherryPip PRIVATE ${D3D12_LIBS})
 
-add_custom_command(TARGET PT POST_BUILD
+add_custom_command(TARGET CherryPip POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
         ${D3D12_AGILITY_DIR}/build/native/bin/x64/D3D12Core.dll
-        $<TARGET_FILE_DIR:PT>
+        $<TARGET_FILE_DIR:CherryPip>
 )
-add_custom_command(TARGET PT POST_BUILD
+add_custom_command(TARGET CherryPip POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
         ${D3D12_AGILITY_DIR}/build/native/bin/x64/D3D12SDKLayers.dll
-        $<TARGET_FILE_DIR:PT>
+        $<TARGET_FILE_DIR:CherryPip>
 )
 
 FetchContent_Declare(
@@ -158,20 +161,20 @@ FetchContent_MakeAvailable(dxc)
 
 set(DXC_DIR ${dxc_SOURCE_DIR})
 
-target_link_libraries(PT PRIVATE ${DXC_DIR}/lib/x64/dxil.lib)
-target_link_libraries(PT PRIVATE ${DXC_DIR}/lib/x64/dxcompiler.lib)
+target_link_libraries(CherryPip PRIVATE ${DXC_DIR}/lib/x64/dxil.lib)
+target_link_libraries(CherryPip PRIVATE ${DXC_DIR}/lib/x64/dxcompiler.lib)
 include_directories(${DXC_DIR}/inc)
 
-add_custom_command(TARGET PT POST_BUILD
+add_custom_command(TARGET CherryPip POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
         ${DXC_DIR}/bin/x64/dxcompiler.dll
-        $<TARGET_FILE_DIR:PT>
+        $<TARGET_FILE_DIR:CherryPip>
 )
 
-add_custom_command(TARGET PT POST_BUILD
+add_custom_command(TARGET CherryPip POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
         ${DXC_DIR}/bin/x64/dxil.dll
-        $<TARGET_FILE_DIR:PT>
+        $<TARGET_FILE_DIR:CherryPip>
 )
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_CONFIGURATION_TYPES MATCHES "Release")
@@ -181,17 +184,17 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_CONFIGURATION_TYPES MATCHES "Rel
             "${CMAKE_BINARY_DIR}/Assets"
             COMMENT "Copying assets for Release"
     )
-    add_dependencies(PT CopyAssets)
-    target_compile_definitions(PT PRIVATE
+    add_dependencies(CherryPip CopyAssets)
+    target_compile_definitions(CherryPip PRIVATE
             ASSETS_SOURCE_DIR=L"${CMAKE_BINARY_DIR}/Assets"
     )
 else()
-    target_compile_definitions(PT PRIVATE
+    target_compile_definitions(CherryPip PRIVATE
             ASSETS_SOURCE_DIR=L"${CMAKE_SOURCE_DIR}/Assets"
     )
 endif()
 
-target_compile_definitions(PT PRIVATE NOMINMAX)
+target_compile_definitions(CherryPip PRIVATE NOMINMAX)
 
 set(FASTGLTF_USE_CUSTOM_SMALLVECTOR OFF CACHE BOOL "" FORCE)
 set(FASTGLTF_ENABLE_TESTS OFF CACHE BOOL "" FORCE)
@@ -211,9 +214,9 @@ FetchContent_Declare(
         URL https://github.com/spnda/fastgltf/archive/refs/tags/v0.9.0.zip
 )
 FetchContent_MakeAvailable(fastgltf)
-target_link_libraries(PT PRIVATE fastgltf)
+target_link_libraries(CherryPip PRIVATE fastgltf)
 
 find_library(DXGUID_LIB dxguid.lib PATHS [HINTS ENV PROGRAMFILES ENV PROGRAMFILES(X86)])
 find_library(UUID_LIB uuid.lib PATHS [HINTS ENV PROGRAMFILES ENV PROGRAMFILES(X86)])
 
-target_link_libraries(PT PRIVATE ${DXGUID_LIB} ${UUID_LIB})
+target_link_libraries(CherryPip PRIVATE ${DXGUID_LIB} ${UUID_LIB})

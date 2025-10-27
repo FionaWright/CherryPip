@@ -56,10 +56,11 @@ inline ComPtr<IDxcBlob> CompileShaderDXC(
     buffer.Size = shaderBytes.size();
     buffer.Encoding = DXC_CP_UTF8; // or DXC_CP_ACP if ASCII
 
+    const std::wstring shadersPath = FileHelper::GetAssetsPath() + L"/Shaders/";
     const std::wstring dualIncludePath = FileHelper::GetAssetsPath() + L"/Shaders/DualIncludes/";
 
     ComPtr<IDxcResult> result;
-    const wchar_t* args[] = { L"-E", entryPoint, L"-T", targetProfile, L"-I", dualIncludePath.c_str() };
+    const wchar_t* args[] = { L"-E", entryPoint, L"-T", targetProfile, L"-I", dualIncludePath.c_str(), L"-I", shadersPath.c_str() };
     if (FAILED(compiler->Compile(&buffer, args, _countof(args), includeHandler.Get(), IID_PPV_ARGS(&result)))) {
         std::cerr << "Shader compile failed\n";
         return nullptr;

@@ -14,7 +14,9 @@ class D12Resource
 {
 public:
     ~D12Resource();
-    void Init(ID3D12Device* device, const D3D12_RESOURCE_DESC& resourceDesc, const D3D12_RESOURCE_STATES& initialState);
+    void Init(LPCWSTR name, ID3D12Device* device, size_t size, const D3D12_RESOURCE_STATES& initialState, D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE);
+
+    void InitWithHeap(LPCWSTR name, ID3D12Device* device, const D3D12_RESOURCE_DESC& resourceDesc, const D3D12_RESOURCE_STATES& initialState);
     void Upload(ID3D12GraphicsCommandList* cmdList, const uint8_t* pData, size_t totalBytes, size_t rowPitch) const;
     void Upload(ID3D12GraphicsCommandList* cmdList, const uint8_t** pData, size_t totalBytes, size_t rowPitch) const;
 

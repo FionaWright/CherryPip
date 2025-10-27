@@ -18,6 +18,7 @@ void Heap::Init(ID3D12Device* device, size_t numDescriptors)
     desc.NodeMask = 0;
 
     V(device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_cbvSrvUavHeap)));
+    V(m_cbvSrvUavHeap->SetName(L"CBV/SRV/UAV Heap"));
 }
 
 UINT Heap::GetNextDescriptor()

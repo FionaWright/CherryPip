@@ -1,11 +1,12 @@
 struct VsOut
 {
+    float4 position : SV_POSITION;
     float2 uv : TEXCOORD0;
-}
+};
 
 RaytracingAccelerationStructure TLAS : register(t0);
 
-float4 MyPixelShader(VsOut input) : SV_Target0
+float4 PSMain(VsOut input) : SV_Target0
 {
     // Instantiate ray query object.
     // Template parameter allows driver to generate a specialized
@@ -20,6 +21,8 @@ float4 MyPixelShader(VsOut input) : SV_Target0
                         RAY_FLAG_CULL_BACK_FACING_TRIANGLES;
 
     uint myInstanceMask = 0xFF; // ?
+
+    float3 worldPosition = float3(0,0,0); // Temp
 
     RayDesc ray;
     ray.Origin = worldPosition;
@@ -44,24 +47,26 @@ float4 MyPixelShader(VsOut input) : SV_Target0
 
     // Examine and act on the result of the traversal.
     // Was a hit committed?
-    if(q.CommittedStatus()) == COMMITTED_TRIANGLE_HIT)
+    if (q.CommittedStatus() == COMMITTED_TRIANGLE_HIT)
     {
-        ShadeMyTriangleHit(
+        /*ShadeMyTriangleHit(
             q.CommittedInstanceIndex(),
             q.CommittedPrimitiveIndex(),
             q.CommittedGeometryIndex(),
             q.CommittedRayT(),
             q.CommittedTriangleBarycentrics(),
-            q.CommittedTriangleFrontFace() );
+            q.CommittedTriangleFrontFace() );*/
+        return float4(1, 1, 1, 1);
     }
     else // COMMITTED_NOTHING
         // From template specialization,
             // COMMITTED_PROCEDURAL_PRIMITIVE can't happen.
     {
         // Do miss shading
-        MyMissColorCalculation(
+        /*MyMissColorCalculation(
             q.WorldRayOrigin(),
-            q.WorldRayDirection());
+            q.WorldRayDirection());*/
+        return float4(0, 0, 0, 1);
     }
 
     return float4(1, 0, 0, 1);

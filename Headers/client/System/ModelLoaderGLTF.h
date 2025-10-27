@@ -11,6 +11,7 @@
 class RootSig;
 class Heap;
 class Object;
+class BLAS;
 class Shader;
 class Model;
 class D3D;
@@ -45,8 +46,11 @@ struct GLTFLoadArgs
 	Transform Transform = {};
 	std::shared_ptr<RootSig> Root;
 
+    bool ExportBlasModeEnabled = false;
+
 	std::vector<std::shared_ptr<Shader>> Shaders;
 	std::vector<std::shared_ptr<Object>> Objects;
+    std::vector<std::shared_ptr<BLAS>> BLASs;
 
 	int DefaultShaderIndex = 0;
 	int DefaultShaderATIndex = 1;
@@ -67,7 +71,7 @@ private:
 	static void loadModel(D3D* d3d, ID3D12GraphicsCommandList* cmdList, const std::string& directory, Asset& asset, const fastgltf::Primitive& primitive, Model* model);
 	static std::variant<std::string, const std::byte*> loadTexture(const Asset& asset, size_t textureIndex, size_t& outDataSize);
 	static void loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, Asset& asset, const fastgltf::Primitive& primitive, const std::string& modelNameExtensionless, fastgltf::Node& node, GLTFLoadArgs& args, std::string id, size_t meshIndex, size_t primitiveIndex);
-	static void loadNode(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, Asset& asset, std::string modelNameExtensionless, fastgltf::Node& node, GLTFLoadArgs& args);
+	static void loadNode(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, Asset& asset, const std::string& modelNameExtensionless, fastgltf::Node& node, GLTFLoadArgs& args);
 	static void loadModelsFromNode(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Asset& asset, const std::string& modelNameExtensionless, fastgltf::Node& node, std::vector<std::shared_ptr<Model>>& modelList);
 
 	static fastgltf::Parser ms_parser;

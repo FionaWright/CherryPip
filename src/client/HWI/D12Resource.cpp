@@ -16,11 +16,12 @@ D12Resource::~D12Resource()
     std::cout << "Resource destroyed!" << std::endl;
 }
 
-void D12Resource::Init(ID3D12Device* device, const D3D12_RESOURCE_DESC& resourceDesc,
+void D12Resource::InitWithHeap(const LPCWSTR name, ID3D12Device* device, const D3D12_RESOURCE_DESC& resourceDesc,
                        const D3D12_RESOURCE_STATES& initialState)
 {
     const auto defaultHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
     V(device->CreateCommittedResource(&defaultHeapProp, D3D12_HEAP_FLAG_NONE, &resourceDesc, initialState, nullptr,IID_PPV_ARGS(&m_resource)));
+    V(m_resource->SetName(name));
     m_currentState = initialState;
     m_desc = resourceDesc;
 
@@ -33,10 +34,21 @@ void D12Resource::Init(ID3D12Device* device, const D3D12_RESOURCE_DESC& resource
     V(device->CreateCommittedResource(&uploadHeapProp, D3D12_HEAP_FLAG_NONE, &bufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_uploadHeap)));
 }
 
+void D12Resource::Init(const LPCWSTR name, ID3D12Device* device, const size_t size,
+                       const D3D12_RESOURCE_STATES& initialState, const D3D12_RESOURCE_FLAGS flags)
+{
+    m_desc = CD3DX12_RESOURCE_DESC::Buffer(size, flags);
+    const auto defaultHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+    V(device->CreateCommittedResource(&defaultHeapProp, D3D12_HEAP_FLAG_NONE, &m_desc, initialState, nullptr,IID_PPV_ARGS(&m_resource)));
+    V(m_resource->SetName(name));
+    m_currentState = initialState;
+}
+
 void D12Resource::Upload(ID3D12GraphicsCommandList* cmdList, const uint8_t* pData, const size_t totalBytes,
                          const size_t rowPitch) const
 {
     assert(m_desc.DepthOrArraySize == 1);
+    assert(m_uploadHeap);
 
     constexpr int c_mip0 = 0;
     constexpr int c_slice0 = 0;
@@ -56,6 +68,8 @@ void D12Resource::Upload(ID3D12GraphicsCommandList* cmdList, const uint8_t* pDat
 void D12Resource::Upload(ID3D12GraphicsCommandList* cmdList, const uint8_t** pData, const size_t totalBytes,
                          const size_t rowPitch) const
 {
+    assert(m_uploadHeap);
+
     UINT intermediateOffset = 0;
 
     for (int a = 0; a < m_desc.DepthOrArraySize; a++)

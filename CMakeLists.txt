@@ -99,6 +99,8 @@ add_executable(PT WIN32
         Headers/client/HWI/BLAS.h
         src/client/HWI/TLAS.cpp
         Headers/client/HWI/TLAS.h
+        src/client/Debug/GPUEventScoped.cpp
+        Headers/client/Debug/GPUEventScoped.h
 )
 
 file(GLOB THIRD_PARTY_SOURCES CONFIGURE_DEPENDS
@@ -106,6 +108,7 @@ file(GLOB THIRD_PARTY_SOURCES CONFIGURE_DEPENDS
         "${CMAKE_SOURCE_DIR}/ThirdParty/imgui/*.h"
         "${CMAKE_SOURCE_DIR}/ThirdParty/spng/*"
         "${CMAKE_SOURCE_DIR}/ThirdParty/zlib/*"
+        "${CMAKE_SOURCE_DIR}/ThirdParty/WinPixEventRuntime.1.0.240308001/Include/WinPixEventRuntime/*"
 )
 target_sources(PT PRIVATE
         ${THIRD_PARTY_SOURCES}
@@ -119,7 +122,15 @@ target_include_directories(PT PRIVATE
         "${CMAKE_SOURCE_DIR}/ThirdParty/imgui"
         "${CMAKE_SOURCE_DIR}/ThirdParty/spng"
         "${CMAKE_SOURCE_DIR}/ThirdParty/zlib"
+        "${CMAKE_SOURCE_DIR}/ThirdParty/WinPixEventRuntime.1.0.240308001/Include/"
 )
+
+add_custom_command(TARGET PT POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+        "${CMAKE_SOURCE_DIR}/ThirdParty/WinPixEventRuntime.1.0.240308001/bin/x64/WinPixEventRuntime.dll"
+        $<TARGET_FILE_DIR:PT>
+)
+target_link_libraries(PT PRIVATE "${CMAKE_SOURCE_DIR}/ThirdParty/WinPixEventRuntime.1.0.240308001/bin/x64/WinPixEventRuntime.lib")
 
 include_directories(Headers)
 include_directories(Headers/client)

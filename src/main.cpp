@@ -23,7 +23,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR args, int nCmdShow)
     AllocConsole();
     FILE* fp;
     freopen_s(&fp, "CONOUT$", "w", stdout);
-    std::cout << "Debug output here\n";
+    std::cout << "Console Window Initialised\n";
 
     Config::ParseCommandLineArgs(args);
 

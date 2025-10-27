@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-#include "DualIncludes/CBV.h"
+#include "CBV.h"
 
 Object::~Object()
 {

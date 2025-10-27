@@ -1,9 +1,12 @@
+#include "CBV.h"
+
 struct VsOut
 {
     float4 position : SV_POSITION;
     float2 uv : TEXCOORD0;
 };
 
+ConstantBuffer<CbvPathTracing> c_pathTracing : register(b0);
 RaytracingAccelerationStructure TLAS : register(t0);
 
 float4 PSMain(VsOut input) : SV_Target0
@@ -22,11 +25,18 @@ float4 PSMain(VsOut input) : SV_Target0
 
     uint myInstanceMask = 0xFF; // ?
 
-    float3 worldPosition = float3(0,0,0); // Temp
+    float3 origin = c_pathTracing.CameraPositionWorld;
+
+    float2 ndc = input.uv * 2.0f - 1.0f; // [-1,1] range
+    float4 clip = float4(ndc, 0, 1); // z=0 for near plane
+    float4 view = mul(c_pathTracing.InvP, clip);
+    view /= view.w;
+    float4 world = mul(c_pathTracing.InvV, view);
+    float3 rayDir = normalize(world.xyz - origin);
 
     RayDesc ray;
-    ray.Origin = worldPosition;
-    ray.Direction = float3(0, 0, 1);
+    ray.Origin = origin;
+    ray.Direction = rayDir;
     ray.TMin = 0;
     ray.TMax = 1000.0;
 
@@ -58,16 +68,10 @@ float4 PSMain(VsOut input) : SV_Target0
             q.CommittedTriangleFrontFace() );*/
         return float4(1, 1, 1, 1);
     }
-    else // COMMITTED_NOTHING
-        // From template specialization,
-            // COMMITTED_PROCEDURAL_PRIMITIVE can't happen.
-    {
-        // Do miss shading
-        /*MyMissColorCalculation(
-            q.WorldRayOrigin(),
-            q.WorldRayDirection());*/
-        return float4(0, 0, 0, 1);
-    }
 
-    return float4(1, 0, 0, 1);
+    // Do miss shading
+    /*MyMissColorCalculation(
+        q.WorldRayOrigin(),
+        q.WorldRayDirection());*/
+    return float4(0, 0, 0, 1);
 }

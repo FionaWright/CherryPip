@@ -10,7 +10,7 @@
 #include "HWI/D3D.h"
 #include "HWI/Texture.h"
 
-#include "DualIncludes/CBV.h"
+#include "CBV.h"
 #include "HWI/BLAS.h"
 #include "HWI/Material.h"
 #include "Render/Object.h"

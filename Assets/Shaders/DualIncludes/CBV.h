@@ -11,4 +11,11 @@ struct CbvMatrices
     float4x4 P; // Projection
 };
 
+struct CbvPathTracing
+{
+    float4x4 InvP;
+    float4x4 InvV;
+    float3 CameraPositionWorld;
+};
+
 #endif

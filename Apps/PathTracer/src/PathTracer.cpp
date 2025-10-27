@@ -9,7 +9,7 @@
 #include "System/Config.h"
 #include "System/FileHelper.h"
 #include "System/Gui.h"
-#include "DualIncludes/CBV.h"
+#include "CBV.h"
 #include "HWI/Material.h"
 #include "System/ModelLoaderGLTF.h"
 
@@ -66,10 +66,12 @@ void PathTracer::loadAssets(D3D* d3d)
 
     // Init Root Sig
     {
-        CD3DX12_ROOT_PARAMETER1 params[1];
-        CD3DX12_DESCRIPTOR_RANGE1 ranges[1];
-        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+        CD3DX12_ROOT_PARAMETER1 params[2];
+        CD3DX12_DESCRIPTOR_RANGE1 ranges[2];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
         params[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+        params[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);
 
         m_rootSig->Init(params, _countof(params), nullptr, 0, device);
     }
@@ -119,6 +121,7 @@ void PathTracer::loadAssets(D3D* d3d)
 
     m_material = std::make_shared<Material>();
     m_material->Init(&m_heap);
+    m_material->AddCBV(device, &m_heap, sizeof(CbvPathTracing));
     m_material->AddTLAS(device, &m_heap, m_tlas);
 
     V(cmdList->Close());
@@ -163,9 +166,20 @@ void PathTracer::PathTrace(const D3D* d3d, ID3D12GraphicsCommandList* cmdList) c
 {
     GPU_SCOPE(cmdList, L"Path Tracing");
 
+    constexpr float fov = 60.0f;
+    constexpr float nearPlane = 0.1f;
+    constexpr float farPlane = 100.0f;
+    const XMMATRIX projMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), m_AspectRatio, nearPlane, farPlane);
+
     cmdList->SetGraphicsRootSignature(m_rootSig->Get());
     cmdList->SetPipelineState(m_shader->GetPSO());
 
+    CbvPathTracing cbv;
+    cbv.CameraPositionWorld = m_camera.GetCamera().GetPosition();
+    cbv.InvP = XMMatrixInverse(nullptr, projMatrix);
+    cbv.InvV = XMMatrixInverse(nullptr, m_camera.GetViewMatrix());
+
+    m_material->UpdateCBV(0, &cbv);
     m_material->SetDescriptorTables(cmdList);
 
     cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

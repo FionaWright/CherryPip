@@ -28,6 +28,7 @@ float4 PSMain(VsOut input) : SV_Target0
     float3 origin = c_pathTracing.CameraPositionWorld;
 
     float2 ndc = input.uv * 2.0f - 1.0f; // [-1,1] range
+    ndc.y = -ndc.y;
     float4 clip = float4(ndc, 0, 1); // z=0 for near plane
     float4 view = mul(c_pathTracing.InvP, clip);
     view /= view.w;

@@ -15,6 +15,7 @@ public:
 
     XMMATRIX GetViewMatrix() const { return m_camera.GetViewMatrix(); }
     Camera& GetCamera() { return m_camera; }
+    const Camera& GetCamera() const { return m_camera; }
 
 private:
     Camera m_camera;

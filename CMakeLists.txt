@@ -134,6 +134,7 @@ target_link_libraries(PT PRIVATE "${CMAKE_SOURCE_DIR}/ThirdParty/WinPixEventRunt
 
 include_directories(Headers)
 include_directories(Headers/client)
+include_directories(Assets/Shaders/DualIncludes)
 include_directories(${CMAKE_SOURCE_DIR})
 
 target_link_libraries(PT PRIVATE ${D3D12_LIBS})

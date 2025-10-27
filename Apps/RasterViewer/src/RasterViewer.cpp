@@ -8,7 +8,7 @@
 #include "System/Config.h"
 #include "System/FileHelper.h"
 #include "System/Gui.h"
-#include "DualIncludes/CBV.h"
+#include "CBV.h"
 #include "HWI/Material.h"
 #include "System/ModelLoaderGLTF.h"
 

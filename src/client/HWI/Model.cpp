@@ -80,7 +80,7 @@ void Model::InitFullScreenTriangle(ID3D12Device* device, ID3D12GraphicsCommandLi
         { XMFLOAT3( 3.0f, -1.0f, 0.0f), XMFLOAT2(2.0f, 1.0f) },  // bottom-right (goes beyond screen)
     };
 
-    static constexpr uint16_t fullscreenIndices[] = { 0, 1, 2 };
+    static constexpr uint32_t fullscreenIndices[] = { 0, 1, 2 };
 
     Init(device, 3, 3, sizeof(FullscreenVertex), 0, {});
     SetBuffers(device, cmdList, fullscreenVertices, fullscreenIndices);

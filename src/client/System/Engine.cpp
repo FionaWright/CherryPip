@@ -7,6 +7,7 @@
 #include "Helper.h"
 #include "imgui.h"
 #include "Apps/App.h"
+#include "Debug/GPUEventScoped.h"
 #include "HWI/D3D.h"
 #include "System/Config.h"
 #include "System/FileHelper.h"
@@ -58,8 +59,11 @@ void Engine::Render(App* pSample)
 
     // ===
     pSample->OnUpdate(m_d3d.get(), cmdList.Get());
-    RenderGUI();
-    Gui::RenderAllWindows(cmdList.Get());
+    {
+        GPU_SCOPE(cmdList.Get(), L"GUI");
+        RenderGUI();
+        Gui::RenderAllWindows(cmdList.Get());
+    }
     // ===
 
     const auto barrier2 = CD3DX12_RESOURCE_BARRIER::Transition(rtv, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);

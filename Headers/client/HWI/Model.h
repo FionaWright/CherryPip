@@ -15,15 +15,16 @@ using namespace DirectX;
 class Model
 {
 public:
-    //bool Init(ID3D12GraphicsCommandList2* cmdList, std::wstring filepath);
-    //bool Init(ID3D12GraphicsCommandList2* cmdList, std::string filepath);
     void Init(ID3D12Device* device, const size_t vertexCount, const size_t indexCount, const size_t vertexInputSize, const float boundingRadius, const XMFLOAT3 centroid);
     void SetBuffers(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const void* vBufferData, const void* iBufferData);
 
+    ID3D12Resource* GetVertexBuffer() const { return m_vertexBuffer.Get(); }
+    ID3D12Resource* GetIndexBuffer() const { return m_indexBuffer.Get(); }
     const D3D12_VERTEX_BUFFER_VIEW& GetVertexBufferView() const { return m_vertexBufferView; }
     const D3D12_INDEX_BUFFER_VIEW& GetIndexBufferView() const { return m_indexBufferView; }
     size_t GetVertexCount() const { return m_vertexCount; }
     size_t GetIndexCount() const { return m_indexCount; }
+    size_t GetVertexInputSize() const { return m_vertexInputSize; }
 
 private:
     ComPtr<ID3D12Resource> m_vertexBuffer;

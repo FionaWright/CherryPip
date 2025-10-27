@@ -84,7 +84,7 @@ D3D::~D3D()
         m_logFile.close();
 }
 
-void D3D::Init(size_t width, size_t height)
+void D3D::Init(const size_t width, const size_t height)
 {
     UINT dxgiFactoryFlags = 0;
 
@@ -176,6 +176,10 @@ void D3D::Init(size_t width, size_t height)
         // You can also filter messages if it's too noisy
     }
 #endif
+
+    D3D12_FEATURE_DATA_D3D12_OPTIONS5 options5 = {};
+    V(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &options5, sizeof(options5)));
+    m_rayTracingSupported = options5.RaytracingTier >= D3D12_RAYTRACING_TIER_1_1;
 
     // Describe and create the command queue.
     D3D12_COMMAND_QUEUE_DESC queueDesc = {};

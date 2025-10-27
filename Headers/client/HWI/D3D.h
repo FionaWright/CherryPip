@@ -41,6 +41,8 @@ public:
     UINT GetFrameIndex() const { return m_frameIndex; }
     UINT GetRtvDescriptorSize() const { return m_rtvDescriptorSize;}
 
+    bool GetRayTracingSupported() const { return m_rayTracingSupported; }
+
     ComPtr<ID3D12CommandAllocator> CreateAllocator(D3D12_COMMAND_LIST_TYPE type) const;
     ComPtr<ID3D12GraphicsCommandList> GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE type);
     void ExecuteCommandList(ID3D12GraphicsCommandList* cmdList);
@@ -73,6 +75,7 @@ private:
 
     bool m_useWarpDevice = false;
     bool m_tearingSupport = false;
+    bool m_rayTracingSupported = false;
 
     // Synchronization objects.
     UINT m_frameIndex = 0;

@@ -41,6 +41,8 @@ add_executable(PT WIN32
         src/main.cpp
         Apps/RasterViewer/Headers/RasterViewer.h
         Apps/RasterViewer/src/RasterViewer.cpp
+        Apps/PathTracer/Headers/PathTracer.h
+        Apps/PathTracer/src/PathTracer.cpp
 
         src/client/System/Win32App.cpp
         Headers/client/System/Win32App.h
@@ -93,6 +95,10 @@ add_executable(PT WIN32
         src/client/System/HighResolutionClock.cpp
         src/client/System/Engine.cpp
         Headers/client/System/Engine.h
+        src/client/HWI/BLAS.cpp
+        src/client/HWI/BLAS.h
+        src/client/HWI/TLAS.cpp
+        src/client/HWI/TLAS.h
 )
 
 file(GLOB THIRD_PARTY_SOURCES CONFIGURE_DEPENDS

@@ -21,11 +21,19 @@
 - [ ] ...
 - [ ] Reflections
 - [ ] Glass & Caustics
+- [ ] Ray pipelines
 
 https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d12-raytracing-samples-win32/
 
-## Mini-TODO:
+## Optimizations-TODO:
 
 - Frustum Culling
 - Texture/Model reuse
 - Descriptor heap sharing (Wait to see if it's worth it)
+- PCH Compilation? 
+
+## PT-TODO:
+
+- Detect and enable PT-features 
+- Create the TLAS and BLAS
+- 

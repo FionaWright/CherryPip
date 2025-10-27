@@ -34,6 +34,6 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 ## PT-TODO:
 
-- Detect and enable PT-features 
-- Create the TLAS and BLAS
-- 
+- Share InstanceData/Vertex
+- New PathTracer class that contains FullScreenTriangle, TLAS and structured vertex/index buffer buffer and instanceData buffer
+- Create structured buffers and pass them in 

@@ -6,8 +6,32 @@ struct VsOut
     float2 uv : TEXCOORD0;
 };
 
+struct InstanceData
+{
+    uint IndexBufferIdx;
+    uint VertexBufferIdx;
+    uint MaterialIdx;
+    uint p;
+
+    float4x4 M;
+};
+
+struct Vertex
+{
+    float3 position;
+    float2 uv;
+    float3 normal;
+    float3 tangent;
+    float3 bitangent;
+}
+
 ConstantBuffer<CbvPathTracing> c_pathTracing : register(b0);
-RaytracingAccelerationStructure TLAS : register(t0);
+RaytracingAccelerationStructure gTLAS : register(t0);
+StructuredBuffer<InstanceData> gInstances : register(t1);
+StructuredBuffer<Vertex> gVertexBuffers[] : register(t2);
+StructuredBuffer<uint3>  gIndexBuffers[]  : register(t3);
+
+#include "Path-Tracing/HitPS.hlsli"
 
 float4 PSMain(VsOut input) : SV_Target0
 {
@@ -15,12 +39,10 @@ float4 PSMain(VsOut input) : SV_Target0
     // Template parameter allows driver to generate a specialized
     // implementation.
     RayQuery<RAY_FLAG_CULL_NON_OPAQUE |
-             RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES |
-             RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH> q;
+             RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> q;
 
     uint myRayFlags =   RAY_FLAG_CULL_NON_OPAQUE |
                         RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES |
-                        RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH |
                         RAY_FLAG_CULL_BACK_FACING_TRIANGLES;
 
     uint myInstanceMask = 0xFF; // ?
@@ -43,7 +65,7 @@ float4 PSMain(VsOut input) : SV_Target0
 
     // Set up a trace.  No work is done yet.
     q.TraceRayInline(
-        TLAS,
+        gTLAS,
         myRayFlags, // OR'd with flags above
         myInstanceMask,
         ray);
@@ -60,14 +82,13 @@ float4 PSMain(VsOut input) : SV_Target0
     // Was a hit committed?
     if (q.CommittedStatus() == COMMITTED_TRIANGLE_HIT)
     {
-        /*ShadeMyTriangleHit(
+        return Shade(
             q.CommittedInstanceIndex(),
             q.CommittedPrimitiveIndex(),
             q.CommittedGeometryIndex(),
             q.CommittedRayT(),
             q.CommittedTriangleBarycentrics(),
-            q.CommittedTriangleFrontFace() );*/
-        return float4(1, 1, 1, 1);
+            q.CommittedTriangleFrontFace() );
     }
 
     // Do miss shading

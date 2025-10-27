@@ -91,7 +91,7 @@ void PathTracer::loadAssets(D3D* d3d)
         };
         const D3D12_INPUT_LAYOUT_DESC ild = {inputElementDescs, _countof(inputElementDescs)};
 
-        m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/TestPS.hlsl", ild, device, m_rootSig->Get());
+        m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/CorePS.hlsl", ild, device, m_rootSig->Get());
     }
 
     std::shared_ptr<Texture> tex = std::make_shared<Texture>();

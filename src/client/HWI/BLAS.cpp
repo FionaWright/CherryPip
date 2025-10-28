@@ -15,19 +15,19 @@ void BLAS::Init(ID3D12Device5* device, ID3D12GraphicsCommandList4* cmdList, cons
     m_transform = transform;
     m_model = model;
 
-    ID3D12Resource* vertexBuffer = model->GetVertexBuffer()->GetResource();
-    ID3D12Resource* indexBuffer = model->GetIndexBuffer()->GetResource();
+    auto vertexBuffer = model->GetVertexBuffer();
+    auto indexBuffer = model->GetIndexBuffer();
 
     D3D12_RAYTRACING_GEOMETRY_DESC geomDesc = {};
     geomDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
     geomDesc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
 
-    geomDesc.Triangles.VertexBuffer.StartAddress = vertexBuffer->GetGPUVirtualAddress();
+    geomDesc.Triangles.VertexBuffer.StartAddress = vertexBuffer->GetResource()->GetGPUVirtualAddress();
     geomDesc.Triangles.VertexBuffer.StrideInBytes = model->GetVertexInputSize();
     geomDesc.Triangles.VertexCount = model->GetVertexCount();
     geomDesc.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
 
-    geomDesc.Triangles.IndexBuffer = indexBuffer->GetGPUVirtualAddress();
+    geomDesc.Triangles.IndexBuffer = indexBuffer->GetResource()->GetGPUVirtualAddress();
     geomDesc.Triangles.IndexFormat = DXGI_FORMAT_R32_UINT;
     geomDesc.Triangles.IndexCount = model->GetIndexCount();
 
@@ -50,17 +50,12 @@ void BLAS::Init(ID3D12Device5* device, ID3D12GraphicsCommandList4* cmdList, cons
     buildDesc.ScratchAccelerationStructureData = m_blasScratch.GetResource()->GetGPUVirtualAddress();
     buildDesc.DestAccelerationStructureData = m_blasResult.GetResource()->GetGPUVirtualAddress();
 
-    D3D12_RESOURCE_BARRIER barrier = {};
-    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
-    barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
-    barrier.Transition.pResource = vertexBuffer;
-    cmdList->ResourceBarrier(1, &barrier);
-    barrier.Transition.pResource = indexBuffer;
-    cmdList->ResourceBarrier(1, &barrier);
+    vertexBuffer->Transition(cmdList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+    indexBuffer->Transition(cmdList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
     cmdList->BuildRaytracingAccelerationStructure(&buildDesc, 0, nullptr);
 
+    D3D12_RESOURCE_BARRIER barrier = {};
     barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
     barrier.UAV.pResource = m_blasResult.GetResource();
     cmdList->ResourceBarrier(1, &barrier);

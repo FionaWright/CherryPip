@@ -24,12 +24,13 @@ public:
 
     void Transition(ID3D12GraphicsCommandList* cmdList, const D3D12_RESOURCE_STATES& newState, UINT subresourceIdx = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
 
-    ID3D12Resource* GetResource() const { return m_resource.Get(); };
-    D3D12_RESOURCE_STATES GetCurrentState() const { return m_currentState; };
-    D3D12_RESOURCE_DESC GetDesc() const { return m_desc; };
+    ID3D12Resource* GetResource() const { return m_resource.Get(); }
+    ID3D12Resource* GetUploadResource() const { return m_uploadResource.Get(); }
+    D3D12_RESOURCE_STATES GetCurrentState() const { return m_currentState; }
+    D3D12_RESOURCE_DESC GetDesc() const { return m_desc; }
 
 private:
-    ComPtr<ID3D12Resource> m_uploadHeap;
+    ComPtr<ID3D12Resource> m_uploadResource;
     ComPtr<ID3D12Resource> m_resource;
     D3D12_RESOURCE_DESC m_desc = {};
     D3D12_RESOURCE_STATES m_currentState = {};

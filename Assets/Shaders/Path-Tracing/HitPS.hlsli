@@ -11,15 +11,12 @@
 float4 Shade(uint blasIdx, uint primitiveIdx, uint geometryIdx, float rayT, float2 barycentrics, uint isFrontFace)
 {
     PtInstanceData instance = gInstances[blasIdx];
-    return Palette(instance.VertexBufferIdx);
-/*
-    StructuredBuffer<uint3> indexBuffer = gIndexBuffers[instance.IndexBufferIndex];
-    StructuredBuffer<Vertex> vertexBuffer = gVertexBuffers[instance.VertexBufferIndex];
+    //return Palette(instance.VertexBufferIdx);
 
-    uint3 tri = indexBuffer[primitiveIdx];
-    Vertex v0 = vertexBuffer[tri.x];
-    Vertex v1 = vertexBuffer[tri.y];
-    Vertex v2 = vertexBuffer[tri.z];
+    uint3 tri = gIndexMegaBuffer[instance.IndexBufferOffset + primitiveIdx];
+    Vertex v0 = gVertexMegaBuffer[instance.VertexBufferOffset + tri.x];
+    Vertex v1 = gVertexMegaBuffer[instance.VertexBufferOffset + tri.y];
+    Vertex v2 = gVertexMegaBuffer[instance.VertexBufferOffset + tri.z];
 
     float3 bary = float3(1 - barycentrics.x - barycentrics.y, barycentrics.x, barycentrics.y);
 
@@ -28,7 +25,6 @@ float4 Shade(uint blasIdx, uint primitiveIdx, uint geometryIdx, float rayT, floa
     normal = isFrontFace == 0 ? -normal : normal;
 
     return float4(normal, 1);
-*/
 }
 
 #endif

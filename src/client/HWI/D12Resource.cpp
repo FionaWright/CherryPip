@@ -44,22 +44,22 @@ void D12Resource::CreateHeap(ID3D12Device* device)
 
     const auto uploadHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
     const auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
-    V(device->CreateCommittedResource(&uploadHeapProp, D3D12_HEAP_FLAG_NONE, &bufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_uploadHeap)));
+    V(device->CreateCommittedResource(&uploadHeapProp, D3D12_HEAP_FLAG_NONE, &bufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_uploadResource)));
 }
 
 void D12Resource::UploadData(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const void* pData, const size_t totalBytes)
 {
-    if (!m_uploadHeap)
+    if (!m_uploadResource)
     {
         CreateHeap(device);
     }
 
     void* mappedData = nullptr;
-    V(m_uploadHeap->Map(0, nullptr, &mappedData));
+    V(m_uploadResource->Map(0, nullptr, &mappedData));
     memcpy(mappedData, pData, totalBytes);
-    m_uploadHeap->Unmap(0, nullptr);
+    m_uploadResource->Unmap(0, nullptr);
 
-    cmdList->CopyBufferRegion(m_resource.Get(), 0, m_uploadHeap.Get(), 0, totalBytes);
+    cmdList->CopyBufferRegion(m_resource.Get(), 0, m_uploadResource.Get(), 0, totalBytes);
 }
 
 void D12Resource::UploadTexture(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const uint8_t* pData, const size_t totalBytes,
@@ -67,7 +67,7 @@ void D12Resource::UploadTexture(ID3D12Device* device, ID3D12GraphicsCommandList*
 {
     assert(m_desc.DepthOrArraySize == 1);
 
-    if (!m_uploadHeap)
+    if (!m_uploadResource)
     {
         CreateHeap(device);
     }
@@ -82,7 +82,7 @@ void D12Resource::UploadTexture(ID3D12Device* device, ID3D12GraphicsCommandList*
     subresource.SlicePitch = totalBytes;
 
     constexpr UINT c_intermediateOffset = 0;
-    UpdateSubresources(cmdList, m_resource.Get(), m_uploadHeap.Get(), c_intermediateOffset, subresourceIndex, 1,
+    UpdateSubresources(cmdList, m_resource.Get(), m_uploadResource.Get(), c_intermediateOffset, subresourceIndex, 1,
                        &subresource);
     delete pData;
 }
@@ -90,7 +90,7 @@ void D12Resource::UploadTexture(ID3D12Device* device, ID3D12GraphicsCommandList*
 void D12Resource::UploadTexture(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const uint8_t** pData, const size_t totalBytes,
                          const size_t rowPitch)
 {
-    if (!m_uploadHeap)
+    if (!m_uploadResource)
     {
         CreateHeap(device);
     }
@@ -107,7 +107,7 @@ void D12Resource::UploadTexture(ID3D12Device* device, ID3D12GraphicsCommandList*
         subresource.RowPitch = rowPitch;
         subresource.SlicePitch = totalBytes;
 
-        UpdateSubresources(cmdList, m_resource.Get(), m_uploadHeap.Get(), intermediateOffset, subresourceIndex, 1,
+        UpdateSubresources(cmdList, m_resource.Get(), m_uploadResource.Get(), intermediateOffset, subresourceIndex, 1,
                            &subresource);
 
         intermediateOffset += static_cast<UINT>(GetRequiredIntermediateSize(m_resource.Get(), subresourceIndex, 1));

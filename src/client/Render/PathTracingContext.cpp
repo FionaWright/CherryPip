@@ -18,6 +18,14 @@ void PathTracingContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* c
     m_tlas = tlas;
     m_blasList = blasList;
 
+    // Temp
+    const std::vector<PtMaterialData> materials = {
+        { XMFLOAT3(1, 0.2, 0.2), 0.0f },
+        { XMFLOAT3(0.2, 1.0, 0.2), 0.0f },
+        { XMFLOAT3(1, 1, 1), 1.0f },
+        { XMFLOAT3(1, 1, 0), 1.0f },
+    };
+
     UINT curVertexBufferOffset = 0;
     UINT curIndexBufferOffset = 0;
     for (int i = 0; i < m_blasList.size(); i++)
@@ -51,13 +59,18 @@ void PathTracingContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* c
     m_instanceDataBuffer->Init(L"Path-Tracing Instance Data Buffer", device, bufferSize, D3D12_RESOURCE_STATE_COMMON);
     m_instanceDataBuffer->UploadData(device, cmdList, m_instanceDataList.data(), bufferSize);
 
+    const UINT64 mBufferSize = sizeof(PtMaterialData) * m_instanceDataList.size();
+    m_materialBuffer = std::make_shared<D12Resource>();
+    m_materialBuffer->Init(L"Path-Tracing Material Data Buffer", device, mBufferSize, D3D12_RESOURCE_STATE_COMMON);
+    m_materialBuffer->UploadData(device, cmdList, materials.data(), mBufferSize);
+
     size_t vByteOffset = 0;
     size_t iByteOffset = 0;
     for (int i = 0; i < m_blasList.size(); i++)
     {
         const Model* model = m_blasList[i]->GetModel();
-        auto vBuffer = model->GetVertexBuffer();
-        auto iBuffer = model->GetIndexBuffer();
+        const auto vBuffer = model->GetVertexBuffer();
+        const auto iBuffer = model->GetIndexBuffer();
 
         vBuffer->Transition(cmdList, D3D12_RESOURCE_STATE_COPY_SOURCE);
         iBuffer->Transition(cmdList, D3D12_RESOURCE_STATE_COPY_SOURCE);
@@ -81,6 +94,7 @@ void PathTracingContext::FillMaterial(ID3D12Device* device, Material* material, 
     material->AddBuffer(device, heap, m_instanceDataBuffer, m_instanceDataList.size(), sizeof(PtInstanceData));
     material->AddBuffer(device, heap, m_vertexMegaBuffer, m_vertexMegaBufferCount, sizeof(Vertex));
     material->AddBuffer(device, heap, m_indexMegaBuffer, m_indexMegaBufferCount, sizeof(uint32_t) * 3);
+    material->AddBuffer(device, heap, m_materialBuffer, m_instanceDataList.size(), sizeof(PtMaterialData));
 }
 
 void PathTracingContext::Render(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSig, ID3D12PipelineState* pso, const Camera* camera, const Material* material, const XMMATRIX& projMatrix) const
@@ -94,6 +108,8 @@ void PathTracingContext::Render(ID3D12Device* device, ID3D12GraphicsCommandList*
     cbv.CameraPositionWorld = camera->GetPosition();
     cbv.InvP = XMMatrixInverse(nullptr, projMatrix);
     cbv.InvV = XMMatrixInverse(nullptr, camera->GetViewMatrix());
+    cbv.NumBounces = 2;
+    cbv.Seed = 1007;
 
     material->UpdateCBV(0, &cbv);
     material->SetDescriptorTables(cmdList);

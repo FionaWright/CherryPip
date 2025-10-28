@@ -1,5 +1,8 @@
 #include "CBV.h"
 #include "PtBuffers.h"
+#include "Rand01.hlsli"
+
+#define EPISLON 1e-4
 
 struct VsOut
 {
@@ -12,8 +15,10 @@ RaytracingAccelerationStructure gTLAS : register(t0);
 StructuredBuffer<PtInstanceData> gInstances : register(t1);
 StructuredBuffer<Vertex> gVertexMegaBuffer : register(t2);
 StructuredBuffer<uint3>  gIndexMegaBuffer  : register(t3);
+StructuredBuffer<PtMaterialData> gMaterials  : register(t4);
 
-#include "Path-Tracing/HitPS.hlsli"
+#include "Path-Tracing/Hit.hlsli"
+#include "Path-Tracing/Miss.hlsli"
 
 float4 PSMain(VsOut input) : SV_Target0
 {
@@ -42,40 +47,62 @@ float4 PSMain(VsOut input) : SV_Target0
     RayDesc ray;
     ray.Origin = origin;
     ray.Direction = rayDir;
-    ray.TMin = 0;
+    ray.TMin = 0.001;
     ray.TMax = 1000.0;
 
-    // Set up a trace.  No work is done yet.
-    q.TraceRayInline(
-        gTLAS,
-        myRayFlags, // OR'd with flags above
-        myInstanceMask,
-        ray);
+    float4 color = float4(0, 0, 0, 1);
+    float3 throughput = float3(1, 1, 1);
 
-    // Proceed() below is where behind-the-scenes traversal happens,
-    // including the heaviest of any driver inlined code.
-    // In this simplest of scenarios, Proceed() only needs
-    // to be called once rather than a loop:
-    // Based on the template specialization above,
-    // traversal completion is guaranteed.
-    q.Proceed();
+    uint rngState = c_pathTracing.Seed;
+    rngState += input.position.y * 1020 + input.position.x; // Pixel index (Assuming 1020xY)
 
-    // Examine and act on the result of the traversal.
-    // Was a hit committed?
-    if (q.CommittedStatus() == COMMITTED_TRIANGLE_HIT)
+    uint TEMP = 99;
+
+    for (uint i = 0; i < c_pathTracing.NumBounces; i++)
     {
-        return Shade(
-            q.CommittedInstanceIndex(),
-            q.CommittedPrimitiveIndex(),
-            q.CommittedGeometryIndex(),
-            q.CommittedRayT(),
-            q.CommittedTriangleBarycentrics(),
-            q.CommittedTriangleFrontFace() );
+        // Set up a trace.  No work is done yet.
+        q.TraceRayInline(
+            gTLAS,
+            myRayFlags, // OR'd with flags above
+            myInstanceMask,
+            ray);
+
+        // Proceed() below is where behind-the-scenes traversal happens,
+        // including the heaviest of any driver inlined code.
+        // In this simplest of scenarios, Proceed() only needs
+        // to be called once rather than a loop:
+        // Based on the template specialization above,
+        // traversal completion is guaranteed.
+        q.Proceed();
+
+        if (q.CommittedStatus() != COMMITTED_TRIANGLE_HIT)
+        {
+            color.rgb *= Miss(ray.Origin, ray.Direction);
+            return color;
+        }
+
+        uint temp = q.CommittedInstanceIndex();
+        if (temp == TEMP)
+            return float4(0, 1, 1, 1);
+        TEMP = temp;
+
+        float3 newDir;
+        float3 hitColor = Shade(throughput, rngState, newDir,
+                            q.CommittedInstanceIndex(),
+                            q.CommittedPrimitiveIndex(),
+                            q.CommittedGeometryIndex(),
+                            q.CommittedRayT(),
+                            q.CommittedTriangleBarycentrics(),
+                            q.CommittedTriangleFrontFace() );
+
+        color.rgb += hitColor;
+
+        float3 hitPos = ray.Origin + ray.Direction * q.CommittedRayT();
+        ray.Direction = newDir;
+        ray.Origin = hitPos + ray.Direction * EPISLON;
+
+        //return float4(ray.Direction, 1);
     }
 
-    // Do miss shading
-    /*MyMissColorCalculation(
-        q.WorldRayOrigin(),
-        q.WorldRayDirection());*/
-    return float4(0, 0, 0, 1);
+    return color;
 }

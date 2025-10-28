@@ -481,8 +481,8 @@ void ModelLoaderGLTF::loadNode(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Hea
     if (!node.meshIndex.has_value())
         return;
 
-    pos = Mult(pos, scale);
-    worldTransform.SetPosition(pos);
+    //pos = Mult(pos, scale);
+    //worldTransform.SetPosition(pos);
 
     args.Transform = worldTransform;
 

@@ -48,8 +48,8 @@ private:
     std::shared_ptr<RootSig> m_rootSig;
 
     std::vector<PtInstanceData> m_instanceDataList;
-    std::shared_ptr<D12Resource> m_instanceDataBuffer, m_vertexMegaBuffer, m_indexMegaBuffer;
-    UINT m_vertexMegaBufferCount, m_indexMegaBufferCount;
+    std::shared_ptr<D12Resource> m_instanceDataBuffer, m_vertexMegaBuffer, m_indexMegaBuffer, m_materialBuffer;
+    UINT m_vertexMegaBufferCount = 0, m_indexMegaBufferCount = 0;
 };
 
 

@@ -57,38 +57,10 @@ void PathTracer::loadAssets(D3D* d3d)
     const ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
     m_shader = std::make_shared<Shader>();
-
     m_heap.Init(device, 10000);
 
-    std::shared_ptr<Texture> tex = std::make_shared<Texture>();
-    tex->Init(d3d->GetDevice(), cmdList.Get(), FileHelper::GetAssetTextureFullPath(L"TestTex.png"),
-              DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-
-    tex->Transition(cmdList.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-
-    GLTFLoadArgs args;
-    args.Transform = {};
-    args.Transform.SetScale(0.1f);
-    args.DefaultShaderIndex = 0;
-    args.DefaultShaderATIndex = -1;
-    args.ExportBlasModeEnabled = true;
-    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
-
-    args.Transform = {};
-    args.Transform.SetPosition(0, 100, 0);
-    args.Transform.SetScale(0.1f);
-    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
-    auto blasList = args.BLASs;
-
-    ComPtr<ID3D12Device5> device5;
-    V(d3d->GetDevice()->QueryInterface(IID_PPV_ARGS(&device5)));
-    ComPtr<ID3D12GraphicsCommandList4> cmdList4;
-    V(cmdList->QueryInterface(IID_PPV_ARGS(&cmdList4)));
-    auto tlas = std::make_shared<TLAS>();
-    tlas->Init(device5.Get(), cmdList4.Get(), blasList);
-
     m_rootSig = std::make_shared<RootSig>();
-    m_rootSig->SmartInit(device, 1, 4);
+    m_rootSig->SmartInit(device, 1, 5);
 
     // Init Shader/PSO
     {
@@ -107,6 +79,42 @@ void PathTracer::loadAssets(D3D* d3d)
 
         m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/CorePS.hlsl", ild, device, m_rootSig->Get());
     }
+
+    std::shared_ptr<Texture> tex = std::make_shared<Texture>();
+    tex->Init(d3d->GetDevice(), cmdList.Get(), FileHelper::GetAssetTextureFullPath(L"TestTex.png"),
+              DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+
+    tex->Transition(cmdList.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
+    GLTFLoadArgs args;
+    args.Transform = {};
+    args.Transform.SetScale(0.1f);
+    args.DefaultShaderIndex = 0;
+    args.DefaultShaderATIndex = -1;
+    args.ExportBlasModeEnabled = true;
+    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
+    args.Transform = {};
+    args.Transform.SetPosition(0, 10, 0);
+    args.Transform.SetScale(0.1f);
+    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
+    args.Transform = {};
+    args.Transform.SetPosition(0, 5, 0);
+    args.Transform.SetScale(0.01f);
+    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
+    args.Transform = {};
+    args.Transform.SetPosition(0, 0, -500);
+    args.Transform.SetRotation(90, 0, 0);
+    args.Transform.SetScale(10.0f);
+    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
+    auto blasList = args.BLASs;
+
+
+    ComPtr<ID3D12Device5> device5;
+    V(d3d->GetDevice()->QueryInterface(IID_PPV_ARGS(&device5)));
+    ComPtr<ID3D12GraphicsCommandList4> cmdList4;
+    V(cmdList->QueryInterface(IID_PPV_ARGS(&cmdList4)));
+    auto tlas = std::make_shared<TLAS>();
+    tlas->Init(device5.Get(), cmdList4.Get(), blasList);
 
     m_ptContext.Init(device, cmdList.Get(), tlas, blasList);
 

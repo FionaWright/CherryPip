@@ -31,8 +31,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR args, int nCmdShow)
     RasterViewer rv;
 
     std::vector<App*> apps;
-    apps.emplace_back(&pt);
     apps.emplace_back(&rv);
+    apps.emplace_back(&pt);
     const int rslt = Win32App::Run(apps, hInstance, nCmdShow);
 
     CoUninitialize();

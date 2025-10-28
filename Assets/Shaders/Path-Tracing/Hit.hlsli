@@ -4,11 +4,6 @@
 #include "DebugPalette.hlsli"
 #include "Rand01.hlsli"
 
-// Use blasIdx to lookup transform/material info
-// Use primitiveIdx in the index and vertex buffer to get 3 vertices
-// Use geometryIdx if the blas contains submeshes
-// HitPosWorld = Origin + rayT * Direction. Use for next ray bounce
-// Use barycentrics to interpolate attribute data, get UV/normal/etc
 float3 Shade(inout float3 throughput, inout uint rngState, inout float3 newDir, uint blasIdx, uint primitiveIdx, uint geometryIdx, float rayT, float2 barycentrics, uint isFrontFace)
 {
     PtInstanceData instance = gInstances[blasIdx];
@@ -35,12 +30,3 @@ float3 Shade(inout float3 throughput, inout uint rngState, inout float3 newDir, 
 }
 
 #endif
-
-// Notes:
-/*
-
-For lambertian I need a Rand01() function and the ability to bounce
-Lets start with with having the rays bounce directly away first then I'll implement a lambertian hemisphere function
-Make sure it can be seeded!!
-
-*/

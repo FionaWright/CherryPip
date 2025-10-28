@@ -23,25 +23,26 @@
 HWND Win32App::ms_hwnd = nullptr;
 std::unique_ptr<Engine> Win32App::ms_engine = nullptr;
 
-int Win32App::Run(App* pSample, HINSTANCE hInstance, int nCmdShow)
+int Win32App::Run(const std::vector<App*>& apps, HINSTANCE hInstance, int nCmdShow)
 {
     FileHelper::Init();
 
     // Initialize the window class.
-    WNDCLASSEX windowClass = { 0 };
+    WNDCLASSEX windowClass = {0};
     windowClass.cbSize = sizeof(WNDCLASSEX);
     windowClass.style = CS_HREDRAW | CS_VREDRAW;
     windowClass.lpfnWndProc = WindowProc;
     windowClass.hInstance = hInstance;
     windowClass.hCursor = LoadCursor(NULL, IDC_ARROW);
     windowClass.lpszClassName = "WindowClass";
-    windowClass.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APP_ICON));  // <-- your main icon
+    windowClass.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APP_ICON)); // <-- your main icon
     windowClass.hIconSm = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APP_ICON)); // small icon for title bar
     RegisterClassEx(&windowClass);
 
-    const uint32_t totalWindowWidth = Config::GetSystem().RtvWidth + Config::GetSystem().WindowAppGuiWidth + Config::GetSystem().WindowEngineGuiWidth;
+    const uint32_t totalWindowWidth = Config::GetSystem().RtvWidth + Config::GetSystem().WindowAppGuiWidth +
+        Config::GetSystem().WindowEngineGuiWidth;
     const uint32_t totalWindowHeight = Config::GetSystem().RtvHeight;
-    RECT windowRect = { 0, 0, static_cast<LONG>(totalWindowWidth), static_cast<LONG>(Config::GetSystem().RtvHeight) };
+    RECT windowRect = {0, 0, static_cast<LONG>(totalWindowWidth), static_cast<LONG>(Config::GetSystem().RtvHeight)};
     AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
 
     // Create the window and store a handle to it.
@@ -53,10 +54,10 @@ int Win32App::Run(App* pSample, HINSTANCE hInstance, int nCmdShow)
         CW_USEDEFAULT,
         windowRect.right - windowRect.left,
         windowRect.bottom - windowRect.top,
-        nullptr,        // We have no parent window.
-        nullptr,        // We aren't using menus.
+        nullptr, // We have no parent window.
+        nullptr, // We aren't using menus.
         hInstance,
-        pSample);
+        nullptr);
 
     if (!ms_hwnd)
     {
@@ -64,7 +65,7 @@ int Win32App::Run(App* pSample, HINSTANCE hInstance, int nCmdShow)
     }
     std::cout << "HWND = " << ms_hwnd << std::endl;
 
-    ms_engine = std::make_unique<Engine>(pSample, ms_hwnd, totalWindowWidth, totalWindowHeight);
+    ms_engine = std::make_unique<Engine>(apps, ms_hwnd, totalWindowWidth, totalWindowHeight);
 
     ShowWindow(ms_hwnd, nCmdShow);
 
@@ -94,14 +95,6 @@ LRESULT CALLBACK Win32App::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LP
 
     switch (message)
     {
-    case WM_CREATE:
-        {
-            // Save the HelloTriangle* passed in to CreateWindow.
-            LPCREATESTRUCT pCreateStruct = reinterpret_cast<LPCREATESTRUCT>(lParam);
-            SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pCreateStruct->lpCreateParams));
-        }
-        return 0;
-
     case WM_SYSKEYDOWN:
     case WM_KEYDOWN:
         {
@@ -160,7 +153,7 @@ LRESULT CALLBACK Win32App::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LP
         break;
 
     case WM_PAINT:
-        ms_engine->Frame(hWnd);
+        ms_engine->Frame();
         return 0;
 
     case WM_DESTROY:

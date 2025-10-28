@@ -19,6 +19,8 @@ RasterViewer::RasterViewer()
 
 void RasterViewer::OnInit(D3D* d3d)
 {
+    App::OnInit(d3d);
+
     m_AspectRatio = static_cast<float>(Config::GetSystem().RtvWidth) / static_cast<float>(Config::GetSystem().
         RtvHeight);
 

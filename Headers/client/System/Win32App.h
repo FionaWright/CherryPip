@@ -31,7 +31,7 @@ class App;
 class Win32App
 {
 public:
-    static int Run(App* pSample, HINSTANCE hInstance, int nCmdShow);
+    static int Run(const std::vector<App*>& pSample, HINSTANCE hInstance, int nCmdShow);
     static HWND GetHwnd() { return ms_hwnd; }
 
 protected:

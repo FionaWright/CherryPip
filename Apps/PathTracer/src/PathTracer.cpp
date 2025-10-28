@@ -20,6 +20,8 @@ PathTracer::PathTracer()
 
 void PathTracer::OnInit(D3D* d3d)
 {
+    App::OnInit(d3d);
+
     if (!d3d->GetRayTracingSupported())
     {
         std::cout << "ERROR: Ray-Tracing not supported!!!" << std::endl;

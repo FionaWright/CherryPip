@@ -19,7 +19,7 @@ public:
     void OnInit(D3D* d3d) override;
     void OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList) override;
 
-    const WCHAR* GetTitle() const { return m_title.c_str(); }
+    const char* GetName() const override { return "Raster Viewer"; }
 
     float m_AspectRatio;
 
@@ -29,9 +29,6 @@ private:
     Heap m_heap;
     CameraController m_camera;
     std::vector<std::shared_ptr<Object>> m_objects;
-
-    // Window title.
-    std::wstring m_title = L"Model Loading";
 
     void loadAssets(D3D* d3d);
     void populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList* cmdList) const;

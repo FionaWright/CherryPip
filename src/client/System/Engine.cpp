@@ -16,28 +16,28 @@
 #include "System/Input.h"
 #include "System/TextureLoader.h"
 
-Engine::Engine(App* pSample, const HWND hWnd, const UINT windowWidth, const UINT windowHeight)
+Engine::Engine(const std::vector<App*>& apps, const HWND hWnd, const UINT windowWidth, const UINT windowHeight)
 {
+    assert(apps.size() > 0);
+
     m_d3d = std::make_unique<D3D>();
     m_d3d->Init(windowWidth, windowHeight);
     TextureLoader::Init(m_d3d.get(), FileHelper::GetAssetsPath() + L"/Shaders");
 
-    pSample->OnInit(m_d3d.get());
+    m_apps = apps;
+    m_apps.at(0)->OnInit(m_d3d.get());
 
     Gui::Init(hWnd, m_d3d->GetDevice(), 3);
 }
 
-void Engine::Frame(const HWND hWnd)
+void Engine::Frame()
 {
     Gui::BeginFrame();
 
     const TimeArgs timeArgs = m_clock.GetTimeArgs();
     CalculateFPS(timeArgs.ElapsedTime);
 
-    if (App* pSample = reinterpret_cast<App*>(GetWindowLongPtr(hWnd, GWLP_USERDATA)))
-    {
-        Render(pSample);
-    }
+    Render();
 
     Input::ProgressFrame();
 
@@ -48,7 +48,7 @@ void Engine::Frame(const HWND hWnd)
 #endif
 }
 
-void Engine::Render(App* pSample)
+void Engine::Render()
 {
     ID3D12Resource* rtv = m_d3d->GetCurrRTV();
 
@@ -58,7 +58,7 @@ void Engine::Render(App* pSample)
     cmdList->ResourceBarrier(1, &barrier);
 
     // ===
-    pSample->OnUpdate(m_d3d.get(), cmdList.Get());
+    m_apps.at(m_selectedAppIdx)->OnUpdate(m_d3d.get(), cmdList.Get());
     {
         GPU_SCOPE(cmdList.Get(), L"GUI");
         RenderGUI();
@@ -72,6 +72,14 @@ void Engine::Render(App* pSample)
     V(cmdList->Close());
     m_d3d->ExecuteCommandList(cmdList.Get());
     m_d3d->Present();
+
+    if (m_changedApps)
+    {
+        m_d3d->Flush();
+        if (!m_apps.at(m_selectedAppIdx)->GetIsInitialized())
+            m_apps.at(m_selectedAppIdx)->OnInit(m_d3d.get());
+        m_changedApps = false;
+    }
 }
 
 // TODO: Move somewhere else
@@ -115,6 +123,30 @@ void Engine::RenderGUI()
 
         ImGui::Unindent(IM_GUI_INDENTATION);
         ImGui::TreePop();
+    }
+
+    ImGui::Spacing();
+    ImGui::Unindent(IM_GUI_INDENTATION);
+    ImGui::SeparatorText("Apps##xx");
+    ImGui::Indent(IM_GUI_INDENTATION);
+
+    const char* curAppName = m_apps.at(m_selectedAppIdx)->GetName();
+    if (ImGui::BeginCombo("App##xx", curAppName))
+    {
+        for (size_t i = 0; i < m_apps.size(); i++)
+        {
+            const bool isSelected = m_selectedAppIdx == i;
+            if (ImGui::Selectable(m_apps[i]->GetName(), isSelected))
+            {
+                m_selectedAppIdx = i;
+                m_changedApps = true;
+            }
+
+            if (isSelected)
+                ImGui::SetItemDefaultFocus();
+        }
+
+        ImGui::EndCombo();
     }
 
     ImGui::Spacing();

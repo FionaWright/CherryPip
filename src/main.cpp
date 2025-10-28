@@ -27,8 +27,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR args, int nCmdShow)
 
     Config::ParseCommandLineArgs(args);
 
-    PathTracer sample;
-    const int rslt = Win32App::Run(&sample, hInstance, nCmdShow);
+    PathTracer pt;
+    RasterViewer rv;
+
+    std::vector<App*> apps;
+    apps.emplace_back(&pt);
+    apps.emplace_back(&rv);
+    const int rslt = Win32App::Run(apps, hInstance, nCmdShow);
 
     CoUninitialize();
 

@@ -22,13 +22,11 @@ public:
     void OnInit(D3D* d3d) override;
     void OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList) override;
 
-    const WCHAR* GetTitle() const { return m_title.c_str(); }
+    const char* GetName() const override { return "Path Tracer"; }
 
     float m_AspectRatio;
 
 private:
-    static constexpr UINT c_FrameCount = 3;
-
     Heap m_heap;
     CameraController m_camera;
 
@@ -39,9 +37,6 @@ private:
     PathTracingContext m_ptContext;
 
     XMMATRIX m_projMatrix;
-
-    // Window title.
-    std::wstring m_title = L"Path Tracer";
 
     void loadAssets(D3D* d3d);
     void populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList* cmdList);

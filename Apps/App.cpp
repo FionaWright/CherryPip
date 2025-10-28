@@ -3,3 +3,8 @@
 //
 
 #include "App.h"
+
+void App::OnInit(D3D* d3d)
+{
+    m_initialized = true;
+}

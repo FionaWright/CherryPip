@@ -23,7 +23,7 @@ void PathTracingContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* c
         { XMFLOAT3(1, 0.2, 0.2), 0.0f },
         { XMFLOAT3(0.2, 1.0, 0.2), 0.0f },
         { XMFLOAT3(1, 1, 1), 1.0f },
-        { XMFLOAT3(1, 1, 0), 1.0f },
+        { XMFLOAT3(1, 1, 0), 0.3f },
     };
 
     UINT curVertexBufferOffset = 0;
@@ -36,7 +36,7 @@ void PathTracingContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* c
         instanceData.VertexBufferOffset = curVertexBufferOffset;
         instanceData.IndexBufferOffset = curIndexBufferOffset;
         instanceData.MaterialIdx = i;
-        instanceData.M = m_blasList[i]->GetTransform().GetModelMatrix();
+        instanceData.MTI = XMMatrixTranspose(XMMatrixInverse(nullptr, m_blasList[i]->GetTransform().GetModelMatrix()));
         m_instanceDataList.emplace_back(instanceData);
 
         curVertexBufferOffset += model->GetVertexCount();

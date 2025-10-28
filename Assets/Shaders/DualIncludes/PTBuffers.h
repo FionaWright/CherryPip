@@ -10,7 +10,7 @@ struct PtInstanceData
     uint MaterialIdx;
     uint p;
 
-    float4x4 M;
+    float4x4 MTI;
 };
 
 struct PtMaterialData

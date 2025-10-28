@@ -19,19 +19,16 @@ float3 Shade(inout float3 throughput, inout uint rngState, inout float3 newDir, 
     Vertex v1 = gVertexMegaBuffer[instance.VertexBufferOffset + tri.y];
     Vertex v2 = gVertexMegaBuffer[instance.VertexBufferOffset + tri.z];
 
-    float3 bary = float3(1 - barycentrics.x - barycentrics.y, barycentrics.x, barycentrics.y);
+    precise float3 bary = float3(1 - barycentrics.x - barycentrics.y, barycentrics.x, barycentrics.y);
 
-    float3 pos = v0.position * bary.x + v1.position * bary.y + v2.position * bary.z;
-    float3 normal = normalize(v0.normal * bary.x + v1.normal * bary.y + v2.normal * bary.z);
-    float3 tangent = normalize(v0.tangent * bary.x + v1.tangent * bary.y + v2.tangent * bary.z);
-    float3 bitangent = normalize(v0.bitangent * bary.x + v1.bitangent * bary.y + v2.bitangent * bary.z);
+    precise float3 pos = v0.position * bary.x + v1.position * bary.y + v2.position * bary.z;
+    precise float3 normal = v0.normal * bary.x + v1.normal * bary.y + v2.normal * bary.z;
 
+    normal = mul((float3x3)instance.MTI, normal);
     normal = isFrontFace == 0 ? -normal : normal;
+    normal = normalize(normal);
 
-    newDir = RandHemisphereCosine(rngState, normal, tangent, bitangent);
-
-    if (dot(normal, newDir) < 0)
-        return float3(1, 0, 1);
+    newDir = RandHemisphereCosine(rngState, normal);
 
     throughput *= material.BaseColorFactor;
     return throughput * material.EmissiveFactor;

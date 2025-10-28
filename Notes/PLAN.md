@@ -35,6 +35,4 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 ## PT-TODO:
 
-- Share InstanceData/Vertex
-- New PathTracer class that contains FullScreenTriangle, TLAS and structured vertex/index buffer buffer and instanceData buffer. (PathTracingContext as a name?)
-- Create structured buffers and pass them in 
+- Test asymmetric model against raster. Normals might be wrong (or camera flipped)

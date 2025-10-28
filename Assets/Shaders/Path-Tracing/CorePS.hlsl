@@ -2,7 +2,7 @@
 #include "PtBuffers.h"
 #include "Rand01.hlsli"
 
-#define EPISLON 1e-4
+#define EPSILON 1e-4
 
 struct VsOut
 {
@@ -57,6 +57,7 @@ float4 PSMain(VsOut input) : SV_Target0
     rngState += input.position.y * 1020 + input.position.x; // Pixel index (Assuming 1020xY)
 
     uint TEMP = 99;
+    uint TEMP2 = 534346325;
 
     for (uint i = 0; i < c_pathTracing.NumBounces; i++)
     {
@@ -77,14 +78,16 @@ float4 PSMain(VsOut input) : SV_Target0
 
         if (q.CommittedStatus() != COMMITTED_TRIANGLE_HIT)
         {
-            color.rgb *= Miss(ray.Origin, ray.Direction);
+            color.rgb += Miss(ray.Origin, ray.Direction);
             return color;
         }
 
         uint temp = q.CommittedInstanceIndex();
-        if (temp == TEMP)
-            return float4(0, 1, 1, 1);
+        uint temp2 = q.CommittedPrimitiveIndex();
+        //if (temp == TEMP && temp2 == TEMP2)
+        //    return float4(0, 1, 1, 1);
         TEMP = temp;
+        TEMP2 = temp2;
 
         float3 newDir;
         float3 hitColor = Shade(throughput, rngState, newDir,
@@ -96,12 +99,12 @@ float4 PSMain(VsOut input) : SV_Target0
                             q.CommittedTriangleFrontFace() );
 
         color.rgb += hitColor;
+        if (hitColor.x < 0 || hitColor.y < 0 || hitColor.z < 0)
+            return float4(0, 1, 1, 1);
 
         float3 hitPos = ray.Origin + ray.Direction * q.CommittedRayT();
         ray.Direction = newDir;
-        ray.Origin = hitPos + ray.Direction * EPISLON;
-
-        //return float4(ray.Direction, 1);
+        ray.Origin = hitPos + ray.Direction * max(EPSILON, EPSILON * (float)q.CommittedRayT());
     }
 
     return color;

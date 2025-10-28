@@ -33,20 +33,25 @@ float3 RandDirectionUniform(inout uint state)
     return float3(r * cos(phi), r * sin(phi), z);
 }
 
-float3 RandHemisphereCosine(inout uint state, float3 normal, float3 tangent, float3 bitangent)
+float PcgRandGauss01(inout uint state)
 {
-    float u = PcgRand01(state);
-    float v = PcgRand01(state);
+    float theta = 2.0 * PI * PcgRand01(state);
+    float rho = sqrt(-2 * log(PcgRand01(state)));
+    return rho * cos(theta);
+}
 
-    float r = sqrt(u);
-    float theta = 2.0 * PI * v;
+float3 RandDirectionSphere(inout uint state)
+{
+    float x = PcgRandGauss01(state);
+    float y = PcgRandGauss01(state);
+    float z = PcgRandGauss01(state);
+    return normalize(float3(x, y, z));
+}
 
-    float x = r * cos(theta);
-    float y = r * sin(theta);
-    float z = sqrt(1.0 - u);
-
-    float3 dir = normalize(x * tangent + y * bitangent + z * normal);
-    return dir;
+float3 RandHemisphereCosine(inout uint state, float3 normal)
+{
+    float3 dir = RandDirectionSphere(state);
+    return dir * sign(dot(normal, dir)); // If pointing away from normal, flip it
 }
 
 

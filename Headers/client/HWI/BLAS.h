@@ -18,6 +18,7 @@ public:
 
     const Transform& GetTransform() const { return m_transform; }
     ID3D12Resource* GetResource() const { return m_blasResult.GetResource(); }
+    Model* GetModel() const { return m_model.get(); }
 
 private:
     std::shared_ptr<Model> m_model;

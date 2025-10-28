@@ -11,6 +11,7 @@
 
 #include "Camera.h"
 #include "HWI/D12Resource.h"
+#include "HWI/Heap.h"
 #include "HWI/Model.h"
 
 class RootSig;
@@ -27,8 +28,11 @@ class PathTracingContext
 {
 public:
     void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<TLAS>& tlas, const std::vector<std::shared_ptr<BLAS>>& blasList);
+    void FillMaterial(ID3D12Device* device, Material* material, Heap* heap);
     void Render(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSig,
                 ID3D12PipelineState* pso, const Camera* camera, const Material* material, const XMMATRIX& projMatrix) const;
+
+
 
     std::shared_ptr<D12Resource> GetInstanceDataBuffer() const { return m_instanceDataBuffer; }
     UINT GetNumInstances() const { return m_blasList.size(); }

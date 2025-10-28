@@ -28,7 +28,7 @@ class PathTracingContext
 {
 public:
     void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<TLAS>& tlas, const std::vector<std::shared_ptr<BLAS>>& blasList);
-    void FillMaterial(ID3D12Device* device, Material* material, Heap* heap);
+    void FillMaterial(ID3D12Device* device, Material* material, Heap* heap) const;
     void Render(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSig,
                 ID3D12PipelineState* pso, const Camera* camera, const Material* material, const XMMATRIX& projMatrix) const;
 
@@ -48,7 +48,8 @@ private:
     std::shared_ptr<RootSig> m_rootSig;
 
     std::vector<PtInstanceData> m_instanceDataList;
-    std::shared_ptr<D12Resource> m_instanceDataBuffer;
+    std::shared_ptr<D12Resource> m_instanceDataBuffer, m_vertexMegaBuffer, m_indexMegaBuffer;
+    UINT m_vertexMegaBufferCount, m_indexMegaBufferCount;
 };
 
 

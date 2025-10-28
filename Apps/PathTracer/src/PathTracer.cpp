@@ -51,43 +51,14 @@ void PathTracer::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     m_camera.UpdateCamera();
 }
 
-struct Vertex
-{
-    XMFLOAT3 position;
-    XMFLOAT2 uv;
-    XMFLOAT3 normal;
-    XMFLOAT4 tangent;
-};
-
 void PathTracer::loadAssets(D3D* d3d)
 {
     ID3D12Device* device = d3d->GetDevice();
     const ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
-    m_rootSig = std::make_shared<RootSig>();
-    m_rootSig->SmartInit(device, 1, 2);
-
     m_shader = std::make_shared<Shader>();
 
     m_heap.Init(device, 10000);
-
-    // Init Shader/PSO
-    {
-        D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
-        {
-            {
-                "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
-                D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
-            },
-            {
-                "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
-                D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
-            }
-        };
-        const D3D12_INPUT_LAYOUT_DESC ild = {inputElementDescs, _countof(inputElementDescs)};
-
-        m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/CorePS.hlsl", ild, device, m_rootSig->Get());
-    }
 
     std::shared_ptr<Texture> tex = std::make_shared<Texture>();
     tex->Init(d3d->GetDevice(), cmdList.Get(), FileHelper::GetAssetTextureFullPath(L"TestTex.png"),
@@ -113,9 +84,29 @@ void PathTracer::loadAssets(D3D* d3d)
     V(d3d->GetDevice()->QueryInterface(IID_PPV_ARGS(&device5)));
     ComPtr<ID3D12GraphicsCommandList4> cmdList4;
     V(cmdList->QueryInterface(IID_PPV_ARGS(&cmdList4)));
-
     auto tlas = std::make_shared<TLAS>();
     tlas->Init(device5.Get(), cmdList4.Get(), blasList);
+
+    m_rootSig = std::make_shared<RootSig>();
+    m_rootSig->SmartInit(device, 1, 4);
+
+    // Init Shader/PSO
+    {
+        D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
+        {
+            {
+                "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
+                D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+            },
+            {
+                "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
+                D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+            }
+        };
+        const D3D12_INPUT_LAYOUT_DESC ild = {inputElementDescs, _countof(inputElementDescs)};
+
+        m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/CorePS.hlsl", ild, device, m_rootSig->Get());
+    }
 
     m_ptContext.Init(device, cmdList.Get(), tlas, blasList);
 

@@ -7,20 +7,11 @@ struct VsOut
     float2 uv : TEXCOORD0;
 };
 
-struct Vertex
-{
-    float3 position;
-    float2 uv;
-    float3 normal;
-    float3 tangent;
-    float3 bitangent;
-};
-
 ConstantBuffer<CbvPathTracing> c_pathTracing : register(b0);
 RaytracingAccelerationStructure gTLAS : register(t0);
 StructuredBuffer<PtInstanceData> gInstances : register(t1);
-//StructuredBuffer<Vertex> gVertexBuffers[] : register(t2);
-//StructuredBuffer<uint3>  gIndexBuffers[]  : register(t3);
+StructuredBuffer<Vertex> gVertexMegaBuffer : register(t2);
+StructuredBuffer<uint3>  gIndexMegaBuffer  : register(t3);
 
 #include "Path-Tracing/HitPS.hlsli"
 

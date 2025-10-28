@@ -118,7 +118,10 @@ void Shader::InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D1
     V(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pso)));
 
 #ifdef _DEBUG
+    if (m_assignedToHotReload)
+        return;
     HotReloader::AssignShaderVsPs(vs, ps, this, ild, rootSig);
+    m_assignedToHotReload = true;
 #endif
 }
 
@@ -139,6 +142,9 @@ void Shader::InitCs(const LPCWSTR cs, ID3D12Device* device, ID3D12RootSignature*
     V(device->CreateComputePipelineState(&psoDesc, IID_PPV_ARGS(&m_pso)));
 
 #ifdef _DEBUG
+    if (m_assignedToHotReload)
+        return;
     HotReloader::AssignShaderCs(cs, this, rootSig);
+    m_assignedToHotReload = true;
 #endif
 }

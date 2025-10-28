@@ -9,7 +9,6 @@
 #include <unordered_map>
 
 SettingsSystem Config::ms_settingsSystem;
-SettingsRender Config::ms_settingsRender;
 
 template <typename Out>
 void split(const std::string &s, const char delim, Out result) {
@@ -63,7 +62,6 @@ void Config::ParseCommandLineArgs(const LPSTR args)
     LinkUInt(argsMap, ms_settingsSystem.RtvWidth, "--window_width");
     LinkUInt(argsMap, ms_settingsSystem.RtvHeight, "--window_height");
     LinkBool(argsMap, ms_settingsSystem.VSyncEnabled, "--vsync");
-    LinkBool(argsMap, ms_settingsRender.PathTracingRngPaused, "--PtRngPaused");
 
     std::cout << "Window Width: " << ms_settingsSystem.RtvWidth << std::endl;
 }

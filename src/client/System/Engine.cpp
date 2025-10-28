@@ -155,7 +155,6 @@ void Engine::RenderGUI()
     ImGui::Indent(IM_GUI_INDENTATION);
 
     ImGui::Checkbox("VSync##xx", &Config::GetSystem().VSyncEnabled);
-    ImGui::Checkbox("PT RNG Paused##xx", &Config::GetRender().PathTracingRngPaused);
 
     ImGui::Spacing();
     ImGui::Unindent(IM_GUI_INDENTATION);

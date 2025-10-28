@@ -8,6 +8,7 @@
 
 #include "CBV.h"
 #include "Helper.h"
+#include "Apps/PathTracer/Headers/PathTracer.h"
 #include "Debug/GPUEventScoped.h"
 #include "HWI/BLAS.h"
 #include "HWI/Material.h"
@@ -101,14 +102,14 @@ void PathTracingContext::FillMaterial(ID3D12Device* device, Material* material, 
     material->AddBuffer(device, heap, m_materialBuffer, m_instanceDataList.size(), sizeof(PtMaterialData));
 }
 
-void PathTracingContext::Render(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSig, ID3D12PipelineState* pso, const Camera* camera, const Material* material, const XMMATRIX& projMatrix)
+void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSig, ID3D12PipelineState* pso, const Camera* camera, const Material* material, const XMMATRIX& projMatrix, const PtConfig& config)
 {
     GPU_SCOPE(cmdList, L"Path Tracing");
 
     cmdList->SetGraphicsRootSignature(rootSig);
     cmdList->SetPipelineState(pso);
 
-    if (!Config::GetRender().PathTracingRngPaused)
+    if (!config.RngPaused)
         m_curRngState = m_rngDist(m_rng);
 
     CbvPathTracing cbv;

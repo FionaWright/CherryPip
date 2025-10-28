@@ -15,6 +15,11 @@
 class BLAS;
 using Microsoft::WRL::ComPtr;
 
+struct PtConfig
+{
+    bool RngPaused = false;
+};
+
 class PathTracer : public App
 {
 public:
@@ -35,11 +40,13 @@ private:
     std::shared_ptr<RootSig> m_rootSig;
 
     PathTracingContext m_ptContext;
+    PtConfig m_ptConfig;
 
     XMMATRIX m_projMatrix;
 
     void loadAssets(D3D* d3d);
     void populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList* cmdList);
+    void GUI();
 };
 
 

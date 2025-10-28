@@ -69,7 +69,7 @@ void RasterViewer::loadAssets(D3D* d3d)
         samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
         samplers[0].ShaderRegister = 0;
 
-        rootSig->Init(params, _countof(params), samplers, _countof(samplers), device);
+        rootSig->Init(device, params, _countof(params), samplers, _countof(samplers));
     }
 
     // Init Shader/PSO

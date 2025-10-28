@@ -1,3 +1,7 @@
+#ifndef H_HITPS_H
+#define H_HITPS_H
+
+#include "DebugPalette.hlsli"
 
 // Use blasIdx to lookup transform/material info
 // Use primitiveIdx in the index and vertex buffer to get 3 vertices
@@ -6,7 +10,9 @@
 // Use barycentrics to interpolate attribute data, get UV/normal/etc
 float4 Shade(uint blasIdx, uint primitiveIdx, uint geometryIdx, float rayT, float2 barycentrics, uint isFrontFace)
 {
-    InstanceData instance = gInstances[blasIdx];
+    PtInstanceData instance = gInstances[blasIdx];
+    return Palette(instance.VertexBufferIdx);
+/*
     StructuredBuffer<uint3> indexBuffer = gIndexBuffers[instance.IndexBufferIndex];
     StructuredBuffer<Vertex> vertexBuffer = gVertexBuffers[instance.VertexBufferIndex];
 
@@ -22,4 +28,7 @@ float4 Shade(uint blasIdx, uint primitiveIdx, uint geometryIdx, float rayT, floa
     normal = isFrontFace == 0 ? -normal : normal;
 
     return float4(normal, 1);
+*/
 }
+
+#endif

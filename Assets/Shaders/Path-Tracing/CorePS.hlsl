@@ -1,19 +1,10 @@
 #include "CBV.h"
+#include "PtBuffers.h"
 
 struct VsOut
 {
     float4 position : SV_POSITION;
     float2 uv : TEXCOORD0;
-};
-
-struct InstanceData
-{
-    uint IndexBufferIdx;
-    uint VertexBufferIdx;
-    uint MaterialIdx;
-    uint p;
-
-    float4x4 M;
 };
 
 struct Vertex
@@ -23,13 +14,13 @@ struct Vertex
     float3 normal;
     float3 tangent;
     float3 bitangent;
-}
+};
 
 ConstantBuffer<CbvPathTracing> c_pathTracing : register(b0);
 RaytracingAccelerationStructure gTLAS : register(t0);
-StructuredBuffer<InstanceData> gInstances : register(t1);
-StructuredBuffer<Vertex> gVertexBuffers[] : register(t2);
-StructuredBuffer<uint3>  gIndexBuffers[]  : register(t3);
+StructuredBuffer<PtInstanceData> gInstances : register(t1);
+//StructuredBuffer<Vertex> gVertexBuffers[] : register(t2);
+//StructuredBuffer<uint3>  gIndexBuffers[]  : register(t3);
 
 #include "Path-Tracing/HitPS.hlsli"
 

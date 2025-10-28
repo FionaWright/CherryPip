@@ -25,14 +25,12 @@ struct CBV
 
 struct SRV
 {
-    std::shared_ptr<Texture> Texture;
     UINT HeapIndex;
-};
 
-struct SRV_TLAS
-{
+    // TODO: Get rid of material ownership
+    std::shared_ptr<Texture> Texture;
     std::shared_ptr<TLAS> TLAS;
-    UINT HeapIndex;
+    std::shared_ptr<D12Resource> Buffer;
 };
 
 class Material
@@ -42,6 +40,8 @@ public:
     void Init(const Heap* heap);
     void AddCBV(ID3D12Device* device, Heap* heap, size_t size);
     void AddSRV(ID3D12Device* device, Heap* heap, std::shared_ptr<Texture> tex);
+    void AddBuffer(ID3D12Device* device, Heap* heap, std::shared_ptr<D12Resource> resource, UINT numElements,
+                   size_t stride);
     void AddTLAS(ID3D12Device* device, Heap* heap, std::shared_ptr<TLAS> tlas);
 
     void TransitionSrvsToPS(ID3D12GraphicsCommandList* cmdList) const;
@@ -56,7 +56,6 @@ private:
 
     std::vector<CBV> m_cbvs;
     std::vector<SRV> m_srvs;
-    std::vector<SRV_TLAS> m_tlases;
 
 };
 

@@ -16,6 +16,10 @@ struct CbvPathTracing
     float4x4 InvP;
     float4x4 InvV;
     float3 CameraPositionWorld;
+    uint NumBounces;
+
+    uint Seed;
+    uint3 p;
 };
 
 #endif

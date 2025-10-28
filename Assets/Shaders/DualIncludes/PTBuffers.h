@@ -13,6 +13,16 @@ struct PtInstanceData
     float4x4 M;
 };
 
+struct PtMaterialData
+{
+    float3 BaseColorFactor;
+    float EmissiveFactor;
+
+    uint TextureIdx;
+    uint NormalMapIdx;
+    uint2 p;
+};
+
 struct Vertex
 {
     float3 position;

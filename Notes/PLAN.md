@@ -13,8 +13,9 @@
 - [x] Hot reloading
 - [ ] Add destructors and scene switching
 - [ ] Clean up CMAKE
-- [ ] Basic Ray-Tracer (Ray-Query)
+- [x] Basic Ray-Tracer (Ray-Query)
 - [ ] Furnace Test
+- [ ] Acceleration Buffer
 - [ ] PT Debug Views & Systems
 - [ ] CI/CD
 - [ ] GPU-Accelerated BVH

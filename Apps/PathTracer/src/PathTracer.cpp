@@ -128,7 +128,7 @@ void PathTracer::loadAssets(D3D* d3d)
     d3d->Flush();
 }
 
-void PathTracer::populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList* cmdList) const
+void PathTracer::populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 {
     const float fRtvWidth = static_cast<float>(Config::GetSystem().RtvWidth);
     const float fRtvHeight = static_cast<float>(Config::GetSystem().RtvHeight);

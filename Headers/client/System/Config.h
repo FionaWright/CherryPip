@@ -17,6 +17,7 @@ struct SettingsSystem
     uint32_t WindowEngineGuiWidth = 340;
 
     bool VSyncEnabled = false;
+    bool DsvEnabled = false;
 };
 
 class Config

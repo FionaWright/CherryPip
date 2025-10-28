@@ -26,6 +26,8 @@ void RasterViewer::OnInit(D3D* d3d)
 
     m_camera.Init({}, {});
 
+    Config::GetSystem().DsvEnabled = true;
+
     loadAssets(d3d);
 }
 

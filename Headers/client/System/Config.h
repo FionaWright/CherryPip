@@ -19,21 +19,14 @@ struct SettingsSystem
     bool VSyncEnabled = false;
 };
 
-struct SettingsRender
-{
-    bool PathTracingRngPaused = false;
-};
-
 class Config
 {
 public:
     static void ParseCommandLineArgs(LPSTR args);
     static SettingsSystem& GetSystem() { return ms_settingsSystem; }
-    static SettingsRender& GetRender() { return ms_settingsRender; }
 
 private:
     static SettingsSystem ms_settingsSystem;
-    static SettingsRender ms_settingsRender;
 };
 
 

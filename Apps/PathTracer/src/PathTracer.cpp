@@ -154,11 +154,23 @@ void PathTracer::populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList* 
     constexpr float clearColor[] = {0.0f, 0.2f, 0.4f, 1.0f};
     cmdList->ClearRenderTargetView(rtvHandle, clearColor, 1, &scissorRect);
 
-    m_ptContext.Render(d3d->GetDevice(), cmdList, m_rootSig->Get(), m_shader->GetPSO(), &m_camera.GetCamera(), m_material.get(), m_projMatrix);
+    m_ptContext.Render(cmdList, m_rootSig->Get(), m_shader->GetPSO(), &m_camera.GetCamera(), m_material.get(), m_projMatrix, m_ptConfig);
 
-    {
-        Gui::BeginWindow("PathTracer", ImVec2(0, 0), ImVec2(Config::GetSystem().WindowAppGuiWidth, Config::GetSystem().RtvHeight));
-        ImGui::Text("APP-SIDE GUI (PathTracer)");
-        Gui::EndWindow();
-    }
+    GUI();
+}
+
+#define IM_GUI_INDENTATION 20 // Temp
+void PathTracer::GUI()
+{
+    Gui::BeginWindow("PathTracer", ImVec2(0, 0), ImVec2(Config::GetSystem().WindowAppGuiWidth, Config::GetSystem().RtvHeight));
+
+    ImGui::Unindent(IM_GUI_INDENTATION);
+    ImGui::SeparatorText("Settings##xx");
+    ImGui::Indent(IM_GUI_INDENTATION);
+
+    ImGui::Checkbox("RNG Paused##xx", &m_ptConfig.RngPaused);
+
+    ImGui::Unindent(IM_GUI_INDENTATION);
+
+    Gui::EndWindow();
 }

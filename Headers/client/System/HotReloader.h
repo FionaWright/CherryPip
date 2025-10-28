@@ -15,6 +15,7 @@ public:
     static void AssignShaderVsPs(const std::wstring& vs, const std::wstring& ps, Shader* shader, const D3D12_INPUT_LAYOUT_DESC& ild, ID3D12RootSignature* rootSig);
     static void AssignShaderCs(const std::wstring& cs, Shader* shader, ID3D12RootSignature* rootSig);
     static void CheckFiles(D3D* d3d);
+    static void PendFullReload() { m_pendingFullReload = true; }
 
 private:
     struct HotInfoVsPs
@@ -43,6 +44,8 @@ private:
 
     static std::vector<HotInfoVsPs> s_shadersVsPs;
     static std::vector<HotInfoCs> s_shadersCs;
+
+    static bool m_pendingFullReload;
 };
 
 

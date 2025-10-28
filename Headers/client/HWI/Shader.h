@@ -17,6 +17,8 @@ public:
 
 private:
     ComPtr<ID3D12PipelineState> m_pso;
+
+    bool m_assignedToHotReload = false;
 };
 
 

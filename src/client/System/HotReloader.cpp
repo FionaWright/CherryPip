@@ -11,6 +11,7 @@
 
 std::vector<HotReloader::HotInfoVsPs> HotReloader::s_shadersVsPs;
 std::vector<HotReloader::HotInfoCs> HotReloader::s_shadersCs;
+bool HotReloader::m_pendingFullReload = false;
 
 std::time_t getTimestamp(const std::wstring& path)
 {
@@ -79,7 +80,7 @@ void HotReloader::CheckFiles(D3D* d3d)
         const std::time_t timeStampVS = getTimestamp(vsPath);
         const std::time_t timeStampPS = getTimestamp(psPath);
 
-        if (timeStampVS == s_shadersVsPs[i].TimeStampVS && timeStampPS == s_shadersVsPs[i].TimeStampPS)
+        if (!m_pendingFullReload && timeStampVS == s_shadersVsPs[i].TimeStampVS && timeStampPS == s_shadersVsPs[i].TimeStampPS)
             continue;
 
         std::cout << "Hot reloading shader" << std::endl;
@@ -106,14 +107,16 @@ void HotReloader::CheckFiles(D3D* d3d)
 
         const std::time_t timeStampCS = getTimestamp(csPath);
 
-        if (timeStampCS == s_shadersCs[i].TimeStampCS)
+        if (!m_pendingFullReload && timeStampCS == s_shadersCs[i].TimeStampCS)
             continue;
 
         std::cout << "Hot reloading shader" << std::endl;
 
         d3d->Flush();
 
-        s_shadersCs[i].ShaderPtr->InitCs(s_shadersCs[i].CS.c_str(), d3d->GetDevice(), s_shadersVsPs[i].RootSig);
+        s_shadersCs[i].ShaderPtr->InitCs(s_shadersCs[i].CS.c_str(), d3d->GetDevice(), s_shadersCs[i].RootSig);
         s_shadersCs[i].TimeStampCS = timeStampCS;
     }
+
+    m_pendingFullReload = false;
 }

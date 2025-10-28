@@ -99,8 +99,6 @@ float4 PSMain(VsOut input) : SV_Target0
                             q.CommittedTriangleFrontFace() );
 
         color.rgb += hitColor;
-        if (hitColor.x < 0 || hitColor.y < 0 || hitColor.z < 0)
-            return float4(0, 1, 1, 1);
 
         float3 hitPos = ray.Origin + ray.Direction * q.CommittedRayT();
         ray.Direction = newDir;

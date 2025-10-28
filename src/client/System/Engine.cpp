@@ -124,6 +124,18 @@ void Engine::RenderGUI()
 
     ImGui::Checkbox("VSync", &Config::GetSystem().VSyncEnabled);
 
+    ImGui::Spacing();
+    ImGui::Unindent(IM_GUI_INDENTATION);
+    ImGui::SeparatorText("Tools##xx");
+    ImGui::Indent(IM_GUI_INDENTATION);
+
+#ifdef _DEBUG
+    if (ImGui::Button("Reload All"))
+    {
+        HotReloader::PendFullReload();
+    }
+#endif
+
     Gui::EndWindow();
 }
 

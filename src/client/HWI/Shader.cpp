@@ -5,6 +5,7 @@
 #include "HWI/Shader.h"
 
 #include "Helper.h"
+#include "System/Config.h"
 #include "System/FileHelper.h"
 
 #ifdef _DEBUG
@@ -108,8 +109,8 @@ void Shader::InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D1
     //psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
     psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
     psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-    psoDesc.DepthStencilState.DepthEnable = FALSE;
-    psoDesc.DepthStencilState.StencilEnable = FALSE;
+    psoDesc.DepthStencilState.DepthEnable = Config::GetSystem().DsvEnabled ? TRUE : FALSE;
+    psoDesc.DepthStencilState.StencilEnable = Config::GetSystem().DsvEnabled ? TRUE : FALSE;
     psoDesc.SampleMask = UINT_MAX;
     psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
     psoDesc.NumRenderTargets = 1;

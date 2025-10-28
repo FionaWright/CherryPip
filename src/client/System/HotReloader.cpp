@@ -62,7 +62,7 @@ void HotReloader::AssignShaderCs(const std::wstring& cs, Shader* shader,
 void HotReloader::CheckFiles(D3D* d3d)
 {
 #ifndef _DEBUG
-    std::cout < "ERROR: Attempted to hot reload on release mode" << std::endl;
+    std::cout << "ERROR: Attempted to hot reload on release mode" << std::endl;
     return;
 #endif
 

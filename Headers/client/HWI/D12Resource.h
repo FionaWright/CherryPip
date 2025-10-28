@@ -15,10 +15,12 @@ class D12Resource
 public:
     ~D12Resource();
     void Init(LPCWSTR name, ID3D12Device* device, size_t size, const D3D12_RESOURCE_STATES& initialState, D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE);
+    void Init(LPCWSTR name, ID3D12Device* device, const D3D12_RESOURCE_DESC& resourceDesc, const D3D12_RESOURCE_STATES& initialState);
 
-    void InitWithHeap(LPCWSTR name, ID3D12Device* device, const D3D12_RESOURCE_DESC& resourceDesc, const D3D12_RESOURCE_STATES& initialState);
-    void Upload(ID3D12GraphicsCommandList* cmdList, const uint8_t* pData, size_t totalBytes, size_t rowPitch) const;
-    void Upload(ID3D12GraphicsCommandList* cmdList, const uint8_t** pData, size_t totalBytes, size_t rowPitch) const;
+    void CreateHeap(ID3D12Device* device);
+    void UploadData(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const void* pData, size_t totalBytes);
+    void UploadTexture(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const uint8_t* pData, size_t totalBytes, size_t rowPitch);
+    void UploadTexture(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const uint8_t** pData, size_t totalBytes, size_t rowPitch);
 
     void Transition(ID3D12GraphicsCommandList* cmdList, const D3D12_RESOURCE_STATES& newState, UINT subresourceIdx = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
 

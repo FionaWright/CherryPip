@@ -86,13 +86,13 @@ void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std
     desc.SampleDesc.Quality = 1;
     desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 
-    m_resource.InitWithHeap(filePath.c_str(), device, desc, D3D12_RESOURCE_STATE_COPY_DEST);
+    m_resource.Init(filePath.c_str(), device, desc, D3D12_RESOURCE_STATE_COPY_DEST);
 
     const int rowPitch = m_width * (BitsPerPixel(format) / 8);
     const int totalBytes = rowPitch * m_height;
-    m_resource.Upload(cmdList, pData, totalBytes, rowPitch);
+    m_resource.UploadTexture(device, cmdList, pData, totalBytes, rowPitch);
 
-    std::wstring debugName(filePath.begin(), filePath.end());
+    const std::wstring debugName(filePath.begin(), filePath.end());
     V(m_resource.GetResource()->SetName(debugName.c_str()));
 
     if (desc.MipLevels > 1)
@@ -122,11 +122,11 @@ void Texture::InitPNG(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, 
     desc.SampleDesc.Quality = 1;
     desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 
-    m_resource.InitWithHeap(L"PNG Texture", device, desc, D3D12_RESOURCE_STATE_COPY_DEST);
+    m_resource.Init(L"PNG Texture", device, desc, D3D12_RESOURCE_STATE_COPY_DEST);
 
     const int rowPitch = m_width * (BitsPerPixel(format) / 8);
     const int totalBytes = rowPitch * m_height;
-    m_resource.Upload(cmdList, pData, totalBytes, rowPitch);
+    m_resource.UploadTexture(device, cmdList, pData, totalBytes, rowPitch);
 
     if (desc.MipLevels > 1)
     {

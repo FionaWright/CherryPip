@@ -16,7 +16,7 @@ D12Resource::~D12Resource()
     std::cout << "Resource destroyed!" << std::endl;
 }
 
-void D12Resource::InitWithHeap(const LPCWSTR name, ID3D12Device* device, const D3D12_RESOURCE_DESC& resourceDesc,
+void D12Resource::Init(const LPCWSTR name, ID3D12Device* device, const D3D12_RESOURCE_DESC& resourceDesc,
                        const D3D12_RESOURCE_STATES& initialState)
 {
     const auto defaultHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
@@ -24,14 +24,6 @@ void D12Resource::InitWithHeap(const LPCWSTR name, ID3D12Device* device, const D
     V(m_resource->SetName(name));
     m_currentState = initialState;
     m_desc = resourceDesc;
-
-    // TODO: Shared upload heap?
-
-    const UINT64 uploadBufferSize = GetRequiredIntermediateSize(m_resource.Get(), 0, 1) * resourceDesc.DepthOrArraySize;
-
-    const auto uploadHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-    const auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
-    V(device->CreateCommittedResource(&uploadHeapProp, D3D12_HEAP_FLAG_NONE, &bufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_uploadHeap)));
 }
 
 void D12Resource::Init(const LPCWSTR name, ID3D12Device* device, const size_t size,
@@ -44,11 +36,41 @@ void D12Resource::Init(const LPCWSTR name, ID3D12Device* device, const size_t si
     m_currentState = initialState;
 }
 
-void D12Resource::Upload(ID3D12GraphicsCommandList* cmdList, const uint8_t* pData, const size_t totalBytes,
-                         const size_t rowPitch) const
+void D12Resource::CreateHeap(ID3D12Device* device)
+{
+    // TODO: Shared upload heap?
+
+    const UINT64 uploadBufferSize = GetRequiredIntermediateSize(m_resource.Get(), 0, 1) * m_desc.DepthOrArraySize;
+
+    const auto uploadHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+    const auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
+    V(device->CreateCommittedResource(&uploadHeapProp, D3D12_HEAP_FLAG_NONE, &bufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_uploadHeap)));
+}
+
+void D12Resource::UploadData(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const void* pData, const size_t totalBytes)
+{
+    if (!m_uploadHeap)
+    {
+        CreateHeap(device);
+    }
+
+    void* mappedData = nullptr;
+    V(m_uploadHeap->Map(0, nullptr, &mappedData));
+    memcpy(mappedData, pData, totalBytes);
+    m_uploadHeap->Unmap(0, nullptr);
+
+    cmdList->CopyBufferRegion(m_resource.Get(), 0, m_uploadHeap.Get(), 0, totalBytes);
+}
+
+void D12Resource::UploadTexture(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const uint8_t* pData, const size_t totalBytes,
+                         const size_t rowPitch)
 {
     assert(m_desc.DepthOrArraySize == 1);
-    assert(m_uploadHeap);
+
+    if (!m_uploadHeap)
+    {
+        CreateHeap(device);
+    }
 
     constexpr int c_mip0 = 0;
     constexpr int c_slice0 = 0;
@@ -65,10 +87,13 @@ void D12Resource::Upload(ID3D12GraphicsCommandList* cmdList, const uint8_t* pDat
     delete pData;
 }
 
-void D12Resource::Upload(ID3D12GraphicsCommandList* cmdList, const uint8_t** pData, const size_t totalBytes,
-                         const size_t rowPitch) const
+void D12Resource::UploadTexture(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const uint8_t** pData, const size_t totalBytes,
+                         const size_t rowPitch)
 {
-    assert(m_uploadHeap);
+    if (!m_uploadHeap)
+    {
+        CreateHeap(device);
+    }
 
     UINT intermediateOffset = 0;
 

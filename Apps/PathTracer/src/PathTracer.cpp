@@ -29,6 +29,11 @@ void PathTracer::OnInit(D3D* d3d)
     m_AspectRatio = static_cast<float>(Config::GetSystem().RtvWidth) / static_cast<float>(Config::GetSystem().
         RtvHeight);
 
+    constexpr float fov = 60.0f;
+    constexpr float nearPlane = 0.1f;
+    constexpr float farPlane = 100.0f;
+    m_projMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), m_AspectRatio, nearPlane, farPlane);
+
     m_camera.Init({}, {});
 
     loadAssets(d3d);
@@ -60,21 +65,11 @@ void PathTracer::loadAssets(D3D* d3d)
     const ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
     m_rootSig = std::make_shared<RootSig>();
+    m_rootSig->SmartInit(device, 1, 2);
+
     m_shader = std::make_shared<Shader>();
 
     m_heap.Init(device, 10000);
-
-    // Init Root Sig
-    {
-        CD3DX12_ROOT_PARAMETER1 params[2];
-        CD3DX12_DESCRIPTOR_RANGE1 ranges[2];
-        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-        params[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
-        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-        params[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);
-
-        m_rootSig->Init(params, _countof(params), nullptr, 0, device);
-    }
 
     // Init Shader/PSO
     {
@@ -107,22 +102,28 @@ void PathTracer::loadAssets(D3D* d3d)
     args.DefaultShaderATIndex = -1;
     args.ExportBlasModeEnabled = true;
     ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
-    m_blasList = args.BLASs;
+
+    args.Transform = {};
+    args.Transform.SetPosition(0, 100, 0);
+    args.Transform.SetScale(0.1f);
+    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
+    auto blasList = args.BLASs;
 
     ComPtr<ID3D12Device5> device5;
     V(d3d->GetDevice()->QueryInterface(IID_PPV_ARGS(&device5)));
     ComPtr<ID3D12GraphicsCommandList4> cmdList4;
     V(cmdList->QueryInterface(IID_PPV_ARGS(&cmdList4)));
 
-    m_tlas = std::make_shared<TLAS>();
-    m_tlas->Init(device5.Get(), cmdList4.Get(), m_blasList);
+    auto tlas = std::make_shared<TLAS>();
+    tlas->Init(device5.Get(), cmdList4.Get(), blasList);
 
-    m_fullScreenTriangle.InitFullScreenTriangle(device, cmdList.Get());
+    m_ptContext.Init(device, cmdList.Get(), tlas, blasList);
 
     m_material = std::make_shared<Material>();
     m_material->Init(&m_heap);
     m_material->AddCBV(device, &m_heap, sizeof(CbvPathTracing));
-    m_material->AddTLAS(device, &m_heap, m_tlas);
+    m_material->AddTLAS(device, &m_heap, tlas);
+    m_material->AddBuffer(device, &m_heap, m_ptContext.GetInstanceDataBuffer(), m_ptContext.GetNumInstances(), m_ptContext.GetInstanceDataSize());
 
     V(cmdList->Close());
     d3d->ExecuteCommandList(cmdList.Get());
@@ -153,37 +154,11 @@ void PathTracer::populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList* 
     constexpr float clearColor[] = {0.0f, 0.2f, 0.4f, 1.0f};
     cmdList->ClearRenderTargetView(rtvHandle, clearColor, 1, &scissorRect);
 
-    PathTrace(d3d, cmdList);
+    m_ptContext.Render(d3d->GetDevice(), cmdList, m_rootSig->Get(), m_shader->GetPSO(), &m_camera.GetCamera(), m_material.get(), m_projMatrix);
 
     {
         Gui::BeginWindow("PathTracer", ImVec2(0, 0), ImVec2(Config::GetSystem().WindowAppGuiWidth, Config::GetSystem().RtvHeight));
         ImGui::Text("APP-SIDE GUI (PathTracer)");
         Gui::EndWindow();
     }
-}
-
-void PathTracer::PathTrace(const D3D* d3d, ID3D12GraphicsCommandList* cmdList) const
-{
-    GPU_SCOPE(cmdList, L"Path Tracing");
-
-    constexpr float fov = 60.0f;
-    constexpr float nearPlane = 0.1f;
-    constexpr float farPlane = 100.0f;
-    const XMMATRIX projMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), m_AspectRatio, nearPlane, farPlane);
-
-    cmdList->SetGraphicsRootSignature(m_rootSig->Get());
-    cmdList->SetPipelineState(m_shader->GetPSO());
-
-    CbvPathTracing cbv;
-    cbv.CameraPositionWorld = m_camera.GetCamera().GetPosition();
-    cbv.InvP = XMMatrixInverse(nullptr, projMatrix);
-    cbv.InvV = XMMatrixInverse(nullptr, m_camera.GetViewMatrix());
-
-    m_material->UpdateCBV(0, &cbv);
-    m_material->SetDescriptorTables(cmdList);
-
-    cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    cmdList->IASetVertexBuffers(0, 1, &m_fullScreenTriangle.GetVertexBufferView());
-    cmdList->IASetIndexBuffer(&m_fullScreenTriangle.GetIndexBufferView());
-    cmdList->DrawIndexedInstanced(static_cast<UINT>(m_fullScreenTriangle.GetIndexCount()), 1, 0, 0, 0);
 }

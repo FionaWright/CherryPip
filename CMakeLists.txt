@@ -104,6 +104,8 @@ add_executable(CherryPip WIN32
 
         Assets/Resources/CherryPip.rc
         Assets/Resources/Resources.h
+        src/client/Render/PathTracingContext.cpp
+        Headers/client/Render/PathTracingContext.h
 )
 
 file(GLOB THIRD_PARTY_SOURCES CONFIGURE_DEPENDS

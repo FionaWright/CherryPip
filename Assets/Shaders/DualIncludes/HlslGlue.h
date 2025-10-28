@@ -8,6 +8,7 @@ typedef DirectX::XMMATRIX float4x4;
 typedef DirectX::XMFLOAT2 float2;
 typedef DirectX::XMFLOAT3 float3;
 typedef DirectX::XMFLOAT4 float4;
+typedef uint32_t uint;
 
 #endif
 

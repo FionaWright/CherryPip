@@ -47,17 +47,35 @@ void Material::AddCBV(ID3D12Device* device, Heap* heap, const size_t size)
 void Material::AddSRV(ID3D12Device* device, Heap* heap, std::shared_ptr<Texture> tex)
 {
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     srvDesc.Format = tex->GetFormat();
     srvDesc.Texture2D.MipLevels = tex->GetDesc().MipLevels;
     srvDesc.Texture2D.MostDetailedMip = 0;
     srvDesc.Texture2D.PlaneSlice = 0;
-    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
     const UINT idx = heap->GetNextDescriptor();
     heap->InitSRV(device, tex->GetResource(), srvDesc, idx);
 
-    SRV srv = { tex, idx};
+    SRV srv = { idx };
+    srv.Texture = tex;
+    m_srvs.push_back(srv);
+}
+
+void Material::AddBuffer(ID3D12Device* device, Heap* heap, std::shared_ptr<D12Resource> resource, const UINT numElements, const size_t stride)
+{
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+    srvDesc.Buffer.FirstElement = 0;
+    srvDesc.Buffer.NumElements = numElements;
+    srvDesc.Buffer.StructureByteStride = stride;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+    const UINT idx = heap->GetNextDescriptor();
+    heap->InitSRV(device, resource->GetResource(), srvDesc, idx);
+
+    SRV srv = { idx };
+    srv.Buffer = resource;
     m_srvs.push_back(srv);
 }
 
@@ -71,15 +89,23 @@ void Material::AddTLAS(ID3D12Device* device, Heap* heap, std::shared_ptr<TLAS> t
     const UINT idx = heap->GetNextDescriptor();
     heap->InitSRV(device, nullptr, srvDesc, idx);
 
-    const SRV_TLAS srv = { tlas, idx};
-    m_tlases.push_back(srv);
+    SRV srv = { idx };
+    srv.TLAS = tlas;
+    m_srvs.push_back(srv);
 }
 
 void Material::TransitionSrvsToPS(ID3D12GraphicsCommandList* cmdList) const
 {
     for (int i = 0; i < m_srvs.size(); i++)
     {
-        m_srvs[i].Texture->Transition(cmdList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        if (m_srvs[i].Texture)
+        {
+            m_srvs[i].Texture->Transition(cmdList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        }
+        else if (m_srvs[i].Buffer)
+        {
+            m_srvs[i].Buffer->Transition(cmdList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        }
     }
 }
 
@@ -105,14 +131,6 @@ void Material::SetDescriptorTables(ID3D12GraphicsCommandList* cmdList) const
     if (m_srvs.size() > 0)
     {
         const CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(m_gpuHandle, m_srvs[0].HeapIndex,
-                                            m_descriptorIncSize);
-        cmdList->SetGraphicsRootDescriptorTable(paramIdx, srvHandle);
-        paramIdx++;
-    }
-
-    if (m_tlases.size() > 0)
-    {
-        const CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(m_gpuHandle, m_tlases[0].HeapIndex,
                                             m_descriptorIncSize);
         cmdList->SetGraphicsRootDescriptorTable(paramIdx, srvHandle);
         paramIdx++;

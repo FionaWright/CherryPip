@@ -225,18 +225,40 @@ void D3D::Init(const size_t width, const size_t height)
         V(m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap)));
 
         m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+        D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
+        dsvHeapDesc.NumDescriptors = c_FrameCount;
+        dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+        dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+        V(m_device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_dsvHeap)));
+
+        m_dsvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
     }
 
     // Create frame resources.
     {
         CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
+        CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
 
-        // Create a RTV for each frame.
+        D3D12_CLEAR_VALUE clearValue = {};
+        clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+        clearValue.DepthStencil = { 1, 0};
+        auto dsvResourceDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32_TYPELESS, width, height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+        auto heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+
+        // Create a RTV/DSV for each frame.
         for (UINT n = 0; n < c_FrameCount; n++)
         {
             V(m_swapChain->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n])));
             m_device->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, rtvHandle);
             rtvHandle.Offset(1, m_rtvDescriptorSize);
+
+            V(m_device->CreateCommittedResource(&heapProperties, D3D12_HEAP_FLAG_NONE, &dsvResourceDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE, &clearValue, IID_PPV_ARGS(&m_depthStencilBuffer[n])));
+            D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+            dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+            dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+            m_device->CreateDepthStencilView(m_depthStencilBuffer[n].Get(), &dsvDesc, dsvHandle);
+            dsvHandle.Offset(1, m_dsvDescriptorSize);
         }
     }
 
@@ -255,6 +277,8 @@ void D3D::Init(const size_t width, const size_t height)
 
     for (int i = 0; i < c_FrameCount; i++)
         m_frameBufferFences[i] = 0;
+
+    std::cout << "D3D Initialized" << std::endl;
 }
 
 ComPtr<ID3D12GraphicsCommandList> D3D::CreateCmdList(ID3D12CommandAllocator* allocator) const

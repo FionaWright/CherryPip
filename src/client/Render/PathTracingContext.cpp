@@ -12,6 +12,7 @@
 #include "HWI/BLAS.h"
 #include "HWI/Material.h"
 #include "Render/Camera.h"
+#include "System/Config.h"
 
 void PathTracingContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<TLAS>& tlas, const std::vector<std::shared_ptr<BLAS>>& blasList)
 {
@@ -86,6 +87,9 @@ void PathTracingContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* c
     }
 
     m_fullScreenTriangle.InitFullScreenTriangle(device, cmdList);
+
+    m_rng = std::mt19937(INITIAL_SEED);
+    m_rngDist = std::uniform_int_distribution<UINT>(0, UINT32_MAX);
 }
 
 void PathTracingContext::FillMaterial(ID3D12Device* device, Material* material, Heap* heap) const
@@ -97,19 +101,22 @@ void PathTracingContext::FillMaterial(ID3D12Device* device, Material* material, 
     material->AddBuffer(device, heap, m_materialBuffer, m_instanceDataList.size(), sizeof(PtMaterialData));
 }
 
-void PathTracingContext::Render(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSig, ID3D12PipelineState* pso, const Camera* camera, const Material* material, const XMMATRIX& projMatrix) const
+void PathTracingContext::Render(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSig, ID3D12PipelineState* pso, const Camera* camera, const Material* material, const XMMATRIX& projMatrix)
 {
     GPU_SCOPE(cmdList, L"Path Tracing");
 
     cmdList->SetGraphicsRootSignature(rootSig);
     cmdList->SetPipelineState(pso);
 
+    if (!Config::GetRender().PathTracingRngPaused)
+        m_curRngState = m_rngDist(m_rng);
+
     CbvPathTracing cbv;
     cbv.CameraPositionWorld = camera->GetPosition();
     cbv.InvP = XMMatrixInverse(nullptr, projMatrix);
     cbv.InvV = XMMatrixInverse(nullptr, camera->GetViewMatrix());
     cbv.NumBounces = 2;
-    cbv.Seed = 1007;
+    cbv.Seed = m_curRngState;
 
     material->UpdateCBV(0, &cbv);
     material->SetDescriptorTables(cmdList);

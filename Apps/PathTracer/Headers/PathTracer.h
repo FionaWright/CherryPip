@@ -44,7 +44,7 @@ private:
     std::wstring m_title = L"Path Tracer";
 
     void loadAssets(D3D* d3d);
-    void populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList* cmdList) const;
+    void populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList* cmdList);
 };
 
 

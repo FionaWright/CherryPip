@@ -53,8 +53,12 @@ float4 PSMain(VsOut input) : SV_Target0
     float4 color = float4(0, 0, 0, 1);
     float3 throughput = float3(1, 1, 1);
 
+    // Overkill?
     uint rngState = c_pathTracing.Seed;
-    rngState += input.position.y * 1020 + input.position.x; // Pixel index (Assuming 1020xY)
+    rngState ^= asuint(input.position.x) * 0x9E3779B9u;
+    rngState ^= asuint(input.position.y) * 0x85EBCA6Bu;
+    rngState ^= (rngState >> 13u);
+    rngState *= 0xC2B2AE35u;
 
     uint TEMP = 99;
     uint TEMP2 = 534346325;

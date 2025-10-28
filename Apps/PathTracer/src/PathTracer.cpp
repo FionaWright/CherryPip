@@ -122,8 +122,7 @@ void PathTracer::loadAssets(D3D* d3d)
     m_material = std::make_shared<Material>();
     m_material->Init(&m_heap);
     m_material->AddCBV(device, &m_heap, sizeof(CbvPathTracing));
-    m_material->AddTLAS(device, &m_heap, tlas);
-    m_material->AddBuffer(device, &m_heap, m_ptContext.GetInstanceDataBuffer(), m_ptContext.GetNumInstances(), m_ptContext.GetInstanceDataSize());
+    m_ptContext.FillMaterial(device,  m_material.get(), &m_heap);
 
     V(cmdList->Close());
     d3d->ExecuteCommandList(cmdList.Get());

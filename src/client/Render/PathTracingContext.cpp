@@ -36,6 +36,20 @@ void PathTracingContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* c
     m_fullScreenTriangle.InitFullScreenTriangle(device, cmdList);
 }
 
+void PathTracingContext::FillMaterial(ID3D12Device* device, Material* material, Heap* heap)
+{
+    material->AddTLAS(device, heap, m_tlas);
+    material->AddBuffer(device, heap, m_instanceDataBuffer, m_instanceDataList.size(), sizeof(PtInstanceData));
+
+    return;
+
+    for (int i = 0; i < m_blasList.size(); i++)
+    {
+        Model* model = m_blasList[i]->GetModel();
+        material->AddBuffer(device, heap, model->GetVertexBuffer(), model->GetVertexCount(), model->GetVertexInputSize());
+    }
+}
+
 void PathTracingContext::Render(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSig, ID3D12PipelineState* pso, const Camera* camera, const Material* material, const XMMATRIX& projMatrix) const
 {
     GPU_SCOPE(cmdList, L"Path Tracing");
@@ -56,3 +70,5 @@ void PathTracingContext::Render(ID3D12Device* device, ID3D12GraphicsCommandList*
     cmdList->IASetIndexBuffer(&m_fullScreenTriangle.GetIndexBufferView());
     cmdList->DrawIndexedInstanced(static_cast<UINT>(m_fullScreenTriangle.GetIndexCount()), 1, 0, 0, 0);
 }
+
+

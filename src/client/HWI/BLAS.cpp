@@ -15,8 +15,8 @@ void BLAS::Init(ID3D12Device5* device, ID3D12GraphicsCommandList4* cmdList, cons
     m_transform = transform;
     m_model = model;
 
-    ID3D12Resource* vertexBuffer = model->GetVertexBuffer();
-    ID3D12Resource* indexBuffer = model->GetIndexBuffer();
+    ID3D12Resource* vertexBuffer = model->GetVertexBuffer()->GetResource();
+    ID3D12Resource* indexBuffer = model->GetIndexBuffer()->GetResource();
 
     D3D12_RAYTRACING_GEOMETRY_DESC geomDesc = {};
     geomDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;

@@ -28,9 +28,9 @@ struct SRV
     UINT HeapIndex;
 
     // TODO: Get rid of material ownership
-    std::shared_ptr<Texture> Texture;
-    std::shared_ptr<TLAS> TLAS;
-    std::shared_ptr<D12Resource> Buffer;
+    std::shared_ptr<Texture> Texture = nullptr;
+    std::shared_ptr<TLAS> TLAS = nullptr;
+    std::shared_ptr<D12Resource> Buffer = nullptr;
 };
 
 class Material
@@ -54,8 +54,8 @@ private:
     D3D12_GPU_DESCRIPTOR_HANDLE m_gpuHandle = {};
     UINT m_descriptorIncSize = 0;
 
-    std::vector<CBV> m_cbvs;
-    std::vector<SRV> m_srvs;
+    std::vector<CBV> m_cbvs = {};
+    std::vector<SRV> m_srvs = {};
 
 };
 

@@ -31,6 +31,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Texture/Model reuse
 - Descriptor heap sharing (Wait to see if it's worth it)
 - PCH Compilation? 
+- Consider dropping tangent/bitangent from attribute data (Needs CI test to see if it's faster)
 
 ## PT-TODO:
 

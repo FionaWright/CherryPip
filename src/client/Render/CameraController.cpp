@@ -6,7 +6,7 @@
 
 #include "System/Input.h"
 
-void CameraController::UpdateCamera()
+bool CameraController::UpdateCamera()
 {
     if (Input::IsMouseRight())
     {
@@ -33,7 +33,7 @@ void CameraController::UpdateCamera()
 
         const XMVECTOR right = XMVector3Rotate(XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), rot);
         m_camera.SetRight(right);
-        return;
+        return deltaMouse != XMFLOAT2(0, 0);
     }
 
     const XMFLOAT3 up = m_camera.GetUp();
@@ -51,7 +51,7 @@ void CameraController::UpdateCamera()
 
         const XMFLOAT3 rightTranslation = XMFLOAT3(right.x * deltaMouse.x, right.y * deltaMouse.x, right.z * deltaMouse.x);
         m_camera.AddPosition(rightTranslation);
-        return;
+        return deltaMouse != XMFLOAT2(0, 0);
     }
 
     const XMFLOAT3 forward = m_camera.GetForward();
@@ -95,4 +95,6 @@ void CameraController::UpdateCamera()
 
     const XMFLOAT3 upTranslation = XMFLOAT3(up.x * upScalar, up.y * upScalar, up.z * upScalar);
     m_camera.AddPosition(upTranslation);
+
+    return forwardScalar != 0 || rightScalar != 0 || upScalar != 0;
 }

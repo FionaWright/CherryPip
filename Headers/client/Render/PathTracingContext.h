@@ -33,12 +33,14 @@ class PathTracingContext
 {
 public:
     void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<TLAS>& tlas,
-              const std::vector<std::shared_ptr<BLAS>>& blasList, Heap* heap, D12Resource* rtv);
+              const std::vector<std::shared_ptr<BLAS>>& blasList);
     void FillMaterial(ID3D12Device* device, Material* material, Heap* heap) const;
-    void Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSig, D12Resource* rtv,
+    void Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSig,
                 ID3D12PipelineState* pso,
                 const Camera* camera, const Material* material, const XMMATRIX& projMatrix, const PtConfig& config);
     void Reset();
+
+    uint32_t GetFrameNum() const { return m_numFrames; }
 
     std::shared_ptr<D12Resource> GetInstanceDataBuffer() const { return m_instanceDataBuffer; }
     UINT GetNumInstances() const { return m_blasList.size(); }
@@ -51,7 +53,7 @@ private:
     uint32_t m_numFrames = 0;
 
     Model m_fullScreenTriangle;
-    std::shared_ptr<Texture> m_accumTexture;
+    std::shared_ptr<Texture> m_accumTexture, m_accumClearBuffer;
 
     std::vector<PtInstanceData> m_instanceDataList;
     std::shared_ptr<D12Resource> m_instanceDataBuffer, m_vertexMegaBuffer, m_indexMegaBuffer, m_materialBuffer;

@@ -16,8 +16,7 @@
 #include "System/Config.h"
 
 void PathTracingContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
-                              const std::shared_ptr<TLAS>& tlas, const std::vector<std::shared_ptr<BLAS>>& blasList,
-                              Heap* heap, D12Resource* rtv)
+                              const std::shared_ptr<TLAS>& tlas, const std::vector<std::shared_ptr<BLAS>>& blasList)
 {
     m_tlas = tlas;
     m_blasList = blasList;
@@ -96,6 +95,11 @@ void PathTracingContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* c
 
     m_accumTexture = std::make_shared<Texture>();
     m_accumTexture->InitEmpty(device, Config::GetSystem().RTVFormat, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    m_accumTexture->Transition(cmdList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+
+    m_accumClearBuffer = std::make_shared<Texture>();
+    m_accumClearBuffer->InitEmpty(device, Config::GetSystem().RTVFormat, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight);
+    m_accumClearBuffer->Transition(cmdList, D3D12_RESOURCE_STATE_COPY_SOURCE);
 
     D3D12_STATIC_SAMPLER_DESC samplers[1];
     samplers[0] = {};
@@ -117,9 +121,10 @@ void PathTracingContext::FillMaterial(ID3D12Device* device, Material* material, 
     material->AddBuffer(device, heap, m_vertexMegaBuffer, m_vertexMegaBufferCount, sizeof(Vertex));
     material->AddBuffer(device, heap, m_indexMegaBuffer, m_indexMegaBufferCount, sizeof(uint32_t) * 3);
     material->AddBuffer(device, heap, m_materialBuffer, m_instanceDataList.size(), sizeof(PtMaterialData));
+    material->AddUAV(device, heap, m_accumTexture);
 }
 
-void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSig, D12Resource* rtv,
+void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSig,
                                 ID3D12PipelineState* pso, const Camera* camera, const Material* material,
                                 const XMMATRIX& projMatrix, const PtConfig& config)
 {
@@ -127,6 +132,32 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
 
     if (!config.RngPaused)
         m_curRngState = m_rngDist(m_rng);
+
+    if (m_numFrames == 0)
+    {
+        m_accumTexture->Transition(cmdList, D3D12_RESOURCE_STATE_COPY_DEST);
+
+        D3D12_TEXTURE_COPY_LOCATION dstLocation;
+        dstLocation.pResource = m_accumTexture->GetD12Resource()->GetResource();
+        dstLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+        dstLocation.SubresourceIndex = 0;
+
+        D3D12_TEXTURE_COPY_LOCATION srcLocation;
+        srcLocation.pResource = m_accumClearBuffer->GetD12Resource()->GetResource();
+        srcLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+        srcLocation.SubresourceIndex = 0;
+
+        D3D12_BOX srcBox;
+        srcBox.front = 0;
+        srcBox.back = 1;
+        srcBox.left = 0;
+        srcBox.right = Config::GetSystem().RtvWidth;
+        srcBox.top = 0;
+        srcBox.bottom = Config::GetSystem().RtvHeight;
+        cmdList->CopyTextureRegion(&dstLocation, 0, 0, 0, &srcLocation, &srcBox);
+
+        m_accumTexture->Transition(cmdList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+    }
 
     {
         cmdList->SetGraphicsRootSignature(rootSig);
@@ -139,6 +170,9 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
         cbv.NumBounces = 2;
         cbv.Seed = m_curRngState;
         cbv.SPP = config.SPP;
+        cbv.NumFrames = m_numFrames;
+        cbv.AccumulationEnabled = config.AccumulationEnabled ? 1 : 0;
+        cbv.WindowAppGuiWidth = Config::GetSystem().WindowAppGuiWidth;
 
         material->UpdateCBV(0, &cbv);
         material->SetDescriptorTables(cmdList);
@@ -155,5 +189,4 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
 void PathTracingContext::Reset()
 {
     m_numFrames = 0;
-    // TODO: Clear accum
 }

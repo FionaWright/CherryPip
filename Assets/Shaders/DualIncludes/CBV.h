@@ -20,14 +20,11 @@ struct CbvPathTracing
 
     uint Seed;
     uint SPP;
-    uint2 p;
-};
-
-struct CbvAccum
-{
-    float2 TexelSize;
     uint NumFrames;
-    uint p;
+    uint AccumulationEnabled;
+
+    uint WindowAppGuiWidth;
+    uint3 p;
 };
 
 #endif

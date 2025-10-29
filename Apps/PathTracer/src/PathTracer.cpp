@@ -50,7 +50,9 @@ void PathTracer::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     }
 
     populateCommandList(d3d, cmdList);
-    m_camera.UpdateCamera();
+    const bool moved = m_camera.UpdateCamera();
+    if (moved)
+        m_ptContext.Reset();
 }
 
 void PathTracer::loadAssets(D3D* d3d)
@@ -62,7 +64,7 @@ void PathTracer::loadAssets(D3D* d3d)
     m_heap.Init(device, 10000);
 
     m_rootSig = std::make_shared<RootSig>();
-    m_rootSig->SmartInit(device, 1, 5);
+    m_rootSig->SmartInit(device, 1, 5, 1);
 
     // Init Shader/PSO
     {
@@ -118,7 +120,7 @@ void PathTracer::loadAssets(D3D* d3d)
     auto tlas = std::make_shared<TLAS>();
     tlas->Init(device5.Get(), cmdList4.Get(), blasList);
 
-    m_ptContext.Init(device, cmdList.Get(), tlas, blasList, &m_heap, d3d->GetRtv());
+    m_ptContext.Init(device, cmdList.Get(), tlas, blasList);
 
     m_material = std::make_shared<Material>();
     m_material->Init(&m_heap);
@@ -152,7 +154,7 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
 
     m_heap.SetHeap(cmdList);
 
-    m_ptContext.Render(cmdList, m_rootSig->Get(), d3d->GetRtv(), m_shader->GetPSO(), &m_camera.GetCamera(), m_material.get(), m_projMatrix, m_ptConfig);
+    m_ptContext.Render(cmdList, m_rootSig->Get(), m_shader->GetPSO(), &m_camera.GetCamera(), m_material.get(), m_projMatrix, m_ptConfig);
 
     GUI();
 }
@@ -162,11 +164,17 @@ void PathTracer::GUI()
 {
     Gui::BeginWindow("PathTracer", ImVec2(0, 0), ImVec2(Config::GetSystem().WindowAppGuiWidth, Config::GetSystem().RtvHeight));
 
+    ImGui::SeparatorText("Stats##xx");
+    ImGui::Indent(IM_GUI_INDENTATION);
+
+    ImGui::Text("%s%i", "Frame Index: ", m_ptContext.GetFrameNum());
+
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Settings##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
 
     ImGui::Checkbox("RNG Paused##xx", &m_ptConfig.RngPaused);
+    ImGui::Checkbox("Accumulation Enabled##xx", &m_ptConfig.AccumulationEnabled);
 
     int spp = static_cast<int>(m_ptConfig.SPP);
     ImGui::DragInt("SPP##xx", &spp, 1, 1, 256);

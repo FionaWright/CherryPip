@@ -19,6 +19,7 @@ struct PtConfig
 {
     uint32_t SPP = 1;
     bool RngPaused = false;
+    bool AccumulationEnabled = false;
 };
 
 class PathTracer : public App

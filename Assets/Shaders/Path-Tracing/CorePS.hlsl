@@ -16,6 +16,7 @@ StructuredBuffer<PtInstanceData> gInstances : register(t1);
 StructuredBuffer<Vertex> gVertexMegaBuffer : register(t2);
 StructuredBuffer<uint3>  gIndexMegaBuffer  : register(t3);
 StructuredBuffer<PtMaterialData> gMaterials  : register(t4);
+RWTexture2D<float4> gAccum : register(u0);
 
 #include "Path-Tracing/Hit.hlsli"
 #include "Path-Tracing/Miss.hlsli"
@@ -94,5 +95,14 @@ float4 PSMain(VsOut input) : SV_Target0
     {
         colorSum += Trace(q, flags, instanceMask, ray, rngState);
     }
-    return float4(colorSum / (float)c_pathTracing.SPP, 1);
+    float4 finalColor = float4(colorSum / (float)c_pathTracing.SPP, 1);
+
+    if (!c_pathTracing.AccumulationEnabled)
+        return finalColor;
+
+    input.position.x -= c_pathTracing.WindowAppGuiWidth;
+    float4 accumColor = gAccum.Load(input.position.xy);
+    float4 mu = (c_pathTracing.NumFrames * accumColor + finalColor) / (c_pathTracing.NumFrames+1);
+    gAccum[input.position.xy] = mu;
+    return mu;
 }

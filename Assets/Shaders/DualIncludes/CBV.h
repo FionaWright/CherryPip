@@ -25,7 +25,7 @@ struct CbvPathTracing
 
     uint WindowAppGuiWidth;
     uint UpdateAccumulation;
-    uint2 p;
+    float2 Jitter;
 };
 
 #endif

@@ -180,6 +180,7 @@ void PathTracer::GUI()
 
     ImGui::Checkbox("RNG Paused##xx", &m_ptConfig.RngPaused);
     ptNeedsReset |= ImGui::Checkbox("Accumulation Enabled##xx", &m_ptConfig.AccumulationEnabled);
+    ptNeedsReset |= ImGui::Checkbox("Jitter Enabled##xx", &m_ptConfig.JitterEnabled);
 
     int spp = static_cast<int>(m_ptConfig.SPP);
     ptNeedsReset |= ImGui::DragInt("SPP##xx", &spp, 1, 1, 256);

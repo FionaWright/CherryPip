@@ -22,6 +22,7 @@ struct PtConfig
     uint32_t MaxFrameNum = 0;
     bool RngPaused = false;
     bool AccumulationEnabled = true;
+    bool JitterEnabled = true;
 };
 
 class PathTracer : public App

@@ -33,6 +33,14 @@ struct SRV
     std::shared_ptr<D12Resource> Buffer = nullptr;
 };
 
+struct UAV
+{
+    UINT HeapIndex;
+
+    // TODO: Get rid of material ownership
+    std::shared_ptr<Texture> Texture = nullptr;
+};
+
 class Material
 {
 public:
@@ -42,7 +50,9 @@ public:
     void AddSRV(ID3D12Device* device, Heap* heap, std::shared_ptr<Texture> tex);
     void AddBuffer(ID3D12Device* device, Heap* heap, std::shared_ptr<D12Resource> resource, UINT numElements,
                    size_t stride);
-    void AddTLAS(ID3D12Device* device, Heap* heap, std::shared_ptr<TLAS> tlas);
+    void AddTLAS(ID3D12Device* device, Heap* heap, const std::shared_ptr<TLAS>& tlas);
+    void AddUAV(ID3D12Device* device, Heap* heap, const std::shared_ptr<Texture>& tex);
+    void AddUAV(ID3D12Device* device, Heap* heap, ID3D12Resource* resource, DXGI_FORMAT format);
 
     void TransitionSrvsToPS(ID3D12GraphicsCommandList* cmdList) const;
 
@@ -56,6 +66,7 @@ private:
 
     std::vector<CBV> m_cbvs = {};
     std::vector<SRV> m_srvs = {};
+    std::vector<UAV> m_uavs = {};
 
 };
 

@@ -20,6 +20,8 @@
 #include <fstream>
 #include <queue>
 
+#include "D12Resource.h"
+
 using namespace DirectX;
 
 // D3D12 extension library.
@@ -38,6 +40,7 @@ public:
     UINT GetFrameIndex() const { return m_frameIndex; }
 
     ID3D12Resource* GetCurrRTV() const { return m_renderTargets[m_frameIndex].Get(); }
+    D12Resource* GetCurrRTVAsSrvUav() { return &m_renderTargetsAsSrvUav[m_frameIndex]; }
     ID3D12Resource* GetCurrDSV() const { return m_depthStencilBuffer[m_frameIndex].Get(); }
     D3D12_CPU_DESCRIPTOR_HANDLE GetRtvHeapStart() const { return m_rtvHeap->GetCPUDescriptorHandleForHeapStart(); }
     D3D12_CPU_DESCRIPTOR_HANDLE GetDsvHeapStart() const { return m_dsvHeap->GetCPUDescriptorHandleForHeapStart(); }
@@ -62,6 +65,7 @@ private:
     ComPtr<IDXGISwapChain3> m_swapChain;
     ComPtr<ID3D12Device> m_device;
     ComPtr<ID3D12Resource> m_renderTargets[c_FrameCount];
+    D12Resource m_renderTargetsAsSrvUav[c_FrameCount];
     ComPtr<ID3D12Resource> m_depthStencilBuffer[c_FrameCount];
     ComPtr<ID3D12DescriptorHeap> m_rtvHeap, m_dsvHeap;
     UINT m_rtvDescriptorSize = 0, m_dsvDescriptorSize = 0;

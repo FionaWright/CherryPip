@@ -20,19 +20,58 @@ StructuredBuffer<PtMaterialData> gMaterials  : register(t4);
 #include "Path-Tracing/Hit.hlsli"
 #include "Path-Tracing/Miss.hlsli"
 
+#define RAY_FLAGS RAY_FLAG_CULL_NON_OPAQUE|RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES
+
+float3 Trace(RayQuery<RAY_FLAGS> q, uint flags, uint instanceMask, RayDesc ray, inout uint rngState)
+{
+    float3 color = float3(0, 0, 0);
+    float3 throughput = float3(1, 1, 1);
+
+    for (uint i = 0; i < c_pathTracing.NumBounces; i++)
+    {
+        q.TraceRayInline(gTLAS, flags, instanceMask, ray);
+
+        q.Proceed();
+
+        if (q.CommittedStatus() != COMMITTED_TRIANGLE_HIT)
+        {
+            color += Miss(ray.Origin, ray.Direction);
+            return color;
+        }
+
+        float3 newDir;
+        float3 hitColor = Shade(throughput, rngState, newDir,
+                            q.CommittedInstanceIndex(),
+                            q.CommittedPrimitiveIndex(),
+                            q.CommittedGeometryIndex(),
+                            q.CommittedRayT(),
+                            q.CommittedTriangleBarycentrics(),
+                            q.CommittedTriangleFrontFace() );
+
+        color += hitColor;
+
+        float3 hitPos = ray.Origin + ray.Direction * q.CommittedRayT();
+        ray.Direction = newDir;
+        ray.Origin = hitPos + ray.Direction * max(EPSILON, EPSILON * (float)q.CommittedRayT());
+    }
+
+    return color;
+}
+
 float4 PSMain(VsOut input) : SV_Target0
 {
-    // Instantiate ray query object.
-    // Template parameter allows driver to generate a specialized
-    // implementation.
-    RayQuery<RAY_FLAG_CULL_NON_OPAQUE |
-             RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> q;
+    // Overkill?
+    uint rngState = c_pathTracing.Seed;
+    rngState ^= asuint(input.position.x) * 0x9E3779B9u;
+    rngState ^= asuint(input.position.y) * 0x85EBCA6Bu;
+    rngState ^= (rngState >> 13u);
+    rngState *= 0xC2B2AE35u;
 
-    uint myRayFlags =   RAY_FLAG_CULL_NON_OPAQUE |
-                        RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES |
-                        RAY_FLAG_CULL_BACK_FACING_TRIANGLES;
+    RayQuery<RAY_FLAGS> q;
 
-    uint myInstanceMask = 0xFF; // ?
+    uint flags = RAY_FLAGS|RAY_FLAG_CULL_BACK_FACING_TRIANGLES;
+
+    uint instanceMask = 0xFF; // ?
 
     float3 origin = c_pathTracing.CameraPositionWorld;
 
@@ -50,64 +89,10 @@ float4 PSMain(VsOut input) : SV_Target0
     ray.TMin = 0.001;
     ray.TMax = 1000.0;
 
-    float4 color = float4(0, 0, 0, 1);
-    float3 throughput = float3(1, 1, 1);
-
-    // Overkill?
-    uint rngState = c_pathTracing.Seed;
-    rngState ^= asuint(input.position.x) * 0x9E3779B9u;
-    rngState ^= asuint(input.position.y) * 0x85EBCA6Bu;
-    rngState ^= (rngState >> 13u);
-    rngState *= 0xC2B2AE35u;
-
-    uint TEMP = 99;
-    uint TEMP2 = 534346325;
-
-    for (uint i = 0; i < c_pathTracing.NumBounces; i++)
+    float3 colorSum = float3(0,0,0);
+    for (uint i = 0; i < c_pathTracing.SPP; i++)
     {
-        // Set up a trace.  No work is done yet.
-        q.TraceRayInline(
-            gTLAS,
-            myRayFlags, // OR'd with flags above
-            myInstanceMask,
-            ray);
-
-        // Proceed() below is where behind-the-scenes traversal happens,
-        // including the heaviest of any driver inlined code.
-        // In this simplest of scenarios, Proceed() only needs
-        // to be called once rather than a loop:
-        // Based on the template specialization above,
-        // traversal completion is guaranteed.
-        q.Proceed();
-
-        if (q.CommittedStatus() != COMMITTED_TRIANGLE_HIT)
-        {
-            color.rgb += Miss(ray.Origin, ray.Direction);
-            return color;
-        }
-
-        uint temp = q.CommittedInstanceIndex();
-        uint temp2 = q.CommittedPrimitiveIndex();
-        //if (temp == TEMP && temp2 == TEMP2)
-        //    return float4(0, 1, 1, 1);
-        TEMP = temp;
-        TEMP2 = temp2;
-
-        float3 newDir;
-        float3 hitColor = Shade(throughput, rngState, newDir,
-                            q.CommittedInstanceIndex(),
-                            q.CommittedPrimitiveIndex(),
-                            q.CommittedGeometryIndex(),
-                            q.CommittedRayT(),
-                            q.CommittedTriangleBarycentrics(),
-                            q.CommittedTriangleFrontFace() );
-
-        color.rgb += hitColor;
-
-        float3 hitPos = ray.Origin + ray.Direction * q.CommittedRayT();
-        ray.Direction = newDir;
-        ray.Origin = hitPos + ray.Direction * max(EPSILON, EPSILON * (float)q.CommittedRayT());
+        colorSum += Trace(q, flags, instanceMask, ray, rngState);
     }
-
-    return color;
+    return float4(colorSum / (float)c_pathTracing.SPP, 1);
 }

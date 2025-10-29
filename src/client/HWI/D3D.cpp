@@ -193,7 +193,7 @@ void D3D::Init(const size_t width, const size_t height)
     swapChainDesc.BufferCount = c_FrameCount;
     swapChainDesc.Width = width;
     swapChainDesc.Height = height;
-    swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    swapChainDesc.Format = Config::GetSystem().RTVFormat;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
     swapChainDesc.SampleDesc.Count = 1;
@@ -242,8 +242,9 @@ void D3D::Init(const size_t width, const size_t height)
 
         D3D12_CLEAR_VALUE clearValue = {};
         clearValue.Format = DXGI_FORMAT_D32_FLOAT;
-        clearValue.DepthStencil = { 1, 0};
-        auto dsvResourceDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32_TYPELESS, width, height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+        clearValue.DepthStencil = {1, 0};
+        auto dsvResourceDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32_TYPELESS, width, height, 1, 0, 1, 0,
+                                                            D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
         auto heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
         // Create a RTV/DSV for each frame.
@@ -253,7 +254,22 @@ void D3D::Init(const size_t width, const size_t height)
             m_device->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, rtvHandle);
             rtvHandle.Offset(1, m_rtvDescriptorSize);
 
-            V(m_device->CreateCommittedResource(&heapProperties, D3D12_HEAP_FLAG_NONE, &dsvResourceDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE, &clearValue, IID_PPV_ARGS(&m_depthStencilBuffer[n])));
+            std::wstring name = std::wstring(L"RTV as SRV/UAV: ") + std::to_wstring(n);
+            D3D12_RESOURCE_DESC desc = {};
+            desc.Format = Config::GetSystem().RTVFormat;
+            desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+            desc.DepthOrArraySize = 1;
+            desc.Width = width;
+            desc.Height = height;
+            desc.MipLevels = 1;
+            desc.SampleDesc.Count = 1;
+            desc.SampleDesc.Quality = 0;
+            desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS | D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+            m_renderTargetsAsSrvUav[n].Init(name.c_str(), m_device.Get(), desc, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+            V(m_device->CreateCommittedResource(&heapProperties, D3D12_HEAP_FLAG_NONE, &dsvResourceDesc,
+                                                D3D12_RESOURCE_STATE_DEPTH_WRITE, &clearValue,
+                                                IID_PPV_ARGS(&m_depthStencilBuffer[n])));
             D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
             dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
             dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;

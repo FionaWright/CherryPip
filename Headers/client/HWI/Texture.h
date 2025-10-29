@@ -19,6 +19,8 @@ public:
 
     void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::wstring filePath, DXGI_FORMAT format,
               int arraySize = 1, D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE);
+    void InitEmpty(ID3D12Device* device, DXGI_FORMAT format, UINT width, UINT height, int arraySize = 1,
+                   D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE);
 
     void InitPNG(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const uint8_t* inData,
                  size_t dataSize,
@@ -30,7 +32,7 @@ public:
         m_resource.Transition(cmdList, newState, subresourceIdx);
     }
 
-    ID3D12Resource* GetResource() const { return m_resource.GetResource(); }
+    D12Resource* GetD12Resource() { return &m_resource; }
     DXGI_FORMAT GetFormat() const { return m_resource.GetDesc().Format; }
     D3D12_RESOURCE_DESC GetDesc() const { return m_resource.GetDesc(); }
 

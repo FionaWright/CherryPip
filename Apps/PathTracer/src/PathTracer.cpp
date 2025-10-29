@@ -89,11 +89,12 @@ void PathTracer::loadAssets(D3D* d3d)
     tex->Transition(cmdList.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
     GLTFLoadArgs args;
-    args.Transform = {};
-    args.Transform.SetScale(0.1f);
     args.DefaultShaderIndex = 0;
     args.DefaultShaderATIndex = -1;
     args.ExportBlasModeEnabled = true;
+
+    args.Transform = {};
+    args.Transform.SetScale(0.1f);
     ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
     args.Transform = {};
     args.Transform.SetPosition(0, 10, 0);
@@ -107,9 +108,8 @@ void PathTracer::loadAssets(D3D* d3d)
     args.Transform.SetPosition(0, 0, -500);
     args.Transform.SetRotation(90, 0, 0);
     args.Transform.SetScale(10.0f);
-    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
+    //ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
     auto blasList = args.BLASs;
-
 
     ComPtr<ID3D12Device5> device5;
     V(d3d->GetDevice()->QueryInterface(IID_PPV_ARGS(&device5)));
@@ -118,7 +118,7 @@ void PathTracer::loadAssets(D3D* d3d)
     auto tlas = std::make_shared<TLAS>();
     tlas->Init(device5.Get(), cmdList4.Get(), blasList);
 
-    m_ptContext.Init(device, cmdList.Get(), tlas, blasList);
+    m_ptContext.Init(device, cmdList.Get(), tlas, blasList, &m_heap, d3d->GetCurrRTVAsSrvUav());
 
     m_material = std::make_shared<Material>();
     m_material->Init(&m_heap);
@@ -130,7 +130,7 @@ void PathTracer::loadAssets(D3D* d3d)
     d3d->Flush();
 }
 
-void PathTracer::populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList* cmdList)
+void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 {
     const float fRtvWidth = static_cast<float>(Config::GetSystem().RtvWidth);
     const float fRtvHeight = static_cast<float>(Config::GetSystem().RtvHeight);
@@ -147,14 +147,11 @@ void PathTracer::populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList* 
 
     m_heap.SetHeap(cmdList);
 
-    // Note: HERE AS WELL
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(d3d->GetRtvHeapStart(), d3d->GetFrameIndex(), d3d->GetRtvDescriptorSize());
-    cmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
-
     constexpr float clearColor[] = {0.0f, 0.2f, 0.4f, 1.0f};
     cmdList->ClearRenderTargetView(rtvHandle, clearColor, 1, &scissorRect);
 
-    m_ptContext.Render(cmdList, m_rootSig->Get(), m_shader->GetPSO(), &m_camera.GetCamera(), m_material.get(), m_projMatrix, m_ptConfig);
+    m_ptContext.Render(cmdList, m_rootSig->Get(), d3d->GetCurrRTVAsSrvUav(), m_shader->GetPSO(), &m_camera.GetCamera(), m_material.get(), m_projMatrix, m_ptConfig);
 
     GUI();
 }
@@ -169,6 +166,10 @@ void PathTracer::GUI()
     ImGui::Indent(IM_GUI_INDENTATION);
 
     ImGui::Checkbox("RNG Paused##xx", &m_ptConfig.RngPaused);
+
+    int spp = static_cast<int>(m_ptConfig.SPP);
+    ImGui::DragInt("SPP##xx", &spp, 1, 1, 256);
+    m_ptConfig.SPP = static_cast<uint32_t>(spp);
 
     ImGui::Unindent(IM_GUI_INDENTATION);
 

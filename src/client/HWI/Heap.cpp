@@ -49,6 +49,13 @@ void Heap::InitSRV(ID3D12Device* device, ID3D12Resource* resource, const D3D12_S
     device->CreateShaderResourceView(resource, &desc, handle);
 }
 
+void Heap::InitUAV(ID3D12Device* device, ID3D12Resource* resource, const D3D12_UNORDERED_ACCESS_VIEW_DESC& desc, const UINT idx) const
+{
+    const auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_cbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), idx,
+                                                   m_descriptorIncSize);
+    device->CreateUnorderedAccessView(resource, nullptr, &desc, handle);
+}
+
 void Heap::SetHeap(ID3D12GraphicsCommandList* cmdList) const
 {
     ID3D12DescriptorHeap* heap = m_cbvSrvUavHeap.Get();

@@ -17,6 +17,8 @@ public:
 
     void InitCBV(ID3D12Device* device, ID3D12Resource* resource, size_t size, UINT idx) const;
     void InitSRV(ID3D12Device* device, ID3D12Resource* resource, const D3D12_SHADER_RESOURCE_VIEW_DESC& desc, UINT idx) const;
+    void InitUAV(ID3D12Device* device, ID3D12Resource* resource, const D3D12_UNORDERED_ACCESS_VIEW_DESC& desc,
+                 UINT idx) const;
 
     void SetHeap(ID3D12GraphicsCommandList* cmdList) const;
 

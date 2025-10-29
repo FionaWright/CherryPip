@@ -17,6 +17,7 @@ using Microsoft::WRL::ComPtr;
 
 struct PtConfig
 {
+    uint32_t SPP = 1;
     bool RngPaused = false;
 };
 
@@ -45,7 +46,7 @@ private:
     XMMATRIX m_projMatrix;
 
     void loadAssets(D3D* d3d);
-    void populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList* cmdList);
+    void populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void GUI();
 };
 

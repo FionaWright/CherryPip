@@ -17,7 +17,7 @@ void Model::Init(ID3D12Device* device, const size_t vertexCount, const size_t in
 
     const size_t vBufferSize = m_vertexCount * m_vertexInputSize;
     m_vertexBuffer = std::make_shared<D12Resource>();
-    m_vertexBuffer->Init(L"Vertex Buffer", device, vBufferSize, D3D12_RESOURCE_STATE_COMMON);
+    m_vertexBuffer->InitBuffer(L"Vertex Buffer", device, vBufferSize, D3D12_RESOURCE_STATE_COMMON);
 
     m_vertexBufferView.BufferLocation = m_vertexBuffer->GetResource()->GetGPUVirtualAddress();
     m_vertexBufferView.SizeInBytes = static_cast<UINT>(vBufferSize);
@@ -25,7 +25,7 @@ void Model::Init(ID3D12Device* device, const size_t vertexCount, const size_t in
 
     const size_t iBufferSize = m_indexCount * sizeof(int32_t);
     m_indexBuffer = std::make_shared<D12Resource>();
-    m_indexBuffer->Init(L"Index Buffer", device, iBufferSize, D3D12_RESOURCE_STATE_COMMON);
+    m_indexBuffer->InitBuffer(L"Index Buffer", device, iBufferSize, D3D12_RESOURCE_STATE_COMMON);
 
     m_indexBufferView.BufferLocation = m_indexBuffer->GetResource()->GetGPUVirtualAddress();
     m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;

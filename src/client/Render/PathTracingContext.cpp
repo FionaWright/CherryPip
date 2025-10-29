@@ -130,7 +130,9 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
 {
     GPU_SCOPE(cmdList, L"Path Tracing");
 
-    if (!config.RngPaused)
+    const bool frameIncAllowed = config.MaxFrameNum == 0 || m_numFrames < config.MaxFrameNum;
+
+    if (!config.RngPaused && frameIncAllowed)
         m_curRngState = m_rngDist(m_rng);
 
     if (m_numFrames == 0)
@@ -167,12 +169,13 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
         cbv.CameraPositionWorld = camera->GetPosition();
         cbv.InvP = XMMatrixInverse(nullptr, projMatrix);
         cbv.InvV = XMMatrixInverse(nullptr, camera->GetViewMatrix());
-        cbv.NumBounces = 2;
+        cbv.NumBounces = config.NumBounces;
         cbv.Seed = m_curRngState;
         cbv.SPP = config.SPP;
         cbv.NumFrames = m_numFrames;
         cbv.AccumulationEnabled = config.AccumulationEnabled ? 1 : 0;
         cbv.WindowAppGuiWidth = Config::GetSystem().WindowAppGuiWidth;
+        cbv.UpdateAccumulation = frameIncAllowed ? 1 : 0;
 
         material->UpdateCBV(0, &cbv);
         material->SetDescriptorTables(cmdList);
@@ -183,10 +186,12 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
         cmdList->DrawIndexedInstanced(static_cast<UINT>(m_fullScreenTriangle.GetIndexCount()), 1, 0, 0, 0);
     }
 
-    m_numFrames++;
+    if (frameIncAllowed)
+        m_numFrames++;
 }
 
 void PathTracingContext::Reset()
 {
     m_numFrames = 0;
+    m_rng = std::mt19937(INITIAL_SEED);
 }

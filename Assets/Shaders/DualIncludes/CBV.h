@@ -24,7 +24,8 @@ struct CbvPathTracing
     uint AccumulationEnabled;
 
     uint WindowAppGuiWidth;
-    uint3 p;
+    uint UpdateAccumulation;
+    uint2 p;
 };
 
 #endif

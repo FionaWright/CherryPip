@@ -48,10 +48,15 @@ float3 RandDirectionSphere(inout uint state)
     return normalize(float3(x, y, z));
 }
 
-float3 RandHemisphereCosine(inout uint state, float3 normal)
+float3 RandHemisphereUniform(inout uint state, float3 normal)
 {
     float3 dir = RandDirectionSphere(state);
     return dir * sign(dot(normal, dir)); // If pointing away from normal, flip it
+}
+
+float3 any_perpendicular(float3 n)
+{
+    return abs(n.z) < 0.999 ? normalize(cross(n, float3(0,0,1))) : normalize(cross(n, float3(0,1,0)));
 }
 
 

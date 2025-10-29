@@ -103,6 +103,7 @@ float4 PSMain(VsOut input) : SV_Target0
     input.position.x -= c_pathTracing.WindowAppGuiWidth;
     float4 accumColor = gAccum.Load(input.position.xy);
     float4 mu = (c_pathTracing.NumFrames * accumColor + finalColor) / (c_pathTracing.NumFrames+1);
-    gAccum[input.position.xy] = mu;
+    if (c_pathTracing.UpdateAccumulation)
+        gAccum[input.position.xy] = mu;
     return mu;
 }

@@ -45,7 +45,7 @@ void RootSig::Init(ID3D12Device* device, const CD3DX12_ROOT_PARAMETER1* params, 
     m_rootSignature = rootSig;
 }
 
-void RootSig::SmartInit(ID3D12Device* device, const UINT numCBV, const UINT numSRV, const D3D12_STATIC_SAMPLER_DESC* samplers, const UINT samplerCount)
+void RootSig::SmartInit(ID3D12Device* device, const UINT numCBV, const UINT numSRV, const UINT numUAV, const D3D12_STATIC_SAMPLER_DESC* samplers, const UINT samplerCount)
 {
     // Assume CBV, SRV order
     std::vector<CD3DX12_ROOT_PARAMETER1> params;
@@ -55,7 +55,7 @@ void RootSig::SmartInit(ID3D12Device* device, const UINT numCBV, const UINT numS
         range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, numCBV, 0);
 
         CD3DX12_ROOT_PARAMETER1 param;
-        param.InitAsDescriptorTable(1, &range, D3D12_SHADER_VISIBILITY_PIXEL);
+        param.InitAsDescriptorTable(1, &range, D3D12_SHADER_VISIBILITY_ALL);
         params.emplace_back(param);
     }
     if (numSRV > 0)
@@ -64,7 +64,16 @@ void RootSig::SmartInit(ID3D12Device* device, const UINT numCBV, const UINT numS
         range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, numSRV, 0);
 
         CD3DX12_ROOT_PARAMETER1 param;
-        param.InitAsDescriptorTable(1, &range, D3D12_SHADER_VISIBILITY_PIXEL);
+        param.InitAsDescriptorTable(1, &range, D3D12_SHADER_VISIBILITY_ALL);
+        params.emplace_back(param);
+    }
+    if (numUAV > 0)
+    {
+        CD3DX12_DESCRIPTOR_RANGE1 range;
+        range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, numUAV, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE);
+
+        CD3DX12_ROOT_PARAMETER1 param;
+        param.InitAsDescriptorTable(1, &range, D3D12_SHADER_VISIBILITY_ALL);
         params.emplace_back(param);
     }
 

@@ -14,7 +14,7 @@ class D12Resource
 {
 public:
     ~D12Resource();
-    void Init(LPCWSTR name, ID3D12Device* device, size_t size, const D3D12_RESOURCE_STATES& initialState, D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE);
+    void InitBuffer(LPCWSTR name, ID3D12Device* device, size_t size, const D3D12_RESOURCE_STATES& initialState, D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE);
     void Init(LPCWSTR name, ID3D12Device* device, const D3D12_RESOURCE_DESC& resourceDesc, const D3D12_RESOURCE_STATES& initialState);
 
     void CreateHeap(ID3D12Device* device);

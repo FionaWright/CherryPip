@@ -19,7 +19,15 @@ struct CbvPathTracing
     uint NumBounces;
 
     uint Seed;
-    uint3 p;
+    uint SPP;
+    uint2 p;
+};
+
+struct CbvAccum
+{
+    float2 TexelSize;
+    uint NumFrames;
+    uint p;
 };
 
 #endif

@@ -26,7 +26,7 @@ void D12Resource::Init(const LPCWSTR name, ID3D12Device* device, const D3D12_RES
     m_desc = resourceDesc;
 }
 
-void D12Resource::Init(const LPCWSTR name, ID3D12Device* device, const size_t size,
+void D12Resource::InitBuffer(const LPCWSTR name, ID3D12Device* device, const size_t size,
                        const D3D12_RESOURCE_STATES& initialState, const D3D12_RESOURCE_FLAGS flags)
 {
     m_desc = CD3DX12_RESOURCE_DESC::Buffer(size, flags);

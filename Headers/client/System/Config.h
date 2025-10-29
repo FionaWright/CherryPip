@@ -6,6 +6,7 @@
 #define PT_CONFIG_H
 
 #include <cstdint>
+#include <dxgiformat.h>
 #include <windows.h>
 
 struct SettingsSystem
@@ -18,6 +19,8 @@ struct SettingsSystem
 
     bool VSyncEnabled = false;
     bool DsvEnabled = false;
+
+    DXGI_FORMAT RTVFormat = DXGI_FORMAT_R8G8B8A8_UNORM; // TODO: Increase to Rgba16f?
 };
 
 class Config

@@ -55,7 +55,7 @@ void Material::AddSRV(ID3D12Device* device, Heap* heap, std::shared_ptr<Texture>
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
     const UINT idx = heap->GetNextDescriptor();
-    heap->InitSRV(device, tex->GetResource(), srvDesc, idx);
+    heap->InitSRV(device, tex->GetD12Resource()->GetResource(), srvDesc, idx);
 
     SRV srv = { idx };
     srv.Texture = tex;
@@ -79,7 +79,7 @@ void Material::AddBuffer(ID3D12Device* device, Heap* heap, std::shared_ptr<D12Re
     m_srvs.push_back(srv);
 }
 
-void Material::AddTLAS(ID3D12Device* device, Heap* heap, std::shared_ptr<TLAS> tlas)
+void Material::AddTLAS(ID3D12Device* device, Heap* heap, const std::shared_ptr<TLAS>& tlas)
 {
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
@@ -92,6 +92,37 @@ void Material::AddTLAS(ID3D12Device* device, Heap* heap, std::shared_ptr<TLAS> t
     SRV srv = { idx };
     srv.TLAS = tlas;
     m_srvs.push_back(srv);
+}
+
+void Material::AddUAV(ID3D12Device* device, Heap* heap, const std::shared_ptr<Texture>& tex)
+{
+    D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+    uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+    uavDesc.Format = tex->GetFormat();
+    uavDesc.Texture2D.MipSlice = 0;
+    uavDesc.Texture2D.PlaneSlice = 0;
+
+    const UINT idx = heap->GetNextDescriptor();
+    heap->InitUAV(device, tex->GetD12Resource()->GetResource(), uavDesc, idx);
+
+    UAV uav = { idx };
+    uav.Texture = tex;
+    m_uavs.push_back(uav);
+}
+
+void Material::AddUAV(ID3D12Device* device, Heap* heap, ID3D12Resource* resource, DXGI_FORMAT format)
+{
+    D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+    uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+    uavDesc.Format = format;
+    uavDesc.Texture2D.MipSlice = 0;
+    uavDesc.Texture2D.PlaneSlice = 0;
+
+    const UINT idx = heap->GetNextDescriptor();
+    heap->InitUAV(device, resource, uavDesc, idx);
+
+    const UAV uav = { idx };
+    m_uavs.push_back(uav);
 }
 
 void Material::TransitionSrvsToPS(ID3D12GraphicsCommandList* cmdList) const
@@ -133,6 +164,14 @@ void Material::SetDescriptorTables(ID3D12GraphicsCommandList* cmdList) const
         const CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(m_gpuHandle, m_srvs[0].HeapIndex,
                                             m_descriptorIncSize);
         cmdList->SetGraphicsRootDescriptorTable(paramIdx, srvHandle);
+        paramIdx++;
+    }
+
+    if (m_uavs.size() > 0)
+    {
+        const CD3DX12_GPU_DESCRIPTOR_HANDLE uavHandle(m_gpuHandle, m_uavs[0].HeapIndex,
+                                            m_descriptorIncSize);
+        cmdList->SetGraphicsRootDescriptorTable(paramIdx, uavHandle);
         paramIdx++;
     }
 }

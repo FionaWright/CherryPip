@@ -92,9 +92,6 @@ void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std
     const int totalBytes = rowPitch * m_height;
     m_resource.UploadTexture(device, cmdList, pData, totalBytes, rowPitch);
 
-    const std::wstring debugName(filePath.begin(), filePath.end());
-    V(m_resource.GetResource()->SetName(debugName.c_str()));
-
     if (desc.MipLevels > 1)
     {
         m_resource.Transition(cmdList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
@@ -102,8 +99,29 @@ void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std
     }
 }
 
+void Texture::InitEmpty(ID3D12Device* device, const DXGI_FORMAT format, const UINT width, const UINT height, const int arraySize,
+                        const D3D12_RESOURCE_FLAGS flags)
+{
+    m_width = width;
+    m_height = height;
+
+    D3D12_RESOURCE_DESC desc = {};
+    desc.Width = m_width;
+    desc.Height = m_height;
+    desc.Format = format;
+    desc.MipLevels = 1;
+    desc.DepthOrArraySize = arraySize;
+    desc.Flags = flags;
+    desc.SampleDesc.Count = 1;
+    desc.SampleDesc.Quality = 0;
+    desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+
+    m_resource.Init(L"Empty Texture", device, desc, D3D12_RESOURCE_STATE_COPY_DEST);
+}
+
 void Texture::InitPNG(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const uint8_t* inData,
-                      const size_t dataSize, const DXGI_FORMAT format, const int arraySize, const D3D12_RESOURCE_FLAGS flags)
+                      const size_t dataSize, const DXGI_FORMAT format, const int arraySize,
+                      const D3D12_RESOURCE_FLAGS flags)
 {
     uint8_t* pData = nullptr;
     int channels = -1;

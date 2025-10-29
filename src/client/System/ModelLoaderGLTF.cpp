@@ -55,7 +55,10 @@ void loadGLTFVertexData(const std::string& directory, std::vector<VertexInputDat
                         const fastgltf::Primitive& primitive, const char* attribute, Func func)
 {
     const fastgltf::Attribute* attributeObj = primitive.findAttribute(attribute);
-    assert(attributeObj != primitive.attributes.cend());
+    if (attributeObj == primitive.attributes.cend())
+    {
+        return;
+    }
 
     const auto& accessor = (*asset)->accessors.at(attributeObj->accessorIndex);
     const auto& bufferView = (*asset)->bufferViews.at(*accessor.bufferViewIndex);
@@ -331,10 +334,11 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
                                     size_t primitiveIndex)
 {
     const uint32_t slashIdx = modelNameExtensionless.find_last_of('/');
-    const std::string directory = "Assets/Models/" + modelNameExtensionless.substr(0, slashIdx) + "/";
+    const std::string assetDirectory = wstringToString(FileHelper::GetAssetsPath());
+    const std::string localDirectory = assetDirectory + "Models/" + modelNameExtensionless.substr(0, slashIdx) + "/";
 
     std::shared_ptr<Model> model = std::make_shared<Model>();
-    loadModel(d3d, cmdList, directory, asset, primitive, model.get());
+    loadModel(d3d, cmdList, localDirectory, asset, primitive, model.get());
 
     fastgltf::Material& mat = (*asset)->materials[primitive.materialIndex.value_or(0)];
 
@@ -387,12 +391,12 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
         {
             diffuseTexInput = loadTexture(asset, mat.pbrData.baseColorTexture.value().textureIndex, dataSize);
             if (std::holds_alternative<std::string>(diffuseTexInput))
-                diffuseTexInput = directory + get<std::string>(diffuseTexInput);
+                diffuseTexInput = localDirectory + get<std::string>(diffuseTexInput);
         }
         else if (mat.iridescence)
-            diffuseTexInput = "Transparent.png";
+            diffuseTexInput = assetDirectory + "Textures/Transparent.png";
         else
-            diffuseTexInput = "Assets/Textures/WhitePOT.png";
+            diffuseTexInput = assetDirectory + "Textures/WhitePOT.png";
 
         std::shared_ptr<Texture> diffuseTex = std::make_shared<Texture>();
         if (std::holds_alternative<std::string>(diffuseTexInput))
@@ -412,7 +416,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
         {
             normalTexInput = loadTexture(asset, mat.normalTexture.value().textureIndex, dataSize);
             if (std::holds_alternative<std::string>(normalTexInput))
-                normalTexInput = directory + get<std::string>(normalTexInput);
+                normalTexInput = localDirectory + get<std::string>(normalTexInput);
         }
         else
             normalTexInput = "Assets/Textures/DefaultNormal.tga";
@@ -481,8 +485,8 @@ void ModelLoaderGLTF::loadNode(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Hea
     if (!node.meshIndex.has_value())
         return;
 
-    //pos = Mult(pos, scale);
-    //worldTransform.SetPosition(pos);
+    pos = Mult(pos, scale);
+    worldTransform.SetPosition(pos);
 
     args.Transform = worldTransform;
 

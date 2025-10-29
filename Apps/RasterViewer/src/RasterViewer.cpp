@@ -121,9 +121,13 @@ void RasterViewer::loadAssets(D3D* d3d)
     args.Overrides = {};
     args.Root = rootSig;
     args.Shaders = {shader};
-    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
+    //ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
     //ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Bistro/Bistro.gltf", args);
     //ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Cube.glb", args);
+
+    //args.Transform.SetPosition(0, 10, 0);
+    args.Transform.SetScale(1.0f);
+    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Cornell/scene.gltf", args);
     m_objects = args.Objects;
 
     V(cmdList->Close());

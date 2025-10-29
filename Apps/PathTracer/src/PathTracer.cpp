@@ -108,7 +108,7 @@ void PathTracer::loadAssets(D3D* d3d)
     args.Transform.SetPosition(0, 0, -500);
     args.Transform.SetRotation(90, 0, 0);
     args.Transform.SetScale(10.0f);
-    //ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
+    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
     auto blasList = args.BLASs;
 
     ComPtr<ID3D12Device5> device5;
@@ -118,7 +118,7 @@ void PathTracer::loadAssets(D3D* d3d)
     auto tlas = std::make_shared<TLAS>();
     tlas->Init(device5.Get(), cmdList4.Get(), blasList);
 
-    m_ptContext.Init(device, cmdList.Get(), tlas, blasList, &m_heap, d3d->GetCurrRTVAsSrvUav());
+    m_ptContext.Init(device, cmdList.Get(), tlas, blasList, &m_heap, d3d->GetRTV());
 
     m_material = std::make_shared<Material>();
     m_material->Init(&m_heap);
@@ -134,24 +134,19 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
 {
     const float fRtvWidth = static_cast<float>(Config::GetSystem().RtvWidth);
     const float fRtvHeight = static_cast<float>(Config::GetSystem().RtvHeight);
-    const float fAppGuiWidth = static_cast<float>(Config::GetSystem().WindowAppGuiWidth);
 
     // Render at offset for ImGui
-    const CD3DX12_VIEWPORT viewport(fAppGuiWidth, 0.0f, fRtvWidth, fRtvHeight);
-    const CD3DX12_RECT scissorRect(Config::GetSystem().WindowAppGuiWidth, 0,
-                                   Config::GetSystem().RtvWidth + Config::GetSystem().WindowAppGuiWidth,
-                                   Config::GetSystem().RtvHeight);
+    const CD3DX12_VIEWPORT viewport(0.0f, 0.0f, fRtvWidth, fRtvHeight);
+    const CD3DX12_RECT scissorRect(0, 0, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight);
 
     cmdList->RSSetViewports(1, &viewport);
     cmdList->RSSetScissorRects(1, &scissorRect);
 
     m_heap.SetHeap(cmdList);
 
-    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(d3d->GetRtvHeapStart(), d3d->GetFrameIndex(), d3d->GetRtvDescriptorSize());
-    constexpr float clearColor[] = {0.0f, 0.2f, 0.4f, 1.0f};
-    cmdList->ClearRenderTargetView(rtvHandle, clearColor, 1, &scissorRect);
+    cmdList->ClearRenderTargetView(*d3d->GetRtvHandle(), Config::GetSystem().RtvClearColor, 1, &scissorRect);
 
-    m_ptContext.Render(cmdList, m_rootSig->Get(), d3d->GetCurrRTVAsSrvUav(), m_shader->GetPSO(), &m_camera.GetCamera(), m_material.get(), m_projMatrix, m_ptConfig);
+    m_ptContext.Render(cmdList, m_rootSig->Get(), d3d->GetRTV(), m_shader->GetPSO(), &m_camera.GetCamera(), m_material.get(), m_projMatrix, m_ptConfig);
 
     GUI();
 }

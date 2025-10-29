@@ -31,13 +31,11 @@ void Gui::Init(const HWND hwnd, ID3D12Device* device, const int framesInFlight)
     desc.NodeMask = 0;
     V(device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&ms_cbvSrvUavHeap)));
 
-    constexpr DXGI_FORMAT rtvFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
-
     const auto hCpu = ms_cbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart();
     const auto hGpu = ms_cbvSrvUavHeap->GetGPUDescriptorHandleForHeapStart();
 
     ImGui_ImplWin32_Init(hwnd);
-    ImGui_ImplDX12_Init(device, framesInFlight, rtvFormat, ms_cbvSrvUavHeap.Get(), hCpu, hGpu);
+    ImGui_ImplDX12_Init(device, framesInFlight, Config::GetSystem().RTVFormat, ms_cbvSrvUavHeap.Get(), hCpu, hGpu);
 
     ImGui_ImplDX12_CreateDeviceObjects();
 }

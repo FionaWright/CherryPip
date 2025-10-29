@@ -36,4 +36,4 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 ## PT-TODO:
 
-- Test asymmetric model against raster. Normals might be wrong (or camera flipped)
+- Clean up PathTracingContext and the RTV system. Need easy access to RTVs for SRVs/UAVs anywhere

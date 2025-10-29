@@ -50,24 +50,27 @@ void Engine::Frame()
 
 void Engine::Render()
 {
-    ID3D12Resource* rtv = m_d3d->GetCurrRTV();
-
     const ComPtr<ID3D12GraphicsCommandList> cmdList = m_d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
-    const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(rtv, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    cmdList->ResourceBarrier(1, &barrier);
+    D12Resource* rtv = m_d3d->GetRTV();
+    rtv->Transition(cmdList.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-    // ===
     m_apps.at(m_selectedAppIdx)->OnUpdate(m_d3d.get(), cmdList.Get());
+
+    m_d3d->CopyRtvIntoBackBuffer(cmdList.Get());
+
     {
         GPU_SCOPE(cmdList.Get(), L"GUI");
         RenderGUI();
+
+        m_d3d->GetCurrBackBuffer()->Transition(cmdList.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+        const CD3DX12_CPU_DESCRIPTOR_HANDLE backBufferHandle(m_d3d->GetBackBufferHeapStart(), m_d3d->GetFrameIndex(), m_d3d->GetRtvDescriptorSize());
+        cmdList->OMSetRenderTargets(1, &backBufferHandle, FALSE, nullptr);
         Gui::RenderAllWindows(cmdList.Get());
     }
-    // ===
 
-    const auto barrier2 = CD3DX12_RESOURCE_BARRIER::Transition(rtv, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-    cmdList->ResourceBarrier(1, &barrier2);
+    m_d3d->GetCurrBackBuffer()->Transition(cmdList.Get(), D3D12_RESOURCE_STATE_PRESENT);
 
     V(cmdList->Close());
     m_d3d->ExecuteCommandList(cmdList.Get());

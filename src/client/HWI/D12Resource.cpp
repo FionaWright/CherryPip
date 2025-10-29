@@ -17,21 +17,29 @@ D12Resource::~D12Resource()
 }
 
 void D12Resource::Init(const LPCWSTR name, ID3D12Device* device, const D3D12_RESOURCE_DESC& resourceDesc,
-                       const D3D12_RESOURCE_STATES& initialState)
+                       const D3D12_RESOURCE_STATES& initialState, const D3D12_CLEAR_VALUE* clearValue)
 {
     const auto defaultHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-    V(device->CreateCommittedResource(&defaultHeapProp, D3D12_HEAP_FLAG_NONE, &resourceDesc, initialState, nullptr,IID_PPV_ARGS(&m_resource)));
+    V(device->CreateCommittedResource(&defaultHeapProp, D3D12_HEAP_FLAG_NONE, &resourceDesc, initialState, clearValue,
+                                      IID_PPV_ARGS(&m_resource)));
     V(m_resource->SetName(name));
     m_currentState = initialState;
     m_desc = resourceDesc;
 }
 
+void D12Resource::Fill(const ComPtr<ID3D12Resource>& resource, const D3D12_RESOURCE_STATES& initialState)
+{
+    m_resource = resource;
+    m_currentState = initialState;
+}
+
 void D12Resource::InitBuffer(const LPCWSTR name, ID3D12Device* device, const size_t size,
-                       const D3D12_RESOURCE_STATES& initialState, const D3D12_RESOURCE_FLAGS flags)
+                             const D3D12_RESOURCE_STATES& initialState, const D3D12_RESOURCE_FLAGS flags)
 {
     m_desc = CD3DX12_RESOURCE_DESC::Buffer(size, flags);
     const auto defaultHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-    V(device->CreateCommittedResource(&defaultHeapProp, D3D12_HEAP_FLAG_NONE, &m_desc, initialState, nullptr,IID_PPV_ARGS(&m_resource)));
+    V(device->CreateCommittedResource(&defaultHeapProp, D3D12_HEAP_FLAG_NONE, &m_desc, initialState, nullptr,
+                                      IID_PPV_ARGS(&m_resource)));
     V(m_resource->SetName(name));
     m_currentState = initialState;
 }
@@ -44,10 +52,12 @@ void D12Resource::CreateHeap(ID3D12Device* device)
 
     const auto uploadHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
     const auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
-    V(device->CreateCommittedResource(&uploadHeapProp, D3D12_HEAP_FLAG_NONE, &bufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_uploadResource)));
+    V(device->CreateCommittedResource(&uploadHeapProp, D3D12_HEAP_FLAG_NONE, &bufferDesc,
+                                      D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_uploadResource)));
 }
 
-void D12Resource::UploadData(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const void* pData, const size_t totalBytes)
+void D12Resource::UploadData(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const void* pData,
+                             const size_t totalBytes)
 {
     if (!m_uploadResource)
     {
@@ -62,8 +72,9 @@ void D12Resource::UploadData(ID3D12Device* device, ID3D12GraphicsCommandList* cm
     cmdList->CopyBufferRegion(m_resource.Get(), 0, m_uploadResource.Get(), 0, totalBytes);
 }
 
-void D12Resource::UploadTexture(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const uint8_t* pData, const size_t totalBytes,
-                         const size_t rowPitch)
+void D12Resource::UploadTexture(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const uint8_t* pData,
+                                const size_t totalBytes,
+                                const size_t rowPitch)
 {
     assert(m_desc.DepthOrArraySize == 1);
 
@@ -87,8 +98,9 @@ void D12Resource::UploadTexture(ID3D12Device* device, ID3D12GraphicsCommandList*
     delete pData;
 }
 
-void D12Resource::UploadTexture(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const uint8_t** pData, const size_t totalBytes,
-                         const size_t rowPitch)
+void D12Resource::UploadTexture(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const uint8_t** pData,
+                                const size_t totalBytes,
+                                const size_t rowPitch)
 {
     if (!m_uploadResource)
     {

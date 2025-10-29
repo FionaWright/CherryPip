@@ -57,7 +57,7 @@ public:
     void TransitionSrvsToPS(ID3D12GraphicsCommandList* cmdList) const;
 
     void UpdateCBV(UINT regIdx, const void* data) const;
-    void SetDescriptorTables(ID3D12GraphicsCommandList* cmdList) const;
+    void SetDescriptorTables(ID3D12GraphicsCommandList* cmdList, bool isCompute = false) const;
 
 private:
     D3D12_CPU_DESCRIPTOR_HANDLE m_cpuHandle = {};

@@ -3,6 +3,7 @@
 #include "Rand01.hlsli"
 
 #define EPSILON 1e-4
+#define RAY_FLAGS RAY_FLAG_CULL_NON_OPAQUE|RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES
 
 struct VsOut
 {
@@ -21,8 +22,6 @@ RWTexture2D<float4> gAccum : register(u0);
 #include "Path-Tracing/Hit.hlsli"
 #include "Path-Tracing/Miss.hlsli"
 
-#define RAY_FLAGS RAY_FLAG_CULL_NON_OPAQUE|RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES
-
 float3 Trace(RayQuery<RAY_FLAGS> q, uint flags, uint instanceMask, RayDesc ray, inout uint rngState)
 {
     float3 color = float3(0, 0, 0);
@@ -40,16 +39,11 @@ float3 Trace(RayQuery<RAY_FLAGS> q, uint flags, uint instanceMask, RayDesc ray, 
             return color;
         }
 
-        float3 newDir;
-        float3 hitColor = Shade(throughput, rngState, newDir,
-                            q.CommittedInstanceIndex(),
-                            q.CommittedPrimitiveIndex(),
-                            q.CommittedGeometryIndex(),
-                            q.CommittedRayT(),
-                            q.CommittedTriangleBarycentrics(),
-                            q.CommittedTriangleFrontFace() );
+        float3 throughputMult = 0, newDir = 0, light = 0;
+        Hit(rngState, throughputMult, newDir, light, q);
 
-        color += hitColor;
+        throughput *= throughputMult;
+        color += throughput * light;
 
         float3 hitPos = ray.Origin + ray.Direction * q.CommittedRayT();
         ray.Direction = newDir;

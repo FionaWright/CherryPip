@@ -51,17 +51,11 @@ private:
     uint32_t m_numFrames = 0;
 
     Model m_fullScreenTriangle;
-    std::shared_ptr<Texture> m_pathTraceOutTexture, m_accumTexture;
-
-    std::shared_ptr<Shader> m_accumShader;
-    std::shared_ptr<RootSig> m_accumRootSig;
-    std::shared_ptr<Material> m_accumMaterial;
+    std::shared_ptr<Texture> m_accumTexture;
 
     std::vector<PtInstanceData> m_instanceDataList;
     std::shared_ptr<D12Resource> m_instanceDataBuffer, m_vertexMegaBuffer, m_indexMegaBuffer, m_materialBuffer;
     UINT m_vertexMegaBufferCount = 0, m_indexMegaBufferCount = 0;
-
-    ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
 
     std::mt19937 m_rng;
     std::uniform_int_distribution<UINT> m_rngDist;

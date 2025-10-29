@@ -52,7 +52,7 @@ void Engine::Render()
 {
     const ComPtr<ID3D12GraphicsCommandList> cmdList = m_d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
-    D12Resource* rtv = m_d3d->GetCurrBackBuffer();
+    D12Resource* rtv = m_d3d->GetRtv();
     rtv->Transition(cmdList.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     m_apps.at(m_selectedAppIdx)->OnUpdate(m_d3d.get(), cmdList.Get());
@@ -61,8 +61,8 @@ void Engine::Render()
         GPU_SCOPE(cmdList.Get(), L"GUI");
         RenderGUI();
 
-        const D3D12_CPU_DESCRIPTOR_HANDLE backBufferHandle = m_d3d->GetBackBufferHandle();
-        cmdList->OMSetRenderTargets(1, &backBufferHandle, FALSE, nullptr);
+        const D3D12_CPU_DESCRIPTOR_HANDLE handle = m_d3d->GetRtvHandle();
+        cmdList->OMSetRenderTargets(1, &handle, FALSE, nullptr);
         Gui::RenderAllWindows(cmdList.Get());
     }
 

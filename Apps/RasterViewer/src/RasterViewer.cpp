@@ -155,7 +155,7 @@ void RasterViewer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdL
 
     m_heap.SetHeap(cmdList);
 
-    const D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = d3d->GetBackBufferHandle();
+    const D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = d3d->GetRtvHandle();
     const CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(d3d->GetDsvHeapStart(), d3d->GetFrameIndex(), d3d->GetDsvDescriptorSize());
     cmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 

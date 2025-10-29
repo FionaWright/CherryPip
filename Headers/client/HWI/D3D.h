@@ -39,13 +39,8 @@ public:
     ID3D12Device* GetDevice() const { return m_device.Get(); }
     UINT GetFrameIndex() const { return m_frameIndex; }
 
-    // TODO: This is a fucking mess, Make "RTV" local to the apps? Then they can copy manually themselves
-    D12Resource* GetRTV() { return &m_finalRenderTarget; }
-    D3D12_CPU_DESCRIPTOR_HANDLE* GetRtvHandle() { return &m_renderTargetHandle; }
-
-    D12Resource* GetCurrBackBuffer() { return &m_swapchainBackBuffers[m_frameIndex]; }
-    D3D12_CPU_DESCRIPTOR_HANDLE GetBackBufferHeapStart() const { return m_rtvHeap->GetCPUDescriptorHandleForHeapStart(); }
-    UINT GetRtvDescriptorSize() const { return m_rtvDescriptorSize;}
+    D12Resource* GetCurrBackBuffer() { return &m_rtvs[m_frameIndex]; }
+    D3D12_CPU_DESCRIPTOR_HANDLE GetBackBufferHandle() const { return CD3DX12_CPU_DESCRIPTOR_HANDLE(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize); }
 
     ID3D12Resource* GetCurrDSV() const { return m_depthStencilBuffer[m_frameIndex].Get(); }
     D3D12_CPU_DESCRIPTOR_HANDLE GetDsvHeapStart() const { return m_dsvHeap->GetCPUDescriptorHandleForHeapStart(); }
@@ -56,7 +51,6 @@ public:
     ComPtr<ID3D12CommandAllocator> CreateAllocator(D3D12_COMMAND_LIST_TYPE type) const;
     ComPtr<ID3D12GraphicsCommandList> GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE type);
     void ExecuteCommandList(ID3D12GraphicsCommandList* cmdList);
-    void CopyRtvIntoBackBuffer(ID3D12GraphicsCommandList* cmdList);
     void Present();
     void Flush();
     void WaitForSignal(UINT64 fence) const;
@@ -70,10 +64,7 @@ private:
     ComPtr<IDXGISwapChain3> m_swapChain;
     ComPtr<ID3D12Device> m_device;
 
-    D12Resource m_swapchainBackBuffers[c_FrameCount];
-    D12Resource m_finalRenderTarget;
-    D3D12_CPU_DESCRIPTOR_HANDLE m_renderTargetHandle = {};
-
+    D12Resource m_rtvs[c_FrameCount];
     ComPtr<ID3D12Resource> m_depthStencilBuffer[c_FrameCount];
 
     ComPtr<ID3D12DescriptorHeap> m_rtvHeap, m_dsvHeap;

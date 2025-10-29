@@ -16,7 +16,7 @@ struct PtInstanceData
 struct PtMaterialData
 {
     float3 BaseColorFactor;
-    float EmissiveFactor;
+    float EmissiveStrength;
 
     uint TextureIdx;
     uint NormalMapIdx;

@@ -36,21 +36,23 @@ float3 Trace(RayQuery<RAY_FLAGS> q, uint flags, uint instanceMask, RayDesc ray, 
         if (q.CommittedStatus() != COMMITTED_TRIANGLE_HIT)
         {
             color += Miss(ray.Origin, ray.Direction);
-            return color;
+            break;
         }
 
-        float3 throughputMult = 0, newDir = 0, light = 0;
-        Hit(rngState, throughputMult, newDir, light, q);
+        float3 outMaterialColor = 0, outNormal = 0, outLight = 0;
+        Hit(rngState, outMaterialColor, outNormal, outLight, q);
 
-        throughput *= throughputMult;
-        color += throughput * light;
+        float3 newDir = normalize(outNormal + RandDirectionSphere(rngState));
+
+        color += throughput * outLight;
+        throughput *= outMaterialColor;
 
         float3 hitPos = ray.Origin + ray.Direction * q.CommittedRayT();
         ray.Direction = newDir;
         ray.Origin = hitPos + ray.Direction * max(EPSILON, EPSILON * (float)q.CommittedRayT());
     }
 
-    return color;
+    return color; // Replaced color here
 }
 
 float4 PSMain(VsOut input) : SV_Target0
@@ -96,7 +98,10 @@ float4 PSMain(VsOut input) : SV_Target0
 
     input.position.x -= c_pathTracing.WindowAppGuiWidth;
     float4 accumColor = gAccum.Load(input.position.xy);
-    float4 mu = (c_pathTracing.NumFrames * accumColor + finalColor) / (c_pathTracing.NumFrames+1);
+
+    float w = 1.0f / (c_pathTracing.NumFrames+1);
+    float4 mu = accumColor * (1 - w) + finalColor * w;
+
     if (c_pathTracing.UpdateAccumulation)
         gAccum[input.position.xy] = mu;
     return mu;

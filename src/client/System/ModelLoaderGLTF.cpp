@@ -537,13 +537,15 @@ void ModelLoaderGLTF::LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
     if (!ms_initialisedParser)
     {
         ms_parser = fastgltf::Parser(
-            fastgltf::Extensions::KHR_materials_specular | fastgltf::Extensions::KHR_materials_iridescence);
+            fastgltf::Extensions::KHR_materials_specular | fastgltf::Extensions::KHR_materials_iridescence | fastgltf::Extensions::KHR_materials_emissive_strength);
         ms_initialisedParser = true;
     }
 
     constexpr fastgltf::Options options = fastgltf::Options::DecomposeNodeMatrices;
 
     Asset asset = std::make_shared<fastgltf::Expected<fastgltf::Asset>>(ms_parser.loadGltf(data.get(), path, options));
+    fastgltf::Error error = asset->error();
+    std::cout << fastgltf::getErrorName(error) << std::endl;
 
     if (asset->error() == fastgltf::Error::InvalidPath)
     {
@@ -551,10 +553,10 @@ void ModelLoaderGLTF::LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
         return;
     }
 
-    if (asset->error() != fastgltf::Error::None)
+    if (error != fastgltf::Error::None)
         throw new std::exception("FastGLTF error");
 
-    auto error = fastgltf::validate(asset->get());
+    error = fastgltf::validate(asset->get());
     if (error != fastgltf::Error::None)
         throw new std::exception("FastGLTF error");
 

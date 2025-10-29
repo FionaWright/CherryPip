@@ -116,7 +116,7 @@ void PathTracer::loadAssets(D3D* d3d)
         const MaterialData* objectMaterialData = object->GetMaterial()->GetData();
         PtMaterialData ptMaterialData;
         ptMaterialData.BaseColorFactor = objectMaterialData->BaseColorFactor;
-        ptMaterialData.EmissiveFactor = objectMaterialData->EmmissiveStrength;
+        ptMaterialData.EmissiveStrength = objectMaterialData->EmmissiveStrength;
         materialData.emplace_back(ptMaterialData);
     }
 

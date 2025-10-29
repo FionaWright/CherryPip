@@ -59,5 +59,25 @@ float3 any_perpendicular(float3 n)
     return abs(n.z) < 0.999 ? normalize(cross(n, float3(0,0,1))) : normalize(cross(n, float3(0,1,0)));
 }
 
+float3 RandHemisphereCosine(inout uint state, float3 normal)
+{
+    float u1 = PcgRand01(state);
+    float u2 = PcgRand01(state);
+
+    float r = sqrt(u1);
+    float theta = 2.0f * PI * u2;
+
+    float x = r * cos(theta);
+    float y = r * sin(theta);
+    float z = sqrt(1.0f - u1); // ensures cosine weighting
+
+    // Build an orthonormal basis around 'normal'
+    float3 tangent = normalize(any_perpendicular(normal));
+    float3 bitangent = cross(normal, tangent);
+
+    // Transform local (x,y,z) to world space
+    return x * tangent + y * bitangent + z * normal;
+}
+
 
 #endif

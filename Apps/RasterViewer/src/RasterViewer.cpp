@@ -131,7 +131,7 @@ void RasterViewer::loadAssets(D3D* d3d)
     d3d->Flush();
 }
 
-void RasterViewer::populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList* cmdList) const
+void RasterViewer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 {
     float fov = 60.0f;
     float nearPlane = 0.1f;
@@ -142,25 +142,20 @@ void RasterViewer::populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList
 
     const float fRtvWidth = static_cast<float>(Config::GetSystem().RtvWidth);
     const float fRtvHeight = static_cast<float>(Config::GetSystem().RtvHeight);
-    const float fAppGuiWidth = static_cast<float>(Config::GetSystem().WindowAppGuiWidth);
 
     // Render at offset for ImGui
-    const CD3DX12_VIEWPORT viewport(fAppGuiWidth, 0.0f, fRtvWidth, fRtvHeight);
-    const CD3DX12_RECT scissorRect(Config::GetSystem().WindowAppGuiWidth, 0,
-                                   Config::GetSystem().RtvWidth + Config::GetSystem().WindowAppGuiWidth,
-                                   Config::GetSystem().RtvHeight);
+    const CD3DX12_VIEWPORT viewport(0.0f, 0.0f, fRtvWidth, fRtvHeight);
+    const CD3DX12_RECT scissorRect(0, 0, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight);
 
     cmdList->RSSetViewports(1, &viewport);
     cmdList->RSSetScissorRects(1, &scissorRect);
 
     m_heap.SetHeap(cmdList);
 
-    const CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(d3d->GetRtvHeapStart(), d3d->GetFrameIndex(), d3d->GetRtvDescriptorSize());
     const CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(d3d->GetDsvHeapStart(), d3d->GetFrameIndex(), d3d->GetDsvDescriptorSize());
-    cmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+    cmdList->OMSetRenderTargets(1, d3d->GetRtvHandle(), FALSE, &dsvHandle);
 
-    constexpr float clearColor[] = {0.0f, 0.2f, 0.4f, 1.0f};
-    cmdList->ClearRenderTargetView(rtvHandle, clearColor, 1, &scissorRect);
+    cmdList->ClearRenderTargetView(*d3d->GetRtvHandle(), Config::GetSystem().RtvClearColor, 1, &scissorRect);
     cmdList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
     for (int i = 0; i < m_objects.size(); ++i)

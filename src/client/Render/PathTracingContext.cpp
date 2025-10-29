@@ -204,7 +204,7 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
         accum.TexelSize.y = 1.0f / Config::GetSystem().RtvHeight;
 
         m_accumMaterial->UpdateCBV(0, &accum);
-        m_accumMaterial->SetDescriptorTables(cmdList);
+        m_accumMaterial->SetDescriptorTables(cmdList, true);
 
         const uint32_t groupX = (Config::GetSystem().RtvWidth + 7) / 8;
         const uint32_t groupY = (Config::GetSystem().RtvHeight + 7) / 8;

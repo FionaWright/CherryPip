@@ -31,7 +31,7 @@ private:
     std::vector<std::shared_ptr<Object>> m_objects;
 
     void loadAssets(D3D* d3d);
-    void populateCommandList(const D3D* d3d, ID3D12GraphicsCommandList* cmdList) const;
+    void populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
 };
 
 

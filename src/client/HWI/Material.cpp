@@ -147,7 +147,7 @@ void Material::UpdateCBV(const UINT regIdx, const void* data) const
 }
 
 // TODO: Not general
-void Material::SetDescriptorTables(ID3D12GraphicsCommandList* cmdList) const
+void Material::SetDescriptorTables(ID3D12GraphicsCommandList* cmdList, const bool isCompute) const
 {
     int paramIdx = 0;
 
@@ -155,7 +155,10 @@ void Material::SetDescriptorTables(ID3D12GraphicsCommandList* cmdList) const
     {
         const CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(m_gpuHandle, m_cbvs[0].HeapIndex,
                                             m_descriptorIncSize);
-        cmdList->SetGraphicsRootDescriptorTable(paramIdx, cbvHandle);
+        if (isCompute)
+            cmdList->SetComputeRootDescriptorTable(paramIdx, cbvHandle);
+        else
+            cmdList->SetGraphicsRootDescriptorTable(paramIdx, cbvHandle);
         paramIdx++;
     }
 
@@ -163,7 +166,10 @@ void Material::SetDescriptorTables(ID3D12GraphicsCommandList* cmdList) const
     {
         const CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(m_gpuHandle, m_srvs[0].HeapIndex,
                                             m_descriptorIncSize);
-        cmdList->SetGraphicsRootDescriptorTable(paramIdx, srvHandle);
+        if (isCompute)
+            cmdList->SetComputeRootDescriptorTable(paramIdx, srvHandle);
+        else
+            cmdList->SetGraphicsRootDescriptorTable(paramIdx, srvHandle);
         paramIdx++;
     }
 
@@ -171,7 +177,10 @@ void Material::SetDescriptorTables(ID3D12GraphicsCommandList* cmdList) const
     {
         const CD3DX12_GPU_DESCRIPTOR_HANDLE uavHandle(m_gpuHandle, m_uavs[0].HeapIndex,
                                             m_descriptorIncSize);
-        cmdList->SetGraphicsRootDescriptorTable(paramIdx, uavHandle);
+        if (isCompute)
+            cmdList->SetComputeRootDescriptorTable(paramIdx, uavHandle);
+        else
+            cmdList->SetGraphicsRootDescriptorTable(paramIdx, uavHandle);
         paramIdx++;
     }
 }

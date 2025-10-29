@@ -15,7 +15,8 @@ class D12Resource
 public:
     ~D12Resource();
     void InitBuffer(LPCWSTR name, ID3D12Device* device, size_t size, const D3D12_RESOURCE_STATES& initialState, D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE);
-    void Init(LPCWSTR name, ID3D12Device* device, const D3D12_RESOURCE_DESC& resourceDesc, const D3D12_RESOURCE_STATES& initialState);
+    void Init(LPCWSTR name, ID3D12Device* device, const D3D12_RESOURCE_DESC& resourceDesc, const D3D12_RESOURCE_STATES& initialState, const D3D12_CLEAR_VALUE* clearValue = nullptr);
+    void Fill(const ComPtr<ID3D12Resource>& resource, const D3D12_RESOURCE_STATES& initialState);
 
     void CreateHeap(ID3D12Device* device);
     void UploadData(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const void* pData, size_t totalBytes);

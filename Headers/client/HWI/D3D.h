@@ -39,12 +39,16 @@ public:
     ID3D12Device* GetDevice() const { return m_device.Get(); }
     UINT GetFrameIndex() const { return m_frameIndex; }
 
-    ID3D12Resource* GetCurrRTV() const { return m_renderTargets[m_frameIndex].Get(); }
-    D12Resource* GetCurrRTVAsSrvUav() { return &m_renderTargetsAsSrvUav[m_frameIndex]; }
-    ID3D12Resource* GetCurrDSV() const { return m_depthStencilBuffer[m_frameIndex].Get(); }
-    D3D12_CPU_DESCRIPTOR_HANDLE GetRtvHeapStart() const { return m_rtvHeap->GetCPUDescriptorHandleForHeapStart(); }
-    D3D12_CPU_DESCRIPTOR_HANDLE GetDsvHeapStart() const { return m_dsvHeap->GetCPUDescriptorHandleForHeapStart(); }
+    // TODO: This is a fucking mess, Make "RTV" local to the apps? Then they can copy manually themselves
+    D12Resource* GetRTV() { return &m_finalRenderTarget; }
+    D3D12_CPU_DESCRIPTOR_HANDLE* GetRtvHandle() { return &m_renderTargetHandle; }
+
+    D12Resource* GetCurrBackBuffer() { return &m_swapchainBackBuffers[m_frameIndex]; }
+    D3D12_CPU_DESCRIPTOR_HANDLE GetBackBufferHeapStart() const { return m_rtvHeap->GetCPUDescriptorHandleForHeapStart(); }
     UINT GetRtvDescriptorSize() const { return m_rtvDescriptorSize;}
+
+    ID3D12Resource* GetCurrDSV() const { return m_depthStencilBuffer[m_frameIndex].Get(); }
+    D3D12_CPU_DESCRIPTOR_HANDLE GetDsvHeapStart() const { return m_dsvHeap->GetCPUDescriptorHandleForHeapStart(); }
     UINT GetDsvDescriptorSize() const { return m_dsvDescriptorSize;}
 
     bool GetRayTracingSupported() const { return m_rayTracingSupported; }
@@ -52,6 +56,7 @@ public:
     ComPtr<ID3D12CommandAllocator> CreateAllocator(D3D12_COMMAND_LIST_TYPE type) const;
     ComPtr<ID3D12GraphicsCommandList> GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE type);
     void ExecuteCommandList(ID3D12GraphicsCommandList* cmdList);
+    void CopyRtvIntoBackBuffer(ID3D12GraphicsCommandList* cmdList);
     void Present();
     void Flush();
     void WaitForSignal(UINT64 fence) const;
@@ -64,9 +69,13 @@ private:
     // Pipeline objects.
     ComPtr<IDXGISwapChain3> m_swapChain;
     ComPtr<ID3D12Device> m_device;
-    ComPtr<ID3D12Resource> m_renderTargets[c_FrameCount];
-    D12Resource m_renderTargetsAsSrvUav[c_FrameCount];
+
+    D12Resource m_swapchainBackBuffers[c_FrameCount];
+    D12Resource m_finalRenderTarget;
+    D3D12_CPU_DESCRIPTOR_HANDLE m_renderTargetHandle = {};
+
     ComPtr<ID3D12Resource> m_depthStencilBuffer[c_FrameCount];
+
     ComPtr<ID3D12DescriptorHeap> m_rtvHeap, m_dsvHeap;
     UINT m_rtvDescriptorSize = 0, m_dsvDescriptorSize = 0;
 

@@ -371,80 +371,70 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     auto transform = std::make_shared<Transform>();
     *transform = args.Transform;
 
-    if (args.ExportBlasModeEnabled)
+    std::variant<std::string, const std::byte*> diffuseTexInput = "";
+    size_t dataSize = 0;
+    if (mat.pbrData.baseColorTexture.has_value())
     {
-        ComPtr<ID3D12Device5> device5;
-        V(d3d->GetDevice()->QueryInterface(IID_PPV_ARGS(&device5)));
+        diffuseTexInput = loadTexture(asset, mat.pbrData.baseColorTexture.value().textureIndex, dataSize);
+        if (std::holds_alternative<std::string>(diffuseTexInput))
+            diffuseTexInput = localDirectory + get<std::string>(diffuseTexInput);
+    }
+    else if (mat.iridescence)
+        diffuseTexInput = assetDirectory + "Textures/Transparent.png";
+    else
+        diffuseTexInput = assetDirectory + "Textures/WhitePOT.png";
 
-        ComPtr<ID3D12GraphicsCommandList4> cmdList4;
-        V(cmdList->QueryInterface(IID_PPV_ARGS(&cmdList4)));
-
-        auto blas = std::make_shared<BLAS>();
-        blas->Init(device5.Get(), cmdList4.Get(), model, *transform.get());
-        args.BLASs.emplace_back(blas);
+    std::shared_ptr<Texture> diffuseTex = std::make_shared<Texture>();
+    if (std::holds_alternative<std::string>(diffuseTexInput))
+    {
+        diffuseTex->Init(d3d->GetDevice(), cmdList, get<std::string>(diffuseTexInput), DXGI_FORMAT_R8G8B8A8_UNORM,
+                         1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
     }
     else
     {
-        std::variant<std::string, const std::byte*> diffuseTexInput = "";
-        size_t dataSize = 0;
-        if (mat.pbrData.baseColorTexture.has_value())
-        {
-            diffuseTexInput = loadTexture(asset, mat.pbrData.baseColorTexture.value().textureIndex, dataSize);
-            if (std::holds_alternative<std::string>(diffuseTexInput))
-                diffuseTexInput = localDirectory + get<std::string>(diffuseTexInput);
-        }
-        else if (mat.iridescence)
-            diffuseTexInput = assetDirectory + "Textures/Transparent.png";
-        else
-            diffuseTexInput = assetDirectory + "Textures/WhitePOT.png";
-
-        std::shared_ptr<Texture> diffuseTex = std::make_shared<Texture>();
-        if (std::holds_alternative<std::string>(diffuseTexInput))
-        {
-            diffuseTex->Init(d3d->GetDevice(), cmdList, get<std::string>(diffuseTexInput), DXGI_FORMAT_R8G8B8A8_UNORM,
-                             1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-        }
-        else
-        {
-            auto pData = get<const std::byte*>(diffuseTexInput);
-            diffuseTex->InitPNG(d3d->GetDevice(), cmdList, reinterpret_cast<const uint8_t*>(pData), dataSize,
-                                DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-        }
-
-        std::variant<std::string, const std::byte*> normalTexInput = "";
-        if (mat.normalTexture.has_value())
-        {
-            normalTexInput = loadTexture(asset, mat.normalTexture.value().textureIndex, dataSize);
-            if (std::holds_alternative<std::string>(normalTexInput))
-                normalTexInput = localDirectory + get<std::string>(normalTexInput);
-        }
-        else
-            normalTexInput = "Assets/Textures/DefaultNormal.tga";
-
-        std::shared_ptr<Texture> normalTex = std::make_shared<Texture>();
-        if (std::holds_alternative<std::string>(normalTexInput))
-        {
-            //normalTex->Init(d3d->GetDevice(), cmdList, get<std::string>(normalTexInput), DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-        }
-        else
-        {
-            //normalTex->InitPNG(d3d->GetDevice(), cmdList, get<const std::byte*>(normalTexInput), DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-        }
-
-        std::shared_ptr<Material> material = std::make_shared<Material>();
-        material->Init(heap);
-        material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices));
-        material->AddSRV(d3d->GetDevice(), heap, diffuseTex);
-
-        if (shaderIndex == -1)
-            shaderIndex = args.DefaultShaderIndex;
-
-        auto& shaderUsed = args.Shaders[shaderIndex];
-
-        auto obj = std::make_shared<Object>();
-        obj->Init(transform, shaderUsed, args.Root, model, material);
-        args.Objects.emplace_back(obj);
+        auto pData = get<const std::byte*>(diffuseTexInput);
+        diffuseTex->InitPNG(d3d->GetDevice(), cmdList, reinterpret_cast<const uint8_t*>(pData), dataSize,
+                            DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
     }
+
+    std::variant<std::string, const std::byte*> normalTexInput = "";
+    if (mat.normalTexture.has_value())
+    {
+        normalTexInput = loadTexture(asset, mat.normalTexture.value().textureIndex, dataSize);
+        if (std::holds_alternative<std::string>(normalTexInput))
+            normalTexInput = localDirectory + get<std::string>(normalTexInput);
+    }
+    else
+        normalTexInput = "Assets/Textures/DefaultNormal.tga";
+
+    std::shared_ptr<Texture> normalTex = std::make_shared<Texture>();
+    if (std::holds_alternative<std::string>(normalTexInput))
+    {
+        //normalTex->Init(d3d->GetDevice(), cmdList, get<std::string>(normalTexInput), DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    }
+    else
+    {
+        //normalTex->InitPNG(d3d->GetDevice(), cmdList, get<const std::byte*>(normalTexInput), DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    }
+
+    std::shared_ptr<Material> material = std::make_shared<Material>();
+    material->Init(heap);
+    material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices));
+    material->AddSRV(d3d->GetDevice(), heap, diffuseTex);
+
+    MaterialData materialData;
+    memcpy(&materialData.BaseColorFactor, &mat.pbrData.baseColorFactor, sizeof(float) * 3);
+    materialData.EmmissiveStrength = mat.emissiveStrength;
+    material->SetData(materialData);
+
+    if (shaderIndex == -1)
+        shaderIndex = args.DefaultShaderIndex;
+
+    std::shared_ptr<Shader> shaderUsed = shaderIndex == -1 ? nullptr : args.Shaders[shaderIndex];
+
+    auto obj = std::make_shared<Object>();
+    obj->Init(transform, shaderUsed, args.Root, model, material);
+    args.OutObjects.emplace_back(obj);
 }
 
 void ModelLoaderGLTF::loadNode(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, Asset& asset,

@@ -30,7 +30,7 @@ public:
     Transform* GetTransform() const { return m_transform.get(); }
     Shader* GetShader() const { return m_shader.get(); }
     RootSig* GetRootSig() const { return m_rootSig.get(); }
-    Model* GetModel() const { return m_model.get(); }
+    std::shared_ptr<Model> GetModel() const { return m_model; }
     Object* GetParent() const { return m_parent; }
     Material* GetMaterial() const { return m_material.get(); }
 

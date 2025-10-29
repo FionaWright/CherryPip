@@ -10,6 +10,7 @@
 #include "System/FileHelper.h"
 #include "System/Gui.h"
 #include "CBV.h"
+#include "HWI/BLAS.h"
 #include "HWI/Material.h"
 #include "System/ModelLoaderGLTF.h"
 
@@ -91,22 +92,38 @@ void PathTracer::loadAssets(D3D* d3d)
     tex->Transition(cmdList.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
     GLTFLoadArgs args;
-    args.DefaultShaderIndex = 0;
+    args.DefaultShaderIndex = -1;
     args.DefaultShaderATIndex = -1;
-    args.ExportBlasModeEnabled = true;
     args.Transform = {};
-    args.Transform.SetScale(0.1f);
+    args.Transform.SetScale(2.0f);
     ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Cornell/scene.gltf", args);
-    auto blasList = args.BLASs;
 
     ComPtr<ID3D12Device5> device5;
     V(d3d->GetDevice()->QueryInterface(IID_PPV_ARGS(&device5)));
     ComPtr<ID3D12GraphicsCommandList4> cmdList4;
     V(cmdList->QueryInterface(IID_PPV_ARGS(&cmdList4)));
+
+    std::vector<std::shared_ptr<BLAS>> blasList;
+    std::vector<PtMaterialData> materialData;
+    for (int i = 0; i < args.OutObjects.size(); i++)
+    {
+        const Object* object = args.OutObjects[i].get();
+
+        auto blas = std::make_shared<BLAS>();
+        blas->Init(device5.Get(), cmdList4.Get(), object->GetModel(), *object->GetTransform());
+        blasList.emplace_back(blas);
+
+        const MaterialData* objectMaterialData = object->GetMaterial()->GetData();
+        PtMaterialData ptMaterialData;
+        ptMaterialData.BaseColorFactor = objectMaterialData->BaseColorFactor;
+        ptMaterialData.EmissiveFactor = objectMaterialData->EmmissiveStrength;
+        materialData.emplace_back(ptMaterialData);
+    }
+
     auto tlas = std::make_shared<TLAS>();
     tlas->Init(device5.Get(), cmdList4.Get(), blasList);
 
-    m_ptContext.Init(device, cmdList.Get(), tlas, blasList);
+    m_ptContext.Init(device, cmdList.Get(), tlas, blasList, materialData);
 
     m_material = std::make_shared<Material>();
     m_material->Init(&m_heap);

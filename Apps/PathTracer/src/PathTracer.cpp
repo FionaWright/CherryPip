@@ -118,7 +118,7 @@ void PathTracer::loadAssets(D3D* d3d)
     auto tlas = std::make_shared<TLAS>();
     tlas->Init(device5.Get(), cmdList4.Get(), blasList);
 
-    m_ptContext.Init(device, cmdList.Get(), tlas, blasList, &m_heap, d3d->GetCurrBackBuffer());
+    m_ptContext.Init(device, cmdList.Get(), tlas, blasList, &m_heap, d3d->GetRtv());
 
     m_material = std::make_shared<Material>();
     m_material->Init(&m_heap);
@@ -134,19 +134,25 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
 {
     const float fRtvWidth = static_cast<float>(Config::GetSystem().RtvWidth);
     const float fRtvHeight = static_cast<float>(Config::GetSystem().RtvHeight);
+    const float fAppGuiWidth = static_cast<float>(Config::GetSystem().WindowAppGuiWidth);
 
     // Render at offset for ImGui
-    const CD3DX12_VIEWPORT viewport(0.0f, 0.0f, fRtvWidth, fRtvHeight);
-    const CD3DX12_RECT scissorRect(0, 0, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight);
+    const CD3DX12_VIEWPORT viewport(fAppGuiWidth, 0.0f, fRtvWidth, fRtvHeight);
+    const CD3DX12_RECT scissorRect(Config::GetSystem().WindowAppGuiWidth, 0,
+                                   Config::GetSystem().RtvWidth + Config::GetSystem().WindowAppGuiWidth,
+                                   Config::GetSystem().RtvHeight);
 
     cmdList->RSSetViewports(1, &viewport);
     cmdList->RSSetScissorRects(1, &scissorRect);
 
+    const D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = d3d->GetRtvHandle();
+    const CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(d3d->GetDsvHeapStart(), d3d->GetFrameIndex(), d3d->GetDsvDescriptorSize());
+    cmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+    cmdList->ClearRenderTargetView(d3d->GetRtvHandle(), Config::GetSystem().RtvClearColor, 1, &scissorRect);
+
     m_heap.SetHeap(cmdList);
 
-    cmdList->ClearRenderTargetView(d3d->GetBackBufferHandle(), Config::GetSystem().RtvClearColor, 1, &scissorRect);
-
-    m_ptContext.Render(cmdList, m_rootSig->Get(), d3d->GetCurrBackBuffer(), m_shader->GetPSO(), &m_camera.GetCamera(), m_material.get(), m_projMatrix, m_ptConfig);
+    m_ptContext.Render(cmdList, m_rootSig->Get(), d3d->GetRtv(), m_shader->GetPSO(), &m_camera.GetCamera(), m_material.get(), m_projMatrix, m_ptConfig);
 
     GUI();
 }

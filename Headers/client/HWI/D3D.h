@@ -39,8 +39,8 @@ public:
     ID3D12Device* GetDevice() const { return m_device.Get(); }
     UINT GetFrameIndex() const { return m_frameIndex; }
 
-    D12Resource* GetCurrBackBuffer() { return &m_rtvs[m_frameIndex]; }
-    D3D12_CPU_DESCRIPTOR_HANDLE GetBackBufferHandle() const { return CD3DX12_CPU_DESCRIPTOR_HANDLE(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize); }
+    D12Resource* GetRtv() { return &m_rtvs[m_frameIndex]; }
+    D3D12_CPU_DESCRIPTOR_HANDLE GetRtvHandle() const { return CD3DX12_CPU_DESCRIPTOR_HANDLE(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize); }
 
     ID3D12Resource* GetCurrDSV() const { return m_depthStencilBuffer[m_frameIndex].Get(); }
     D3D12_CPU_DESCRIPTOR_HANDLE GetDsvHeapStart() const { return m_dsvHeap->GetCPUDescriptorHandleForHeapStart(); }

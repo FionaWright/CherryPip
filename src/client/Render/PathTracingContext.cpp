@@ -23,7 +23,7 @@ void PathTracingContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* c
 
     // Temp
     const std::vector<PtMaterialData> materials = {
-        {XMFLOAT3(1, 0.2, 0.2), 0.0f},
+        {XMFLOAT3(1, 0.2, 0.2), 5.0f},
         {XMFLOAT3(0.2, 1.0, 0.2), 0.0f},
         {XMFLOAT3(1, 1, 1), 10.0f},
         {XMFLOAT3(1, 1, 0), 0.3f},

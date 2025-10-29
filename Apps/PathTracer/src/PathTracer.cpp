@@ -94,23 +94,9 @@ void PathTracer::loadAssets(D3D* d3d)
     args.DefaultShaderIndex = 0;
     args.DefaultShaderATIndex = -1;
     args.ExportBlasModeEnabled = true;
-
     args.Transform = {};
     args.Transform.SetScale(0.1f);
-    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
-    args.Transform = {};
-    args.Transform.SetPosition(0, 10, 0);
-    args.Transform.SetScale(0.1f);
-    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
-    args.Transform = {};
-    args.Transform.SetPosition(0, 5, 0);
-    args.Transform.SetScale(0.01f);
-    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
-    args.Transform = {};
-    args.Transform.SetPosition(0, 0, -500);
-    args.Transform.SetRotation(90, 0, 0);
-    args.Transform.SetScale(10.0f);
-    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
+    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Cornell/scene.gltf", args);
     auto blasList = args.BLASs;
 
     ComPtr<ID3D12Device5> device5;
@@ -167,6 +153,7 @@ void PathTracer::GUI()
     ImGui::Indent(IM_GUI_INDENTATION);
 
     ImGui::Text("%s%i", "Frame Index: ", m_ptContext.GetFrameNum());
+    ImGui::Text("%s%i", "Total SPP: ", m_ptContext.GetFrameNum() * m_ptConfig.SPP);
 
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Settings##xx");

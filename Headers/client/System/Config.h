@@ -17,6 +17,8 @@ struct SettingsSystem
     uint32_t WindowAppGuiWidth = 340;
     uint32_t WindowEngineGuiWidth = 340;
 
+    uint32_t DefaultAppIdx = 0;
+
     bool VSyncEnabled = false;
     bool DsvEnabled = false;
 

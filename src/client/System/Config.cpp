@@ -61,6 +61,7 @@ void Config::ParseCommandLineArgs(const LPSTR args)
 
     LinkUInt(argsMap, ms_settingsSystem.RtvWidth, "--window_width");
     LinkUInt(argsMap, ms_settingsSystem.RtvHeight, "--window_height");
+    LinkUInt(argsMap, ms_settingsSystem.DefaultAppIdx, "--app");
     LinkBool(argsMap, ms_settingsSystem.VSyncEnabled, "--vsync");
 
     std::cout << "Window Width: " << ms_settingsSystem.RtvWidth << std::endl;

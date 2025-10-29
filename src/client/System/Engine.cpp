@@ -24,8 +24,10 @@ Engine::Engine(const std::vector<App*>& apps, const HWND hWnd, const UINT window
     m_d3d->Init(windowWidth, windowHeight);
     TextureLoader::Init(m_d3d.get(), FileHelper::GetAssetsPath() + L"/Shaders");
 
+    m_selectedAppIdx = Config::GetSystem().DefaultAppIdx;
+
     m_apps = apps;
-    m_apps.at(0)->OnInit(m_d3d.get());
+    m_apps.at(m_selectedAppIdx)->OnInit(m_d3d.get());
 
     Gui::Init(hWnd, m_d3d->GetDevice(), 3);
 }

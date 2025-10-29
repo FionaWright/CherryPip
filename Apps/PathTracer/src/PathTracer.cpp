@@ -148,8 +148,7 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
     cmdList->RSSetScissorRects(1, &scissorRect);
 
     const D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = d3d->GetRtvHandle();
-    const CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(d3d->GetDsvHeapStart(), d3d->GetFrameIndex(), d3d->GetDsvDescriptorSize());
-    cmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+    cmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
     cmdList->ClearRenderTargetView(d3d->GetRtvHandle(), Config::GetSystem().RtvClearColor, 1, &scissorRect);
 
     m_heap.SetHeap(cmdList);
@@ -173,12 +172,31 @@ void PathTracer::GUI()
     ImGui::SeparatorText("Settings##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
 
+    bool ptNeedsReset = false;
+
     ImGui::Checkbox("RNG Paused##xx", &m_ptConfig.RngPaused);
-    ImGui::Checkbox("Accumulation Enabled##xx", &m_ptConfig.AccumulationEnabled);
+    ptNeedsReset |= ImGui::Checkbox("Accumulation Enabled##xx", &m_ptConfig.AccumulationEnabled);
 
     int spp = static_cast<int>(m_ptConfig.SPP);
-    ImGui::DragInt("SPP##xx", &spp, 1, 1, 256);
+    ptNeedsReset |= ImGui::DragInt("SPP##xx", &spp, 1, 1, 256);
     m_ptConfig.SPP = static_cast<uint32_t>(spp);
+
+    int bounces = static_cast<int>(m_ptConfig.NumBounces);
+    ptNeedsReset |= ImGui::DragInt("Ray Bounces##xx", &bounces, 1, 0, 256);
+    m_ptConfig.NumBounces = static_cast<uint32_t>(bounces);
+
+    int maxFrame = static_cast<int>(m_ptConfig.MaxFrameNum);
+    ptNeedsReset |= ImGui::InputInt("Max Frames##xx", &maxFrame);
+    m_ptConfig.MaxFrameNum = static_cast<uint32_t>(maxFrame);
+
+    ImGui::Unindent(IM_GUI_INDENTATION);
+    ImGui::SeparatorText("Tools##xx");
+    ImGui::Indent(IM_GUI_INDENTATION);
+
+    ptNeedsReset |= ImGui::Button("Reset PathTracer##xx");
+
+    if (ptNeedsReset)
+        m_ptContext.Reset();
 
     ImGui::Unindent(IM_GUI_INDENTATION);
 

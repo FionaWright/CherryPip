@@ -23,7 +23,7 @@ float3 Shade(inout float3 throughput, inout uint rngState, inout float3 newDir, 
     normal = isFrontFace == 0 ? -normal : normal;
     normal = normalize(normal);
 
-    newDir = RandHemisphereCosine(rngState, normal);
+    newDir = RandHemisphereUniform(rngState, normal);
 
     throughput *= material.BaseColorFactor;
     return throughput * material.EmissiveFactor;

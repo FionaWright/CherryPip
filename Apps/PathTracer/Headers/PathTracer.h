@@ -18,8 +18,10 @@ using Microsoft::WRL::ComPtr;
 struct PtConfig
 {
     uint32_t SPP = 1;
+    uint32_t NumBounces = 2;
+    uint32_t MaxFrameNum = 0;
     bool RngPaused = false;
-    bool AccumulationEnabled = false;
+    bool AccumulationEnabled = true;
 };
 
 class PathTracer : public App

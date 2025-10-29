@@ -127,8 +127,6 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
     if (!config.RngPaused && frameIncAllowed)
         m_curRngState = m_rngDist(m_rng) + m_numFrames * 234376827;
 
-    std::cout << std::to_string(m_curRngState) << std::endl;
-
     if (m_numFrames == 0)
     {
         m_accumTexture->Transition(cmdList, D3D12_RESOURCE_STATE_COPY_DEST);
@@ -170,6 +168,17 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
         cbv.AccumulationEnabled = config.AccumulationEnabled ? 1 : 0;
         cbv.WindowAppGuiWidth = Config::GetSystem().WindowAppGuiWidth;
         cbv.UpdateAccumulation = frameIncAllowed ? 1 : 0;
+
+        cbv.Jitter = XMFLOAT2(0, 0);
+        if (config.JitterEnabled)
+        {
+            const XMFLOAT2 texelSize = XMFLOAT2(1.0f / Config::GetSystem().RtvWidth, 1.0f / Config::GetSystem().RtvHeight);
+            cbv.Jitter = XMFLOAT2((m_numFrames % 8) / 8.0f, ((m_numFrames / 8) % 8) / 8.0f);
+            cbv.Jitter.x = (cbv.Jitter.x - 0.5f) * 2.0f;
+            cbv.Jitter.y = (cbv.Jitter.y - 0.5f) * 2.0f;
+            cbv.Jitter.x *= texelSize.x;
+            cbv.Jitter.y *= texelSize.y;
+        }
 
         material->UpdateCBV(0, &cbv);
         material->SetDescriptorTables(cmdList);

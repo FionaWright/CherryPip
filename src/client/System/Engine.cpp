@@ -52,25 +52,21 @@ void Engine::Render()
 {
     const ComPtr<ID3D12GraphicsCommandList> cmdList = m_d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
-    D12Resource* rtv = m_d3d->GetRTV();
+    D12Resource* rtv = m_d3d->GetCurrBackBuffer();
     rtv->Transition(cmdList.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     m_apps.at(m_selectedAppIdx)->OnUpdate(m_d3d.get(), cmdList.Get());
-
-    m_d3d->CopyRtvIntoBackBuffer(cmdList.Get());
 
     {
         GPU_SCOPE(cmdList.Get(), L"GUI");
         RenderGUI();
 
-        m_d3d->GetCurrBackBuffer()->Transition(cmdList.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET);
-
-        const CD3DX12_CPU_DESCRIPTOR_HANDLE backBufferHandle(m_d3d->GetBackBufferHeapStart(), m_d3d->GetFrameIndex(), m_d3d->GetRtvDescriptorSize());
+        const D3D12_CPU_DESCRIPTOR_HANDLE backBufferHandle = m_d3d->GetBackBufferHandle();
         cmdList->OMSetRenderTargets(1, &backBufferHandle, FALSE, nullptr);
         Gui::RenderAllWindows(cmdList.Get());
     }
 
-    m_d3d->GetCurrBackBuffer()->Transition(cmdList.Get(), D3D12_RESOURCE_STATE_PRESENT);
+    rtv->Transition(cmdList.Get(), D3D12_RESOURCE_STATE_PRESENT);
 
     V(cmdList->Close());
     m_d3d->ExecuteCommandList(cmdList.Get());

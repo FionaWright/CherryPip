@@ -118,7 +118,7 @@ void PathTracer::loadAssets(D3D* d3d)
     auto tlas = std::make_shared<TLAS>();
     tlas->Init(device5.Get(), cmdList4.Get(), blasList);
 
-    m_ptContext.Init(device, cmdList.Get(), tlas, blasList, &m_heap, d3d->GetRTV());
+    m_ptContext.Init(device, cmdList.Get(), tlas, blasList, &m_heap, d3d->GetCurrBackBuffer());
 
     m_material = std::make_shared<Material>();
     m_material->Init(&m_heap);
@@ -144,9 +144,9 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
 
     m_heap.SetHeap(cmdList);
 
-    cmdList->ClearRenderTargetView(*d3d->GetRtvHandle(), Config::GetSystem().RtvClearColor, 1, &scissorRect);
+    cmdList->ClearRenderTargetView(d3d->GetBackBufferHandle(), Config::GetSystem().RtvClearColor, 1, &scissorRect);
 
-    m_ptContext.Render(cmdList, m_rootSig->Get(), d3d->GetRTV(), m_shader->GetPSO(), &m_camera.GetCamera(), m_material.get(), m_projMatrix, m_ptConfig);
+    m_ptContext.Render(cmdList, m_rootSig->Get(), d3d->GetCurrBackBuffer(), m_shader->GetPSO(), &m_camera.GetCamera(), m_material.get(), m_projMatrix, m_ptConfig);
 
     GUI();
 }

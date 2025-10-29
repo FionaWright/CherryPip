@@ -3,6 +3,8 @@
 //
 
 #include "HWI/D3D.h"
+
+#include "HlslGlue.h"
 #include "Headers/Helper.h"
 #include "System/Config.h"
 #include "System/Win32App.h"
@@ -219,7 +221,7 @@ void D3D::Init(const size_t width, const size_t height)
     {
         // Describe and create a render target view (RTV) descriptor heap.
         D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-        rtvHeapDesc.NumDescriptors = c_FrameCount + 1;
+        rtvHeapDesc.NumDescriptors = c_FrameCount;
         rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
         rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         V(m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap)));
@@ -255,7 +257,7 @@ void D3D::Init(const size_t width, const size_t height)
             m_device->CreateRenderTargetView(rtvResource.Get(), nullptr, rtvHandle);
             rtvHandle.Offset(1, m_rtvDescriptorSize);
 
-            m_swapchainBackBuffers[n].Fill(rtvResource, D3D12_RESOURCE_STATE_PRESENT);
+            m_rtvs[n].Fill(rtvResource, D3D12_RESOURCE_STATE_PRESENT);
             std::wstring name = std::wstring(L"Swapchain Backbuffer #") + std::to_wstring(n);
             V(rtvResource->SetName(name.c_str()));
 
@@ -269,24 +271,6 @@ void D3D::Init(const size_t width, const size_t height)
             dsvHandle.Offset(1, m_dsvDescriptorSize);
         }
     }
-
-    D3D12_CLEAR_VALUE clearValue = {};
-    clearValue.Format = Config::GetSystem().RTVFormat;
-    memcpy(clearValue.Color, Config::GetSystem().RtvClearColor, sizeof(float) * 4);
-
-    D3D12_RESOURCE_DESC desc = {};
-    desc.Format = Config::GetSystem().RTVFormat;
-    desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    desc.DepthOrArraySize = 1;
-    desc.Width = Config::GetSystem().RtvWidth;
-    desc.Height = Config::GetSystem().RtvHeight;
-    desc.MipLevels = 1;
-    desc.SampleDesc.Count = 1;
-    desc.SampleDesc.Quality = 0;
-    desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS | D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-    m_finalRenderTarget.Init(L"Render Target", m_device.Get(), desc, D3D12_RESOURCE_STATE_RENDER_TARGET, &clearValue);
-    m_renderTargetHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), c_FrameCount, m_rtvDescriptorSize);
-    m_device->CreateRenderTargetView(m_finalRenderTarget.GetResource(), nullptr, m_renderTargetHandle);
 
     // Create synchronization objects and wait until assets have been uploaded to the GPU.
     {
@@ -373,33 +357,6 @@ void D3D::ExecuteCommandList(ID3D12GraphicsCommandList* cmdList)
     m_commandAllocatorQueue.push({fence, commandAllocator});
     m_commandListQueue.push(cmdList);
     commandAllocator->Release();
-}
-
-void D3D::CopyRtvIntoBackBuffer(ID3D12GraphicsCommandList* cmdList)
-{
-    m_finalRenderTarget.Transition(cmdList, D3D12_RESOURCE_STATE_COPY_SOURCE);
-    m_swapchainBackBuffers[m_frameIndex].Transition(cmdList, D3D12_RESOURCE_STATE_COPY_DEST);
-
-    D3D12_TEXTURE_COPY_LOCATION dstLocation;
-    dstLocation.pResource = m_swapchainBackBuffers[m_frameIndex].GetResource();
-    dstLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-    dstLocation.SubresourceIndex = 0;
-
-    D3D12_TEXTURE_COPY_LOCATION srcLocation;
-    srcLocation.pResource = m_finalRenderTarget.GetResource();
-    srcLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-    srcLocation.SubresourceIndex = 0;
-
-    D3D12_BOX srcBox;
-    srcBox.front = 0;
-    srcBox.back = 1;
-    srcBox.left = 0;
-    srcBox.right = Config::GetSystem().RtvWidth;
-    srcBox.top = 0;
-    srcBox.bottom = Config::GetSystem().RtvHeight;
-    cmdList->CopyTextureRegion(&dstLocation, Config::GetSystem().WindowAppGuiWidth, 0, 0, &srcLocation, &srcBox);
-
-    m_swapchainBackBuffers[m_frameIndex].Transition(cmdList, D3D12_RESOURCE_STATE_PRESENT);
 }
 
 void D3D::Present()

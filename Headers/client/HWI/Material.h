@@ -4,6 +4,7 @@
 
 #ifndef PT_MATERIAL_H
 #define PT_MATERIAL_H
+#include <DirectXMath.h>
 #include <memory>
 #include <vector>
 
@@ -41,11 +42,20 @@ struct UAV
     std::shared_ptr<Texture> Texture = nullptr;
 };
 
+struct MaterialData
+{
+    DirectX::XMFLOAT3 BaseColorFactor = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
+    float EmmissiveStrength = 0.0f;
+};
+
 class Material
 {
 public:
     ~Material();
     void Init(const Heap* heap);
+    const MaterialData* GetData() const { return &m_materialData; }
+    void SetData(const MaterialData& data) { m_materialData = data; }
+
     void AddCBV(ID3D12Device* device, Heap* heap, size_t size);
     void AddSRV(ID3D12Device* device, Heap* heap, std::shared_ptr<Texture> tex);
     void AddBuffer(ID3D12Device* device, Heap* heap, std::shared_ptr<D12Resource> resource, UINT numElements,
@@ -68,6 +78,7 @@ private:
     std::vector<SRV> m_srvs = {};
     std::vector<UAV> m_uavs = {};
 
+    MaterialData m_materialData;
 };
 
 

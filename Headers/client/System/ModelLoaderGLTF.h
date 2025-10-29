@@ -46,17 +46,15 @@ struct GLTFLoadArgs
 	Transform Transform = {};
 	std::shared_ptr<RootSig> Root;
 
-    bool ExportBlasModeEnabled = false;
-
 	std::vector<std::shared_ptr<Shader>> Shaders;
-	std::vector<std::shared_ptr<Object>> Objects;
-    std::vector<std::shared_ptr<BLAS>> BLASs;
 
 	int DefaultShaderIndex = 0;
 	int DefaultShaderATIndex = 1;
 
 	std::vector<std::string> CullingWhiteList;
 	std::vector<GLTFLoadOverride> Overrides;
+
+    std::vector<std::shared_ptr<Object>> OutObjects;
 };
 
 class ModelLoaderGLTF

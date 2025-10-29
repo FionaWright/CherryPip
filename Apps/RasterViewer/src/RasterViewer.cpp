@@ -128,7 +128,7 @@ void RasterViewer::loadAssets(D3D* d3d)
     //args.Transform.SetPosition(0, 10, 0);
     args.Transform.SetScale(1.0f);
     ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Cornell/scene.gltf", args);
-    m_objects = args.Objects;
+    m_objects = args.OutObjects;
 
     V(cmdList->Close());
     d3d->ExecuteCommandList(cmdList.Get());

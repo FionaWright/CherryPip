@@ -33,7 +33,7 @@ class PathTracingContext
 {
 public:
     void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<TLAS>& tlas,
-              const std::vector<std::shared_ptr<BLAS>>& blasList);
+              const std::vector<std::shared_ptr<BLAS>>& blasList, const std::vector<PtMaterialData>& materials);
     void FillMaterial(ID3D12Device* device, Material* material, Heap* heap) const;
     void Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSig,
                 ID3D12PipelineState* pso,

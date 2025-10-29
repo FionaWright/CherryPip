@@ -16,18 +16,10 @@
 #include "System/Config.h"
 
 void PathTracingContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
-                              const std::shared_ptr<TLAS>& tlas, const std::vector<std::shared_ptr<BLAS>>& blasList)
+                              const std::shared_ptr<TLAS>& tlas, const std::vector<std::shared_ptr<BLAS>>& blasList, const std::vector<PtMaterialData>& materials)
 {
     m_tlas = tlas;
     m_blasList = blasList;
-
-    // Temp
-    const std::vector<PtMaterialData> materials = {
-        {XMFLOAT3(1, 0.2, 0.2), 5.0f},
-        {XMFLOAT3(0.2, 1.0, 0.2), 0.0f},
-        {XMFLOAT3(1, 1, 1), 10.0f},
-        {XMFLOAT3(1, 1, 0), 0.3f},
-    };
 
     UINT curVertexBufferOffset = 0;
     UINT curIndexBufferOffset = 0;

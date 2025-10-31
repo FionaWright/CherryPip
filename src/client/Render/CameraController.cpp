@@ -33,7 +33,7 @@ bool CameraController::UpdateCamera()
 
         const XMVECTOR right = XMVector3Rotate(XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), rot);
         m_camera.SetRight(right);
-        return deltaMouse != XMFLOAT2(0, 0);
+        return deltaMouse.x != 0 || deltaMouse.y != 0;
     }
 
     const XMFLOAT3 up = m_camera.GetUp();
@@ -51,7 +51,7 @@ bool CameraController::UpdateCamera()
 
         const XMFLOAT3 rightTranslation = XMFLOAT3(right.x * deltaMouse.x, right.y * deltaMouse.x, right.z * deltaMouse.x);
         m_camera.AddPosition(rightTranslation);
-        return deltaMouse != XMFLOAT2(0, 0);
+        return deltaMouse.x != 0 || deltaMouse.y != 0;
     }
 
     const XMFLOAT3 forward = m_camera.GetForward();

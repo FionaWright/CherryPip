@@ -147,12 +147,12 @@ target_link_libraries(CherryPip PRIVATE ${D3D12_LIBS})
 add_custom_command(TARGET CherryPip POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
         ${D3D12_AGILITY_DIR}/build/native/bin/x64/D3D12Core.dll
-        $<TARGET_FILE_DIR:CherryPip>
+        $<TARGET_FILE_DIR:CherryPip>/D3D12/D3D12Core.dll
 )
 add_custom_command(TARGET CherryPip POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
         ${D3D12_AGILITY_DIR}/build/native/bin/x64/D3D12SDKLayers.dll
-        $<TARGET_FILE_DIR:CherryPip>
+        $<TARGET_FILE_DIR:CherryPip>/D3D12/D3D12SDKLayers.dll
 )
 
 FetchContent_Declare(

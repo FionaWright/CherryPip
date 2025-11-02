@@ -1,0 +1,68 @@
+# Source files
+set(PROJECT_SOURCES
+        Apps/App.cpp
+        Apps/PathTracer/src/PathTracer.cpp
+        Apps/RasterViewer/src/RasterViewer.cpp
+        src/MathUtils.cpp
+        src/client/Debug/GPUEventScoped.cpp
+        src/client/HWI/BLAS.cpp
+        src/client/HWI/D12Resource.cpp
+        src/client/HWI/D3D.cpp
+        src/client/HWI/Heap.cpp
+        src/client/HWI/Material.cpp
+        src/client/HWI/Model.cpp
+        src/client/HWI/RootSig.cpp
+        src/client/HWI/Shader.cpp
+        src/client/HWI/Texture.cpp
+        src/client/HWI/TLAS.cpp
+        src/client/Render/Camera.cpp
+        src/client/Render/CameraController.cpp
+        src/client/Render/Object.cpp
+        src/client/Render/PathTracingContext.cpp
+        src/client/Render/Transform.cpp
+        src/client/System/Config.cpp
+        src/client/System/Engine.cpp
+        src/client/System/FileHelper.cpp
+        src/client/System/Gui.cpp
+        src/client/System/HighResolutionClock.cpp
+        src/client/System/HotReloader.cpp
+        src/client/System/Input.cpp
+        src/client/System/ModelLoaderGLTF.cpp
+        src/client/System/TextureLoader.cpp
+        src/client/System/Win32App.cpp
+)
+
+# Header files
+set(PROJECT_HEADERS
+        Apps/App.h
+        Apps/PathTracer/Headers/PathTracer.h
+        Apps/RasterViewer/Headers/RasterViewer.h
+        Headers/Helper.h
+        Headers/MathUtils.h
+        Headers/client/Debug/GPUEventScoped.h
+        Headers/client/HWI/BLAS.h
+        Headers/client/HWI/D12Resource.h
+        Headers/client/HWI/D3D.h
+        Headers/client/HWI/Heap.h
+        Headers/client/HWI/Material.h
+        Headers/client/HWI/Model.h
+        Headers/client/HWI/RootSig.h
+        Headers/client/HWI/Shader.h
+        Headers/client/HWI/Texture.h
+        Headers/client/HWI/TLAS.h
+        Headers/client/Render/Camera.h
+        Headers/client/Render/CameraController.h
+        Headers/client/Render/Object.h
+        Headers/client/Render/PathTracingContext.h
+        Headers/client/Render/Transform.h
+        Headers/client/System/Config.h
+        Headers/client/System/DebugOutputRedirector.h
+        Headers/client/System/FileHelper.h
+        Headers/client/System/Gui.h
+        Headers/client/System/HighResolutionClock.h
+        Headers/client/System/HotReloader.h
+        Headers/client/System/Input.h
+        Headers/client/System/Keycodes.h
+        Headers/client/System/TextureLoader.h
+        Headers/client/System/Win32App.h
+)

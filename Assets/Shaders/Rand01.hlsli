@@ -4,6 +4,26 @@
 #define UINT_MAX 4294967295.0
 #define PI 3.141592653589793
 
+uint wang_hash(uint a) {
+    a = (a ^ 61u) ^ (a >> 16);
+    a *= 9u;
+    a = a ^ (a >> 4);
+    a *= 0x27d4eb2du;
+    a = a ^ (a >> 15);
+    return a;
+}
+
+float PrngSeed(uint2 pixel, uint sample_i, uint temporal_i) {
+    // Random big primes
+    // XOR the temporal frame number to avoid accumulated patterns
+    return wang_hash(
+        pixel.x * 374761393u +
+        pixel.y * 668265263u +
+        (sample_i * 1597334677u) ^
+        (temporal_i * 3812015801u)
+    );
+}
+
 // https://www.pcg-random.org/
 float PcgRand01(inout uint state)
 {

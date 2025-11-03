@@ -24,8 +24,6 @@ public:
     float m_AspectRatio;
 
 private:
-    static constexpr UINT c_FrameCount = 3;
-
     Heap m_heap;
     CameraController m_camera;
     std::vector<std::shared_ptr<Object>> m_objects;

@@ -27,7 +27,7 @@ float3 Trace(RayQuery<RAY_FLAGS> q, uint flags, uint instanceMask, RayDesc ray, 
     float3 color = float3(0, 0, 0);
     float3 throughput = float3(1, 1, 1);
 
-    for (uint i = 0; i < c_pathTracing.NumBounces; i++)
+    for (uint i = 0; i <= c_pathTracing.NumBounces; i++)
     {
         q.TraceRayInline(gTLAS, flags, instanceMask, ray);
 
@@ -57,13 +57,6 @@ float3 Trace(RayQuery<RAY_FLAGS> q, uint flags, uint instanceMask, RayDesc ray, 
 
 float4 PSMain(VsOut input) : SV_Target0
 {
-    // Overkill?
-    uint rngState = c_pathTracing.Seed;
-    rngState ^= asuint(input.position.x) * 0x9E3779B9u;
-    rngState ^= asuint(input.position.y) * 0x85EBCA6Bu;
-    rngState ^= (rngState >> 13u);
-    rngState *= 0xC2B2AE35u;
-
     RayQuery<RAY_FLAGS> q;
 
     uint flags = RAY_FLAGS|RAY_FLAG_CULL_BACK_FACING_TRIANGLES;
@@ -89,9 +82,12 @@ float4 PSMain(VsOut input) : SV_Target0
     float3 colorSum = float3(0,0,0);
     for (uint i = 0; i < c_pathTracing.SPP; i++)
     {
+        uint rngState = PrngSeed((uint2)input.position, i+4648387, c_pathTracing.NumFrames);
         colorSum += Trace(q, flags, instanceMask, ray, rngState);
     }
-    float4 finalColor = float4(colorSum / (float)c_pathTracing.SPP, 1);
+
+    colorSum /= float(c_pathTracing.SPP);
+    float4 finalColor = float4(colorSum, 1);
 
     if (!c_pathTracing.AccumulationEnabled)
         return finalColor;
@@ -99,8 +95,9 @@ float4 PSMain(VsOut input) : SV_Target0
     input.position.x -= c_pathTracing.WindowAppGuiWidth;
     float4 accumColor = gAccum.Load(input.position.xy);
 
-    float w = 1.0f / (c_pathTracing.NumFrames+1);
-    float4 mu = accumColor * (1 - w) + finalColor * w;
+    float N = (float)c_pathTracing.NumFrames + 1.0f;
+    float4 mu = (finalColor - accumColor) / N;
+    mu += accumColor;
 
     if (c_pathTracing.UpdateAccumulation)
         gAccum[input.position.xy] = mu;

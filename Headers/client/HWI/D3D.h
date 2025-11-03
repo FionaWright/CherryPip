@@ -21,6 +21,7 @@
 #include <queue>
 
 #include "D12Resource.h"
+#include "System/Config.h"
 
 using namespace DirectX;
 
@@ -58,14 +59,12 @@ public:
 
 private:
 
-    static constexpr UINT c_FrameCount = 3;
-
     // Pipeline objects.
     ComPtr<IDXGISwapChain3> m_swapChain;
     ComPtr<ID3D12Device> m_device;
 
-    D12Resource m_rtvs[c_FrameCount];
-    ComPtr<ID3D12Resource> m_depthStencilBuffer[c_FrameCount];
+    D12Resource m_rtvs[NUM_FRAMES_IN_FLIGHT];
+    ComPtr<ID3D12Resource> m_depthStencilBuffer[NUM_FRAMES_IN_FLIGHT];
 
     ComPtr<ID3D12DescriptorHeap> m_rtvHeap, m_dsvHeap;
     UINT m_rtvDescriptorSize = 0, m_dsvDescriptorSize = 0;
@@ -90,7 +89,7 @@ private:
     HANDLE m_fenceEvent = {};
     ComPtr<ID3D12Fence> m_fence;
     UINT64 m_fenceValue = 0;
-    UINT64 m_frameBufferFences[c_FrameCount] = {};
+    UINT64 m_frameBufferFences[NUM_FRAMES_IN_FLIGHT] = {};
 
     // Debugging
     ComPtr<ID3D12InfoQueue1> m_infoQueue;

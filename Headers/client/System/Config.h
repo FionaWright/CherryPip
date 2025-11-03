@@ -9,6 +9,8 @@
 #include <dxgiformat.h>
 #include <windows.h>
 
+#define NUM_FRAMES_IN_FLIGHT 3
+
 struct SettingsSystem
 {
     uint32_t RtvWidth = 1020;
@@ -21,6 +23,7 @@ struct SettingsSystem
 
     bool VSyncEnabled = false;
     bool DsvEnabled = false;
+    bool ForceSyncCpuGpu = true;
 
     DXGI_FORMAT RTVFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
     FLOAT RtvClearColor[4] = {0.0f, 0.2f, 0.4f, 1.0f};

@@ -125,7 +125,7 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
     const bool frameIncAllowed = config.MaxFrameNum == 0 || m_numFrames < config.MaxFrameNum;
 
     if (!config.RngPaused && frameIncAllowed)
-        m_curRngState = m_rngDist(m_rng) + m_numFrames * 234376827;
+        m_curRngState = m_rngDist(m_rng);
 
     if (m_numFrames == 0)
     {

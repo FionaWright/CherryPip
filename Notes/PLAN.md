@@ -15,10 +15,9 @@
 - [ ] Clean up CMAKE
 - [x] Basic Ray-Tracer (Ray-Query)
 - [ ] Furnace Test
-- [ ] Acceleration Buffer
+- [x] Accumulation Buffer
 - [ ] PT Debug Views & Systems
 - [ ] CI/CD
-- [ ] GPU-Accelerated BVH
 - [ ] ...
 - [ ] Reflections
 - [ ] Glass & Caustics
@@ -36,4 +35,9 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 ## PT-TODO:
 
-- Clean up PathTracingContext and the RTV system. Need easy access to RTVs for SRVs/UAVs anywhere
+### The Big Debug Feature Expansion
+
+- [ ] Readback pixel value
+- [ ] Output Buffers
+- [ ] Furnace Test
+- [ ] RMSE Convergence Graph

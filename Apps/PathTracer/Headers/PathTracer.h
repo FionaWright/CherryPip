@@ -18,11 +18,11 @@ using Microsoft::WRL::ComPtr;
 struct PtConfig
 {
     uint32_t SPP = 1;
-    uint32_t NumBounces = 2;
+    uint32_t NumBounces = 1;
     uint32_t MaxFrameNum = 0;
     bool RngPaused = false;
     bool AccumulationEnabled = true;
-    bool JitterEnabled = true;
+    bool JitterEnabled = false;
 };
 
 class PathTracer : public App

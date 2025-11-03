@@ -190,7 +190,7 @@ void D3D::Init(const size_t width, const size_t height)
 
     // Describe and create the swap chain.
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-    swapChainDesc.BufferCount = c_FrameCount;
+    swapChainDesc.BufferCount = NUM_FRAMES_IN_FLIGHT;
     swapChainDesc.Width = width;
     swapChainDesc.Height = height;
     swapChainDesc.Format = Config::GetSystem().RTVFormat;
@@ -219,7 +219,7 @@ void D3D::Init(const size_t width, const size_t height)
     {
         // Describe and create a render target view (RTV) descriptor heap.
         D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-        rtvHeapDesc.NumDescriptors = c_FrameCount;
+        rtvHeapDesc.NumDescriptors = NUM_FRAMES_IN_FLIGHT;
         rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
         rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         V(m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap)));
@@ -227,7 +227,7 @@ void D3D::Init(const size_t width, const size_t height)
         m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
         D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
-        dsvHeapDesc.NumDescriptors = c_FrameCount;
+        dsvHeapDesc.NumDescriptors = NUM_FRAMES_IN_FLIGHT;
         dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
         dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         V(m_device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_dsvHeap)));
@@ -248,7 +248,7 @@ void D3D::Init(const size_t width, const size_t height)
         auto heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
         // Create a RTV/DSV for each frame.
-        for (UINT n = 0; n < c_FrameCount; n++)
+        for (UINT n = 0; n < NUM_FRAMES_IN_FLIGHT; n++)
         {
             ComPtr<ID3D12Resource> rtvResource;
             V(m_swapChain->GetBuffer(n, IID_PPV_ARGS(&rtvResource)));
@@ -283,7 +283,7 @@ void D3D::Init(const size_t width, const size_t height)
         }
     }
 
-    for (int i = 0; i < c_FrameCount; i++)
+    for (int i = 0; i < NUM_FRAMES_IN_FLIGHT; i++)
         m_frameBufferFences[i] = 0;
 
     std::cout << "D3D Initialized" << std::endl;
@@ -371,6 +371,9 @@ void D3D::Present()
     m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 
     WaitForSignal(m_frameBufferFences[m_frameIndex]);
+
+    if (Config::GetSystem().ForceSyncCpuGpu)
+        Flush();
 }
 
 void D3D::Flush()

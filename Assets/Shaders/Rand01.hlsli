@@ -1,7 +1,7 @@
 #ifndef H_RAND01_H
 #define H_RAND01_H
 
-#define UINT_MAX 4294967295.0
+#define UINT_MAX 4294967296.0
 #define PI 3.141592653589793
 
 uint wang_hash(uint a) {
@@ -25,12 +25,20 @@ float PrngSeed(uint2 pixel, uint sample_i, uint temporal_i) {
 }
 
 // https://www.pcg-random.org/
-float PcgRand01(inout uint state)
+float PcgRand01_X(inout uint state)
 {
     state = state * 747796405u + 2891336453u;
     uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
     word = (word >> 22u) ^ word;
     return word / UINT_MAX;
+}
+
+float PcgRand01(inout uint state)
+{
+    state += 0x6D2B79F5u;
+    uint z = (state ^ (state >> 15)) * (1u | state);
+    z ^= z + (z ^ (z >> 7)) * (61u | z);
+    return float((z ^ (z >> 14))) / UINT_MAX;
 }
 
 float3 RandDirectionCube(inout uint state)
@@ -56,7 +64,7 @@ float3 RandDirectionUniform(inout uint state)
 float PcgRandGauss01(inout uint state)
 {
     float theta = 2.0 * PI * PcgRand01(state);
-    float rho = sqrt(-2 * log(PcgRand01(state)));
+    float rho = sqrt(-2.0 * log(PcgRand01(state)));
     return rho * cos(theta);
 }
 

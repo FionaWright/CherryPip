@@ -101,5 +101,5 @@ float4 PSMain(VsOut input) : SV_Target0
 
     if (c_pathTracing.UpdateAccumulation)
         gAccum[input.position.xy] = mu;
-    return mu;
+    return gAccum[input.position.xy];
 }

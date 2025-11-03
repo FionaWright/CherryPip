@@ -41,6 +41,7 @@ public:
     void Reset();
 
     uint32_t GetFrameNum() const { return m_numFrames; }
+    Texture* GetAccumTexture() const { return m_accumTexture.get(); }
 
     std::shared_ptr<D12Resource> GetInstanceDataBuffer() const { return m_instanceDataBuffer; }
     UINT GetNumInstances() const { return m_blasList.size(); }

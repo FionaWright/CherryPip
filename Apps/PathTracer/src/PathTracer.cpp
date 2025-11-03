@@ -125,6 +125,8 @@ void PathTracer::loadAssets(D3D* d3d)
 
     m_ptContext.Init(device, cmdList.Get(), tlas, blasList, materialData);
 
+    m_readbackBuffer.Init(d3d, cmdList.Get(), m_ptContext.GetAccumTexture());
+
     m_material = std::make_shared<Material>();
     m_material->Init(&m_heap);
     m_material->AddCBV(device, &m_heap, sizeof(CbvPathTracing));
@@ -157,6 +159,9 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
     m_heap.SetHeap(cmdList);
 
     m_ptContext.Render(cmdList, m_rootSig->Get(), m_shader->GetPSO(), &m_camera.GetCamera(), m_material.get(), m_projMatrix, m_ptConfig);
+
+    if (m_ptConfig.ReadbackEnabled)
+        m_readbackBuffer.Readback(d3d, cmdList);
 
     GUI();
 }

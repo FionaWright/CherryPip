@@ -2,6 +2,7 @@
 #define PT_PATHTRACER_H
 
 #include "Apps/App.h"
+#include "Debug/ReadbackBuffer.h"
 #include "HWI/Heap.h"
 #include "HWI/RootSig.h"
 #include "HWI/Shader.h"
@@ -23,6 +24,7 @@ struct PtConfig
     bool RngPaused = false;
     bool AccumulationEnabled = true;
     bool JitterEnabled = false;
+    bool ReadbackEnabled = false;
 };
 
 class PathTracer : public App
@@ -48,6 +50,7 @@ private:
     PtConfig m_ptConfig;
 
     XMMATRIX m_projMatrix;
+    ReadbackBuffer m_readbackBuffer;
 
     void loadAssets(D3D* d3d);
     void populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdList);

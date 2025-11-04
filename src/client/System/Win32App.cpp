@@ -7,7 +7,6 @@
 
 #include "HWI/D3D.h"
 #include "System/FileHelper.h"
-#include "System/Gui.h"
 #include "System/Input.h"
 
 #include "imgui/backends/imgui_impl_win32.h"
@@ -23,7 +22,7 @@
 HWND Win32App::ms_hwnd = nullptr;
 std::unique_ptr<Engine> Win32App::ms_engine = nullptr;
 
-int Win32App::Run(const std::vector<App*>& apps, HINSTANCE hInstance, int nCmdShow)
+int Win32App::Run(const std::vector<App*>& apps, const HINSTANCE hInstance, const int nCmdShow)
 {
     FileHelper::Init();
 

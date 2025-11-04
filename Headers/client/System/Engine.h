@@ -28,7 +28,7 @@ private:
     std::unique_ptr<D3D> m_d3d;
     HighResolutionClock m_clock;
 
-    double m_fps10ms = 0.0, m_fps50ms = 0.0, m_fps100ms = 0.0;
+    double m_fps10ms = 0.0, m_fps50ms = 0.0, m_fps100ms = 0.0, m_frameTime = 0.0;
     double m_fpsTimeSinceUpdate10ms = 0.0, m_fpsTimeSinceUpdate50ms = 0.0, m_fpsTimeSinceUpdate100ms = 0.0;
     unsigned int m_fpsFramesSinceUpdate10ms = 0, m_fpsFramesSinceUpdate50ms = 0, m_fpsFramesSinceUpdate100ms = 0;
     std::vector<float> m_fpsGuiQueue;

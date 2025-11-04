@@ -25,6 +25,8 @@ struct PtConfig
     bool AccumulationEnabled = true;
     bool JitterEnabled = false;
     bool ReadbackEnabled = false;
+    bool FurnaceTestClassicEnabled = false; // TODO: Combine with debug buffer mode into enum once branches merged
+    bool FurnaceTestEmissiveEnabled = false;
 };
 
 class PathTracer : public App
@@ -43,7 +45,7 @@ private:
     CameraController m_camera;
 
     std::shared_ptr<Material> m_material;
-    std::shared_ptr<Shader> m_shader;
+    std::shared_ptr<Shader> m_shader, m_shaderFurnaceClassic, m_shaderFurnaceEmissive;
     std::shared_ptr<RootSig> m_rootSig;
 
     PathTracingContext m_ptContext;

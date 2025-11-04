@@ -11,6 +11,7 @@ unordered_map<KeyCode::Key, bool> Input::ms_keysLastFrame;
 
 XMFLOAT2 Input::ms_mousePos;
 XMFLOAT2 Input::ms_mousePosLastFrame;
+XMFLOAT2 Input::ms_mousePosOnLastClick = { -1, -1 };
 
 XMFLOAT2 Input::ms_mousePosClient;
 XMFLOAT2 Input::ms_mousePosClientLastFrame;
@@ -35,17 +36,22 @@ void Input::RemoveKey(KeyCode::Key key)
     ms_currentlyHeldKeys.insert_or_assign(key, false);
 }
 
-void Input::SetMouseLeftState(bool state)
+void Input::SetMouseLeftState(const bool state)
 {
+    if (state && !ms_mouseLeftState)
+    {
+        ms_mousePosOnLastClick = ms_mousePos;
+    }
+
     ms_mouseLeftState = state;
 }
 
-void Input::SetMouseRightState(bool state)
+void Input::SetMouseRightState(const bool state)
 {
     ms_mouseRightState = state;
 }
 
-void Input::SetMouseMiddleState(bool state)
+void Input::SetMouseMiddleState(const bool state)
 {
     ms_mouseMiddleState = state;
 }
@@ -109,11 +115,6 @@ bool Input::IsMouseLeftDown()
     return ms_mouseLeftState && !ms_mouseLeftStateLastFrame;
 }
 
-bool Input::IsMouseLeft()
-{
-    return ms_mouseLeftState;
-}
-
 bool Input::IsMouseLeftUp()
 {
     return !ms_mouseLeftState && ms_mouseLeftStateLastFrame;
@@ -122,11 +123,6 @@ bool Input::IsMouseLeftUp()
 bool Input::IsMouseRightDown()
 {
     return ms_mouseRightState && !ms_mouseRightStateLastFrame;
-}
-
-bool Input::IsMouseRight()
-{
-    return ms_mouseRightState;
 }
 
 bool Input::IsMouseRightUp()
@@ -139,39 +135,19 @@ bool Input::IsMouseMiddleDown()
     return ms_mouseMiddleState && !ms_mouseMiddleStateLastFrame;
 }
 
-bool Input::IsMouseMiddle()
-{
-    return ms_mouseMiddleState;
-}
-
 bool Input::IsMouseMiddleUp()
 {
     return !ms_mouseMiddleState && ms_mouseMiddleStateLastFrame;
 }
 
-XMFLOAT2 Input::GetMousePos()
-{
-    return ms_mousePos;
-}
-
 XMFLOAT2 Input::GetMousePosDelta()
 {
-    return XMFLOAT2(ms_mousePos.x - ms_mousePosLastFrame.x, ms_mousePos.y - ms_mousePosLastFrame.y);
-}
-
-XMFLOAT2 Input::GetMousePosClient()
-{
-    return ms_mousePosClient;
+    return {ms_mousePos.x - ms_mousePosLastFrame.x, ms_mousePos.y - ms_mousePosLastFrame.y};
 }
 
 XMFLOAT2 Input::GetMousePosClientDelta()
 {
-    return XMFLOAT2(ms_mousePosClient.x - ms_mousePosClientLastFrame.x, ms_mousePosClient.y - ms_mousePosClientLastFrame.y);
-}
-
-float Input::GetMouseWheelDelta()
-{
-    return ms_mouseWheelDelta;
+    return {ms_mousePosClient.x - ms_mousePosClientLastFrame.x, ms_mousePosClient.y - ms_mousePosClientLastFrame.y};
 }
 
 void Input::ProgressFrame()

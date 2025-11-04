@@ -25,6 +25,7 @@ struct PtConfig
     bool AccumulationEnabled = true;
     bool JitterEnabled = false;
     bool ReadbackEnabled = false;
+    bool ReadbackEveryFrame = false;
 };
 
 struct Rgba8
@@ -61,6 +62,7 @@ private:
     XMMATRIX m_projMatrix;
     ReadbackBuffer m_readbackBuffer;
     XMFLOAT2 m_mousePosOnClick = { -1, -1 };
+    bool m_readingBackEveryFrame = false;
 
     std::vector<Rgba8> m_readbackRgbaData;
 };

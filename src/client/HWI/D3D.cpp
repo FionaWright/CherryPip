@@ -289,10 +289,10 @@ void D3D::Init(const size_t width, const size_t height)
     std::cout << "D3D Initialized" << std::endl;
 }
 
-ComPtr<ID3D12GraphicsCommandList> D3D::CreateCmdList(ID3D12CommandAllocator* allocator) const
+ComPtr<ID3D12GraphicsCommandList> D3D::CreateCmdList(ID3D12CommandAllocator* allocator, const D3D12_COMMAND_LIST_TYPE type) const
 {
     ComPtr<ID3D12GraphicsCommandList> cmdList = nullptr;
-    V(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, allocator, nullptr, IID_PPV_ARGS(&cmdList)));
+    V(m_device->CreateCommandList(0, type, allocator, nullptr, IID_PPV_ARGS(&cmdList)));
 
     return cmdList;
 }
@@ -330,7 +330,7 @@ ComPtr<ID3D12GraphicsCommandList> D3D::GetAvailableCmdList(const D3D12_COMMAND_L
     }
     else
     {
-        cmdList = CreateCmdList(commandAllocator.Get());
+        cmdList = CreateCmdList(commandAllocator.Get(), type);
     }
 
     // Associate the command allocator with the command list so that it can be

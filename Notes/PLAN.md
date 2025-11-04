@@ -41,3 +41,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - [ ] Output Buffers
 - [ ] Furnace Test
 - [ ] RMSE Convergence Graph
+
+## Notes
+
+Look into russian roulette 

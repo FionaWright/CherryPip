@@ -27,6 +27,11 @@ struct PtConfig
     bool ReadbackEnabled = false;
 };
 
+struct Rgba8
+{
+    uint8_t r, g, b, a;
+};
+
 class PathTracer : public App
 {
 public:
@@ -34,11 +39,15 @@ public:
     void OnInit(D3D* d3d) override;
     void OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList) override;
 
-    const char* GetName() const override { return "Path Tracer"; }
+    [[nodiscard]] const char* GetName() const override { return "Path Tracer"; }
 
     float m_AspectRatio;
 
 private:
+    void loadAssets(D3D* d3d);
+    void populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
+    void GUI();
+
     Heap m_heap;
     CameraController m_camera;
 
@@ -52,9 +61,7 @@ private:
     XMMATRIX m_projMatrix;
     ReadbackBuffer m_readbackBuffer;
 
-    void loadAssets(D3D* d3d);
-    void populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
-    void GUI();
+    std::vector<Rgba8> m_readbackRgbaData;
 };
 
 

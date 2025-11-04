@@ -36,23 +36,24 @@ public:
     static bool IsAltHeld();
 
     static bool IsMouseLeftDown();
-    static bool IsMouseLeft();
+    static bool IsMouseLeft() { return ms_mouseLeftState; }
     static bool IsMouseLeftUp();
 
     static bool IsMouseRightDown();
-    static bool IsMouseRight();
+    static bool IsMouseRight() { return ms_mouseRightState;}
     static bool IsMouseRightUp();
 
     static bool IsMouseMiddleDown();
-    static bool IsMouseMiddle();
+    static bool IsMouseMiddle() { return ms_mouseMiddleState;}
     static bool IsMouseMiddleUp();
 
-    static XMFLOAT2 GetMousePos();
+    static XMFLOAT2 GetMousePos() { return ms_mousePos; }
     static XMFLOAT2 GetMousePosDelta();
-    static XMFLOAT2 GetMousePosClient();
+    static XMFLOAT2 GetMousePosOnLastClick() { return ms_mousePosOnLastClick; }
+    static XMFLOAT2 GetMousePosClient() { return ms_mousePosClient; }
     static XMFLOAT2 GetMousePosClientDelta();
 
-    static float GetMouseWheelDelta();
+    static float GetMouseWheelDelta() { return ms_mouseWheelDelta; }
 
     static void ProgressFrame();
 
@@ -62,6 +63,7 @@ private:
 
     static XMFLOAT2 ms_mousePos;
     static XMFLOAT2 ms_mousePosLastFrame;
+    static XMFLOAT2 ms_mousePosOnLastClick;
 
     static XMFLOAT2 ms_mousePosClient;
     static XMFLOAT2 ms_mousePosClientLastFrame;

@@ -12,6 +12,7 @@
 #include "CBV.h"
 #include "HWI/BLAS.h"
 #include "HWI/Material.h"
+#include "System/Input.h"
 #include "System/ModelLoaderGLTF.h"
 
 PathTracer::PathTracer()
@@ -161,7 +162,18 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
     m_ptContext.Render(cmdList, m_rootSig->Get(), m_shader->GetPSO(), &m_camera.GetCamera(), m_material.get(), m_projMatrix, m_ptConfig);
 
     if (m_ptConfig.ReadbackEnabled)
+    {
         m_readbackBuffer.Readback(d3d, cmdList);
+        const uint8_t* byteData = m_readbackBuffer.GetData();
+        const auto* rgbaData = reinterpret_cast<const Rgba8*>(byteData);
+        const XMFLOAT2 mousePos = Input::GetMousePosOnLastClick();
+        if (mousePos.x != -1 && mousePos.y != -1)
+        {
+            const auto pixelIdx = static_cast<size_t>(mousePos.y * static_cast<float>(Config::GetSystem().RtvWidth) + (mousePos.x - static_cast<float>(Config::GetSystem().WindowAppGuiWidth)));
+            const Rgba8 pixelData = rgbaData[pixelIdx];
+            m_readbackRgbaData.push_back(pixelData);
+        }
+    }
 
     GUI();
 }
@@ -204,6 +216,31 @@ void PathTracer::GUI()
     ImGui::Indent(IM_GUI_INDENTATION);
 
     ptNeedsReset |= ImGui::Button("Reset PathTracer##xx");
+
+    ImGui::Unindent(IM_GUI_INDENTATION);
+    ImGui::SeparatorText("Debug##xx");
+    ImGui::Indent(IM_GUI_INDENTATION);
+
+    const bool prevReadbackEnabled = m_ptConfig.ReadbackEnabled;
+    ImGui::Checkbox("Enable Readback##xx", &m_ptConfig.ReadbackEnabled);
+    if (!prevReadbackEnabled && m_ptConfig.ReadbackEnabled)
+        m_readbackRgbaData.clear();
+
+    if (!m_readbackRgbaData.empty() && ImGui::TreeNode("Readback Data##xx"))
+    {
+        ImGui::Indent(IM_GUI_INDENTATION);
+
+        for (int i = 0; i < m_readbackRgbaData.size(); i++)
+        {
+            const float r = static_cast<float>(m_readbackRgbaData[i].r) / 255.0f;
+            const float b = static_cast<float>(m_readbackRgbaData[i].g) / 255.0f;
+            const float g = static_cast<float>(m_readbackRgbaData[i].b) / 255.0f;
+            const float a = static_cast<float>(m_readbackRgbaData[i].a) / 255.0f;
+            ImGui::Text("%i: (%f, %f, %f, %f)", i, r, g, b, a);
+        }
+
+        ImGui::Unindent(IM_GUI_INDENTATION);
+    }
 
     if (ptNeedsReset)
         m_ptContext.Reset();

@@ -60,6 +60,7 @@ private:
 
     XMMATRIX m_projMatrix;
     ReadbackBuffer m_readbackBuffer;
+    XMFLOAT2 m_mousePosOnClick = { -1, -1 };
 
     std::vector<Rgba8> m_readbackRgbaData;
 };

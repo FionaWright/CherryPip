@@ -163,15 +163,25 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
 
     if (m_ptConfig.ReadbackEnabled)
     {
-        m_readbackBuffer.Readback(d3d, cmdList);
-        const uint8_t* byteData = m_readbackBuffer.GetData();
-        const auto* rgbaData = reinterpret_cast<const Rgba8*>(byteData);
-        const XMFLOAT2 mousePos = Input::GetMousePosOnLastClick();
-        if (mousePos.x != -1 && mousePos.y != -1)
+        if (Input::IsMouseLeftDown())
         {
-            const auto pixelIdx = static_cast<size_t>(mousePos.y * static_cast<float>(Config::GetSystem().RtvWidth) + (mousePos.x - static_cast<float>(Config::GetSystem().WindowAppGuiWidth)));
+            const XMFLOAT2 mousePos = Input::GetMousePos();
+            const uint32_t minX = Config::GetSystem().WindowAppGuiWidth;
+            const uint32_t maxX = Config::GetSystem().WindowAppGuiWidth + Config::GetSystem().RtvWidth;
+            if (mousePos.x >= minX && mousePos.x < maxX)
+                m_mousePosOnClick = { mousePos.x - minX, mousePos.y };
+        }
+
+        if (m_mousePosOnClick.x != -1 && m_mousePosOnClick.y != -1)
+        {
+            m_readbackBuffer.Readback(d3d, cmdList);
+            const uint8_t* byteData = m_readbackBuffer.GetData();
+            const auto* rgbaData = reinterpret_cast<const Rgba8*>(byteData);
+            const auto pixelIdx = static_cast<size_t>(m_mousePosOnClick.y * static_cast<float>(Config::GetSystem().RtvWidth) + m_mousePosOnClick.x);
             const Rgba8 pixelData = rgbaData[pixelIdx];
             m_readbackRgbaData.push_back(pixelData);
+
+            m_mousePosOnClick = { -1, -1};
         }
     }
 
@@ -233,13 +243,14 @@ void PathTracer::GUI()
         for (int i = 0; i < m_readbackRgbaData.size(); i++)
         {
             const float r = static_cast<float>(m_readbackRgbaData[i].r) / 255.0f;
-            const float b = static_cast<float>(m_readbackRgbaData[i].g) / 255.0f;
-            const float g = static_cast<float>(m_readbackRgbaData[i].b) / 255.0f;
+            const float g = static_cast<float>(m_readbackRgbaData[i].g) / 255.0f;
+            const float b = static_cast<float>(m_readbackRgbaData[i].b) / 255.0f;
             const float a = static_cast<float>(m_readbackRgbaData[i].a) / 255.0f;
-            ImGui::Text("%i: (%f, %f, %f, %f)", i, r, g, b, a);
+            ImGui::Text("%i: (%.3f, %.3f, %.3f, %.3f)", i, r, g, b, a);
         }
 
         ImGui::Unindent(IM_GUI_INDENTATION);
+        ImGui::TreePop();
     }
 
     if (ptNeedsReset)

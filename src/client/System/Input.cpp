@@ -11,7 +11,6 @@ unordered_map<KeyCode::Key, bool> Input::ms_keysLastFrame;
 
 XMFLOAT2 Input::ms_mousePos;
 XMFLOAT2 Input::ms_mousePosLastFrame;
-XMFLOAT2 Input::ms_mousePosOnLastClick = { -1, -1 };
 
 XMFLOAT2 Input::ms_mousePosClient;
 XMFLOAT2 Input::ms_mousePosClientLastFrame;
@@ -38,11 +37,6 @@ void Input::RemoveKey(KeyCode::Key key)
 
 void Input::SetMouseLeftState(const bool state)
 {
-    if (state && !ms_mouseLeftState)
-    {
-        ms_mousePosOnLastClick = ms_mousePos;
-    }
-
     ms_mouseLeftState = state;
 }
 
@@ -56,17 +50,17 @@ void Input::SetMouseMiddleState(const bool state)
     ms_mouseMiddleState = state;
 }
 
-void Input::SetMousePos(XMFLOAT2 pos)
+void Input::SetMousePos(const XMFLOAT2 pos)
 {
     ms_mousePos = pos;
 }
 
-void Input::SetMousePosClient(XMFLOAT2 pos)
+void Input::SetMousePosClient(const XMFLOAT2 pos)
 {
     ms_mousePosClient = pos;
 }
 
-void Input::SetMouseWheelDelta(float delta)
+void Input::SetMouseWheelDelta(const float delta)
 {
     ms_mouseWheelDelta += delta;
 }

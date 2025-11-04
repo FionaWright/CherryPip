@@ -14,7 +14,7 @@ class ReadbackBuffer
 {
 public:
     void Init(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, Texture* texture);
-    void Readback(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
+    void Readback(D3D* d3d);
 
     const uint8_t* GetData() const { return m_readbackData.data(); }
 

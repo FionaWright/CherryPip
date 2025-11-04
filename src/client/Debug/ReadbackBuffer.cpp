@@ -38,14 +38,24 @@ void ReadbackBuffer::Init(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, Te
     ));
 }
 
-void ReadbackBuffer::Readback(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
+void ReadbackBuffer::Readback(D3D* d3d)
 {
-    m_assignedTex->Transition(cmdList, D3D12_RESOURCE_STATE_COPY_SOURCE);
+    auto cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
+
+    const D3D12_RESOURCE_STATES prevState = m_assignedTex->GetD12Resource()->GetCurrentState();
+    m_assignedTex->Transition(cmdList.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE);
 
     D3D12_TEXTURE_COPY_LOCATION srcLocation = {};
     srcLocation.pResource = m_assignedTex->GetD12Resource()->GetResource();
     srcLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
     srcLocation.SubresourceIndex = 0;
+
+    const D3D12_RESOURCE_DESC desc = m_assignedTex->GetDesc();
+    D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint;
+    UINT numRows;
+    UINT64 rowSizeInBytes, totalBytes;
+    d3d->GetDevice()->GetCopyableFootprints(&desc, 0, 1, 0,
+        &footprint, &numRows, &rowSizeInBytes, &totalBytes);
 
     D3D12_TEXTURE_COPY_LOCATION dstLocation = {};
     dstLocation.pResource = m_readbackBuffer.Get();
@@ -55,9 +65,14 @@ void ReadbackBuffer::Readback(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     dstLocation.PlacedFootprint.Footprint.Height = m_assignedTex->GetDesc().Height;
     dstLocation.PlacedFootprint.Footprint.Format = m_assignedTex->GetDesc().Format;
     dstLocation.PlacedFootprint.Footprint.Depth = 1;
-    dstLocation.PlacedFootprint.Footprint.RowPitch = m_assignedTex->GetDesc().Width * sizeof(uint8_t) * 4;
+    dstLocation.PlacedFootprint.Footprint.RowPitch = rowSizeInBytes;
 
     cmdList->CopyTextureRegion(&dstLocation, 0, 0, 0, &srcLocation, nullptr);
+
+    m_assignedTex->Transition(cmdList.Get(), prevState); // Can this be gotten rid of through a refactor of the command list system?
+
+    V(cmdList->Close());
+    d3d->ExecuteCommandList(cmdList.Get());
 
     d3d->Flush();
 

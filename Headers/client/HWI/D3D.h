@@ -35,7 +35,7 @@ class D3D
 public:
     ~D3D();
     void Init(size_t width, size_t height);
-    ComPtr<ID3D12GraphicsCommandList> CreateCmdList(ID3D12CommandAllocator* allocator) const;
+    ComPtr<ID3D12GraphicsCommandList> CreateCmdList(ID3D12CommandAllocator* allocator, D3D12_COMMAND_LIST_TYPE type) const;
 
     ID3D12Device* GetDevice() const { return m_device.Get(); }
     UINT GetFrameIndex() const { return m_frameIndex; }

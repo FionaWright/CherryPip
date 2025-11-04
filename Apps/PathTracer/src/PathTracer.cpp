@@ -172,16 +172,18 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
                 m_mousePosOnClick = { mousePos.x - minX, mousePos.y };
         }
 
-        if (m_mousePosOnClick.x != -1 && m_mousePosOnClick.y != -1)
+        const bool validMousePos = m_mousePosOnClick.x != -1 && m_mousePosOnClick.y != -1;
+        if (validMousePos && !(m_ptConfig.ReadbackEveryFrame && !m_readingBackEveryFrame))
         {
-            m_readbackBuffer.Readback(d3d, cmdList);
+            m_readbackBuffer.Readback(d3d);
             const uint8_t* byteData = m_readbackBuffer.GetData();
             const auto* rgbaData = reinterpret_cast<const Rgba8*>(byteData);
             const auto pixelIdx = static_cast<size_t>(m_mousePosOnClick.y * static_cast<float>(Config::GetSystem().RtvWidth) + m_mousePosOnClick.x);
             const Rgba8 pixelData = rgbaData[pixelIdx];
             m_readbackRgbaData.push_back(pixelData);
 
-            m_mousePosOnClick = { -1, -1};
+            if (!m_readingBackEveryFrame)
+                m_mousePosOnClick = { -1, -1};
         }
     }
 
@@ -233,28 +235,44 @@ void PathTracer::GUI()
 
     const bool prevReadbackEnabled = m_ptConfig.ReadbackEnabled;
     ImGui::Checkbox("Enable Readback##xx", &m_ptConfig.ReadbackEnabled);
-    if (!prevReadbackEnabled && m_ptConfig.ReadbackEnabled)
-        m_readbackRgbaData.clear();
 
-    if (!m_readbackRgbaData.empty() && ImGui::TreeNode("Readback Data##xx"))
+    if (m_ptConfig.ReadbackEnabled)
     {
-        ImGui::Indent(IM_GUI_INDENTATION);
+        if (!prevReadbackEnabled)
+            m_readbackRgbaData.clear();
 
-        for (int i = 0; i < m_readbackRgbaData.size(); i++)
+        ImGui::Checkbox("Readback Every Frame##xx", &m_ptConfig.ReadbackEveryFrame);
+        if (m_ptConfig.ReadbackEveryFrame)
+            ImGui::Text("%s", "(Starts on PathTracer Reset!)");
+
+        if (!m_readbackRgbaData.empty() && ImGui::TreeNode("Readback Data##xx"))
         {
-            const float r = static_cast<float>(m_readbackRgbaData[i].r) / 255.0f;
-            const float g = static_cast<float>(m_readbackRgbaData[i].g) / 255.0f;
-            const float b = static_cast<float>(m_readbackRgbaData[i].b) / 255.0f;
-            const float a = static_cast<float>(m_readbackRgbaData[i].a) / 255.0f;
-            ImGui::Text("%i: (%.3f, %.3f, %.3f, %.3f)", i, r, g, b, a);
-        }
+            ImGui::Indent(IM_GUI_INDENTATION);
 
-        ImGui::Unindent(IM_GUI_INDENTATION);
-        ImGui::TreePop();
+            for (int i = 0; i < m_readbackRgbaData.size(); i++)
+            {
+                const float r = static_cast<float>(m_readbackRgbaData[i].r) / 255.0f;
+                const float g = static_cast<float>(m_readbackRgbaData[i].g) / 255.0f;
+                const float b = static_cast<float>(m_readbackRgbaData[i].b) / 255.0f;
+                const float a = static_cast<float>(m_readbackRgbaData[i].a) / 255.0f;
+                ImGui::Text("%i: (%.3f, %.3f, %.3f, %.3f)", i, r, g, b, a);
+            }
+
+            ImGui::Unindent(IM_GUI_INDENTATION);
+            ImGui::TreePop();
+        }
     }
 
     if (ptNeedsReset)
+    {
         m_ptContext.Reset();
+        m_readbackRgbaData.clear();
+    }
+
+    if (ptNeedsReset && m_ptConfig.ReadbackEveryFrame)
+        m_readingBackEveryFrame = true;
+    else if (!m_ptConfig.ReadbackEveryFrame)
+        m_readingBackEveryFrame = false;
 
     ImGui::Unindent(IM_GUI_INDENTATION);
 

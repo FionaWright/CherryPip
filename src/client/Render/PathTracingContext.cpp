@@ -149,9 +149,9 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
         srcBox.top = 0;
         srcBox.bottom = Config::GetSystem().RtvHeight;
         cmdList->CopyTextureRegion(&dstLocation, 0, 0, 0, &srcLocation, &srcBox);
-
-        m_accumTexture->Transition(cmdList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
     }
+
+    m_accumTexture->Transition(cmdList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
     {
         cmdList->SetGraphicsRootSignature(rootSig);

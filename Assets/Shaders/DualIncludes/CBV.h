@@ -28,4 +28,18 @@ struct CbvPathTracing
     float2 Jitter;
 };
 
+enum DebugBuffer
+{
+    eNormals,
+    eBaseColor,
+    eHitPos,
+    eFirstBounceDirection,
+};
+
+struct CbvPathTracingDebug
+{
+    DebugBuffer DebugIdx;
+    uint3 p;
+};
+
 #endif

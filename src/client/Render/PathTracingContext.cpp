@@ -118,7 +118,7 @@ void PathTracingContext::FillMaterial(ID3D12Device* device, Material* material, 
 
 void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSig,
                                 ID3D12PipelineState* pso, const Camera* camera, const Material* material,
-                                const XMMATRIX& projMatrix, const PtConfig& config)
+                                const XMMATRIX& projMatrix, const PtConfig& config, int debugModeIdx)
 {
     GPU_SCOPE(cmdList, L"Path Tracing");
 
@@ -181,6 +181,14 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
         }
 
         material->UpdateCBV(0, &cbv);
+
+        if (debugModeIdx != -1)
+        {
+            CbvPathTracingDebug cbvDebug;
+            cbvDebug.DebugIdx = static_cast<DebugBuffer>(debugModeIdx);
+            material->UpdateCBV(1, &cbvDebug);
+        }
+
         material->SetDescriptorTables(cmdList);
 
         cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

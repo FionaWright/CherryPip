@@ -67,6 +67,9 @@ void PathTracer::loadAssets(D3D* d3d)
     m_rootSig = std::make_shared<RootSig>();
     m_rootSig->SmartInit(device, 1, 5, 1);
 
+    m_rootSigDebug = std::make_shared<RootSig>();
+    m_rootSigDebug->SmartInit(device, 2, 5, 2);
+
     // Init Shader/PSO
     {
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
@@ -83,6 +86,7 @@ void PathTracer::loadAssets(D3D* d3d)
         const D3D12_INPUT_LAYOUT_DESC ild = {inputElementDescs, _countof(inputElementDescs)};
 
         m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/CorePS.hlsl", ild, device, m_rootSig->Get());
+        m_shaderDebug->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/CoreDebugPS.hlsl", ild, device, m_rootSigDebug->Get());
     }
 
     std::shared_ptr<Texture> tex = std::make_shared<Texture>();
@@ -132,6 +136,12 @@ void PathTracer::loadAssets(D3D* d3d)
     m_material->AddCBV(device, &m_heap, sizeof(CbvPathTracing));
     m_ptContext.FillMaterial(device,  m_material.get(), &m_heap);
 
+    m_materialDebug = std::make_shared<Material>();
+    m_materialDebug->Init(&m_heap);
+    m_materialDebug->AddCBV(device, &m_heap, sizeof(CbvPathTracing));
+    m_materialDebug->AddCBV(device, &m_heap, sizeof(CbvPathTracingDebug));
+    m_ptContext.FillMaterial(device, m_materialDebug.get(), &m_heap);
+
     V(cmdList->Close());
     d3d->ExecuteCommandList(cmdList.Get());
     d3d->Flush();
@@ -158,7 +168,10 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
 
     m_heap.SetHeap(cmdList);
 
-    m_ptContext.Render(cmdList, m_rootSig->Get(), m_shader->GetPSO(), &m_camera.GetCamera(), m_material.get(), m_projMatrix, m_ptConfig);
+    ID3D12RootSignature* rootSig = m_ptConfig.DebugBufferModeEnabled ? m_rootSigDebug->Get() : m_rootSig->Get();
+    ID3D12PipelineState* pso = m_ptConfig.DebugBufferModeEnabled ? m_shaderDebug->GetPSO() : m_shader->GetPSO();
+    const Material* mat = m_ptConfig.DebugBufferModeEnabled ? m_materialDebug.get() : m_material.get();
+    m_ptContext.Render(cmdList, rootSig, pso, &m_camera.GetCamera(), mat, m_projMatrix, m_ptConfig);
 
     if (m_ptConfig.ReadbackEnabled)
         m_readbackBuffer.Readback(d3d, cmdList);
@@ -204,6 +217,36 @@ void PathTracer::GUI()
     ImGui::Indent(IM_GUI_INDENTATION);
 
     ptNeedsReset |= ImGui::Button("Reset PathTracer##xx");
+
+    ptNeedsReset |= ImGui::Checkbox("Debug Buffer Mode##xx", &m_ptConfig.DebugBufferModeEnabled);
+
+    static const std::vector<const char*> c_debugBufferStrMap = {
+        "Normals",
+        "Base Color",
+        "HitPos",
+        "First Bounce Direction"
+    };
+
+    if (m_ptConfig.DebugBufferModeEnabled)
+    {
+        const char* curSelection = c_debugBufferStrMap.at(m_ptConfig.DebugBufferIdx);
+        if (ImGui::BeginCombo("Debug Buffer##xx", curSelection))
+        {
+            for (size_t i = 0; i < c_debugBufferStrMap.size(); i++)
+            {
+                const bool isSelected = m_ptConfig.DebugBufferIdx == i;
+                if (ImGui::Selectable(c_debugBufferStrMap.at(i), isSelected))
+                {
+                    m_ptConfig.DebugBufferIdx = i;
+                }
+
+                if (isSelected)
+                    ImGui::SetItemDefaultFocus();
+            }
+
+            ImGui::EndCombo();
+        }
+    }
 
     if (ptNeedsReset)
         m_ptContext.Reset();

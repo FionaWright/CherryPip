@@ -18,11 +18,23 @@ StructuredBuffer<Vertex> gVertexMegaBuffer : register(t2);
 StructuredBuffer<uint3>  gIndexMegaBuffer  : register(t3);
 StructuredBuffer<PtMaterialData> gMaterials  : register(t4);
 RWTexture2D<float4> gAccum : register(u0);
+#ifdef DEBUG_BUFFER
+    ConstantBuffer<CbvPathTracingDebug> c_debug : register(b1);
+    RWTexture2D<float4> gDebugBuffer : register(u1);
+#endif
 
 #include "Path-Tracing/Hit.hlsli"
 #include "Path-Tracing/Miss.hlsli"
 
-float3 Trace(RayQuery<RAY_FLAGS> q, uint flags, uint instanceMask, RayDesc ray, inout uint rngState)
+float3 Trace(RayQuery<RAY_FLAGS> q,
+            uint flags,
+            uint instanceMask,
+            RayDesc ray,
+            inout uint rngState
+#ifdef DEBUG_BUFFER
+            , float2 inputPos
+#endif
+)
 {
     float3 color = float3(0, 0, 0);
     float3 throughput = float3(1, 1, 1);
@@ -50,6 +62,15 @@ float3 Trace(RayQuery<RAY_FLAGS> q, uint flags, uint instanceMask, RayDesc ray, 
         float3 hitPos = ray.Origin + ray.Direction * q.CommittedRayT();
         ray.Direction = newDir;
         ray.Origin = hitPos + ray.Direction * max(EPSILON, EPSILON * (float)q.CommittedRayT());
+
+#ifdef DEBUG_BUFFER
+        if (i == 0 && c_debug.DebugIdx == DebugBuffer::eNormals)
+            gDebugBuffer[inputPos] = float4(outNormal, 1);
+        else if (i == 0 && c_debug.DebugIdx == DebugBuffer::eFirstBounceDirection)
+            gDebugBuffer[inputPos] = float4(newDir, 1);
+        else if (i == 0 && c_debug.DebugIdx == DebugBuffer::eHitPos)
+            gDebugBuffer[inputPos] = float4(hitPos, 1);
+#endif
     }
 
     return color;
@@ -79,11 +100,21 @@ float4 PSMain(VsOut input) : SV_Target0
     ray.TMin = 0.001;
     ray.TMax = 1000.0;
 
+    input.position.x -= c_pathTracing.WindowAppGuiWidth;
+
     float3 colorSum = float3(0,0,0);
     for (uint i = 0; i < c_pathTracing.SPP; i++)
     {
         uint rngState = PrngSeed((uint2)input.position, i+4648387, c_pathTracing.NumFrames);
-        colorSum += Trace(q, flags, instanceMask, ray, rngState);
+        colorSum += Trace(q,
+                          flags,
+                          instanceMask,
+                          ray,
+                          rngState
+#ifdef DEBUG_BUFFER
+                          , input.position.xy
+#endif
+);
     }
 
     colorSum /= float(c_pathTracing.SPP);
@@ -92,7 +123,6 @@ float4 PSMain(VsOut input) : SV_Target0
     if (!c_pathTracing.AccumulationEnabled)
         return finalColor;
 
-    input.position.x -= c_pathTracing.WindowAppGuiWidth;
     float4 accumColor = gAccum.Load(input.position.xy);
 
     float N = (float)c_pathTracing.NumFrames + 1.0f;

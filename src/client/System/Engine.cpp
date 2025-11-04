@@ -164,7 +164,7 @@ void Engine::RenderGUI()
     ImGui::Indent(IM_GUI_INDENTATION);
 
 #ifdef _DEBUG
-    if (ImGui::Button("Reload All"))
+    if (ImGui::Button("Reload All Shaders"))
     {
         HotReloader::PendFullReload();
     }

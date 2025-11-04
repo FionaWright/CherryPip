@@ -1,6 +1,7 @@
 #ifndef PT_PATHTRACER_H
 #define PT_PATHTRACER_H
 
+#include "CBV.h"
 #include "Apps/App.h"
 #include "Debug/ReadbackBuffer.h"
 #include "HWI/Heap.h"
@@ -21,10 +22,12 @@ struct PtConfig
     uint32_t SPP = 1;
     uint32_t NumBounces = 1;
     uint32_t MaxFrameNum = 0;
+    uint32_t DebugBufferIdx = (uint32_t)DebugBuffer::eNormals;
     bool RngPaused = false;
     bool AccumulationEnabled = true;
     bool JitterEnabled = false;
     bool ReadbackEnabled = false;
+    bool DebugBufferModeEnabled = false;
 };
 
 class PathTracer : public App
@@ -42,9 +45,9 @@ private:
     Heap m_heap;
     CameraController m_camera;
 
-    std::shared_ptr<Material> m_material;
-    std::shared_ptr<Shader> m_shader;
-    std::shared_ptr<RootSig> m_rootSig;
+    std::shared_ptr<Material> m_material, m_materialDebug;
+    std::shared_ptr<Shader> m_shader, m_shaderDebug;
+    std::shared_ptr<RootSig> m_rootSig, m_rootSigDebug;
 
     PathTracingContext m_ptContext;
     PtConfig m_ptConfig;

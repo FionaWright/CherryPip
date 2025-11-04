@@ -37,7 +37,8 @@ public:
     void FillMaterial(ID3D12Device* device, Material* material, Heap* heap) const;
     void Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSig,
                 ID3D12PipelineState* pso,
-                const Camera* camera, const Material* material, const XMMATRIX& projMatrix, const PtConfig& config);
+                const Camera* camera, const Material* material, const XMMATRIX& projMatrix, const PtConfig& config,
+                int debugModeIdx = -1);
     void Reset();
 
     uint32_t GetFrameNum() const { return m_numFrames; }

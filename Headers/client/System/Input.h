@@ -49,7 +49,6 @@ public:
 
     static XMFLOAT2 GetMousePos() { return ms_mousePos; }
     static XMFLOAT2 GetMousePosDelta();
-    static XMFLOAT2 GetMousePosOnLastClick() { return ms_mousePosOnLastClick; }
     static XMFLOAT2 GetMousePosClient() { return ms_mousePosClient; }
     static XMFLOAT2 GetMousePosClientDelta();
 
@@ -63,7 +62,6 @@ private:
 
     static XMFLOAT2 ms_mousePos;
     static XMFLOAT2 ms_mousePosLastFrame;
-    static XMFLOAT2 ms_mousePosOnLastClick;
 
     static XMFLOAT2 ms_mousePosClient;
     static XMFLOAT2 ms_mousePosClientLastFrame;

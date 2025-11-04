@@ -104,6 +104,9 @@ void Engine::RenderGUI()
 
     ImGui::Text("Frame Time (ms): %f", m_frameTime * 1000.0);
 
+    ImGui::Text("Mouse: (%f, %f)", Input::GetMousePos().x, Input::GetMousePos().y);
+    ImGui::Text("Mouse Client: (%f, %f)", Input::GetMousePosClient().x, Input::GetMousePosClient().y);
+
     static bool pauseFPSQueue = false;
 
     const bool canUpdateQueue = m_fpsGuiQueue.size() == 0 || m_fps10ms != m_fpsGuiQueue.at(m_fpsGuiQueue.size() - 1);

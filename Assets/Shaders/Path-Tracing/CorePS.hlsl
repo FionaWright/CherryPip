@@ -99,6 +99,8 @@ float4 PSMain(VsOut input) : SV_Target0
     float4 mu = (finalColor - accumColor) / N;
     mu += accumColor;
 
+	mu = float4(input.uv.xy, 0, 1);
+
     if (c_pathTracing.UpdateAccumulation)
         gAccum[input.position.xy] = mu;
     return gAccum[input.position.xy];

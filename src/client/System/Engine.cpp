@@ -102,6 +102,8 @@ void Engine::RenderGUI()
     const std::string fpsTxt10 = "FPS (Over 100ms): " + std::to_string(m_fps100ms);
     ImGui::Text("%s", fpsTxt10.c_str());
 
+    ImGui::Text("Frame Time (ms): %f", m_frameTime * 1000.0);
+
     static bool pauseFPSQueue = false;
 
     const bool canUpdateQueue = m_fpsGuiQueue.size() == 0 || m_fps10ms != m_fpsGuiQueue.at(m_fpsGuiQueue.size() - 1);
@@ -175,6 +177,8 @@ void Engine::RenderGUI()
 
 void Engine::CalculateFPS(const double deltaTime)
 {
+    m_frameTime = deltaTime;
+
     m_fpsTimeSinceUpdate10ms += deltaTime;
     m_fpsTimeSinceUpdate50ms += deltaTime;
     m_fpsTimeSinceUpdate100ms += deltaTime;

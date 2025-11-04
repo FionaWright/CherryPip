@@ -83,6 +83,8 @@ void PathTracer::loadAssets(D3D* d3d)
         const D3D12_INPUT_LAYOUT_DESC ild = {inputElementDescs, _countof(inputElementDescs)};
 
         m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/CorePS.hlsl", ild, device, m_rootSig->Get());
+        m_shaderFurnaceClassic->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/CoreFurnaceTestClassicPS.hlsl", ild, device, m_rootSig->Get());
+        m_shaderFurnaceEmissive->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/CoreFurnaceTestEmissivePS.hlsl", ild, device, m_rootSig->Get());
     }
 
     std::shared_ptr<Texture> tex = std::make_shared<Texture>();
@@ -158,7 +160,14 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
 
     m_heap.SetHeap(cmdList);
 
-    m_ptContext.Render(cmdList, m_rootSig->Get(), m_shader->GetPSO(), &m_camera.GetCamera(), m_material.get(), m_projMatrix, m_ptConfig);
+    ID3D12PipelineState* pso = nullptr;
+    if (m_ptConfig.FurnaceTestClassicEnabled)
+        pso = m_shaderFurnaceClassic->GetPSO();
+    else if (m_ptConfig.FurnaceTestEmissiveEnabled)
+        pso = m_shaderFurnaceEmissive->GetPSO();
+    else
+        pso = m_shader->GetPSO();
+    m_ptContext.Render(cmdList, m_rootSig->Get(), pso, &m_camera.GetCamera(), m_material.get(), m_projMatrix, m_ptConfig);
 
     if (m_ptConfig.ReadbackEnabled)
         m_readbackBuffer.Readback(d3d, cmdList);
@@ -204,6 +213,15 @@ void PathTracer::GUI()
     ImGui::Indent(IM_GUI_INDENTATION);
 
     ptNeedsReset |= ImGui::Button("Reset PathTracer##xx");
+
+    static int e = 0;
+    ImGui::RadioButton("Furnace Test (Classic)", &e, 0);
+    ImGui::RadioButton("Furnace Test (Emissive)", &e, 1);
+    ImGui::RadioButton("Debug Buffer", &e, 2);
+
+    m_ptConfig.FurnaceTestClassicEnabled = e == 0;
+    m_ptConfig.FurnaceTestEmissiveEnabled = e == 1;
+    // TODO HERE
 
     if (ptNeedsReset)
         m_ptContext.Reset();

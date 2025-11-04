@@ -27,6 +27,20 @@ int Win32App::Run(const std::vector<App*>& apps, HINSTANCE hInstance, int nCmdSh
 {
     FileHelper::Init();
 
+    const int screenW = GetSystemMetrics(SM_CXSCREEN);
+
+    uint32_t totalWindowWidth = Config::GetSystem().RtvWidth + Config::GetSystem().WindowAppGuiWidth +
+        Config::GetSystem().WindowEngineGuiWidth;
+    if (totalWindowWidth > screenW)
+    {
+        const uint32_t diff = totalWindowWidth - screenW;
+        const uint32_t reduction = diff / 2;
+        Config::GetSystem().WindowAppGuiWidth -= reduction;
+        Config::GetSystem().WindowEngineGuiWidth -= reduction;
+        totalWindowWidth = Config::GetSystem().RtvWidth + Config::GetSystem().WindowAppGuiWidth +
+            Config::GetSystem().WindowEngineGuiWidth;
+    }
+
     // Initialize the window class.
     WNDCLASSEX windowClass = {0};
     windowClass.cbSize = sizeof(WNDCLASSEX);
@@ -39,8 +53,6 @@ int Win32App::Run(const std::vector<App*>& apps, HINSTANCE hInstance, int nCmdSh
     windowClass.hIconSm = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APP_ICON)); // small icon for title bar
     RegisterClassEx(&windowClass);
 
-    const uint32_t totalWindowWidth = Config::GetSystem().RtvWidth + Config::GetSystem().WindowAppGuiWidth +
-        Config::GetSystem().WindowEngineGuiWidth;
     const uint32_t totalWindowHeight = Config::GetSystem().RtvHeight;
     RECT windowRect = {0, 0, static_cast<LONG>(totalWindowWidth), static_cast<LONG>(Config::GetSystem().RtvHeight)};
     AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);

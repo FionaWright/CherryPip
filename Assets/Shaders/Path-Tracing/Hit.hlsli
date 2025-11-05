@@ -24,8 +24,16 @@ void Hit(inout uint rngState, out float3 materialColor, out float3 normal, out f
     normal = q.CommittedTriangleFrontFace() == 0 ? -normal : normal;
     normal = normalize(normal);
 
+#if defined(FURNACE_TEST_EMISSIVE)
+    materialColor = float3(0, 0, 0);
+    light = float3(1, 1, 1);
+#elif defined(FURNACE_TEST_CLASSIC)
+    materialColor = float3(1, 1, 1);
+    light = float3(0, 0, 0);
+#else
     materialColor = material.BaseColorFactor;
     light = material.EmissiveStrength;
+#endif
 }
 
 #endif

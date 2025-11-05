@@ -175,7 +175,6 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
     m_heap.SetHeap(cmdList);
 
     const bool debugMode = m_ptConfig.Mode == eOutputBuffer;
-
     ID3D12RootSignature* rootSig = debugMode ? m_rootSigDebug->Get() : m_rootSig->Get();
     const Material* mat = debugMode ? m_materialDebug.get() : m_material.get();
     const int debugBufferIdx = debugMode ? m_ptConfig.DebugBufferIdx : -1;
@@ -225,7 +224,8 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
         }
     }
 
-    GUI();
+    if (Config::GetSystem().AppGuiEnabled)
+        GUI();
 }
 
 #define IM_GUI_INDENTATION 20 // Temp

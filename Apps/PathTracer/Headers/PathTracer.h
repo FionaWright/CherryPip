@@ -12,6 +12,7 @@
 #include "Render/CameraController.h"
 #include "Render/Object.h"
 #include "Render/PathTracingContext.h"
+#include "Render/TextureRTV.h"
 #include "Render/Transform.h"
 
 class BLAS;
@@ -58,8 +59,9 @@ private:
     void loadAssets(D3D* d3d);
     void populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void GUI();
+    void readbackPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
 
-    Heap m_heap;
+    Heap m_heap, m_heapRTV;
     CameraController m_camera;
 
     std::shared_ptr<Material> m_material, m_materialDebug;
@@ -70,6 +72,8 @@ private:
 
     PathTracingContext m_ptContext;
     PtConfig m_ptConfig;
+
+    TextureRTV m_ptOutputTex;
 
     XMMATRIX m_projMatrix;
     ReadbackBuffer m_readbackBuffer;

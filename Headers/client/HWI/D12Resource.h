@@ -24,6 +24,8 @@ public:
     void UploadTexture(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const uint8_t** pData, size_t totalBytes, size_t rowPitch);
 
     void Transition(ID3D12GraphicsCommandList* cmdList, const D3D12_RESOURCE_STATES& newState, UINT subresourceIdx = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
+    void CopyTextureInto(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* srcResource, uint32_t dstX = 0, uint32_t dstY = 0,
+                         uint32_t dstZ = 0, const D3D12_BOX* srcBox = nullptr) const;
 
     ID3D12Resource* GetResource() const { return m_resource.Get(); }
     ID3D12Resource* GetUploadResource() const { return m_uploadResource.Get(); }

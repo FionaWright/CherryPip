@@ -6,19 +6,20 @@
 
 #include "Helper.h"
 
-void Heap::Init(ID3D12Device* device, size_t numDescriptors)
+void Heap::Init(ID3D12Device* device, const size_t numDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE type)
 {
-    m_descriptorIncSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    m_type = type;
+    m_descriptorIncSize = device->GetDescriptorHandleIncrementSize(m_type);
     m_heapSize = numDescriptors;
 
     D3D12_DESCRIPTOR_HEAP_DESC desc = {};
-    desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    desc.Type = m_type;
     desc.NumDescriptors = numDescriptors;
-    desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    desc.Flags = m_type == D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     desc.NodeMask = 0;
 
-    V(device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_cbvSrvUavHeap)));
-    V(m_cbvSrvUavHeap->SetName(L"CBV/SRV/UAV Heap"));
+    V(device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_heapResource)));
+    V(m_heapResource->SetName(L"Heap"));
 }
 
 UINT Heap::GetNextDescriptor()
@@ -37,27 +38,27 @@ void Heap::InitCBV(ID3D12Device* device, ID3D12Resource* resource, const size_t 
     cbvDesc.BufferLocation = resource->GetGPUVirtualAddress();
     cbvDesc.SizeInBytes = static_cast<UINT>(size);
 
-    const auto cbvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_cbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), idx,
+    const auto cbvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_heapResource->GetCPUDescriptorHandleForHeapStart(), idx,
                                                    m_descriptorIncSize);
     device->CreateConstantBufferView(&cbvDesc, cbvHandle);
 }
 
 void Heap::InitSRV(ID3D12Device* device, ID3D12Resource* resource, const D3D12_SHADER_RESOURCE_VIEW_DESC& desc, const UINT idx) const
 {
-    const auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_cbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), idx,
+    const auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_heapResource->GetCPUDescriptorHandleForHeapStart(), idx,
                                                    m_descriptorIncSize);
     device->CreateShaderResourceView(resource, &desc, handle);
 }
 
 void Heap::InitUAV(ID3D12Device* device, ID3D12Resource* resource, const D3D12_UNORDERED_ACCESS_VIEW_DESC& desc, const UINT idx) const
 {
-    const auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_cbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), idx,
+    const auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_heapResource->GetCPUDescriptorHandleForHeapStart(), idx,
                                                    m_descriptorIncSize);
     device->CreateUnorderedAccessView(resource, nullptr, &desc, handle);
 }
 
 void Heap::SetHeap(ID3D12GraphicsCommandList* cmdList) const
 {
-    ID3D12DescriptorHeap* heap = m_cbvSrvUavHeap.Get();
+    ID3D12DescriptorHeap* heap = m_heapResource.Get();
     cmdList->SetDescriptorHeaps(1, &heap);
 }

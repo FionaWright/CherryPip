@@ -139,3 +139,18 @@ void D12Resource::Transition(ID3D12GraphicsCommandList* cmdList, const D3D12_RES
     cmdList->ResourceBarrier(1, &barrier);
     m_currentState = newState;
 }
+
+void D12Resource::CopyTextureInto(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* srcResource, const uint32_t dstX, const uint32_t dstY, const uint32_t dstZ, const D3D12_BOX* srcBox) const
+{
+    D3D12_TEXTURE_COPY_LOCATION srcLocation = {};
+    srcLocation.pResource = srcResource;
+    srcLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+    srcLocation.SubresourceIndex = 0;
+
+    D3D12_TEXTURE_COPY_LOCATION dstLocation = {};
+    dstLocation.pResource = m_resource.Get();
+    dstLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+    dstLocation.SubresourceIndex = 0;
+
+    cmdList->CopyTextureRegion(&dstLocation, dstX, dstY, dstZ, &srcLocation, srcBox);
+}

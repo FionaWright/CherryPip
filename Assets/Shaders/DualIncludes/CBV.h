@@ -53,4 +53,10 @@ struct CbvPathTracingDebug
     uint3 p;
 };
 
+struct CbvHighlightPixel
+{
+    uint2 SelectedPixelCoords;
+    uint2 p;
+};
+
 #endif

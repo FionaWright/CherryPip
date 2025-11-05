@@ -19,7 +19,7 @@ public:
     void Fill(const ComPtr<ID3D12Resource>& resource, const D3D12_RESOURCE_STATES& initialState);
 
     void CreateHeap(ID3D12Device* device);
-    void UploadData(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const void* pData, size_t totalBytes);
+    void UploadBuffer(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const void* pData, size_t totalBytes);
     void UploadTexture(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const uint8_t* pData, size_t totalBytes, size_t rowPitch);
     void UploadTexture(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const uint8_t** pData, size_t totalBytes, size_t rowPitch);
 

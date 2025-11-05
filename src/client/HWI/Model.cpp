@@ -36,11 +36,11 @@ void Model::SetBuffers(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
 {
     const size_t vBufferSize = m_vertexCount * m_vertexInputSize;
     m_vertexBuffer->Transition(cmdList, D3D12_RESOURCE_STATE_COPY_DEST);
-    m_vertexBuffer->UploadData(device, cmdList, vBufferData, vBufferSize);
+    m_vertexBuffer->UploadBuffer(device, cmdList, vBufferData, vBufferSize);
 
     const size_t iBufferSize = m_indexCount * sizeof(int32_t);
     m_indexBuffer->Transition(cmdList, D3D12_RESOURCE_STATE_COPY_DEST);
-    m_indexBuffer->UploadData(device, cmdList, iBufferData, iBufferSize);
+    m_indexBuffer->UploadBuffer(device, cmdList, iBufferData, iBufferSize);
 }
 
 void Model::InitFullScreenTriangle(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)

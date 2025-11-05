@@ -4,6 +4,7 @@
 
 #ifndef CHERRYPIP_READBACKBUFFER_H
 #define CHERRYPIP_READBACKBUFFER_H
+#include <functional>
 #include <vector>
 
 #include "HWI/D3D.h"
@@ -15,11 +16,15 @@ class ReadbackBuffer
 public:
     void Init(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, Texture* texture);
     void Readback(D3D* d3d);
+    void ReadbackAndAlter(D3D* d3d, const std::function<void(std::vector<uint8_t>&)>& alterData);
 
     const uint8_t* GetData() const { return m_readbackData.data(); }
 
 private:
-    ComPtr<ID3D12Resource> m_readbackBuffer;
+    void copyToBuffer(D3D* d3d) const;
+    void copyToTexture(D3D* d3d) const;
+
+    D12Resource m_readbackBuffer;
     Texture* m_assignedTex = nullptr;
     size_t m_bufferSize = 0;
 

@@ -91,6 +91,7 @@ void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std
     const int rowPitch = m_width * (BitsPerPixel(format) / 8);
     const int totalBytes = rowPitch * m_height;
     m_resource.UploadTexture(device, cmdList, pData, totalBytes, rowPitch);
+    delete pData;
 
     if (desc.MipLevels > 1)
     {
@@ -145,6 +146,7 @@ void Texture::InitPNG(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, 
     const int rowPitch = m_width * (BitsPerPixel(format) / 8);
     const int totalBytes = rowPitch * m_height;
     m_resource.UploadTexture(device, cmdList, pData, totalBytes, rowPitch);
+    delete pData;
 
     if (desc.MipLevels > 1)
     {

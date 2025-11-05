@@ -121,8 +121,6 @@ float4 PSMain(VsOut input) : SV_Target0
     ray.TMin = 0.001;
     ray.TMax = 1000.0;
 
-    input.position.x -= c_pathTracing.WindowAppGuiWidth;
-
     float3 colorSum = float3(0,0,0);
     for (uint i = 0; i < c_pathTracing.SPP; i++)
     {

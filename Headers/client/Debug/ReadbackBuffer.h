@@ -14,19 +14,18 @@
 class ReadbackBuffer
 {
 public:
-    void Init(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, Texture* texture);
-    void Readback(D3D* d3d);
-    void ReadbackAndAlter(D3D* d3d, const std::function<void(std::vector<uint8_t>&)>& alterData);
+    void Init(const D3D* d3d, size_t width, size_t height);
+    void Readback(D3D* d3d, D12Resource* resource);
 
-    const uint8_t* GetData() const { return m_readbackData.data(); }
+    std::vector<uint8_t>& GetData() { return m_readbackData; }
 
 private:
-    void copyToBuffer(D3D* d3d) const;
-    void copyToTexture(D3D* d3d) const;
+    void copyToBuffer(D3D* d3d, D12Resource* resource) const;
 
     D12Resource m_readbackBuffer;
-    Texture* m_assignedTex = nullptr;
     size_t m_bufferSize = 0;
+
+    size_t m_width = 0, m_height = 0;
 
     std::vector<uint8_t> m_readbackData;
 };

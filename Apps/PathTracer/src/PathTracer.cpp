@@ -63,7 +63,7 @@ void PathTracer::loadAssets(D3D* d3d)
     const ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
     m_heap.Init(device, 10000, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-    m_heapRTV.Init(device, 1, D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    m_heapRTV.Init(device, 5, D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
     m_rootSig = std::make_shared<RootSig>();
     m_rootSig->SmartInit(device, 1, 5, 1);
@@ -130,8 +130,6 @@ void PathTracer::loadAssets(D3D* d3d)
 
     m_ptContext.Init(device, cmdList.Get(), tlas, blasList, materialData);
 
-    m_readbackBuffer.Init(d3d, cmdList.Get(), m_ptContext.GetAccumTexture());
-
     m_material = std::make_shared<Material>();
     m_material->Init(&m_heap);
     m_material->AddCBV(device, &m_heap, sizeof(CbvPathTracing));
@@ -143,8 +141,12 @@ void PathTracer::loadAssets(D3D* d3d)
     m_materialDebug->AddCBV(device, &m_heap, sizeof(CbvPathTracingDebug));
     m_ptContext.FillMaterial(device, m_materialDebug.get(), &m_heap);
 
-    m_ptOutputTex.Init(L"PT Output", device, &m_heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight,
+    m_ptOutputTextures[0].Init(L"PT Output PP0", device, &m_heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight,
                        Config::GetSystem().RTVFormat);
+    m_ptOutputTextures[1].Init(L"PT Output PP1", device, &m_heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight,
+                       Config::GetSystem().RTVFormat);
+
+    m_readbackBuffer.Init(d3d, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight);
 
     V(cmdList->Close());
     d3d->ExecuteCommandList(cmdList.Get());
@@ -162,8 +164,10 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
     cmdList->RSSetViewports(1, &viewport);
     cmdList->RSSetScissorRects(1, &scissorRect);
 
-    m_ptOutputTex.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    const UINT rtvIdx = m_ptOutputTex.GetHeapIdx();
+    TextureRTV* currPtOutputTex = &m_ptOutputTextures[m_ptOutputPingPong ? 1 : 0];
+
+    currPtOutputTex->GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    const UINT rtvIdx = currPtOutputTex->GetHeapIdx();
     const auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_heapRTV.GetCPUHandle(), rtvIdx, m_heapRTV.GetIncrementSize());
     cmdList->OMSetRenderTargets(1, &handle, FALSE, nullptr);
 
@@ -215,18 +219,21 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
 
     m_ptContext.Render(cmdList, rootSig, pso, &m_camera.GetCamera(), mat, m_projMatrix, m_ptConfig, debugBufferIdx);
 
-    D12Resource* rtv = d3d->GetRtv();
-    m_ptOutputTex.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_COPY_SOURCE);
-    rtv->Transition(cmdList, D3D12_RESOURCE_STATE_COPY_DEST);
-    ID3D12Resource* srcResource = m_ptOutputTex.GetD12Resource()->GetResource();
-    rtv->CopyTextureInto(cmdList, srcResource, Config::GetSystem().WindowAppGuiWidth);
-
     if (m_ptConfig.ReadbackEnabled)
     {
         readbackPass(d3d, cmdList);
     }
 
+    D12Resource* rtv = d3d->GetRtv();
+    currPtOutputTex->GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_COPY_SOURCE);
+    rtv->Transition(cmdList, D3D12_RESOURCE_STATE_COPY_DEST);
+    ID3D12Resource* srcResource = currPtOutputTex->GetD12Resource()->GetResource();
+    rtv->CopyTextureInto(cmdList, srcResource, Config::GetSystem().WindowAppGuiWidth);
+    currPtOutputTex->GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
     GUI();
+
+    m_ptOutputPingPong = !m_ptOutputPingPong;
 }
 
 #define IM_GUI_INDENTATION 20 // Temp
@@ -357,9 +364,9 @@ void PathTracer::GUI()
     }
 
     if (ptNeedsReset && m_ptConfig.ReadbackEveryFrame)
-        m_readingBackEveryFrame = true;
+        m_inReadbackEveryFrameProcess = true;
     else if (!m_ptConfig.ReadbackEveryFrame)
-        m_readingBackEveryFrame = false;
+        m_inReadbackEveryFrameProcess = false;
 
     ImGui::Unindent(IM_GUI_INDENTATION);
 
@@ -374,43 +381,67 @@ void PathTracer::readbackPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         const uint32_t minX = Config::GetSystem().WindowAppGuiWidth;
         const uint32_t maxX = Config::GetSystem().WindowAppGuiWidth + Config::GetSystem().RtvWidth;
         if (mousePos.x >= minX && mousePos.x < maxX)
+        {
             m_mousePosOnClick = {mousePos.x - minX, mousePos.y};
+            m_finishedReadingBack = false;
+        }
     }
 
     const bool validMousePos = m_mousePosOnClick.x != -1 && m_mousePosOnClick.y != -1;
-    if (validMousePos && !(m_ptConfig.ReadbackEveryFrame && !m_readingBackEveryFrame))
-    {
-        uint32_t px = static_cast<uint32_t>(m_mousePosOnClick.x);
-        uint32_t py = static_cast<uint32_t>(m_mousePosOnClick.y);
-        m_readbackBuffer.ReadbackAndAlter(d3d, [px, py](std::vector<uint8_t>& d)
+    if (!validMousePos)
+        return;
+
+    TextureRTV* nonCurrPtOutputTex = &m_ptOutputTextures[m_ptOutputPingPong ? 0 : 1];
+
+    m_readbackBuffer.Readback(d3d, nonCurrPtOutputTex->GetD12Resource());
+    std::vector<uint8_t>& byteData = m_readbackBuffer.GetData();
+
+    constexpr int c_BorderSize = 2;
+
+    // Color selected pixel
+    const uint32_t px = static_cast<uint32_t>(m_mousePosOnClick.x);
+    const uint32_t py = static_cast<uint32_t>(m_mousePosOnClick.y);
+    for (int dy = -c_BorderSize; dy <= c_BorderSize; dy++)
+        for (int dx = -c_BorderSize; dx <= c_BorderSize; dx++)
         {
-            constexpr int c_BorderSize = 2;
-            for (int dy = -c_BorderSize; dy <= c_BorderSize; dy++)
-                for (int dx = -c_BorderSize; dx <= c_BorderSize; dx++)
-                {
-                    if (dx == 0 && dy == 0)
-                        continue;
-                    const uint32_t x = px + dx;
-                    const uint32_t y = py + dy;
-                    const size_t pixelIdx = y * Config::GetSystem().RtvWidth + x;
-                    const size_t firstByte = pixelIdx * 4;
-                    if (firstByte + 3 >= d.size())
-                        continue;
-                    d.at(firstByte + 0) = 255u;
-                    d.at(firstByte + 1) = 0u;
-                    d.at(firstByte + 2) = 255u;
-                    d.at(firstByte + 3) = 255u;
-                }
-        });
+            if (dx == 0 && dy == 0)
+                continue;
+            const uint32_t x = px + dx;
+            const uint32_t y = py + dy;
+            const size_t pixelIdx = y * Config::GetSystem().RtvWidth + x;
+            const size_t firstByte = pixelIdx * 4;
+            if (firstByte + 3 >= byteData.size())
+                continue;
+            byteData.at(firstByte + 0) = 255u;
+            byteData.at(firstByte + 1) = 0u;
+            byteData.at(firstByte + 2) = 255u;
+            byteData.at(firstByte + 3) = 255u;
+        }
 
-        const uint8_t* byteData = m_readbackBuffer.GetData();
-        const auto* rgbaData = reinterpret_cast<const Rgba8*>(byteData);
-        const auto pixelIdx = static_cast<size_t>(m_mousePosOnClick.y * static_cast<float>(Config::GetSystem().RtvWidth)
-            + m_mousePosOnClick.x);
-        const Rgba8 pixelData = rgbaData[pixelIdx];
-        m_readbackRgbaData.push_back(pixelData);
+    nonCurrPtOutputTex->GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_COPY_DEST);
 
-        if (!m_readingBackEveryFrame)
-            m_mousePosOnClick = {-1, -1};
-    }
+    const D3D12_RESOURCE_DESC desc = nonCurrPtOutputTex->GetD12Resource()->GetDesc();
+    D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint;
+    UINT numRows;
+    UINT64 rowSizeInBytes, totalBytes;
+    d3d->GetDevice()->GetCopyableFootprints(&desc, 0, 1, 0,
+        &footprint, &numRows, &rowSizeInBytes, &totalBytes);
+
+    nonCurrPtOutputTex->GetD12Resource()->UploadTexture(d3d->GetDevice(), cmdList, byteData.data(), totalBytes, rowSizeInBytes);
+
+    nonCurrPtOutputTex->GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+    if (m_ptConfig.ReadbackEveryFrame && !m_inReadbackEveryFrameProcess)
+        return;
+
+    if (m_finishedReadingBack)
+        return;
+
+    const size_t pixelIdx = py * Config::GetSystem().RtvWidth + px;
+    const Rgba8* rgbaData = reinterpret_cast<const Rgba8*>(byteData.data());
+    const Rgba8 pixelData = rgbaData[pixelIdx];
+    m_readbackRgbaData.push_back(pixelData);
+
+    if (!m_inReadbackEveryFrameProcess)
+        m_finishedReadingBack = true;
 }

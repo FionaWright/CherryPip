@@ -23,7 +23,6 @@ struct PtConfig
     uint32_t NumBounces = 1;
     uint32_t MaxFrameNum = 0;
     uint32_t DebugBufferIdx = (uint32_t)DebugBuffer::eNormals;
-    bool RngPaused = false;
     bool AccumulationEnabled = true;
     bool JitterEnabled = false;
     bool ReadbackEnabled = false;

@@ -66,6 +66,8 @@ private:
     std::shared_ptr<Shader> m_shader, m_shaderDebug, m_shaderFurnaceClassic, m_shaderFurnaceEmissive;
     std::shared_ptr<RootSig> m_rootSig, m_rootSigDebug;
 
+    std::vector<D3D12_INPUT_ELEMENT_DESC> m_shaderILD;
+
     PathTracingContext m_ptContext;
     PtConfig m_ptConfig;
 

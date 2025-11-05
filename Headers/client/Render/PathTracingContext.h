@@ -27,8 +27,6 @@ using Microsoft::WRL::ComPtr;
 class BLAS;
 class TLAS;
 
-#define INITIAL_SEED 1887
-
 class PathTracingContext
 {
 public:
@@ -60,10 +58,6 @@ private:
     std::vector<PtInstanceData> m_instanceDataList;
     std::shared_ptr<D12Resource> m_instanceDataBuffer, m_vertexMegaBuffer, m_indexMegaBuffer, m_materialBuffer;
     UINT m_vertexMegaBufferCount = 0, m_indexMegaBufferCount = 0;
-
-    std::mt19937 m_rng;
-    std::uniform_int_distribution<UINT> m_rngDist;
-    UINT m_curRngState = INITIAL_SEED;
 };
 
 

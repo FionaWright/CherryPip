@@ -101,9 +101,6 @@ void PathTracingContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* c
     samplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
     samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
     samplers[0].ShaderRegister = 0;
-
-    m_rng = std::mt19937(INITIAL_SEED);
-    m_rngDist = std::uniform_int_distribution<UINT>(0, UINT32_MAX);
 }
 
 void PathTracingContext::FillMaterial(ID3D12Device* device, Material* material, Heap* heap) const
@@ -123,9 +120,6 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
     GPU_SCOPE(cmdList, L"Path Tracing");
 
     const bool frameIncAllowed = config.MaxFrameNum == 0 || m_numFrames < config.MaxFrameNum;
-
-    if (!config.RngPaused && frameIncAllowed)
-        m_curRngState = m_rngDist(m_rng);
 
     if (m_numFrames == 0)
     {
@@ -162,7 +156,6 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
         cbv.InvP = XMMatrixInverse(nullptr, projMatrix);
         cbv.InvV = XMMatrixInverse(nullptr, camera->GetViewMatrix());
         cbv.NumBounces = config.NumBounces;
-        cbv.Seed = m_curRngState;
         cbv.SPP = config.SPP;
         cbv.NumFrames = m_numFrames;
         cbv.AccumulationEnabled = config.AccumulationEnabled ? 1 : 0;
@@ -204,5 +197,4 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
 void PathTracingContext::Reset()
 {
     m_numFrames = 0;
-    m_rng = std::mt19937(INITIAL_SEED);
 }

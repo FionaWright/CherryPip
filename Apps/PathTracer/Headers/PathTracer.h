@@ -73,12 +73,14 @@ private:
     PathTracingContext m_ptContext;
     PtConfig m_ptConfig;
 
-    TextureRTV m_ptOutputTex;
+    TextureRTV m_ptOutputTextures[2];
+    bool m_ptOutputPingPong = false;
 
     XMMATRIX m_projMatrix;
     ReadbackBuffer m_readbackBuffer;
     XMFLOAT2 m_mousePosOnClick = { -1, -1 };
-    bool m_readingBackEveryFrame = false;
+    bool m_inReadbackEveryFrameProcess = false;
+    bool m_finishedReadingBack = true;
 
     std::vector<Rgba8> m_readbackRgbaData;
 };

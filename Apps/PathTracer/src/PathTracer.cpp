@@ -62,7 +62,6 @@ void PathTracer::loadAssets(D3D* d3d)
     ID3D12Device* device = d3d->GetDevice();
     const ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
-    m_shader = std::make_shared<Shader>();
     m_heap.Init(device, 10000);
 
     m_rootSig = std::make_shared<RootSig>();
@@ -86,7 +85,9 @@ void PathTracer::loadAssets(D3D* d3d)
         };
         const D3D12_INPUT_LAYOUT_DESC ild = {inputElementDescs, _countof(inputElementDescs)};
 
+        m_shader = std::make_shared<Shader>();
         m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/CorePS.hlsl", ild, device, m_rootSig->Get());
+        m_shaderDebug = std::make_shared<Shader>();
         m_shaderDebug->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/CoreDebugPS.hlsl", ild, device, m_rootSigDebug->Get());
     }
 
@@ -172,7 +173,8 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
     ID3D12RootSignature* rootSig = m_ptConfig.DebugBufferModeEnabled ? m_rootSigDebug->Get() : m_rootSig->Get();
     ID3D12PipelineState* pso = m_ptConfig.DebugBufferModeEnabled ? m_shaderDebug->GetPSO() : m_shader->GetPSO();
     const Material* mat = m_ptConfig.DebugBufferModeEnabled ? m_materialDebug.get() : m_material.get();
-    m_ptContext.Render(cmdList, rootSig, pso, &m_camera.GetCamera(), mat, m_projMatrix, m_ptConfig);
+    const int debugBufferIdx = m_ptConfig.DebugBufferModeEnabled ? m_ptConfig.DebugBufferIdx : -1;
+    m_ptContext.Render(cmdList, rootSig, pso, &m_camera.GetCamera(), mat, m_projMatrix, m_ptConfig, debugBufferIdx);
 
     if (m_ptConfig.ReadbackEnabled)
     {
@@ -220,7 +222,6 @@ void PathTracer::GUI()
 
     bool ptNeedsReset = false;
 
-    ImGui::Checkbox("RNG Paused##xx", &m_ptConfig.RngPaused);
     ptNeedsReset |= ImGui::Checkbox("Accumulation Enabled##xx", &m_ptConfig.AccumulationEnabled);
     ptNeedsReset |= ImGui::Checkbox("Jitter Enabled##xx", &m_ptConfig.JitterEnabled);
 
@@ -282,7 +283,11 @@ void PathTracer::GUI()
         "Normals",
         "Base Color",
         "HitPos",
-        "First Bounce Direction"
+        "First Bounce Direction",
+        "Miss / Hit",
+        "Hit Dist Ray 0",
+        "Hit Dist Ray 1",
+        "Material ID",
     };
 
     if (m_ptConfig.DebugBufferModeEnabled)

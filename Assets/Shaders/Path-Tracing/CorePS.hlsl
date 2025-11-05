@@ -21,6 +21,8 @@ RWTexture2D<float4> gAccum : register(u0);
 #ifdef DEBUG_BUFFER
     ConstantBuffer<CbvPathTracingDebug> c_debug : register(b1);
     RWTexture2D<float4> gDebugBuffer : register(u1);
+
+	#include "DebugPalette.hlsli"
 #endif
 
 #include "Path-Tracing/Hit.hlsli"
@@ -31,9 +33,6 @@ float3 Trace(RayQuery<RAY_FLAGS> q,
             uint instanceMask,
             RayDesc ray,
             inout uint rngState
-#ifdef DEBUG_BUFFER
-            , float2 inputPos
-#endif
 )
 {
     float3 color = float3(0, 0, 0);
@@ -47,6 +46,12 @@ float3 Trace(RayQuery<RAY_FLAGS> q,
 
         if (q.CommittedStatus() != COMMITTED_TRIANGLE_HIT)
         {
+#ifdef DEBUG_BUFFER
+        if (c_debug.DebugIdx == DebugBuffer::eMissHit)
+			return float3(0, 0, 0);
+		else if (i == 1 && c_debug.DebugIdx == DebugBuffer::eHitDistRay1)
+			return float3(1, 1, 1);
+#endif
             color += Miss(ray.Origin, ray.Direction);
             break;
         }
@@ -64,12 +69,22 @@ float3 Trace(RayQuery<RAY_FLAGS> q,
         ray.Origin = hitPos + ray.Direction * max(EPSILON, EPSILON * (float)q.CommittedRayT());
 
 #ifdef DEBUG_BUFFER
-        if (i == 0 && c_debug.DebugIdx == DebugBuffer::eNormals)
-            gDebugBuffer[inputPos] = float4(outNormal, 1);
-        else if (i == 0 && c_debug.DebugIdx == DebugBuffer::eFirstBounceDirection)
-            gDebugBuffer[inputPos] = float4(newDir, 1);
-        else if (i == 0 && c_debug.DebugIdx == DebugBuffer::eHitPos)
-            gDebugBuffer[inputPos] = float4(hitPos, 1);
+        if (c_debug.DebugIdx == DebugBuffer::eNormals)
+            return outNormal;
+        else if (c_debug.DebugIdx == DebugBuffer::eFirstBounceDirection)
+            return newDir;
+        else if (c_debug.DebugIdx == DebugBuffer::eHitPos)
+            return hitPos;
+		else if (c_debug.DebugIdx == DebugBuffer::eBaseColor)
+			return outMaterialColor;
+		else if (c_debug.DebugIdx == DebugBuffer::eMissHit)
+			return float3(1, 1, 1);
+		else if (c_debug.DebugIdx == DebugBuffer::eHitDistRay0)
+			return float(q.CommittedRayT()).xxx;
+		else if (i == 1 && c_debug.DebugIdx == DebugBuffer::eHitDistRay1)
+			return float(q.CommittedRayT()).xxx;
+		else if (c_debug.DebugIdx == DebugBuffer::eMaterialID)
+			return Palette(gInstances[q.CommittedInstanceIndex()].MaterialIdx).rgb;
 #endif
     }
 
@@ -111,9 +126,6 @@ float4 PSMain(VsOut input) : SV_Target0
                           instanceMask,
                           ray,
                           rngState
-#ifdef DEBUG_BUFFER
-                          , input.position.xy
-#endif
 );
     }
 

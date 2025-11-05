@@ -18,7 +18,7 @@ struct CbvPathTracing
     float3 CameraPositionWorld;
     uint NumBounces;
 
-    uint Seed;
+    uint RESERVED;
     uint SPP;
     uint NumFrames;
     uint AccumulationEnabled;
@@ -34,6 +34,16 @@ enum DebugBuffer
     eBaseColor,
     eHitPos,
     eFirstBounceDirection,
+    eMissHit,
+    eHitDistRay0,
+    eHitDistRay1,
+    eMaterialID,
+
+    // Unimplemented for now:
+    eDirectLighting,
+    eIndirectLighting,
+    eMetalness,
+    eRoughness
 };
 
 struct CbvPathTracingDebug

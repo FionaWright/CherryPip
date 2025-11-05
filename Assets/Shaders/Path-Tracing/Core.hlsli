@@ -49,8 +49,12 @@ float3 Trace(RayQuery<RAY_FLAGS> q,
 #ifdef DEBUG_BUFFER
         if (c_debug.DebugIdx == DebugBuffer::eMissHit)
 			return float3(0, 0, 0);
+        else if (c_debug.DebugIdx == DebugBuffer::eHitDistRay0)
+            return float3(1, 1, 1);
 		else if (i == 1 && c_debug.DebugIdx == DebugBuffer::eHitDistRay1)
 			return float3(1, 1, 1);
+		else if (c_debug.DebugIdx == DebugBuffer::eRNG)
+		    return PcgRand01(rngState).xxx;
 #endif
             color += Miss(ray.Origin, ray.Direction);
             break;
@@ -80,11 +84,13 @@ float3 Trace(RayQuery<RAY_FLAGS> q,
 		else if (c_debug.DebugIdx == DebugBuffer::eMissHit)
 			return float3(1, 1, 1);
 		else if (c_debug.DebugIdx == DebugBuffer::eHitDistRay0)
-			return float(q.CommittedRayT()).xxx;
+			return float(q.CommittedRayT()).xxx / 10.0;
 		else if (i == 1 && c_debug.DebugIdx == DebugBuffer::eHitDistRay1)
 			return float(q.CommittedRayT()).xxx;
 		else if (c_debug.DebugIdx == DebugBuffer::eMaterialID)
 			return Palette(gInstances[q.CommittedInstanceIndex()].MaterialIdx).rgb;
+		else if (c_debug.DebugIdx == DebugBuffer::eRNG)
+		    return PcgRand01(rngState).xxx;
 #endif
     }
 
@@ -130,15 +136,15 @@ float4 PSMain(VsOut input) : SV_Target0
     }
 
     colorSum /= float(c_pathTracing.SPP);
-    float4 finalColor = float4(colorSum, 1);
+    precise float4 finalColor = float4(colorSum, 1);
 
     if (!c_pathTracing.AccumulationEnabled)
         return finalColor;
 
-    float4 accumColor = gAccum.Load(input.position.xy);
+    precise float4 accumColor = gAccum.Load(input.position.xy);
 
-    float N = (float)c_pathTracing.NumFrames + 1.0f;
-    float4 mu = (finalColor - accumColor) / N;
+    precise float N = (float)c_pathTracing.NumFrames + 1.0f;
+    precise float4 mu = (finalColor - accumColor) / N;
     mu += accumColor;
 
     if (c_pathTracing.UpdateAccumulation)

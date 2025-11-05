@@ -38,6 +38,7 @@ enum DebugBuffer
     eHitDistRay0,
     eHitDistRay1,
     eMaterialID,
+    eRNG,
 
     // Unimplemented for now:
     eDirectLighting,

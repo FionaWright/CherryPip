@@ -40,6 +40,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - [x] Readback pixel value
 - [x] Output Buffers
 - [x] Furnace Test
+- [ ] Change PathTracer to render into a local buffer which debug can modify/use/etc which then gets copied/rendered to the back buffer
 - [ ] Plot readback data into histogram (MatPlotPlusPlus? Gnuplot?)
 - [ ] Fix whatever makes the furnace test fail
 - [ ] RMSE Convergence Graph 

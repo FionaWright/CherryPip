@@ -164,6 +164,7 @@ void Engine::RenderGUI()
 
     ImGui::Checkbox("VSync##xx", &Config::GetSystem().VSyncEnabled);
     ImGui::Checkbox("Sync GPU##xx", &Config::GetSystem().ForceSyncCpuGpu);
+    ImGui::Checkbox("App Gui Enabled##xx", &Config::GetSystem().AppGuiEnabled);
 
     ImGui::Spacing();
     ImGui::Unindent(IM_GUI_INDENTATION);

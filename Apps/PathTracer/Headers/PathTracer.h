@@ -28,6 +28,8 @@ struct PtConfig
     bool ReadbackEnabled = false;
     bool ReadbackEveryFrame = false;
     bool DebugBufferModeEnabled = false;
+    bool FurnaceTestClassicEnabled = false; // TODO: Combine with debug buffer mode into enum once branches merged
+    bool FurnaceTestEmissiveEnabled = false;
 };
 
 struct Rgba8
@@ -55,7 +57,7 @@ private:
     CameraController m_camera;
 
     std::shared_ptr<Material> m_material, m_materialDebug;
-    std::shared_ptr<Shader> m_shader, m_shaderDebug;
+    std::shared_ptr<Shader> m_shader, m_shaderDebug, m_shaderFurnaceClassic, m_shaderFurnaceEmissive;
     std::shared_ptr<RootSig> m_rootSig, m_rootSigDebug;
 
     PathTracingContext m_ptContext;

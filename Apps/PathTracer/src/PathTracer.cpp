@@ -89,6 +89,10 @@ void PathTracer::loadAssets(D3D* d3d)
         m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/CorePS.hlsl", ild, device, m_rootSig->Get());
         m_shaderDebug = std::make_shared<Shader>();
         m_shaderDebug->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/CoreDebugPS.hlsl", ild, device, m_rootSigDebug->Get());
+        m_shaderFurnaceClassic = std::make_shared<Shader>();
+        m_shaderFurnaceClassic->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/CoreFurnaceTestClassicPS.hlsl", ild, device, m_rootSig->Get());
+        m_shaderFurnaceEmissive = std::make_shared<Shader>();
+        m_shaderFurnaceEmissive->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/CoreFurnaceTestEmissivePS.hlsl", ild, device, m_rootSig->Get());
     }
 
     std::shared_ptr<Texture> tex = std::make_shared<Texture>();
@@ -171,8 +175,15 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
     m_heap.SetHeap(cmdList);
 
     ID3D12RootSignature* rootSig = m_ptConfig.DebugBufferModeEnabled ? m_rootSigDebug->Get() : m_rootSig->Get();
-    ID3D12PipelineState* pso = m_ptConfig.DebugBufferModeEnabled ? m_shaderDebug->GetPSO() : m_shader->GetPSO();
     const Material* mat = m_ptConfig.DebugBufferModeEnabled ? m_materialDebug.get() : m_material.get();
+    ID3D12PipelineState* pso = nullptr;
+    if (m_ptConfig.FurnaceTestClassicEnabled)
+        pso = m_shaderFurnaceClassic->GetPSO();
+    else if (m_ptConfig.FurnaceTestEmissiveEnabled)
+        pso = m_shaderFurnaceEmissive->GetPSO();
+    else
+        pso = m_shader->GetPSO();
+        
     const int debugBufferIdx = m_ptConfig.DebugBufferModeEnabled ? m_ptConfig.DebugBufferIdx : -1;
     m_ptContext.Render(cmdList, rootSig, pso, &m_camera.GetCamera(), mat, m_projMatrix, m_ptConfig, debugBufferIdx);
 
@@ -310,6 +321,15 @@ void PathTracer::GUI()
             ImGui::EndCombo();
         }
     }
+
+    static int e = 0;
+    ImGui::RadioButton("Furnace Test (Classic)", &e, 0);
+    ImGui::RadioButton("Furnace Test (Emissive)", &e, 1);
+    ImGui::RadioButton("Debug Buffer", &e, 2);
+
+    m_ptConfig.FurnaceTestClassicEnabled = e == 0;
+    m_ptConfig.FurnaceTestEmissiveEnabled = e == 1;
+    // TODO HERE
 
     if (ptNeedsReset)
     {

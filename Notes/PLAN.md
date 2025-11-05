@@ -14,9 +14,9 @@
 - [ ] Add destructors and scene switching
 - [ ] Clean up CMAKE
 - [x] Basic Ray-Tracer (Ray-Query)
-- [ ] Furnace Test
+- [x] Furnace Test
 - [x] Accumulation Buffer
-- [ ] PT Debug Views & Systems
+- [x] PT Debug Views & Systems
 - [ ] CI/CD
 - [ ] ...
 - [ ] Reflections
@@ -37,10 +37,12 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 ### The Big Debug Feature Expansion
 
-- [ ] Readback pixel value
-- [ ] Output Buffers
-- [ ] Furnace Test
-- [ ] RMSE Convergence Graph
+- [x] Readback pixel value
+- [x] Output Buffers
+- [x] Furnace Test
+- [ ] Plot readback data into histogram (MatPlotPlusPlus? Gnuplot?)
+- [ ] Fix whatever makes the furnace test fail
+- [ ] RMSE Convergence Graph 
 
 ## Notes
 

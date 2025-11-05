@@ -86,7 +86,7 @@ void PathTracer::loadAssets(D3D* d3d)
         const D3D12_INPUT_LAYOUT_DESC ild = {m_shaderILD.data(), static_cast<UINT>(m_shaderILD.size())};
 
         m_shader = std::make_shared<Shader>();
-        m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/CorePS.hlsl", ild, device, m_rootSig->Get());
+        m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/PS.hlsl", ild, device, m_rootSig->Get());
     }
 
     std::shared_ptr<Texture> tex = std::make_shared<Texture>();
@@ -185,7 +185,7 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
         {
             const D3D12_INPUT_LAYOUT_DESC ild = {m_shaderILD.data(), static_cast<UINT>(m_shaderILD.size())};
             m_shaderDebug = std::make_shared<Shader>();
-            m_shaderDebug->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/CoreDebugPS.hlsl", ild, d3d->GetDevice(), m_rootSigDebug->Get());
+            m_shaderDebug->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/DebugPS.hlsl", ild, d3d->GetDevice(), m_rootSigDebug->Get());
         }
         pso = m_shaderDebug->GetPSO();
         break;
@@ -194,7 +194,7 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
         {
             const D3D12_INPUT_LAYOUT_DESC ild = {m_shaderILD.data(), static_cast<UINT>(m_shaderILD.size())};
             m_shaderFurnaceClassic = std::make_shared<Shader>();
-            m_shaderFurnaceClassic->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/CoreFurnaceTestClassicPS.hlsl", ild, d3d->GetDevice(), m_rootSig->Get());
+            m_shaderFurnaceClassic->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/FurnaceClassicPS.hlsl", ild, d3d->GetDevice(), m_rootSig->Get());
         }
         pso = m_shaderFurnaceClassic->GetPSO();
         break;
@@ -203,7 +203,7 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
         {
             const D3D12_INPUT_LAYOUT_DESC ild = {m_shaderILD.data(), static_cast<UINT>(m_shaderILD.size())};
             m_shaderFurnaceEmissive = std::make_shared<Shader>();
-            m_shaderFurnaceEmissive->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/CoreFurnaceTestEmissivePS.hlsl", ild, d3d->GetDevice(), m_rootSig->Get());
+            m_shaderFurnaceEmissive->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/FurnaceEmissivePS.hlsl", ild, d3d->GetDevice(), m_rootSig->Get());
         }
         pso = m_shaderFurnaceEmissive->GetPSO();
         break;
@@ -289,14 +289,14 @@ void PathTracer::GUI()
     {
         ImGui::Indent(IM_GUI_INDENTATION);
 
-        if (!prevReadbackEnabled)
+        if (!prevReadbackEnabled || ImGui::Button("Clear##xx"))
             m_readbackRgbaData.clear();
 
         ImGui::Checkbox("Readback Every Frame##xx", &m_ptConfig.ReadbackEveryFrame);
         if (m_ptConfig.ReadbackEveryFrame)
             ImGui::Text("%s", "(Starts on PathTracer Reset!)");
 
-        if (!m_readbackRgbaData.empty() && ImGui::TreeNode("Readback Data##xx"))
+        if (ImGui::TreeNode("Readback Data##xx"))
         {
             ImGui::Indent(IM_GUI_INDENTATION);
 
@@ -325,6 +325,7 @@ void PathTracer::GUI()
         "Hit Dist Ray 0",
         "Hit Dist Ray 1",
         "Material ID",
+        "RNG",
     };
 
     static int e = 0;

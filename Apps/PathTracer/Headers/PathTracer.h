@@ -17,19 +17,25 @@
 class BLAS;
 using Microsoft::WRL::ComPtr;
 
+enum PathTracerMode : uint32_t
+{
+    eStandard,
+    eOutputBuffer,
+    eFurnaceTestClassic,
+    eFurnaceTestEmissive
+};
+
 struct PtConfig
 {
     uint32_t SPP = 1;
     uint32_t NumBounces = 1;
     uint32_t MaxFrameNum = 0;
-    uint32_t DebugBufferIdx = (uint32_t)DebugBuffer::eNormals;
+    PathTracerMode Mode = eStandard;
+    DebugBuffer DebugBufferIdx = DebugBuffer::eNormals;
     bool AccumulationEnabled = true;
     bool JitterEnabled = false;
     bool ReadbackEnabled = false;
     bool ReadbackEveryFrame = false;
-    bool DebugBufferModeEnabled = false;
-    bool FurnaceTestClassicEnabled = false; // TODO: Combine with debug buffer mode into enum once branches merged
-    bool FurnaceTestEmissiveEnabled = false;
 };
 
 struct Rgba8

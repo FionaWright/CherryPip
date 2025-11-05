@@ -174,17 +174,29 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
 
     m_heap.SetHeap(cmdList);
 
-    ID3D12RootSignature* rootSig = m_ptConfig.DebugBufferModeEnabled ? m_rootSigDebug->Get() : m_rootSig->Get();
-    const Material* mat = m_ptConfig.DebugBufferModeEnabled ? m_materialDebug.get() : m_material.get();
+    const bool debugMode = m_ptConfig.Mode == eOutputBuffer;
+
+    ID3D12RootSignature* rootSig = debugMode ? m_rootSigDebug->Get() : m_rootSig->Get();
+    const Material* mat = debugMode ? m_materialDebug.get() : m_material.get();
+    const int debugBufferIdx = debugMode ? m_ptConfig.DebugBufferIdx : -1;
+
     ID3D12PipelineState* pso = nullptr;
-    if (m_ptConfig.FurnaceTestClassicEnabled)
-        pso = m_shaderFurnaceClassic->GetPSO();
-    else if (m_ptConfig.FurnaceTestEmissiveEnabled)
-        pso = m_shaderFurnaceEmissive->GetPSO();
-    else
+    switch (m_ptConfig.Mode)
+    {
+    case eStandard:
         pso = m_shader->GetPSO();
-        
-    const int debugBufferIdx = m_ptConfig.DebugBufferModeEnabled ? m_ptConfig.DebugBufferIdx : -1;
+        break;
+    case eOutputBuffer:
+        pso = m_shaderDebug->GetPSO();
+        break;
+    case eFurnaceTestClassic:
+        pso = m_shaderFurnaceClassic->GetPSO();
+        break;
+    case eFurnaceTestEmissive:
+        pso = m_shaderFurnaceEmissive->GetPSO();
+        break;
+    }
+
     m_ptContext.Render(cmdList, rootSig, pso, &m_camera.GetCamera(), mat, m_projMatrix, m_ptConfig, debugBufferIdx);
 
     if (m_ptConfig.ReadbackEnabled)
@@ -263,6 +275,8 @@ void PathTracer::GUI()
 
     if (m_ptConfig.ReadbackEnabled)
     {
+        ImGui::Indent(IM_GUI_INDENTATION);
+
         if (!prevReadbackEnabled)
             m_readbackRgbaData.clear();
 
@@ -286,9 +300,9 @@ void PathTracer::GUI()
             ImGui::Unindent(IM_GUI_INDENTATION);
             ImGui::TreePop();
         }
+
+        ImGui::Unindent(IM_GUI_INDENTATION);
     }
-    
-    ptNeedsReset |= ImGui::Checkbox("Debug Buffer Mode##xx", &m_ptConfig.DebugBufferModeEnabled);
 
     static const std::vector<const char*> c_debugBufferStrMap = {
         "Normals",
@@ -301,7 +315,12 @@ void PathTracer::GUI()
         "Material ID",
     };
 
-    if (m_ptConfig.DebugBufferModeEnabled)
+    static int e = 0;
+    ImGui::Text("%s", "Path Tracer Mode:");
+    ImGui::Indent(IM_GUI_INDENTATION);
+    ptNeedsReset |= ImGui::RadioButton("Standard", &e, 0);
+    ptNeedsReset |= ImGui::RadioButton("Debug Buffer", &e, 1);
+    if (m_ptConfig.Mode == eOutputBuffer)
     {
         const char* curSelection = c_debugBufferStrMap.at(m_ptConfig.DebugBufferIdx);
         if (ImGui::BeginCombo("Debug Buffer##xx", curSelection))
@@ -311,7 +330,8 @@ void PathTracer::GUI()
                 const bool isSelected = m_ptConfig.DebugBufferIdx == i;
                 if (ImGui::Selectable(c_debugBufferStrMap.at(i), isSelected))
                 {
-                    m_ptConfig.DebugBufferIdx = i;
+                    m_ptConfig.DebugBufferIdx = static_cast<DebugBuffer>(i);
+                    ptNeedsReset = true;
                 }
 
                 if (isSelected)
@@ -321,15 +341,10 @@ void PathTracer::GUI()
             ImGui::EndCombo();
         }
     }
-
-    static int e = 0;
-    ImGui::RadioButton("Furnace Test (Classic)", &e, 0);
-    ImGui::RadioButton("Furnace Test (Emissive)", &e, 1);
-    ImGui::RadioButton("Debug Buffer", &e, 2);
-
-    m_ptConfig.FurnaceTestClassicEnabled = e == 0;
-    m_ptConfig.FurnaceTestEmissiveEnabled = e == 1;
-    // TODO HERE
+    ptNeedsReset |= ImGui::RadioButton("Furnace Test (Classic)", &e, 2);
+    ptNeedsReset |= ImGui::RadioButton("Furnace Test (Emissive)", &e, 3);
+    ImGui::Unindent(IM_GUI_INDENTATION);
+    m_ptConfig.Mode = static_cast<PathTracerMode>(e);
 
     if (ptNeedsReset)
     {

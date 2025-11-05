@@ -4,6 +4,8 @@
 
 #include "Debug/ReadbackBuffer.h"
 
+#include <functional>
+
 #include "Helper.h"
 #include "HWI/D3D.h"
 
@@ -28,19 +30,60 @@ void ReadbackBuffer::Init(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, Te
     readbackDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
     readbackDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 
+    ComPtr<ID3D12Resource> resource;
+
     V(d3d->GetDevice()->CreateCommittedResource(
         &heapProps,
         D3D12_HEAP_FLAG_NONE,
         &readbackDesc,
         D3D12_RESOURCE_STATE_COPY_DEST,
         nullptr,
-        IID_PPV_ARGS(&m_readbackBuffer)
+        IID_PPV_ARGS(&resource)
     ));
+
+    m_readbackBuffer.Fill(resource, D3D12_RESOURCE_STATE_COPY_DEST);
 }
 
 void ReadbackBuffer::Readback(D3D* d3d)
 {
-    auto cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
+    copyToBuffer(d3d);
+
+    m_readbackData.clear();
+    m_readbackData.resize(m_bufferSize);
+
+    void* mappedData = nullptr;
+    const D3D12_RANGE readRange = {0, m_bufferSize};
+    V(m_readbackBuffer.GetResource()->Map(0, &readRange, &mappedData));
+
+    memcpy(m_readbackData.data(), mappedData, m_bufferSize);
+
+    constexpr D3D12_RANGE writeRange = {0, 0};
+    m_readbackBuffer.GetResource()->Unmap(0, &writeRange);
+}
+
+void ReadbackBuffer::ReadbackAndAlter(D3D* d3d, const std::function<void(std::vector<uint8_t>&)>& alterData)
+{
+    copyToBuffer(d3d);
+
+    m_readbackData.clear();
+    m_readbackData.resize(m_bufferSize);
+
+    void* mappedData = nullptr;
+    const D3D12_RANGE readRange = {0, m_bufferSize};
+    V(m_readbackBuffer.GetResource()->Map(0, &readRange, &mappedData));
+
+    memcpy(m_readbackData.data(), mappedData, m_bufferSize);
+    alterData(m_readbackData);
+
+    constexpr D3D12_RANGE writeRange = {0, 0};
+    m_readbackBuffer.GetResource()->Unmap(0, &writeRange);
+
+    copyToTexture(d3d);
+}
+
+void ReadbackBuffer::copyToBuffer(D3D* d3d) const
+{
+    const auto cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
     const D3D12_RESOURCE_STATES prevState = m_assignedTex->GetD12Resource()->GetCurrentState();
     m_assignedTex->Transition(cmdList.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE);
@@ -58,7 +101,7 @@ void ReadbackBuffer::Readback(D3D* d3d)
         &footprint, &numRows, &rowSizeInBytes, &totalBytes);
 
     D3D12_TEXTURE_COPY_LOCATION dstLocation = {};
-    dstLocation.pResource = m_readbackBuffer.Get();
+    dstLocation.pResource = m_readbackBuffer.GetResource();
     dstLocation.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
     dstLocation.PlacedFootprint.Offset = 0;
     dstLocation.PlacedFootprint.Footprint.Width = m_assignedTex->GetDesc().Width;
@@ -75,15 +118,28 @@ void ReadbackBuffer::Readback(D3D* d3d)
     d3d->ExecuteCommandList(cmdList.Get());
 
     d3d->Flush();
+}
 
-    void* mappedData = nullptr;
-    const D3D12_RANGE readRange = {0, m_bufferSize};
-    V(m_readbackBuffer->Map(0, &readRange, &mappedData));
+void ReadbackBuffer::copyToTexture(D3D* d3d) const
+{
+    const auto cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
-    m_readbackData.clear();
-    m_readbackData.resize(m_bufferSize);
-    memcpy(m_readbackData.data(), mappedData, m_bufferSize);
+    const D3D12_RESOURCE_STATES prevState = m_assignedTex->GetD12Resource()->GetCurrentState();
+    m_assignedTex->Transition(cmdList.Get(), D3D12_RESOURCE_STATE_COPY_DEST);
 
-    constexpr D3D12_RANGE writeRange = {0, 0};
-    m_readbackBuffer->Unmap(0, &writeRange);
+    const D3D12_RESOURCE_DESC desc = m_assignedTex->GetDesc();
+    D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint;
+    UINT numRows;
+    UINT64 rowSizeInBytes, totalBytes;
+    d3d->GetDevice()->GetCopyableFootprints(&desc, 0, 1, 0,
+        &footprint, &numRows, &rowSizeInBytes, &totalBytes);
+
+    m_assignedTex->GetD12Resource()->UploadTexture(d3d->GetDevice(), cmdList.Get(), m_readbackData.data(), totalBytes, rowSizeInBytes);
+
+    m_assignedTex->Transition(cmdList.Get(), prevState); // Can this be gotten rid of through a refactor of the command list system?
+
+    V(cmdList->Close());
+    d3d->ExecuteCommandList(cmdList.Get());
+
+    d3d->Flush();
 }

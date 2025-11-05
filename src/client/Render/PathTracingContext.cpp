@@ -53,12 +53,12 @@ void PathTracingContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* c
     const UINT64 bufferSize = sizeof(PtInstanceData) * m_instanceDataList.size();
     m_instanceDataBuffer = std::make_shared<D12Resource>();
     m_instanceDataBuffer->InitBuffer(L"Path-Tracing Instance Data Buffer", device, bufferSize, D3D12_RESOURCE_STATE_COMMON);
-    m_instanceDataBuffer->UploadData(device, cmdList, m_instanceDataList.data(), bufferSize);
+    m_instanceDataBuffer->UploadBuffer(device, cmdList, m_instanceDataList.data(), bufferSize);
 
     const UINT64 mBufferSize = sizeof(PtMaterialData) * m_instanceDataList.size();
     m_materialBuffer = std::make_shared<D12Resource>();
     m_materialBuffer->InitBuffer(L"Path-Tracing Material Data Buffer", device, mBufferSize, D3D12_RESOURCE_STATE_COMMON);
-    m_materialBuffer->UploadData(device, cmdList, materials.data(), mBufferSize);
+    m_materialBuffer->UploadBuffer(device, cmdList, materials.data(), mBufferSize);
 
     size_t vByteOffset = 0;
     size_t iByteOffset = 0;

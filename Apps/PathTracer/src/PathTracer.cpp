@@ -225,7 +225,26 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
         const bool validMousePos = m_mousePosOnClick.x != -1 && m_mousePosOnClick.y != -1;
         if (validMousePos && !(m_ptConfig.ReadbackEveryFrame && !m_readingBackEveryFrame))
         {
-            m_readbackBuffer.Readback(d3d);
+            uint32_t px = static_cast<uint32_t>(m_mousePosOnClick.x);
+            uint32_t py = static_cast<uint32_t>(m_mousePosOnClick.y);
+            m_readbackBuffer.ReadbackAndAlter(d3d, [px, py](std::vector<uint8_t>& d) {
+                constexpr int c_BorderSize = 2;
+                for (int dy = -c_BorderSize; dy <= c_BorderSize; dy++)
+                    for (int dx = -c_BorderSize; dx <= c_BorderSize; dx++)
+                    {
+                        if (dx == 0 && dy == 0)
+                            continue;
+                        const uint32_t x = px + dx;
+                        const uint32_t y = py + dy;
+                        const size_t pixelIdx = y * Config::GetSystem().RtvWidth + x;
+                        const size_t firstByte = pixelIdx * 4;
+                        d.at(firstByte + 0) = 255u;
+                        d.at(firstByte + 1) = 0u;
+                        d.at(firstByte + 2) = 255u;
+                        d.at(firstByte + 3) = 255u;
+                    }
+            });
+
             const uint8_t* byteData = m_readbackBuffer.GetData();
             const auto* rgbaData = reinterpret_cast<const Rgba8*>(byteData);
             const auto pixelIdx = static_cast<size_t>(m_mousePosOnClick.y * static_cast<float>(Config::GetSystem().RtvWidth) + m_mousePosOnClick.x);

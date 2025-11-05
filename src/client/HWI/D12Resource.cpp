@@ -56,7 +56,7 @@ void D12Resource::CreateHeap(ID3D12Device* device)
                                       D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_uploadResource)));
 }
 
-void D12Resource::UploadData(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const void* pData,
+void D12Resource::UploadBuffer(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const void* pData,
                              const size_t totalBytes)
 {
     if (!m_uploadResource)
@@ -95,7 +95,6 @@ void D12Resource::UploadTexture(ID3D12Device* device, ID3D12GraphicsCommandList*
     constexpr UINT c_intermediateOffset = 0;
     UpdateSubresources(cmdList, m_resource.Get(), m_uploadResource.Get(), c_intermediateOffset, subresourceIndex, 1,
                        &subresource);
-    delete pData;
 }
 
 void D12Resource::UploadTexture(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const uint8_t** pData,

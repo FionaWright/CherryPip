@@ -53,7 +53,7 @@ void RasterViewer::loadAssets(D3D* d3d)
     std::shared_ptr<RootSig> rootSig = std::make_shared<RootSig>();
     std::shared_ptr<Shader> shader = std::make_shared<Shader>();
 
-    m_heap.Init(device, 10000);
+    m_heap.Init(device, 10000, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
     // Init Root Sig
     {

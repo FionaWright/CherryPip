@@ -62,7 +62,8 @@ void PathTracer::loadAssets(D3D* d3d)
     ID3D12Device* device = d3d->GetDevice();
     const ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
-    m_heap.Init(device, 10000);
+    m_heap.Init(device, 10000, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    m_heapRTV.Init(device, 1, D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
     m_rootSig = std::make_shared<RootSig>();
     m_rootSig->SmartInit(device, 1, 5, 1);
@@ -134,13 +135,16 @@ void PathTracer::loadAssets(D3D* d3d)
     m_material = std::make_shared<Material>();
     m_material->Init(&m_heap);
     m_material->AddCBV(device, &m_heap, sizeof(CbvPathTracing));
-    m_ptContext.FillMaterial(device,  m_material.get(), &m_heap);
+    m_ptContext.FillMaterial(device, m_material.get(), &m_heap);
 
     m_materialDebug = std::make_shared<Material>();
     m_materialDebug->Init(&m_heap);
     m_materialDebug->AddCBV(device, &m_heap, sizeof(CbvPathTracing));
     m_materialDebug->AddCBV(device, &m_heap, sizeof(CbvPathTracingDebug));
     m_ptContext.FillMaterial(device, m_materialDebug.get(), &m_heap);
+
+    m_ptOutputTex.Init(L"PT Output", device, &m_heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight,
+                       Config::GetSystem().RTVFormat);
 
     V(cmdList->Close());
     d3d->ExecuteCommandList(cmdList.Get());
@@ -151,20 +155,17 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
 {
     const float fRtvWidth = static_cast<float>(Config::GetSystem().RtvWidth);
     const float fRtvHeight = static_cast<float>(Config::GetSystem().RtvHeight);
-    const float fAppGuiWidth = static_cast<float>(Config::GetSystem().WindowAppGuiWidth);
 
-    // Render at offset for ImGui
-    const CD3DX12_VIEWPORT viewport(fAppGuiWidth, 0.0f, fRtvWidth, fRtvHeight);
-    const CD3DX12_RECT scissorRect(Config::GetSystem().WindowAppGuiWidth, 0,
-                                   Config::GetSystem().RtvWidth + Config::GetSystem().WindowAppGuiWidth,
-                                   Config::GetSystem().RtvHeight);
+    const CD3DX12_VIEWPORT viewport(0.0f, 0.0f, fRtvWidth, fRtvHeight);
+    const CD3DX12_RECT scissorRect(0, 0, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight);
 
     cmdList->RSSetViewports(1, &viewport);
     cmdList->RSSetScissorRects(1, &scissorRect);
 
-    const D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = d3d->GetRtvHandle();
-    cmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
-    cmdList->ClearRenderTargetView(d3d->GetRtvHandle(), Config::GetSystem().RtvClearColor, 1, &scissorRect);
+    m_ptOutputTex.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    const UINT rtvIdx = m_ptOutputTex.GetHeapIdx();
+    const auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_heapRTV.GetCPUHandle(), rtvIdx, m_heapRTV.GetIncrementSize());
+    cmdList->OMSetRenderTargets(1, &handle, FALSE, nullptr);
 
     m_heap.SetHeap(cmdList);
 
@@ -185,7 +186,8 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
         {
             const D3D12_INPUT_LAYOUT_DESC ild = {m_shaderILD.data(), static_cast<UINT>(m_shaderILD.size())};
             m_shaderDebug = std::make_shared<Shader>();
-            m_shaderDebug->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/DebugPS.hlsl", ild, d3d->GetDevice(), m_rootSigDebug->Get());
+            m_shaderDebug->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/DebugPS.hlsl", ild, d3d->GetDevice(),
+                                    m_rootSigDebug->Get());
         }
         pso = m_shaderDebug->GetPSO();
         break;
@@ -194,7 +196,8 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
         {
             const D3D12_INPUT_LAYOUT_DESC ild = {m_shaderILD.data(), static_cast<UINT>(m_shaderILD.size())};
             m_shaderFurnaceClassic = std::make_shared<Shader>();
-            m_shaderFurnaceClassic->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/FurnaceClassicPS.hlsl", ild, d3d->GetDevice(), m_rootSig->Get());
+            m_shaderFurnaceClassic->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/FurnaceClassicPS.hlsl", ild,
+                                             d3d->GetDevice(), m_rootSig->Get());
         }
         pso = m_shaderFurnaceClassic->GetPSO();
         break;
@@ -203,7 +206,8 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
         {
             const D3D12_INPUT_LAYOUT_DESC ild = {m_shaderILD.data(), static_cast<UINT>(m_shaderILD.size())};
             m_shaderFurnaceEmissive = std::make_shared<Shader>();
-            m_shaderFurnaceEmissive->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/FurnaceEmissivePS.hlsl", ild, d3d->GetDevice(), m_rootSig->Get());
+            m_shaderFurnaceEmissive->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/FurnaceEmissivePS.hlsl", ild,
+                                              d3d->GetDevice(), m_rootSig->Get());
         }
         pso = m_shaderFurnaceEmissive->GetPSO();
         break;
@@ -211,58 +215,26 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
 
     m_ptContext.Render(cmdList, rootSig, pso, &m_camera.GetCamera(), mat, m_projMatrix, m_ptConfig, debugBufferIdx);
 
+    D12Resource* rtv = d3d->GetRtv();
+    m_ptOutputTex.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_COPY_SOURCE);
+    rtv->Transition(cmdList, D3D12_RESOURCE_STATE_COPY_DEST);
+    ID3D12Resource* srcResource = m_ptOutputTex.GetD12Resource()->GetResource();
+    rtv->CopyTextureInto(cmdList, srcResource, Config::GetSystem().WindowAppGuiWidth);
+
     if (m_ptConfig.ReadbackEnabled)
     {
-        if (Input::IsMouseLeftDown())
-        {
-            const XMFLOAT2 mousePos = Input::GetMousePos();
-            const uint32_t minX = Config::GetSystem().WindowAppGuiWidth;
-            const uint32_t maxX = Config::GetSystem().WindowAppGuiWidth + Config::GetSystem().RtvWidth;
-            if (mousePos.x >= minX && mousePos.x < maxX)
-                m_mousePosOnClick = { mousePos.x - minX, mousePos.y };
-        }
-
-        const bool validMousePos = m_mousePosOnClick.x != -1 && m_mousePosOnClick.y != -1;
-        if (validMousePos && !(m_ptConfig.ReadbackEveryFrame && !m_readingBackEveryFrame))
-        {
-            uint32_t px = static_cast<uint32_t>(m_mousePosOnClick.x);
-            uint32_t py = static_cast<uint32_t>(m_mousePosOnClick.y);
-            m_readbackBuffer.ReadbackAndAlter(d3d, [px, py](std::vector<uint8_t>& d) {
-                constexpr int c_BorderSize = 2;
-                for (int dy = -c_BorderSize; dy <= c_BorderSize; dy++)
-                    for (int dx = -c_BorderSize; dx <= c_BorderSize; dx++)
-                    {
-                        if (dx == 0 && dy == 0)
-                            continue;
-                        const uint32_t x = px + dx;
-                        const uint32_t y = py + dy;
-                        const size_t pixelIdx = y * Config::GetSystem().RtvWidth + x;
-                        const size_t firstByte = pixelIdx * 4;
-                        d.at(firstByte + 0) = 255u;
-                        d.at(firstByte + 1) = 0u;
-                        d.at(firstByte + 2) = 255u;
-                        d.at(firstByte + 3) = 255u;
-                    }
-            });
-
-            const uint8_t* byteData = m_readbackBuffer.GetData();
-            const auto* rgbaData = reinterpret_cast<const Rgba8*>(byteData);
-            const auto pixelIdx = static_cast<size_t>(m_mousePosOnClick.y * static_cast<float>(Config::GetSystem().RtvWidth) + m_mousePosOnClick.x);
-            const Rgba8 pixelData = rgbaData[pixelIdx];
-            m_readbackRgbaData.push_back(pixelData);
-
-            if (!m_readingBackEveryFrame)
-                m_mousePosOnClick = { -1, -1};
-        }
+        readbackPass(d3d, cmdList);
     }
 
     GUI();
 }
 
 #define IM_GUI_INDENTATION 20 // Temp
+
 void PathTracer::GUI()
 {
-    Gui::BeginWindow("PathTracer", ImVec2(0, 0), ImVec2(Config::GetSystem().WindowAppGuiWidth, Config::GetSystem().RtvHeight));
+    Gui::BeginWindow("PathTracer", ImVec2(0, 0),
+                     ImVec2(Config::GetSystem().WindowAppGuiWidth, Config::GetSystem().RtvHeight));
 
     ImGui::SeparatorText("Stats##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
@@ -392,4 +364,53 @@ void PathTracer::GUI()
     ImGui::Unindent(IM_GUI_INDENTATION);
 
     Gui::EndWindow();
+}
+
+void PathTracer::readbackPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
+{
+    if (Input::IsMouseLeftDown())
+    {
+        const XMFLOAT2 mousePos = Input::GetMousePos();
+        const uint32_t minX = Config::GetSystem().WindowAppGuiWidth;
+        const uint32_t maxX = Config::GetSystem().WindowAppGuiWidth + Config::GetSystem().RtvWidth;
+        if (mousePos.x >= minX && mousePos.x < maxX)
+            m_mousePosOnClick = {mousePos.x - minX, mousePos.y};
+    }
+
+    const bool validMousePos = m_mousePosOnClick.x != -1 && m_mousePosOnClick.y != -1;
+    if (validMousePos && !(m_ptConfig.ReadbackEveryFrame && !m_readingBackEveryFrame))
+    {
+        uint32_t px = static_cast<uint32_t>(m_mousePosOnClick.x);
+        uint32_t py = static_cast<uint32_t>(m_mousePosOnClick.y);
+        m_readbackBuffer.ReadbackAndAlter(d3d, [px, py](std::vector<uint8_t>& d)
+        {
+            constexpr int c_BorderSize = 2;
+            for (int dy = -c_BorderSize; dy <= c_BorderSize; dy++)
+                for (int dx = -c_BorderSize; dx <= c_BorderSize; dx++)
+                {
+                    if (dx == 0 && dy == 0)
+                        continue;
+                    const uint32_t x = px + dx;
+                    const uint32_t y = py + dy;
+                    const size_t pixelIdx = y * Config::GetSystem().RtvWidth + x;
+                    const size_t firstByte = pixelIdx * 4;
+                    if (firstByte + 3 >= d.size())
+                        continue;
+                    d.at(firstByte + 0) = 255u;
+                    d.at(firstByte + 1) = 0u;
+                    d.at(firstByte + 2) = 255u;
+                    d.at(firstByte + 3) = 255u;
+                }
+        });
+
+        const uint8_t* byteData = m_readbackBuffer.GetData();
+        const auto* rgbaData = reinterpret_cast<const Rgba8*>(byteData);
+        const auto pixelIdx = static_cast<size_t>(m_mousePosOnClick.y * static_cast<float>(Config::GetSystem().RtvWidth)
+            + m_mousePosOnClick.x);
+        const Rgba8 pixelData = rgbaData[pixelIdx];
+        m_readbackRgbaData.push_back(pixelData);
+
+        if (!m_readingBackEveryFrame)
+            m_mousePosOnClick = {-1, -1};
+    }
 }

@@ -20,6 +20,7 @@ set(PROJECT_SOURCES
         src/client/Render/CameraController.cpp
         src/client/Render/Object.cpp
         src/client/Render/PathTracingContext.cpp
+        src/client/Render/TextureRTV.cpp
         src/client/Render/Transform.cpp
         src/client/System/Config.cpp
         src/client/System/Engine.cpp
@@ -56,6 +57,7 @@ set(PROJECT_HEADERS
         Headers/client/Render/CameraController.h
         Headers/client/Render/Object.h
         Headers/client/Render/PathTracingContext.h
+        Headers/client/Render/TextureRTV.h
         Headers/client/Render/Transform.h
         Headers/client/System/Config.h
         Headers/client/System/DebugOutputRedirector.h

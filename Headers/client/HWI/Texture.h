@@ -26,8 +26,8 @@ public:
                  size_t dataSize,
                  DXGI_FORMAT format, int arraySize, D3D12_RESOURCE_FLAGS flags);
 
-    void Transition(ID3D12GraphicsCommandList* cmdList, D3D12_RESOURCE_STATES newState,
-                    UINT subresourceIdx = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES)
+    void Transition(ID3D12GraphicsCommandList* cmdList, const D3D12_RESOURCE_STATES newState,
+                    const UINT subresourceIdx = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES)
     {
         m_resource.Transition(cmdList, newState, subresourceIdx);
     }

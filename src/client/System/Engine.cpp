@@ -65,6 +65,7 @@ void Engine::Render()
 
         const D3D12_CPU_DESCRIPTOR_HANDLE handle = m_d3d->GetRtvHandle();
         cmdList->OMSetRenderTargets(1, &handle, FALSE, nullptr);
+        rtv->Transition(cmdList.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET);
         Gui::RenderAllWindows(cmdList.Get());
     }
 

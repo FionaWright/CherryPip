@@ -16,4 +16,10 @@ with open(sys.argv[1], newline='') as csvfile:
 show_plot = sys.argv.__contains__('--show')
 save_plot = sys.argv.__contains__('--save')
 
-plot_histogram(data, num_bins=255, name="histogram_test", show_plot=show_plot, save_plot=save_plot)
+import numpy as np
+
+std = np.std(data, ddof=0)   # population standard deviation
+mean = np.mean(data)
+print(std, mean)
+
+plot_value_counts(data, name=f"histogram_test (std={std}, mean={mean})", show_plot=show_plot, save_plot=save_plot)

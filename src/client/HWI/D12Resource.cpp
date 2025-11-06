@@ -34,14 +34,25 @@ void D12Resource::Fill(const ComPtr<ID3D12Resource>& resource, const D3D12_RESOU
 }
 
 void D12Resource::InitBuffer(const LPCWSTR name, ID3D12Device* device, const size_t size,
-                             const D3D12_RESOURCE_STATES& initialState, const D3D12_RESOURCE_FLAGS flags)
+                             const D3D12_RESOURCE_FLAGS flags)
 {
     m_desc = CD3DX12_RESOURCE_DESC::Buffer(size, flags);
     const auto defaultHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-    V(device->CreateCommittedResource(&defaultHeapProp, D3D12_HEAP_FLAG_NONE, &m_desc, initialState, nullptr,
+    V(device->CreateCommittedResource(&defaultHeapProp, D3D12_HEAP_FLAG_NONE, &m_desc, D3D12_RESOURCE_STATE_COMMON, nullptr,
                                       IID_PPV_ARGS(&m_resource)));
     V(m_resource->SetName(name));
-    m_currentState = initialState;
+    m_currentState = D3D12_RESOURCE_STATE_COMMON;
+}
+
+void D12Resource::InitRTAS(const LPCWSTR name, ID3D12Device* device, const size_t size,
+                             const D3D12_RESOURCE_FLAGS flags)
+{
+    m_desc = CD3DX12_RESOURCE_DESC::Buffer(size, flags);
+    const auto defaultHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+    V(device->CreateCommittedResource(&defaultHeapProp, D3D12_HEAP_FLAG_NONE, &m_desc, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE, nullptr,
+                                      IID_PPV_ARGS(&m_resource)));
+    V(m_resource->SetName(name));
+    m_currentState = D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
 }
 
 void D12Resource::CreateHeap(ID3D12Device* device)
@@ -69,6 +80,7 @@ void D12Resource::UploadBuffer(ID3D12Device* device, ID3D12GraphicsCommandList* 
     memcpy(mappedData, pData, totalBytes);
     m_uploadResource->Unmap(0, nullptr);
 
+    Transition(cmdList, D3D12_RESOURCE_STATE_COPY_DEST);
     cmdList->CopyBufferRegion(m_resource.Get(), 0, m_uploadResource.Get(), 0, totalBytes);
 }
 

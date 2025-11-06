@@ -64,14 +64,16 @@ private:
     Heap m_heap, m_heapRTV;
     CameraController m_camera;
 
-    std::shared_ptr<Material> m_material, m_materialDebug;
+    std::shared_ptr<Material> m_material, m_materialDebug, m_materialFurnace;
     std::shared_ptr<Shader> m_shader, m_shaderDebug, m_shaderFurnaceClassic, m_shaderFurnaceEmissive;
     std::shared_ptr<RootSig> m_rootSig, m_rootSigDebug;
 
     std::vector<D3D12_INPUT_ELEMENT_DESC> m_shaderILD;
 
-    PathTracingContext m_ptContext;
+    PathTracingContext m_ptContext, m_ptContextFurnaceTest;
     PtConfig m_ptConfig;
+
+    std::shared_ptr<Model> m_furnaceTestSphere;
 
     TextureRTV m_ptOutputTex;
 

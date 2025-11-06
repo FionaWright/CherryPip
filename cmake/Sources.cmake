@@ -5,6 +5,7 @@ set(PROJECT_SOURCES
         Apps/RasterViewer/src/RasterViewer.cpp
         src/MathUtils.cpp
         src/client/Debug/GPUEventScoped.cpp
+        src/client/Debug/PythonExecutor.cpp
         src/client/Debug/ReadbackBuffer.cpp
         src/client/HWI/BLAS.cpp
         src/client/HWI/D12Resource.cpp
@@ -42,6 +43,7 @@ set(PROJECT_HEADERS
         Headers/Helper.h
         Headers/MathUtils.h
         Headers/client/Debug/GPUEventScoped.h
+        Headers/client/Debug/PythonExecutor.h
         Headers/client/Debug/ReadbackBuffer.h
         Headers/client/HWI/BLAS.h
         Headers/client/HWI/D12Resource.h

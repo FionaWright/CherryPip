@@ -43,22 +43,25 @@ void PathTracingContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* c
 
     const UINT64 vMegaBufferSize = sizeof(Vertex) * m_vertexMegaBufferCount;
     m_vertexMegaBuffer = std::make_shared<D12Resource>();
-    m_vertexMegaBuffer->InitBuffer(L"Path-Tracing Vertex Mega Buffer", device, vMegaBufferSize,
-                             D3D12_RESOURCE_STATE_COPY_DEST);
+    m_vertexMegaBuffer->InitBuffer(L"Path-Tracing Vertex Mega Buffer", device, vMegaBufferSize);
+    m_vertexMegaBuffer->Transition(cmdList, D3D12_RESOURCE_STATE_COPY_DEST);
 
     const UINT64 iMegaBufferSize = sizeof(uint32_t) * 3 * m_indexMegaBufferCount;
     m_indexMegaBuffer = std::make_shared<D12Resource>();
-    m_indexMegaBuffer->InitBuffer(L"Path-Tracing Index Mega Buffer", device, iMegaBufferSize, D3D12_RESOURCE_STATE_COPY_DEST);
+    m_indexMegaBuffer->InitBuffer(L"Path-Tracing Index Mega Buffer", device, iMegaBufferSize);
+    m_indexMegaBuffer->Transition(cmdList, D3D12_RESOURCE_STATE_COPY_DEST);
 
     const UINT64 bufferSize = sizeof(PtInstanceData) * m_instanceDataList.size();
     m_instanceDataBuffer = std::make_shared<D12Resource>();
-    m_instanceDataBuffer->InitBuffer(L"Path-Tracing Instance Data Buffer", device, bufferSize, D3D12_RESOURCE_STATE_COMMON);
+    m_instanceDataBuffer->InitBuffer(L"Path-Tracing Instance Data Buffer", device, bufferSize);
     m_instanceDataBuffer->UploadBuffer(device, cmdList, m_instanceDataList.data(), bufferSize);
+    m_instanceDataBuffer->Transition(cmdList, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
 
     const UINT64 mBufferSize = sizeof(PtMaterialData) * m_instanceDataList.size();
     m_materialBuffer = std::make_shared<D12Resource>();
-    m_materialBuffer->InitBuffer(L"Path-Tracing Material Data Buffer", device, mBufferSize, D3D12_RESOURCE_STATE_COMMON);
+    m_materialBuffer->InitBuffer(L"Path-Tracing Material Data Buffer", device, mBufferSize);
     m_materialBuffer->UploadBuffer(device, cmdList, materials.data(), mBufferSize);
+    m_materialBuffer->Transition(cmdList, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
 
     size_t vByteOffset = 0;
     size_t iByteOffset = 0;
@@ -82,6 +85,8 @@ void PathTracingContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* c
         vByteOffset += vBufferSize;
         iByteOffset += iBufferSize;
     }
+    m_vertexMegaBuffer->Transition(cmdList, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
+    m_indexMegaBuffer->Transition(cmdList, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
 
     m_fullScreenTriangle.InitFullScreenTriangle(device, cmdList);
 

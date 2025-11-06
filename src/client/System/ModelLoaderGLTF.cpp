@@ -340,8 +340,6 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     std::shared_ptr<Model> model = std::make_shared<Model>();
     loadModel(d3d, cmdList, localDirectory, asset, primitive, model.get());
 
-    fastgltf::Material& mat = (*asset)->materials[primitive.materialIndex.value_or(0)];
-
     UINT shaderIndex = -1;
 
     for (size_t i = 0; i < args.Overrides.size(); i++)
@@ -370,6 +368,35 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
 
     auto transform = std::make_shared<Transform>();
     *transform = args.Transform;
+
+    if (shaderIndex == -1)
+        shaderIndex = args.DefaultShaderIndex;
+
+    std::shared_ptr<Shader> shaderUsed = shaderIndex == -1 ? nullptr : args.Shaders[shaderIndex];
+
+    // TODO: Refactor
+    if ((*asset)->materials.empty())
+    {
+        std::string diffuseTexInput = assetDirectory + "Textures/WhitePOT.png";
+        std::shared_ptr<Texture> diffuseTex = std::make_shared<Texture>();
+        diffuseTex->Init(d3d->GetDevice(), cmdList, diffuseTexInput, DXGI_FORMAT_R8G8B8A8_UNORM,
+                         1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+
+        std::shared_ptr<Material> material = std::make_shared<Material>();
+        material->Init(heap);
+        material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices));
+        material->AddSRV(d3d->GetDevice(), heap, diffuseTex);
+
+        MaterialData materialData = {};
+        material->SetData(materialData);
+
+        auto obj = std::make_shared<Object>();
+        obj->Init(transform, shaderUsed, args.Root, model, material);
+        args.OutObjects.emplace_back(obj);
+        return;
+    }
+
+    fastgltf::Material& mat = (*asset)->materials[primitive.materialIndex.value_or(0)];
 
     std::variant<std::string, const std::byte*> diffuseTexInput = "";
     size_t dataSize = 0;
@@ -426,11 +453,6 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     memcpy(&materialData.BaseColorFactor, &mat.pbrData.baseColorFactor, sizeof(float) * 3);
     materialData.EmmissiveStrength = mat.emissiveStrength;
     material->SetData(materialData);
-
-    if (shaderIndex == -1)
-        shaderIndex = args.DefaultShaderIndex;
-
-    std::shared_ptr<Shader> shaderUsed = shaderIndex == -1 ? nullptr : args.Shaders[shaderIndex];
 
     auto obj = std::make_shared<Object>();
     obj->Init(transform, shaderUsed, args.Root, model, material);
@@ -591,31 +613,32 @@ void ModelLoaderGLTF::loadModelsFromNode(D3D* d3d, ID3D12GraphicsCommandList* cm
     size_t meshIndex = node.meshIndex.value();
     fastgltf::Mesh& mesh = (*asset)->meshes.at(meshIndex);
 
+    const uint32_t slashIdx = modelNameExtensionless.find_last_of('/');
+    const std::string assetDirectory = wstringToString(FileHelper::GetAssetsPath());
+    const std::string localDirectory = assetDirectory + "Models/" + modelNameExtensionless.substr(0, slashIdx) + "/";
+
     for (size_t i = 0; i < mesh.primitives.size(); i++)
     {
         std::string id = modelNameExtensionless + "::NODE(" + std::to_string(meshIndex) + ")::PRIMITIVE(" +
             std::to_string(i) + ")";
 
-        std::shared_ptr<Model> model;
-        /*if (!ResourceTracker::TryGetModel(id, model))
-        {
-            loadModel(d3d, cmdList, asset, mesh.primitives[i], model.get());
-        }*/
-        loadModel(d3d, cmdList, "Assets/Models/", asset, mesh.primitives[i], model.get());
+        std::shared_ptr<Model> model = std::make_shared<Model>();
+        loadModel(d3d, cmdList, localDirectory, asset, mesh.primitives[i], model.get());
         modelList.push_back(model);
     }
 }
 
 std::vector<std::shared_ptr<Model>> ModelLoaderGLTF::LoadModelsFromGLTF(D3D* d3d, ID3D12GraphicsCommandList* cmdList,
-                                                                        std::string modelName)
+                                                                        const std::wstring& modelName)
 {
-    std::string path = "Assets/Models/" + modelName;
+    const std::wstring wpath = FileHelper::GetAssetModelFullPath(modelName.c_str());
+    const std::string path = wstringToString(wpath);
 
     size_t dotIndex = modelName.find_last_of('.');
     if (dotIndex == std::string::npos)
         throw std::exception("Invalid model name");
 
-    std::string modelNameExtensionless = modelName.substr(0, dotIndex);
+    const std::string modelNameExtensionless = wstringToString(modelName.substr(0, dotIndex));
 
     fastgltf::Expected<fastgltf::GltfDataBuffer> data = fastgltf::GltfDataBuffer::FromPath(path);
     if (data.error() != fastgltf::Error::None)

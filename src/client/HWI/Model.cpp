@@ -17,7 +17,7 @@ void Model::Init(ID3D12Device* device, const size_t vertexCount, const size_t in
 
     const size_t vBufferSize = m_vertexCount * m_vertexInputSize;
     m_vertexBuffer = std::make_shared<D12Resource>();
-    m_vertexBuffer->InitBuffer(L"Vertex Buffer", device, vBufferSize, D3D12_RESOURCE_STATE_COMMON);
+    m_vertexBuffer->InitBuffer(L"Vertex Buffer", device, vBufferSize);
 
     m_vertexBufferView.BufferLocation = m_vertexBuffer->GetResource()->GetGPUVirtualAddress();
     m_vertexBufferView.SizeInBytes = static_cast<UINT>(vBufferSize);
@@ -25,7 +25,7 @@ void Model::Init(ID3D12Device* device, const size_t vertexCount, const size_t in
 
     const size_t iBufferSize = m_indexCount * sizeof(int32_t);
     m_indexBuffer = std::make_shared<D12Resource>();
-    m_indexBuffer->InitBuffer(L"Index Buffer", device, iBufferSize, D3D12_RESOURCE_STATE_COMMON);
+    m_indexBuffer->InitBuffer(L"Index Buffer", device, iBufferSize);
 
     m_indexBufferView.BufferLocation = m_indexBuffer->GetResource()->GetGPUVirtualAddress();
     m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
@@ -38,9 +38,13 @@ void Model::SetBuffers(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
     m_vertexBuffer->Transition(cmdList, D3D12_RESOURCE_STATE_COPY_DEST);
     m_vertexBuffer->UploadBuffer(device, cmdList, vBufferData, vBufferSize);
 
+    m_vertexBuffer->Transition(cmdList, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+
     const size_t iBufferSize = m_indexCount * sizeof(int32_t);
     m_indexBuffer->Transition(cmdList, D3D12_RESOURCE_STATE_COPY_DEST);
     m_indexBuffer->UploadBuffer(device, cmdList, iBufferData, iBufferSize);
+
+    m_indexBuffer->Transition(cmdList, D3D12_RESOURCE_STATE_INDEX_BUFFER);
 }
 
 void Model::InitFullScreenTriangle(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)

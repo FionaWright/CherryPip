@@ -41,8 +41,8 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - [x] Output Buffers
 - [x] Furnace Test
 - [x] Change PathTracer to render into a local buffer which debug can modify/use/etc which then gets copied/rendered to the back buffer
-- [ ] Plot readback data into histogram (I think I should write to a file -> Execute python script -> Use Bokeh)
-- [ ] Fix whatever makes the furnace test fail
+- [x] Plot readback data into histogram (I think I should write to a file -> Execute python script -> Use Bokeh)
+- [x] Fix whatever makes the furnace test fail
 - [ ] RMSE Convergence Graph 
 
 ## Notes

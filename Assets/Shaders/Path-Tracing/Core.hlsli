@@ -38,6 +38,10 @@ float3 Trace(RayQuery<RAY_FLAGS> q,
     float3 color = float3(0, 0, 0);
     float3 throughput = float3(1, 1, 1);
 
+#ifdef DEBUG_BUFFER
+    #include "Path-Tracing/DebugBuffersPreTrace.hlsli"
+#endif
+
     for (uint i = 0; i <= c_pathTracing.NumBounces; i++)
     {
         q.TraceRayInline(gTLAS, flags, instanceMask, ray);
@@ -47,14 +51,7 @@ float3 Trace(RayQuery<RAY_FLAGS> q,
         if (q.CommittedStatus() != COMMITTED_TRIANGLE_HIT)
         {
 #ifdef DEBUG_BUFFER
-        if (c_debug.DebugIdx == DebugBuffer::eMissHit)
-			return float3(0, 0, 0);
-        else if (c_debug.DebugIdx == DebugBuffer::eHitDistRay0)
-            return float3(1, 1, 1);
-		else if (i == 1 && c_debug.DebugIdx == DebugBuffer::eHitDistRay1)
-			return float3(1, 1, 1);
-		else if (c_debug.DebugIdx == DebugBuffer::eRNG)
-		    return PcgRand01(rngState).xxx;
+    #include "Path-Tracing/DebugBuffersOnMiss.hlsli"
 #endif
             color += Miss(ray.Origin, ray.Direction);
             break;
@@ -73,24 +70,7 @@ float3 Trace(RayQuery<RAY_FLAGS> q,
         ray.Origin = hitPos + ray.Direction * max(EPSILON, EPSILON * (float)q.CommittedRayT());
 
 #ifdef DEBUG_BUFFER
-        if (c_debug.DebugIdx == DebugBuffer::eNormals)
-            return outNormal;
-        else if (c_debug.DebugIdx == DebugBuffer::eFirstBounceDirection)
-            return newDir;
-        else if (c_debug.DebugIdx == DebugBuffer::eHitPos)
-            return hitPos;
-		else if (c_debug.DebugIdx == DebugBuffer::eBaseColor)
-			return outMaterialColor;
-		else if (c_debug.DebugIdx == DebugBuffer::eMissHit)
-			return float3(1, 1, 1);
-		else if (c_debug.DebugIdx == DebugBuffer::eHitDistRay0)
-			return float(q.CommittedRayT()).xxx / 10.0;
-		else if (i == 1 && c_debug.DebugIdx == DebugBuffer::eHitDistRay1)
-			return float(q.CommittedRayT()).xxx;
-		else if (c_debug.DebugIdx == DebugBuffer::eMaterialID)
-			return Palette(gInstances[q.CommittedInstanceIndex()].MaterialIdx).rgb;
-		else if (c_debug.DebugIdx == DebugBuffer::eRNG)
-		    return PcgRand01(rngState).xxx;
+    #include "Path-Tracing/DebugBuffersOnHit.hlsli"
 #endif
     }
 
@@ -125,6 +105,8 @@ float4 PSMain(VsOut input) : SV_Target0
     for (uint i = 0; i < c_pathTracing.SPP; i++)
     {
         uint rngState = PrngSeed((uint2)input.position, i+4648387, c_pathTracing.NumFrames);
+        //uint rngState = c_pathTracing.NumFrames;
+        //uint4 rngState = Pcg4d(uint4(input.position, i, c_pathTracing.NumFrames);
         colorSum += Trace(q,
                           flags,
                           instanceMask,

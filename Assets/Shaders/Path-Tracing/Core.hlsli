@@ -67,7 +67,7 @@ float3 Trace(RayQuery<RAY_FLAGS> q,
 
         float3 hitPos = ray.Origin + ray.Direction * q.CommittedRayT();
         ray.Direction = newDir;
-        ray.Origin = hitPos + ray.Direction * max(EPSILON, EPSILON * (float)q.CommittedRayT());
+        ray.Origin = hitPos + outNormal * EPSILON;
 
 #ifdef DEBUG_BUFFER
     #include "Path-Tracing/DebugBuffersOnHit.hlsli"
@@ -105,14 +105,11 @@ float4 PSMain(VsOut input) : SV_Target0
     for (uint i = 0; i < c_pathTracing.SPP; i++)
     {
         uint rngState = PrngSeed((uint2)input.position, i+4648387, c_pathTracing.NumFrames);
-        //uint rngState = c_pathTracing.NumFrames;
-        //uint4 rngState = Pcg4d(uint4(input.position, i, c_pathTracing.NumFrames);
         colorSum += Trace(q,
                           flags,
                           instanceMask,
                           ray,
-                          rngState
-);
+                          rngState);
     }
 
     colorSum /= float(c_pathTracing.SPP);
@@ -121,13 +118,14 @@ float4 PSMain(VsOut input) : SV_Target0
     if (!c_pathTracing.AccumulationEnabled)
         return finalColor;
 
-    precise float4 accumColor = gAccum.Load(input.position.xy);
+    uint2 pixelCoord = uint2(input.position.xy);
+    precise float4 accumColor = gAccum.Load(pixelCoord);
 
-    precise float N = (float)c_pathTracing.NumFrames + 1.0f;
-    precise float4 mu = (finalColor - accumColor) / N;
-    mu += accumColor;
+    float prevCount = (float)c_pathTracing.NumFrames;
+    float newCount  = prevCount + 1.0f;
+    float4 newAccum = (accumColor * prevCount + finalColor) / newCount;
 
     if (c_pathTracing.UpdateAccumulation)
-        gAccum[input.position.xy] = mu;
-    return gAccum[input.position.xy];
+        gAccum[pixelCoord] = newAccum;
+    return newAccum;
 }

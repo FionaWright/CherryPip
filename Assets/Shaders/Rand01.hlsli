@@ -13,7 +13,7 @@ uint wang_hash(uint a) {
     return a;
 }
 
-float PrngSeed(uint2 pixel, uint sample_i, uint temporal_i) {
+uint PrngSeed(uint2 pixel, uint sample_i, uint temporal_i) {
     // Random big primes
     // XOR the temporal frame number to avoid accumulated patterns
     return wang_hash(
@@ -39,6 +39,21 @@ float PcgRand01(inout uint state)
     uint z = (state ^ (state >> 15)) * (1u | state);
     z ^= z + (z ^ (z >> 7)) * (61u | z);
     return float((z ^ (z >> 14))) / UINT_MAX;
+}
+
+uint4 Pcg4d(uint4 v)
+{
+    v = v * 1664525u + 1013904223u;
+    v.x += v.y*v.w;
+    v.y += v.z*v.x;
+    v.z += v.x*v.y;
+    v.w += v.y*v.z;
+    v ^= v >> 16u;
+    v.x += v.y*v.w;
+    v.y += v.z*v.x;
+    v.z += v.x*v.y;
+    v.w += v.y*v.z;
+    return v;
 }
 
 float3 RandDirectionCube(inout uint state)

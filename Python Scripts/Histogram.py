@@ -1,15 +1,19 @@
 import csv
+import os
 import sys
 
 from Utils.BokehPlot import *
 
-x_data = []
-y_data = []
+os.chdir(os.path.dirname(os.path.abspath(__file__))) # Change CWD to "Python Scripts"
+
+data = []
 
 with open(sys.argv[1], newline='') as csvfile:
     reader = csv.DictReader(csvfile)
     for row in reader:
-        x_data.append(float(row['x']))
-        y_data.append(float(row['y']))
+        data.append(float(row['data']))
 
-plot_histogram(x_data, y_data, num_bins=10, name="histogram_test", show_plot=True, save_plot=False)
+show_plot = sys.argv.__contains__('--show')
+save_plot = sys.argv.__contains__('--save')
+
+plot_histogram(data, num_bins=255, name="histogram_test", show_plot=show_plot, save_plot=save_plot)

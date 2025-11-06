@@ -1,5 +1,7 @@
 .idea/*
 .venv/*
 Data/*
+!Data/.gitkeep
 Python Scripts/BokehData/*
+!Python Scripts/BokehData/.gitkeep
 *.pyc

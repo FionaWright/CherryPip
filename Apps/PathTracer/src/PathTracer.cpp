@@ -10,6 +10,7 @@
 #include "System/FileHelper.h"
 #include "System/Gui.h"
 #include "CBV.h"
+#include "Debug/PythonExecutor.h"
 #include "HWI/BLAS.h"
 #include "HWI/Material.h"
 #include "System/Input.h"
@@ -281,6 +282,7 @@ void PathTracer::GUI()
 
     ptNeedsReset |= ImGui::Button("Reset PathTracer##xx");
 
+#ifdef _DEBUG
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Debug##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
@@ -299,7 +301,8 @@ void PathTracer::GUI()
         if (m_ptConfig.ReadbackEveryFrame)
             ImGui::Text("%s", "(Starts on PathTracer Reset!)");
 
-        if (ImGui::TreeNode("Readback Data##xx"))
+        const std::string label = "Readback Data (" + std::to_string(m_readbackRgbaData.size()) + ")##xx";
+        if (ImGui::TreeNode(label.c_str()))
         {
             ImGui::Indent(IM_GUI_INDENTATION);
 
@@ -314,6 +317,23 @@ void PathTracer::GUI()
 
             ImGui::Unindent(IM_GUI_INDENTATION);
             ImGui::TreePop();
+        }
+
+        if (ImGui::Button("Plot data (Execute Py)##xx"))
+        {
+            const std::string csvPath = std::string(SOURCE_DIR) + "/Data/ReadbackData.csv";
+            std::ofstream f(csvPath);
+            f.clear();
+            f << "data" << "\n";
+            for (const Rgba8 rgba : m_readbackRgbaData)
+                f << std::to_string(rgba.r) << "\n";
+            f.close();
+
+            const std::vector<const char*> args = {
+                csvPath.c_str(),
+                "--show"
+            };
+            PythonExecutor::ExecutePython("Histogram.py", args);
         }
 
         ImGui::Unindent(IM_GUI_INDENTATION);
@@ -362,18 +382,19 @@ void PathTracer::GUI()
     ImGui::Unindent(IM_GUI_INDENTATION);
     m_ptConfig.Mode = static_cast<PathTracerMode>(e);
 
-    if (ptNeedsReset)
-    {
-        m_ptContext.Reset();
-        m_readbackRgbaData.clear();
-    }
-
     if (ptNeedsReset && m_ptConfig.ReadbackEveryFrame)
         m_inReadbackEveryFrameProcess = true;
     else if (!m_ptConfig.ReadbackEveryFrame)
         m_inReadbackEveryFrameProcess = false;
 
     ImGui::Unindent(IM_GUI_INDENTATION);
+#endif
+
+    if (ptNeedsReset)
+    {
+        m_ptContext.Reset();
+        m_readbackRgbaData.clear();
+    }
 
     Gui::EndWindow();
 }

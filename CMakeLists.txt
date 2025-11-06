@@ -34,3 +34,6 @@ include(cmake/Dependencies.cmake)
 include(cmake/Assets.cmake)
 
 target_compile_definitions(CherryPip PRIVATE NOMINMAX)
+if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_CONFIGURATION_TYPES MATCHES "Debug")
+    target_compile_definitions(CherryPip PRIVATE SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+endif()

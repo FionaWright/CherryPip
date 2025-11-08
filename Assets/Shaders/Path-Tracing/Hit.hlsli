@@ -4,7 +4,7 @@
 #include "DebugPalette.hlsli"
 #include "Rand01.hlsli"
 
-void Hit(inout uint rngState, out float3 materialColor, out float3 normal, out float3 light, RayQuery<RAY_FLAGS> q)
+void Hit(inout uint rngState, out float3 materialColor, out float3 normal, out float3 light, inout RayQuery<RAY_FLAGS> q)
 {
     PtInstanceData instance = gInstances[q.CommittedInstanceIndex()];
     PtMaterialData material = gMaterials[instance.MaterialIdx];

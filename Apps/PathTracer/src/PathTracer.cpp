@@ -380,6 +380,7 @@ void PathTracer::GUI()
         "Hit Dist Ray 1",
         "Material ID",
         "RNG",
+        "Self-Intersection",
     };
 
     static int e = 0;

@@ -113,19 +113,22 @@ float4 PSMain(VsOut input) : SV_Target0
     }
 
     colorSum /= float(c_pathTracing.SPP);
-    precise float4 finalColor = float4(colorSum, 1);
 
     if (!c_pathTracing.AccumulationEnabled)
-        return finalColor;
+        return float4(colorSum, 1);
 
     uint2 pixelCoord = uint2(input.position.xy);
-    precise float4 accumColor = gAccum.Load(pixelCoord);
+    float3 accumColor = gAccum.Load(pixelCoord).rgb;
 
-    float prevCount = (float)c_pathTracing.NumFrames;
-    float newCount  = prevCount + 1.0f;
-    float4 newAccum = (accumColor * prevCount + finalColor) / newCount;
+    float3 newSum = accumColor + colorSum;
+
+    float accumFrameCount = (float)c_pathTracing.NumFrames;
+    float totalFrames = accumFrameCount + 1.0f;
+
+    float3 average = (accumColor * accumFrameCount + colorSum) / totalFrames;
 
     if (c_pathTracing.UpdateAccumulation)
-        gAccum[pixelCoord] = newAccum;
-    return newAccum;
+        gAccum[pixelCoord].rgb = average;
+
+    return float4(pow(average, 1/2.2f), 1);
 }

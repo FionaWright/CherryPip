@@ -91,7 +91,7 @@ void PathTracingContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* c
     m_fullScreenTriangle.InitFullScreenTriangle(device, cmdList);
 
     m_accumTexture = std::make_shared<Texture>();
-    m_accumTexture->InitEmpty(device, DXGI_FORMAT_R16G16B16A16_FLOAT, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    m_accumTexture->InitEmpty(device, DXGI_FORMAT_R32G32B32A32_FLOAT, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
     m_accumTexture->Transition(cmdList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
     m_accumClearBuffer = std::make_shared<Texture>();

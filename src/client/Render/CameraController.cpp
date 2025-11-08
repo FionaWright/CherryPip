@@ -4,11 +4,14 @@
 
 #include "Render/CameraController.h"
 
+#include "System/Config.h"
 #include "System/Input.h"
 
 bool CameraController::UpdateCamera()
 {
-    if (Input::IsMouseRight())
+    const bool mouseOverGUI = Input::GetMousePos().x < Config::GetSystem().WindowAppGuiWidth || Input::GetMousePos().x > Config::GetSystem().WindowAppGuiWidth + Config::GetSystem().RtvWidth;
+
+    if (Input::IsMouseRight() && !mouseOverGUI)
     {
         double pitch = m_camera.GetPitch();
         double yaw = m_camera.GetYaw();
@@ -39,7 +42,7 @@ bool CameraController::UpdateCamera()
     const XMFLOAT3 up = m_camera.GetUp();
     const XMFLOAT3 right = m_camera.GetRight();
 
-    if (Input::IsMouseMiddle())
+    if (Input::IsMouseMiddle() && !mouseOverGUI)
     {
         XMFLOAT2 deltaMouse = Input::GetMousePosDelta();
         const float panSpeed = -3.5f * m_speed;
@@ -56,8 +59,9 @@ bool CameraController::UpdateCamera()
 
     const XMFLOAT3 forward = m_camera.GetForward();
 
-    float forwardScalar = Input::GetMouseWheelDelta();
-    forwardScalar *= 230 * m_speed;
+    float forwardScalar = 0.0f;
+    if (!mouseOverGUI)
+        forwardScalar = Input::GetMouseWheelDelta() * 230 * m_speed;
     if (Input::IsKey(KeyCode::W))
     {
         forwardScalar += m_speed;

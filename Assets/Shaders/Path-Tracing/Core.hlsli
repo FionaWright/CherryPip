@@ -28,7 +28,7 @@ RWTexture2D<float4> gAccum : register(u0);
 #include "Path-Tracing/Hit.hlsli"
 #include "Path-Tracing/Miss.hlsli"
 
-float3 Trace(RayQuery<RAY_FLAGS> q,
+float3 Trace(inout RayQuery<RAY_FLAGS> q,
             uint flags,
             uint instanceMask,
             RayDesc ray,

@@ -14,3 +14,12 @@ else if (i == 1 && c_debug.DebugIdx == DebugBuffer::eHitDistRay1)
     return float(q.CommittedRayT()).xxx;
 else if (c_debug.DebugIdx == DebugBuffer::eMaterialID)
     return Palette(gInstances[q.CommittedInstanceIndex()].MaterialIdx).rgb;
+else if (c_debug.DebugIdx == DebugBuffer::eSelfIntersection)
+{
+    uint instanceID = q.CommittedInstanceIndex();
+    uint primID = q.CommittedPrimitiveIndex();
+    if (instanceID == prevInstanceID && primID == prevPrimID)
+        return float3(0, 1, 1);
+    prevPrimID = primID;
+    prevInstanceID = instanceID;
+}

@@ -9,7 +9,7 @@
 #include "System/FileHelper.h"
 
 #ifdef _DEBUG
-#include "System/HotReloader.h"
+#include "../../../Headers/client/Debug/HotReloader.h"
 #endif
 
 inline ComPtr<IDxcBlob> CompileShaderDXC(

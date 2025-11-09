@@ -2,7 +2,7 @@
 // Created by fionaw on 26/10/2025.
 //
 
-#include "System/HotReloader.h"
+#include "../../../Headers/client/Debug/HotReloader.h"
 
 #include <filesystem>
 #include <iostream>

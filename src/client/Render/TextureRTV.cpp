@@ -2,7 +2,10 @@
 // Created by fionaw on 05/11/2025.
 //
 
-#include "../../../Headers/client/Render/TextureRTV.h"
+#include "Render/TextureRTV.h"
+
+#include <cassert>
+#include <d3dx12.h>
 
 #include "Debug/GPUEventScoped.h"
 #include "System/Config.h"

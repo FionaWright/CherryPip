@@ -74,6 +74,7 @@ void PathTracer::GUI()
         "Material ID",
         "RNG",
         "Self-Intersection",
+        "NaN",
     };
 
     static int e = 0;

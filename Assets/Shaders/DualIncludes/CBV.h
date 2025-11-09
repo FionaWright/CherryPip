@@ -40,6 +40,7 @@ enum DebugBuffer
     eMaterialID,
     eRNG,
     eSelfIntersection,
+    eNaN,
 
     // Unimplemented for now:
     eDirectLighting,

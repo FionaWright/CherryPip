@@ -74,6 +74,10 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 #endif
     }
 
+#ifdef DEBUG_BUFFER
+    #include "Path-Tracing/DebugBuffersPostTrace.hlsli"
+#endif
+
     return color;
 }
 

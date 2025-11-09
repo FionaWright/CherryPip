@@ -12,7 +12,7 @@
 - [ ] Build shaders in cmake
 - [x] Hot reloading
 - [ ] Add destructors and scene switching
-- [ ] Clean up CMAKE
+- [x] Clean up CMAKE
 - [x] Basic Ray-Tracer (Ray-Query)
 - [x] Furnace Test
 - [x] Accumulation Buffer

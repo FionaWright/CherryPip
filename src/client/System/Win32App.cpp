@@ -14,7 +14,7 @@
 #include "System/TextureLoader.h"
 
 #ifdef _DEBUG
-#include "System/HotReloader.h"
+#include "../../../Headers/client/Debug/HotReloader.h"
 #endif
 
 #include "Assets/Resources/Resources.h"

@@ -8,7 +8,10 @@
 #include "Headers/Helper.h"
 #include "System/Config.h"
 #include "System/Win32App.h"
-#include "System/DebugOutputRedirector.h"
+
+#ifdef _DEBUG
+#include "Debug/DebugOutputRedirector.h"
+#endif
 
 extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = "/D3D12/"; } // IMPORTANT!
 

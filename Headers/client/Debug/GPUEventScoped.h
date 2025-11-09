@@ -4,6 +4,9 @@
 
 #ifndef PT_GPUEVENTSCOPED_H
 #define PT_GPUEVENTSCOPED_H
+
+#ifdef _DEBUG
+
 #include "Apps/App.h"
 
 #define GPU_SCOPE(cmdList, label) GPUEventScoped CONCAT(scope_, __LINE__)(cmdList, label)
@@ -18,6 +21,12 @@ public:
 private:
     ID3D12GraphicsCommandList* m_heldCmdList;
 };
+
+#else
+
+#define GPU_SCOPE(cmdList, label)
+
+#endif
 
 
 #endif //PT_GPUEVENTSCOPED_H

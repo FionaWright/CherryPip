@@ -2,11 +2,9 @@
 set(PROJECT_SOURCES
         Apps/App.cpp
         Apps/PathTracer/src/PathTracer.cpp
+        Apps/PathTracer/src/PathTracer_GUI.cpp
         Apps/RasterViewer/src/RasterViewer.cpp
         src/MathUtils.cpp
-        src/client/Debug/GPUEventScoped.cpp
-        src/client/Debug/PythonExecutor.cpp
-        src/client/Debug/ReadbackBuffer.cpp
         src/client/HWI/BLAS.cpp
         src/client/HWI/D12Resource.cpp
         src/client/HWI/D3D.cpp
@@ -25,10 +23,10 @@ set(PROJECT_SOURCES
         src/client/Render/Transform.cpp
         src/client/System/Config.cpp
         src/client/System/Engine.cpp
+        src/client/System/Engine_GUI.cpp
         src/client/System/FileHelper.cpp
         src/client/System/Gui.cpp
         src/client/System/HighResolutionClock.cpp
-        src/client/System/HotReloader.cpp
         src/client/System/Input.cpp
         src/client/System/ModelLoaderGLTF.cpp
         src/client/System/TextureLoader.cpp
@@ -42,9 +40,6 @@ set(PROJECT_HEADERS
         Apps/RasterViewer/Headers/RasterViewer.h
         Headers/Helper.h
         Headers/MathUtils.h
-        Headers/client/Debug/GPUEventScoped.h
-        Headers/client/Debug/PythonExecutor.h
-        Headers/client/Debug/ReadbackBuffer.h
         Headers/client/HWI/BLAS.h
         Headers/client/HWI/D12Resource.h
         Headers/client/HWI/D3D.h
@@ -62,13 +57,31 @@ set(PROJECT_HEADERS
         Headers/client/Render/TextureRTV.h
         Headers/client/Render/Transform.h
         Headers/client/System/Config.h
-        Headers/client/System/DebugOutputRedirector.h
         Headers/client/System/FileHelper.h
         Headers/client/System/Gui.h
         Headers/client/System/HighResolutionClock.h
-        Headers/client/System/HotReloader.h
         Headers/client/System/Input.h
         Headers/client/System/Keycodes.h
         Headers/client/System/TextureLoader.h
         Headers/client/System/Win32App.h
 )
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_CONFIGURATION_TYPES MATCHES "Debug")
+    set(PROJECT_SOURCES
+            ${PROJECT_SOURCES}
+            Apps/PathTracer/src/ReadbackManager.cpp
+            src/client/Debug/GPUEventScoped.cpp
+            src/client/Debug/HotReloader.cpp
+            src/client/Debug/PythonExecutor.cpp
+            src/client/Debug/ReadbackBuffer.cpp
+    )
+    set(PROJECT_HEADERS
+            ${PROJECT_HEADERS}
+            Apps/PathTracer/Headers/ReadbackManager.h
+            Headers/client/Debug/DebugOutputRedirector.h
+            Headers/client/Debug/GPUEventScoped.h
+            Headers/client/Debug/HotReloader.h
+            Headers/client/Debug/PythonExecutor.h
+            Headers/client/Debug/ReadbackBuffer.h
+    )
+endif()

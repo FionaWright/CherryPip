@@ -72,9 +72,6 @@ void PathTracer::loadAssets(D3D* d3d)
     m_rootSigDebug = std::make_shared<RootSig>();
     m_rootSigDebug->SmartInit(device, 2, 5, 2);
 
-    m_rootSigReadbackHighlight = std::make_shared<RootSig>();
-    m_rootSigReadbackHighlight->SmartInit(device, 1, 0, 1);
-
     // Init Shader/PSO
     {
         m_shaderILD =
@@ -93,9 +90,6 @@ void PathTracer::loadAssets(D3D* d3d)
         m_shader = std::make_shared<Shader>();
         m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/PS.hlsl", ild, device, m_rootSig->Get());
     }
-
-    m_shaderReadbackHighlight = std::make_shared<Shader>();
-    m_shaderReadbackHighlight->InitCs(L"DebugHighlightPixelCS.hlsl", device, m_rootSigReadbackHighlight->Get());
 
     std::shared_ptr<Texture> tex = std::make_shared<Texture>();
     tex->Init(d3d->GetDevice(), cmdList.Get(), FileHelper::GetAssetTextureFullPath(L"TestTex.png"),
@@ -140,8 +134,6 @@ void PathTracer::loadAssets(D3D* d3d)
     m_ptOutputTex.Init(L"PT Output", device, &m_heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight,
                        Config::GetSystem().RTVFormat);
 
-    m_readbackBuffer.Init(d3d, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight);
-
     m_material = std::make_shared<Material>();
     m_material->Init(&m_heap);
     m_material->AddCBV(device, &m_heap, sizeof(CbvPathTracing));
@@ -153,10 +145,9 @@ void PathTracer::loadAssets(D3D* d3d)
     m_materialDebug->AddCBV(device, &m_heap, sizeof(CbvPathTracingDebug));
     m_ptContext.FillMaterial(device, m_materialDebug.get(), &m_heap);
 
-    m_materialReadbackHighlight = std::make_shared<Material>();
-    m_materialReadbackHighlight->Init(&m_heap);
-    m_materialReadbackHighlight->AddCBV(device, &m_heap, sizeof(CbvHighlightPixel));
-    m_materialReadbackHighlight->AddUAV(device, &m_heap, m_ptOutputTex.GetResource(), m_ptOutputTex.GetD12Resource()->GetDesc().Format);
+#ifdef _DEBUG
+    m_readbackManager.Init(d3d, &m_heap, &m_ptOutputTex);
+#endif
 
     V(cmdList->Close());
     d3d->ExecuteCommandList(cmdList.Get());
@@ -258,10 +249,10 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
 
     ptContext->Render(cmdList, rootSig, pso, &m_camera.GetCamera(), mat, m_projMatrix, m_ptConfig, debugBufferIdx);
 
+#ifdef _DEBUG
     if (m_ptConfig.ReadbackEnabled)
-    {
-        readbackPass(d3d, cmdList);
-    }
+        m_readbackManager.ReadbackPass(d3d, cmdList, &m_ptOutputTex, m_ptConfig.ReadbackEveryFrame);
+#endif
 
     D12Resource* rtv = d3d->GetRtv();
     m_ptOutputTex.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_COPY_SOURCE);
@@ -271,218 +262,4 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
     m_ptOutputTex.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     GUI();
-}
-
-#define IM_GUI_INDENTATION 20 // Temp
-
-void PathTracer::GUI()
-{
-    Gui::BeginWindow("PathTracer", ImVec2(0, 0),
-                     ImVec2(Config::GetSystem().WindowAppGuiWidth, Config::GetSystem().RtvHeight));
-
-    ImGui::SeparatorText("Stats##xx");
-    ImGui::Indent(IM_GUI_INDENTATION);
-
-    ImGui::Text("%s%i", "Frame Index: ", m_ptContext.GetFrameNum());
-    ImGui::Text("%s%i", "Total SPP: ", m_ptContext.GetFrameNum() * m_ptConfig.SPP);
-
-    ImGui::Unindent(IM_GUI_INDENTATION);
-    ImGui::SeparatorText("Settings##xx");
-    ImGui::Indent(IM_GUI_INDENTATION);
-
-    bool ptNeedsReset = false;
-
-    ptNeedsReset |= ImGui::Checkbox("Accumulation Enabled##xx", &m_ptConfig.AccumulationEnabled);
-    ptNeedsReset |= ImGui::Checkbox("Jitter Enabled##xx", &m_ptConfig.JitterEnabled);
-
-    int spp = static_cast<int>(m_ptConfig.SPP);
-    ptNeedsReset |= ImGui::DragInt("SPP##xx", &spp, 1, 1, 256);
-    m_ptConfig.SPP = static_cast<uint32_t>(spp);
-
-    int bounces = static_cast<int>(m_ptConfig.NumBounces);
-    ptNeedsReset |= ImGui::DragInt("Ray Bounces##xx", &bounces, 1, 0, 256);
-    m_ptConfig.NumBounces = static_cast<uint32_t>(bounces);
-
-    int maxFrame = static_cast<int>(m_ptConfig.MaxFrameNum);
-    ptNeedsReset |= ImGui::InputInt("Max Frames##xx", &maxFrame);
-    m_ptConfig.MaxFrameNum = static_cast<uint32_t>(maxFrame);
-
-    ImGui::Unindent(IM_GUI_INDENTATION);
-    ImGui::SeparatorText("Tools##xx");
-    ImGui::Indent(IM_GUI_INDENTATION);
-
-    ptNeedsReset |= ImGui::Button("Reset PathTracer##xx");
-
-#ifdef _DEBUG
-    ImGui::Unindent(IM_GUI_INDENTATION);
-    ImGui::SeparatorText("Debug##xx");
-    ImGui::Indent(IM_GUI_INDENTATION);
-
-    const bool prevReadbackEnabled = m_ptConfig.ReadbackEnabled;
-    ImGui::Checkbox("Enable Readback##xx", &m_ptConfig.ReadbackEnabled);
-
-    if (m_ptConfig.ReadbackEnabled)
-    {
-        ImGui::Indent(IM_GUI_INDENTATION);
-
-        if (!prevReadbackEnabled || ImGui::Button("Clear##xx"))
-            m_readbackRgbaData.clear();
-
-        ImGui::Checkbox("Readback Every Frame##xx", &m_ptConfig.ReadbackEveryFrame);
-        if (m_ptConfig.ReadbackEveryFrame)
-            ImGui::Text("%s", "(Starts on PathTracer Reset!)");
-
-        const std::string label = "Readback Data (" + std::to_string(m_readbackRgbaData.size()) + ")##xx";
-        if (ImGui::TreeNode(label.c_str()))
-        {
-            ImGui::Indent(IM_GUI_INDENTATION);
-
-            for (int i = 0; i < m_readbackRgbaData.size(); i++)
-            {
-                const float r = static_cast<float>(m_readbackRgbaData[i].r) / 255.0f;
-                const float g = static_cast<float>(m_readbackRgbaData[i].g) / 255.0f;
-                const float b = static_cast<float>(m_readbackRgbaData[i].b) / 255.0f;
-                const float a = static_cast<float>(m_readbackRgbaData[i].a) / 255.0f;
-                ImGui::Text("%i: (%.3f, %.3f, %.3f, %.3f)", i, r, g, b, a);
-            }
-
-            ImGui::Unindent(IM_GUI_INDENTATION);
-            ImGui::TreePop();
-        }
-
-        if (ImGui::Button("Plot data (Execute Py)##xx"))
-        {
-            const std::string csvPath = std::string(SOURCE_DIR) + "/Data/ReadbackData.csv";
-            std::ofstream f(csvPath);
-            f.clear();
-            f << "data" << "\n";
-            for (const Rgba8 rgba : m_readbackRgbaData)
-                f << std::to_string(rgba.r) << "\n";
-            f.close();
-
-            const std::vector<const char*> args = {
-                csvPath.c_str(),
-                "--show"
-            };
-            PythonExecutor::ExecutePython("Histogram.py", args);
-        }
-
-        ImGui::Unindent(IM_GUI_INDENTATION);
-    }
-
-    static const std::vector<const char*> c_debugBufferStrMap = {
-        "Normals",
-        "Base Color",
-        "HitPos",
-        "First Bounce Direction",
-        "Miss / Hit",
-        "Hit Dist Ray 0",
-        "Hit Dist Ray 1",
-        "Material ID",
-        "RNG",
-        "Self-Intersection",
-    };
-
-    static int e = 0;
-    ImGui::Text("%s", "Path Tracer Mode:");
-    ImGui::Indent(IM_GUI_INDENTATION);
-    ptNeedsReset |= ImGui::RadioButton("Standard", &e, 0);
-    ptNeedsReset |= ImGui::RadioButton("Debug Buffer", &e, 1);
-    if (m_ptConfig.Mode == eOutputBuffer)
-    {
-        const char* curSelection = c_debugBufferStrMap.at(m_ptConfig.DebugBufferIdx);
-        if (ImGui::BeginCombo("Debug Buffer##xx", curSelection))
-        {
-            for (size_t i = 0; i < c_debugBufferStrMap.size(); i++)
-            {
-                const bool isSelected = m_ptConfig.DebugBufferIdx == i;
-                if (ImGui::Selectable(c_debugBufferStrMap.at(i), isSelected))
-                {
-                    m_ptConfig.DebugBufferIdx = static_cast<DebugBuffer>(i);
-                    ptNeedsReset = true;
-                }
-
-                if (isSelected)
-                    ImGui::SetItemDefaultFocus();
-            }
-
-            ImGui::EndCombo();
-        }
-    }
-    ptNeedsReset |= ImGui::RadioButton("Furnace Test (Classic)", &e, 2);
-    ptNeedsReset |= ImGui::RadioButton("Furnace Test (Emissive)", &e, 3);
-    ImGui::Unindent(IM_GUI_INDENTATION);
-    m_ptConfig.Mode = static_cast<PathTracerMode>(e);
-
-    if (ptNeedsReset && m_ptConfig.ReadbackEveryFrame)
-        m_inReadbackEveryFrameProcess = true;
-    else if (!m_ptConfig.ReadbackEveryFrame)
-        m_inReadbackEveryFrameProcess = false;
-
-    ImGui::Unindent(IM_GUI_INDENTATION);
-#endif
-
-    if (ptNeedsReset)
-    {
-        m_ptContext.Reset();
-        m_readbackRgbaData.clear();
-    }
-
-    Gui::EndWindow();
-}
-
-void PathTracer::readbackPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
-{
-    if (Input::IsMouseLeftDown())
-    {
-        const XMFLOAT2 mousePos = Input::GetMousePos();
-        const uint32_t minX = Config::GetSystem().WindowAppGuiWidth;
-        const uint32_t maxX = Config::GetSystem().WindowAppGuiWidth + Config::GetSystem().RtvWidth;
-        if (mousePos.x >= minX && mousePos.x < maxX)
-        {
-            m_mousePosOnClick = {mousePos.x - minX, mousePos.y};
-            m_finishedReadingBack = false;
-        }
-    }
-
-    const bool validMousePos = m_mousePosOnClick.x != -1 && m_mousePosOnClick.y != -1;
-    if (!validMousePos)
-        return;
-
-    const uint32_t px = static_cast<uint32_t>(m_mousePosOnClick.x);
-    const uint32_t py = static_cast<uint32_t>(m_mousePosOnClick.y);
-
-    // Post-Pass: Highlight Selected Pixel
-    {
-        m_ptOutputTex.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-
-        cmdList->SetComputeRootSignature(m_rootSigReadbackHighlight->Get());
-
-        CbvHighlightPixel highlightPixel;
-        highlightPixel.SelectedPixelCoords = { px, py };
-        m_materialReadbackHighlight->UpdateCBV(0, &highlightPixel);
-
-        m_materialReadbackHighlight->SetDescriptorTables(cmdList, true);
-
-        cmdList->SetPipelineState(m_shaderReadbackHighlight->GetPSO());
-        cmdList->Dispatch(1, 1, 1);
-
-        m_ptOutputTex.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    }
-
-    if (m_ptConfig.ReadbackEveryFrame && !m_inReadbackEveryFrameProcess)
-        return;
-
-    if (m_finishedReadingBack)
-        return;
-
-    m_readbackBuffer.Readback(d3d, m_ptOutputTex.GetD12Resource());
-    const std::vector<uint8_t>& byteData = m_readbackBuffer.GetData();
-    const size_t pixelIdx = py * Config::GetSystem().RtvWidth + px;
-    const Rgba8* rgbaData = reinterpret_cast<const Rgba8*>(byteData.data());
-    const Rgba8 pixelData = rgbaData[pixelIdx];
-    m_readbackRgbaData.push_back(pixelData);
-
-    if (!m_inReadbackEveryFrameProcess)
-        m_finishedReadingBack = true;
 }

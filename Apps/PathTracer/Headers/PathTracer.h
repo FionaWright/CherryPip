@@ -3,7 +3,6 @@
 
 #include "CBV.h"
 #include "Apps/App.h"
-#include "Debug/ReadbackBuffer.h"
 #include "HWI/Heap.h"
 #include "HWI/RootSig.h"
 #include "HWI/Shader.h"
@@ -14,6 +13,10 @@
 #include "Render/PathTracingContext.h"
 #include "Render/TextureRTV.h"
 #include "Render/Transform.h"
+
+#ifdef _DEBUG
+#include "ReadbackManager.h"
+#endif
 
 class BLAS;
 using Microsoft::WRL::ComPtr;
@@ -39,11 +42,6 @@ struct PtConfig
     bool ReadbackEveryFrame = false;
 };
 
-struct Rgba8
-{
-    uint8_t r, g, b, a;
-};
-
 class PathTracer : public App
 {
 public:
@@ -59,7 +57,6 @@ private:
     void loadAssets(D3D* d3d);
     void populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void GUI();
-    void readbackPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
 
     Heap m_heap, m_heapRTV;
     CameraController m_camera;
@@ -79,15 +76,9 @@ private:
 
     XMMATRIX m_projMatrix;
 
-    ReadbackBuffer m_readbackBuffer;
-    XMFLOAT2 m_mousePosOnClick = { -1, -1 };
-    bool m_inReadbackEveryFrameProcess = false;
-    bool m_finishedReadingBack = true;
-    std::shared_ptr<Shader> m_shaderReadbackHighlight;
-    std::shared_ptr<Material> m_materialReadbackHighlight;
-    std::shared_ptr<RootSig> m_rootSigReadbackHighlight;
-
-    std::vector<Rgba8> m_readbackRgbaData;
+#ifdef _DEBUG
+    ReadbackManager m_readbackManager;
+#endif
 };
 
 

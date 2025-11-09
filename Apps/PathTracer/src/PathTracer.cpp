@@ -91,12 +91,6 @@ void PathTracer::loadAssets(D3D* d3d)
         m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/PS.hlsl", ild, device, m_rootSig->Get());
     }
 
-    std::shared_ptr<Texture> tex = std::make_shared<Texture>();
-    tex->Init(d3d->GetDevice(), cmdList.Get(), FileHelper::GetAssetTextureFullPath(L"TestTex.png"),
-              DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-
-    tex->Transition(cmdList.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-
     GLTFLoadArgs args;
     args.DefaultShaderIndex = -1;
     args.DefaultShaderATIndex = -1;

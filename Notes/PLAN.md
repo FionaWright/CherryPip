@@ -11,7 +11,7 @@
 - [x] GLTF Model Importing (fastgltf)
 - [ ] Build shaders in cmake
 - [x] Hot reloading
-- [ ] Add destructors and scene switching
+- [x] Add destructors and scene switching
 - [x] Clean up CMAKE
 - [x] Basic Ray-Tracer (Ray-Query)
 - [x] Furnace Test
@@ -21,9 +21,12 @@
 - [x] Switch direction of Engine->App, seperate CMAKE targets
 - [x] Scene, SceneViewer, Refactor App system
 - [x] Save/Load Camera Transform
-- [ ] Scene Transforms GUI 
+- [ ] Scene Transforms/Materials GUI + Fix Chess
 - [ ] CI/CD-like tests
-- [ ] Specular/Reflections
+- [x] Specular/Reflections
+- [ ] Russian Roulette
+- [ ] Allow for changing lighting models at runtime (Recompile shader with defines)
+- [ ] EA Mapping
 - [ ] NEE 
 - [ ] Glass & Caustics
 - [ ] Ray pipelines
@@ -37,6 +40,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Descriptor heap sharing (Wait to see if it's worth it)
 - PCH Compilation? 
 - Consider dropping tangent/bitangent from attribute data (Needs CI test to see if it's faster)
+- Check for memory leaks, there's probably a lot
 
 ## PT-TODO:
 

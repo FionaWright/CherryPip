@@ -71,6 +71,12 @@ void SceneStudio::GUI()
         ImGui::EndCombo();
     }
 
+    if (ImGui::Button("Reload Scene##xx"))
+    {
+        m_sceneDirty = true;
+        resetPT = true;
+    }
+
     static int e = m_studioConfig.Backend;
     ImGui::SeparatorText("Render Backend##xx");
     ImGui::Indent(IM_GUI_INDENTATION);

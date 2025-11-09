@@ -23,6 +23,9 @@ struct PtMaterialData
     uint NormalMapIdx;
     float Roughness;
     float Metalness;
+
+    float DiffuseProbability;
+    float3 p;
 };
 
 struct Vertex

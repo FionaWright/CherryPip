@@ -15,12 +15,9 @@ endif()
 
 include(cmake/Sources.cmake)
 
-add_executable(CherryPip WIN32
-        src/main.cpp
+add_library(client STATIC
         ${PROJECT_SOURCES}
         ${PROJECT_HEADERS}
-        Assets/Resources/CherryPip.rc
-        Assets/Resources/Resources.h
 )
 
 include_directories(
@@ -33,7 +30,9 @@ include_directories(
 include(cmake/Dependencies.cmake)
 include(cmake/Assets.cmake)
 
-target_compile_definitions(CherryPip PRIVATE NOMINMAX)
+target_compile_definitions(client PUBLIC NOMINMAX)
 if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_CONFIGURATION_TYPES MATCHES "Debug")
-    target_compile_definitions(CherryPip PRIVATE SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+    target_compile_definitions(client PUBLIC SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 endif()
+
+add_subdirectory(Apps)

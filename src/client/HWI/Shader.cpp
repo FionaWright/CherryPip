@@ -4,7 +4,7 @@
 
 #include "HWI/Shader.h"
 
-#include "Helper.h"
+#include "../../../Headers/client/Helper.h"
 #include "System/Config.h"
 #include "System/FileHelper.h"
 

@@ -3,7 +3,7 @@
 //
 
 #include "HWI/RootSig.h"
-#include "Helper.h"
+#include "../../../Headers/client/Helper.h"
 #include "fastgltf/types.hpp"
 
 void RootSig::Init(ID3D12Device* device, const CD3DX12_ROOT_PARAMETER1* params, const UINT paramCount, const D3D12_STATIC_SAMPLER_DESC* pSamplers, const UINT samplerCount)

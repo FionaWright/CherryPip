@@ -14,17 +14,17 @@ set(D3D12_LIBS
         dxgi.lib   # comes from Windows SDK
 )
 
-target_link_libraries(CherryPip PRIVATE ${D3D12_LIBS})
+target_link_libraries(client PRIVATE ${D3D12_LIBS})
 
-add_custom_command(TARGET CherryPip POST_BUILD
+add_custom_command(TARGET client POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
         ${D3D12_AGILITY_DIR}/build/native/bin/x64/D3D12Core.dll
-        $<TARGET_FILE_DIR:CherryPip>/D3D12/D3D12Core.dll
+        $<TARGET_FILE_DIR:client>/D3D12/D3D12Core.dll
 )
-add_custom_command(TARGET CherryPip POST_BUILD
+add_custom_command(TARGET client POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
         ${D3D12_AGILITY_DIR}/build/native/bin/x64/D3D12SDKLayers.dll
-        $<TARGET_FILE_DIR:CherryPip>/D3D12/D3D12SDKLayers.dll
+        $<TARGET_FILE_DIR:client>/D3D12/D3D12SDKLayers.dll
 )
 
 FetchContent_Declare(
@@ -35,20 +35,20 @@ FetchContent_MakeAvailable(dxc)
 
 set(DXC_DIR ${dxc_SOURCE_DIR})
 
-target_link_libraries(CherryPip PRIVATE ${DXC_DIR}/lib/x64/dxil.lib)
-target_link_libraries(CherryPip PRIVATE ${DXC_DIR}/lib/x64/dxcompiler.lib)
+target_link_libraries(client PRIVATE ${DXC_DIR}/lib/x64/dxil.lib)
+target_link_libraries(client PRIVATE ${DXC_DIR}/lib/x64/dxcompiler.lib)
 include_directories(${DXC_DIR}/inc)
 
-add_custom_command(TARGET CherryPip POST_BUILD
+add_custom_command(TARGET client POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
         ${DXC_DIR}/bin/x64/dxcompiler.dll
-        $<TARGET_FILE_DIR:CherryPip>
+        $<TARGET_FILE_DIR:client>
 )
 
-add_custom_command(TARGET CherryPip POST_BUILD
+add_custom_command(TARGET client POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
         ${DXC_DIR}/bin/x64/dxil.dll
-        $<TARGET_FILE_DIR:CherryPip>
+        $<TARGET_FILE_DIR:client>
 )
 
 file(GLOB THIRD_PARTY_SOURCES CONFIGURE_DEPENDS
@@ -58,14 +58,14 @@ file(GLOB THIRD_PARTY_SOURCES CONFIGURE_DEPENDS
         "${CMAKE_SOURCE_DIR}/ThirdParty/zlib/*"
         "${CMAKE_SOURCE_DIR}/ThirdParty/WinPixEventRuntime.1.0.240308001/Include/WinPixEventRuntime/*"
 )
-target_sources(CherryPip PRIVATE
+target_sources(client PUBLIC
         ${THIRD_PARTY_SOURCES}
         "${CMAKE_SOURCE_DIR}/ThirdParty/imgui/backends/imgui_impl_dx12.h"
         "${CMAKE_SOURCE_DIR}/ThirdParty/imgui/backends/imgui_impl_dx12.cpp"
         "${CMAKE_SOURCE_DIR}/ThirdParty/imgui/backends/imgui_impl_win32.cpp"
         "${CMAKE_SOURCE_DIR}/ThirdParty/imgui/backends/imgui_impl_win32.h"
 )
-target_include_directories(CherryPip PRIVATE
+target_include_directories(client PUBLIC
         "${CMAKE_SOURCE_DIR}/ThirdParty"
         "${CMAKE_SOURCE_DIR}/ThirdParty/imgui"
         "${CMAKE_SOURCE_DIR}/ThirdParty/spng"
@@ -73,12 +73,12 @@ target_include_directories(CherryPip PRIVATE
         "${CMAKE_SOURCE_DIR}/ThirdParty/WinPixEventRuntime.1.0.240308001/Include/"
 )
 
-add_custom_command(TARGET CherryPip POST_BUILD
+add_custom_command(TARGET client POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
         "${CMAKE_SOURCE_DIR}/ThirdParty/WinPixEventRuntime.1.0.240308001/bin/x64/WinPixEventRuntime.dll"
-        $<TARGET_FILE_DIR:CherryPip>
+        $<TARGET_FILE_DIR:client>
 )
-target_link_libraries(CherryPip PRIVATE "${CMAKE_SOURCE_DIR}/ThirdParty/WinPixEventRuntime.1.0.240308001/bin/x64/WinPixEventRuntime.lib")
+target_link_libraries(client PUBLIC "${CMAKE_SOURCE_DIR}/ThirdParty/WinPixEventRuntime.1.0.240308001/bin/x64/WinPixEventRuntime.lib")
 
 set(FASTGLTF_USE_CUSTOM_SMALLVECTOR OFF CACHE BOOL "" FORCE)
 set(FASTGLTF_ENABLE_TESTS OFF CACHE BOOL "" FORCE)
@@ -98,9 +98,9 @@ FetchContent_Declare(
         URL https://github.com/spnda/fastgltf/archive/refs/tags/v0.9.0.zip
 )
 FetchContent_MakeAvailable(fastgltf)
-target_link_libraries(CherryPip PRIVATE fastgltf)
+target_link_libraries(client PUBLIC fastgltf)
 
 find_library(DXGUID_LIB dxguid.lib PATHS [HINTS ENV PROGRAMFILES ENV PROGRAMFILES(X86)])
 find_library(UUID_LIB uuid.lib PATHS [HINTS ENV PROGRAMFILES ENV PROGRAMFILES(X86)])
 
-target_link_libraries(CherryPip PRIVATE ${DXGUID_LIB} ${UUID_LIB})
+target_link_libraries(client PUBLIC ${DXGUID_LIB} ${UUID_LIB})

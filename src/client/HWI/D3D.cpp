@@ -5,7 +5,7 @@
 #include "HWI/D3D.h"
 
 #include "HlslGlue.h"
-#include "Headers/Helper.h"
+#include "Helper.h"
 #include "System/Config.h"
 #include "System/Win32App.h"
 

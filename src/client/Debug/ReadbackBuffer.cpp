@@ -6,7 +6,7 @@
 
 #include <functional>
 
-#include "Helper.h"
+#include "../../../Headers/client/Helper.h"
 #include "HWI/D3D.h"
 
 void ReadbackBuffer::Init(const D3D* d3d, const size_t width, const size_t height)

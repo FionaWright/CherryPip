@@ -4,7 +4,7 @@
 
 #include "HWI/Heap.h"
 
-#include "Helper.h"
+#include "../../../Headers/client/Helper.h"
 
 void Heap::Init(ID3D12Device* device, const size_t numDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE type)
 {

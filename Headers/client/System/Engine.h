@@ -7,7 +7,7 @@
 #include <memory>
 
 #include "HighResolutionClock.h"
-#include "Apps/App.h"
+#include "App.h"
 
 class D3D;
 

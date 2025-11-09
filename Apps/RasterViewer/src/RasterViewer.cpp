@@ -3,7 +3,7 @@
 #include <dxcapi.h>
 
 #include "imgui.h"
-#include "Headers/Helper.h"
+#include "../../../Headers/client/Helper.h"
 #include "HWI/D3D.h"
 #include "System/Config.h"
 #include "System/FileHelper.h"

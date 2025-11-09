@@ -33,3 +33,8 @@ Progress as of 29/10/25:
 Progress as of 08/11/25:
 <img width="1699" height="599" alt="image" src="https://github.com/user-attachments/assets/8a37f88e-0d83-475e-9b28-3272d3ca2607" />
 
+Progress as of 09/11/25:
+<img width="1699" height="604" alt="image" src="https://github.com/user-attachments/assets/ac64c41a-92c5-4159-b324-cfad17abffa0" />
+
+
+

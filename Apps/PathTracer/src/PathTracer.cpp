@@ -179,7 +179,6 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
     const int debugBufferIdx = debugMode ? m_ptConfig.DebugBufferIdx : -1;
     PathTracingContext* ptContext = &m_ptContext;
 
-    // TODO: Refactor this (And exclude in Release)
     ID3D12PipelineState* pso = nullptr;
     switch (m_ptConfig.Mode)
     {
@@ -197,53 +196,12 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
         pso = m_shaderDebug->GetPSO();
         break;
     case eFurnaceTestClassic:
-        if (!m_shaderFurnaceClassic)
-        {
-            m_furnaceTestSphere = ModelLoaderGLTF::LoadModelsFromGLTF(d3d, cmdList, L"Sphere/Sphere.gltf").at(0);
-
-            ComPtr<ID3D12Device5> device5;
-            V(d3d->GetDevice()->QueryInterface(IID_PPV_ARGS(&device5)));
-            ComPtr<ID3D12GraphicsCommandList4> cmdList4;
-            V(cmdList->QueryInterface(IID_PPV_ARGS(&cmdList4)));
-
-            std::vector<std::shared_ptr<BLAS>> blasList;
-            std::vector<PtMaterialData> materialData;
-            auto blas = std::make_shared<BLAS>();
-            blas->Init(device5.Get(), cmdList4.Get(), m_furnaceTestSphere, {});
-            blasList.emplace_back(blas);
-
-            PtMaterialData ptMaterialData;
-            ptMaterialData.BaseColorFactor = XMFLOAT3(1, 1, 1);
-            ptMaterialData.EmissiveStrength = 0;
-            materialData.emplace_back(ptMaterialData);
-
-            const D3D12_INPUT_LAYOUT_DESC ild = {m_shaderILD.data(), static_cast<UINT>(m_shaderILD.size())};
-            m_shaderFurnaceClassic = std::make_shared<Shader>();
-            m_shaderFurnaceClassic->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/FurnaceClassicPS.hlsl", ild,
-                                             d3d->GetDevice(), m_rootSig->Get());
-
-            auto tlas = std::make_shared<TLAS>();
-            tlas->Init(device5.Get(), cmdList4.Get(), blasList);
-            m_ptContextFurnaceTest.Init(d3d->GetDevice(), cmdList, tlas, blasList, materialData);
-
-            m_materialFurnace = std::make_shared<Material>();
-            m_materialFurnace->Init(&m_heap);
-            m_materialFurnace->AddCBV(d3d->GetDevice(), &m_heap, sizeof(CbvPathTracing));
-            m_ptContextFurnaceTest.FillMaterial(d3d->GetDevice(), m_materialFurnace.get(), &m_heap);
-        }
-        ptContext = &m_ptContextFurnaceTest;
-        pso = m_shaderFurnaceClassic->GetPSO();
-        mat = m_materialFurnace.get();
-        break;
     case eFurnaceTestEmissive:
-        if (!m_shaderFurnaceEmissive)
-        {
-            const D3D12_INPUT_LAYOUT_DESC ild = {m_shaderILD.data(), static_cast<UINT>(m_shaderILD.size())};
-            m_shaderFurnaceEmissive = std::make_shared<Shader>();
-            m_shaderFurnaceEmissive->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/FurnaceEmissivePS.hlsl", ild,
-                                              d3d->GetDevice(), m_rootSig->Get());
-        }
-        pso = m_shaderFurnaceEmissive->GetPSO();
+        if (!m_furnaceTest.GetIsInitialised())
+            m_furnaceTest.Init(d3d, cmdList, m_shaderILD, m_rootSig->Get(), &m_heap);
+        ptContext = m_furnaceTest.GetPtContext();
+        pso = m_ptConfig.Mode == eFurnaceTestClassic ? m_furnaceTest.GetShaderClassic() : m_furnaceTest.GetShaderEmissive();
+        mat = m_furnaceTest.GetMaterial();
         break;
     }
 
@@ -263,3 +221,4 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
 
     GUI();
 }
+

@@ -15,6 +15,7 @@
 #include "Render/Transform.h"
 
 #ifdef _DEBUG
+#include "FurnaceTest.h"
 #include "ReadbackManager.h"
 #endif
 
@@ -61,22 +62,21 @@ private:
     Heap m_heap, m_heapRTV;
     CameraController m_camera;
 
-    std::shared_ptr<Material> m_material, m_materialDebug, m_materialFurnace;
-    std::shared_ptr<Shader> m_shader, m_shaderDebug, m_shaderFurnaceClassic, m_shaderFurnaceEmissive;
+    std::shared_ptr<Material> m_material, m_materialDebug;
+    std::shared_ptr<Shader> m_shader, m_shaderDebug;
     std::shared_ptr<RootSig> m_rootSig, m_rootSigDebug;
 
     std::vector<D3D12_INPUT_ELEMENT_DESC> m_shaderILD;
 
-    PathTracingContext m_ptContext, m_ptContextFurnaceTest;
+    PathTracingContext m_ptContext;
     PtConfig m_ptConfig;
-
-    std::shared_ptr<Model> m_furnaceTestSphere;
 
     TextureRTV m_ptOutputTex;
 
     XMMATRIX m_projMatrix;
 
 #ifdef _DEBUG
+    FurnaceTest m_furnaceTest;
     ReadbackManager m_readbackManager;
 #endif
 };

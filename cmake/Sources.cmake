@@ -70,6 +70,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_CONFIGURATION_TYPES MATCHES "Debug
     set(PROJECT_SOURCES
             ${PROJECT_SOURCES}
             Apps/PathTracer/src/ReadbackManager.cpp
+            Apps/PathTracer/src/FurnaceTest.cpp
             src/client/Debug/GPUEventScoped.cpp
             src/client/Debug/HotReloader.cpp
             src/client/Debug/PythonExecutor.cpp
@@ -78,6 +79,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_CONFIGURATION_TYPES MATCHES "Debug
     set(PROJECT_HEADERS
             ${PROJECT_HEADERS}
             Apps/PathTracer/Headers/ReadbackManager.h
+            Apps/PathTracer/Headers/FurnaceTest.h
             Headers/client/Debug/DebugOutputRedirector.h
             Headers/client/Debug/GPUEventScoped.h
             Headers/client/Debug/HotReloader.h

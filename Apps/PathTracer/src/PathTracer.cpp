@@ -2,9 +2,9 @@
 #include "System/Win32App.h"
 #include <dxcapi.h>
 
-#include "imgui.h"
+#include "ThirdParty/imgui/imgui.h"
 #include "Debug/GPUEventScoped.h"
-#include "Headers/Helper.h"
+#include "Helper.h"
 #include "HWI/D3D.h"
 #include "System/Config.h"
 #include "System/FileHelper.h"

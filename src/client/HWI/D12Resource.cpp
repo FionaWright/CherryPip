@@ -9,7 +9,7 @@
 #include <d3dx12_core.h>
 #include <d3dx12_resource_helpers.h>
 
-#include "Helper.h"
+#include "../../../Headers/client/Helper.h"
 
 D12Resource::~D12Resource()
 {

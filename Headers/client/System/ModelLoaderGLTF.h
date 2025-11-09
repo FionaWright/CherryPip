@@ -4,9 +4,16 @@
 #include <DirectXMath.h>
 #include <string>
 
+#include <memory>
+#include <mutex>
+#include <variant>
+#include <vector>
+
+#include "Render/Transform.h"
+
 #include "fastgltf/core.hpp"
 #include "fastgltf/types.hpp"
-#include "Render/Transform.h"
+using Asset = std::shared_ptr<fastgltf::Expected<fastgltf::Asset>>;
 
 class RootSig;
 class Heap;
@@ -19,7 +26,6 @@ class D3D;
 using std::ifstream;
 using std::ofstream;
 
-using Asset = std::shared_ptr<fastgltf::Expected<fastgltf::Asset>>;
 using namespace DirectX;
 
 #pragma pack(push, 1)

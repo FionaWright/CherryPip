@@ -5,7 +5,7 @@
 #include "Apps/PathTracer/Headers/ReadbackManager.h"
 
 #include "CBV.h"
-#include "imgui.h"
+#include "ThirdParty/imgui/imgui.h"
 #include "Debug/PythonExecutor.h"
 #include "HWI/Material.h"
 #include "HWI/RootSig.h"

@@ -26,7 +26,7 @@
 class Engine;
 class App;
 
-#include "Headers/Helper.h"
+#include "../Helper.h"
 
 class Win32App
 {

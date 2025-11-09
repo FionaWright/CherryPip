@@ -7,7 +7,7 @@
 #include <d3d12.h>
 #include <d3dx12_core.h>
 
-#include "Helper.h"
+#include "../../../Headers/client/Helper.h"
 #include "HWI/Model.h"
 
 void BLAS::Init(ID3D12Device5* device, ID3D12GraphicsCommandList4* cmdList, const std::shared_ptr<Model>& model, const Transform& transform)

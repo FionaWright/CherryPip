@@ -2,7 +2,7 @@
 // Created by fionaw on 09/11/2025.
 //
 
-#include "imgui.h"
+#include "ThirdParty/imgui/imgui.h"
 #include "Apps/PathTracer/Headers/PathTracer.h"
 #include "Render/Scene.h"
 #include "System/Gui.h"

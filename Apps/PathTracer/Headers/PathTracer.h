@@ -2,7 +2,7 @@
 #define PT_PATHTRACER_H
 
 #include "CBV.h"
-#include "Apps/App.h"
+#include "../../../Headers/client/System/App.h"
 #include "HWI/Heap.h"
 #include "HWI/RootSig.h"
 #include "HWI/Shader.h"

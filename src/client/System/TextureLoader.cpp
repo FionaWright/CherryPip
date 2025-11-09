@@ -8,7 +8,7 @@
 #include <d3d12.h>
 #include <DirectXMath.h>
 
-#include "Helper.h"
+#include "../../../Headers/client/Helper.h"
 #include "HWI/D12Resource.h"
 
 using namespace DirectX;

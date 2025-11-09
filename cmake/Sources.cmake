@@ -1,10 +1,6 @@
 # Source files
 set(PROJECT_SOURCES
-        Apps/App.cpp
-        Apps/PathTracer/src/PathTracer.cpp
-        Apps/PathTracer/src/PathTracer_GUI.cpp
-        Apps/RasterViewer/src/RasterViewer.cpp
-        src/MathUtils.cpp
+        src/client/MathUtils.cpp
         src/client/HWI/BLAS.cpp
         src/client/HWI/D12Resource.cpp
         src/client/HWI/D3D.cpp
@@ -22,6 +18,8 @@ set(PROJECT_SOURCES
         src/client/Render/TextureRTV.cpp
         src/client/Render/Transform.cpp
         src/client/Render/Scene.cpp
+        src/client/System/App.cpp
+        src/client/System/CherryPip.cpp
         src/client/System/Config.cpp
         src/client/System/Engine.cpp
         src/client/System/Engine_GUI.cpp
@@ -36,11 +34,8 @@ set(PROJECT_SOURCES
 
 # Header files
 set(PROJECT_HEADERS
-        Apps/App.h
-        Apps/PathTracer/Headers/PathTracer.h
-        Apps/RasterViewer/Headers/RasterViewer.h
-        Headers/Helper.h
-        Headers/MathUtils.h
+        Headers/client/Helper.h
+        Headers/client/MathUtils.h
         Headers/client/HWI/BLAS.h
         Headers/client/HWI/D12Resource.h
         Headers/client/HWI/D3D.h
@@ -58,6 +53,8 @@ set(PROJECT_HEADERS
         Headers/client/Render/TextureRTV.h
         Headers/client/Render/Transform.h
         Headers/client/Render/Scene.h
+        Headers/client/System/App.h
+        Headers/client/System/CherryPip.h
         Headers/client/System/Config.h
         Headers/client/System/FileHelper.h
         Headers/client/System/Gui.h
@@ -71,8 +68,6 @@ set(PROJECT_HEADERS
 if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_CONFIGURATION_TYPES MATCHES "Debug")
     set(PROJECT_SOURCES
             ${PROJECT_SOURCES}
-            Apps/PathTracer/src/ReadbackManager.cpp
-            Apps/PathTracer/src/FurnaceTest.cpp
             src/client/Debug/GPUEventScoped.cpp
             src/client/Debug/HotReloader.cpp
             src/client/Debug/PythonExecutor.cpp
@@ -80,8 +75,6 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_CONFIGURATION_TYPES MATCHES "Debug
     )
     set(PROJECT_HEADERS
             ${PROJECT_HEADERS}
-            Apps/PathTracer/Headers/ReadbackManager.h
-            Apps/PathTracer/Headers/FurnaceTest.h
             Headers/client/Debug/DebugOutputRedirector.h
             Headers/client/Debug/GPUEventScoped.h
             Headers/client/Debug/HotReloader.h

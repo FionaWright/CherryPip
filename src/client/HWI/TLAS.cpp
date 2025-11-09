@@ -7,7 +7,7 @@
 #include <d3d12.h>
 #include <DirectXMath.h>
 
-#include "Helper.h"
+#include "../../../Headers/client/Helper.h"
 #include "HWI/BLAS.h"
 using namespace DirectX;
 

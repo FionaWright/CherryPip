@@ -17,7 +17,7 @@
 - [x] Furnace Test
 - [x] Accumulation Buffer
 - [x] PT Debug Views & Systems
-- [ ] NaN Test, split Furnace and DebugBuffer
+- [x] NaN Test
 - [ ] Switch direction of Engine->App, seperate CMAKE targets
 - [ ] Scene, SceneViewer, Refactor App system
 - [ ] Save/Load Camera Transform
@@ -54,14 +54,18 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 Look into russian roulette 
 
-## The Scene Refactor
+## Scene Refactor part 3
 
-I want to be able to do:
-PtContext->Render(bistroScene)
-RasterContext->Render(bistroScene)
+Currently the direction of my engine goes:
 
-But ptcontext already holds scene data 
+main.cpp creates an App vector and passes it into Win32App
+Win32App creates an Engine
+Engine calls the App functions
 
-New Idea:
-PtContext holds frameCount, accumTex, fullscreenTriangle, etc
-Scene holds list of objects, BLAS/TLAS/InstanceDataBuffer/etc, 
+What I want: 
+
+main.cpp (within app) passes the single App class into Win32App
+client becomes a new target which the app is dependant on
+The app has its own CMakeLists.txt
+
+Leave the functionality for multiple Apps running at once jic

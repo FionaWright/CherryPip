@@ -8,6 +8,7 @@
 
 #include "CBV.h"
 #include "Helper.h"
+#include "../../../Headers/client/Render/Scene.h"
 #include "Apps/PathTracer/Headers/PathTracer.h"
 #include "Debug/GPUEventScoped.h"
 #include "HWI/BLAS.h"
@@ -15,11 +16,32 @@
 #include "Render/Camera.h"
 #include "System/Config.h"
 
-void PathTracingContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
-                              const std::shared_ptr<TLAS>& tlas, const std::vector<std::shared_ptr<BLAS>>& blasList, const std::vector<PtMaterialData>& materials)
+void PathTracingContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const Scene* scene)
 {
-    m_tlas = tlas;
-    m_blasList = blasList;
+    ComPtr<ID3D12Device5> device5;
+    V(device->QueryInterface(IID_PPV_ARGS(&device5)));
+    ComPtr<ID3D12GraphicsCommandList4> cmdList4;
+    V(cmdList->QueryInterface(IID_PPV_ARGS(&cmdList4)));
+
+    const auto& objects = scene->GetObjects();
+    std::vector<PtMaterialData> materialData;
+    for (int i = 0; i < objects.size(); i++)
+    {
+        const Object* object = objects[i].get();
+
+        auto blas = std::make_shared<BLAS>();
+        blas->Init(device5.Get(), cmdList4.Get(), object->GetModel(), *object->GetTransform());
+        m_blasList.emplace_back(blas);
+
+        const MaterialData* objectMaterialData = object->GetMaterial()->GetData();
+        PtMaterialData ptMaterialData;
+        ptMaterialData.BaseColorFactor = objectMaterialData->BaseColorFactor;
+        ptMaterialData.EmissiveStrength = objectMaterialData->EmmissiveStrength;
+        materialData.emplace_back(ptMaterialData);
+    }
+
+    m_tlas = std::make_shared<TLAS>();
+    m_tlas->Init(device5.Get(), cmdList4.Get(), m_blasList);
 
     UINT curVertexBufferOffset = 0;
     UINT curIndexBufferOffset = 0;
@@ -60,7 +82,7 @@ void PathTracingContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* c
     const UINT64 mBufferSize = sizeof(PtMaterialData) * m_instanceDataList.size();
     m_materialBuffer = std::make_shared<D12Resource>();
     m_materialBuffer->InitBuffer(L"Path-Tracing Material Data Buffer", device, mBufferSize);
-    m_materialBuffer->UploadBuffer(device, cmdList, materials.data(), mBufferSize);
+    m_materialBuffer->UploadBuffer(device, cmdList, materialData.data(), mBufferSize);
     m_materialBuffer->Transition(cmdList, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
 
     size_t vByteOffset = 0;

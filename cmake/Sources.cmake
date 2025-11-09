@@ -21,6 +21,7 @@ set(PROJECT_SOURCES
         src/client/Render/PathTracingContext.cpp
         src/client/Render/TextureRTV.cpp
         src/client/Render/Transform.cpp
+        src/client/Render/Scene.cpp
         src/client/System/Config.cpp
         src/client/System/Engine.cpp
         src/client/System/Engine_GUI.cpp
@@ -56,6 +57,7 @@ set(PROJECT_HEADERS
         Headers/client/Render/PathTracingContext.h
         Headers/client/Render/TextureRTV.h
         Headers/client/Render/Transform.h
+        Headers/client/Render/Scene.h
         Headers/client/System/Config.h
         Headers/client/System/FileHelper.h
         Headers/client/System/Gui.h

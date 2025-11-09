@@ -13,6 +13,7 @@
 #include "Debug/PythonExecutor.h"
 #include "HWI/BLAS.h"
 #include "HWI/Material.h"
+#include "../../../Headers/client/Render/Scene.h"
 #include "System/Input.h"
 #include "System/ModelLoaderGLTF.h"
 
@@ -69,9 +70,6 @@ void PathTracer::loadAssets(D3D* d3d)
     m_rootSig = std::make_shared<RootSig>();
     m_rootSig->SmartInit(device, 1, 5, 1);
 
-    m_rootSigDebug = std::make_shared<RootSig>();
-    m_rootSigDebug->SmartInit(device, 2, 5, 2);
-
     // Init Shader/PSO
     {
         m_shaderILD =
@@ -92,38 +90,14 @@ void PathTracer::loadAssets(D3D* d3d)
     }
 
     GLTFLoadArgs args;
-    args.DefaultShaderIndex = -1;
-    args.DefaultShaderATIndex = -1;
-    args.Transform = {};
     args.Transform.SetScale(2.0f);
     ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Cornell/scene.gltf", args);
 
-    ComPtr<ID3D12Device5> device5;
-    V(d3d->GetDevice()->QueryInterface(IID_PPV_ARGS(&device5)));
-    ComPtr<ID3D12GraphicsCommandList4> cmdList4;
-    V(cmdList->QueryInterface(IID_PPV_ARGS(&cmdList4)));
+    std::shared_ptr<Scene> cornellScene = std::make_shared<Scene>();
+    cornellScene->Init(args.OutObjects);
+    m_scenes.emplace_back(cornellScene);
 
-    std::vector<std::shared_ptr<BLAS>> blasList;
-    std::vector<PtMaterialData> materialData;
-    for (int i = 0; i < args.OutObjects.size(); i++)
-    {
-        const Object* object = args.OutObjects[i].get();
-
-        auto blas = std::make_shared<BLAS>();
-        blas->Init(device5.Get(), cmdList4.Get(), object->GetModel(), *object->GetTransform());
-        blasList.emplace_back(blas);
-
-        const MaterialData* objectMaterialData = object->GetMaterial()->GetData();
-        PtMaterialData ptMaterialData;
-        ptMaterialData.BaseColorFactor = objectMaterialData->BaseColorFactor;
-        ptMaterialData.EmissiveStrength = objectMaterialData->EmmissiveStrength;
-        materialData.emplace_back(ptMaterialData);
-    }
-
-    auto tlas = std::make_shared<TLAS>();
-    tlas->Init(device5.Get(), cmdList4.Get(), blasList);
-
-    m_ptContext.Init(device, cmdList.Get(), tlas, blasList, materialData);
+    m_ptContext.Init(device, cmdList.Get(), m_scenes.at(0).get());
 
     m_ptOutputTex.Init(L"PT Output", device, &m_heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight,
                        Config::GetSystem().RTVFormat);
@@ -133,13 +107,16 @@ void PathTracer::loadAssets(D3D* d3d)
     m_material->AddCBV(device, &m_heap, sizeof(CbvPathTracing));
     m_ptContext.FillMaterial(device, m_material.get(), &m_heap);
 
+#ifdef _DEBUG
+    m_rootSigDebug = std::make_shared<RootSig>();
+    m_rootSigDebug->SmartInit(device, 2, 5, 2);
+
     m_materialDebug = std::make_shared<Material>();
     m_materialDebug->Init(&m_heap);
     m_materialDebug->AddCBV(device, &m_heap, sizeof(CbvPathTracing));
     m_materialDebug->AddCBV(device, &m_heap, sizeof(CbvPathTracingDebug));
     m_ptContext.FillMaterial(device, m_materialDebug.get(), &m_heap);
 
-#ifdef _DEBUG
     m_readbackManager.Init(d3d, &m_heap, &m_ptOutputTex);
 #endif
 

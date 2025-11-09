@@ -48,8 +48,8 @@ struct GLTFLoadArgs
 
 	std::vector<std::shared_ptr<Shader>> Shaders;
 
-	int DefaultShaderIndex = 0;
-	int DefaultShaderATIndex = 1;
+	int DefaultShaderIndex = -1;
+	int DefaultShaderATIndex = -1;
 
 	std::vector<std::string> CullingWhiteList;
 	std::vector<GLTFLoadOverride> Overrides;

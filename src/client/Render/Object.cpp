@@ -17,7 +17,7 @@ void Object::Init(const std::shared_ptr<Transform>& transform,
                   const std::shared_ptr<Shader>& shader, const std::shared_ptr<RootSig>& rootSig,
                   const std::shared_ptr<Model>& model, const std::shared_ptr<Material>& mat)
 {
-    m_transform = transform;
+    m_transform = transform ? transform : std::make_shared<Transform>();
     m_shader = shader;
     m_rootSig = rootSig;
     m_model = model;

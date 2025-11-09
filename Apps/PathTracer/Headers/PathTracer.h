@@ -68,6 +68,8 @@ private:
 
     std::vector<D3D12_INPUT_ELEMENT_DESC> m_shaderILD;
 
+    std::vector<std::shared_ptr<Scene>> m_scenes;
+
     PathTracingContext m_ptContext;
     PtConfig m_ptConfig;
 

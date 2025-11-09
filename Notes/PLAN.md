@@ -53,3 +53,15 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ## Notes
 
 Look into russian roulette 
+
+## The Scene Refactor
+
+I want to be able to do:
+PtContext->Render(bistroScene)
+RasterContext->Render(bistroScene)
+
+But ptcontext already holds scene data 
+
+New Idea:
+PtContext holds frameCount, accumTex, fullscreenTriangle, etc
+Scene holds list of objects, BLAS/TLAS/InstanceDataBuffer/etc, 

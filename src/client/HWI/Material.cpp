@@ -145,7 +145,7 @@ void Material::TransitionSrvsToPS(ID3D12GraphicsCommandList* cmdList) const
     {
         if (m_srvs[i].Resource)
         {
-            m_srvs[i].Resource->Transition(cmdList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+            m_srvs[i].Resource->Transition(cmdList, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
         }
     }
 }

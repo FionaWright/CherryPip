@@ -1,4 +1,4 @@
-#include "Apps/PathTracer/Headers/PathTracer.h"
+#include "Apps/SceneStudio/Headers/SceneStudio.h"
 #include "System/Win32App.h"
 #include <dxcapi.h>
 
@@ -13,16 +13,11 @@
 #include "Debug/PythonExecutor.h"
 #include "HWI/BLAS.h"
 #include "HWI/Material.h"
-#include "../../../Headers/client/Render/Scene.h"
+#include "Render/Scene.h"
 #include "System/Input.h"
 #include "System/ModelLoaderGLTF.h"
 
-PathTracer::PathTracer()
-    : m_AspectRatio(0)
-{
-}
-
-void PathTracer::OnInit(D3D* d3d)
+void SceneStudio::OnInit(D3D* d3d)
 {
     App::OnInit(d3d);
 
@@ -45,7 +40,7 @@ void PathTracer::OnInit(D3D* d3d)
     loadAssets(d3d);
 }
 
-void PathTracer::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
+void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 {
     if (!d3d->GetRayTracingSupported())
     {
@@ -56,22 +51,38 @@ void PathTracer::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     if (m_sceneDirty)
     {
         m_ptContext.BuildScene(d3d->GetDevice(), cmdList, m_scenes.at(m_currentScene).get(), &m_heap);
+        m_rasterContext.SetScene(m_scenes.at(m_currentScene).get());
         m_sceneDirty = false;
     }
 
-    populateCommandList(d3d, cmdList);
+    switch (m_studioConfig.Backend)
+    {
+    case eForward:
+        renderRaster(d3d, cmdList);
+        break;
+    case ePathTracer:
+        renderPathTracer(d3d, cmdList);
+        break;
+    default:
+        break;
+    }
+
+    GUI();
+
     const bool moved = m_camera.UpdateCamera();
     if (moved)
         m_ptContext.Reset();
 }
 
-void PathTracer::loadAssets(D3D* d3d)
+void SceneStudio::loadAssets(D3D* d3d)
 {
     ID3D12Device* device = d3d->GetDevice();
     const ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
     m_heap.Init(device, 10000, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     m_heapRTV.Init(device, 5, D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+    loadRasterAssets(d3d);
 
     m_rootSig = std::make_shared<RootSig>();
     m_rootSig->SmartInit(device, 1, 5, 1);
@@ -96,18 +107,21 @@ void PathTracer::loadAssets(D3D* d3d)
     }
 
     GLTFLoadArgs args;
+    args.Root = m_rootSigRaster;
+    args.DefaultShaderIndex = 0;
+    args.Shaders = { m_shaderRaster };
+
     args.Transform.SetScale(2.0f);
     ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Cornell/scene.gltf", args);
     std::shared_ptr<Scene> sceneCornellBox = std::make_shared<Scene>();
     sceneCornellBox->Init("Cornell Box", args.OutObjects);
     m_scenes.emplace_back(sceneCornellBox);
 
-    auto sphereModel = ModelLoaderGLTF::LoadModelsFromGLTF(d3d, cmdList.Get(), L"Sphere/Sphere.gltf").at(0);
+    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Sphere/Sphere.gltf", args);
     std::shared_ptr<Scene> sceneSphere = std::make_shared<Scene>();
-    sceneSphere->Init("Sphere", sphereModel, { XMFLOAT3(1, 1, 1), 3});
+    sceneSphere->Init("Sphere", args.OutObjects);
     m_scenes.emplace_back(sceneSphere);
 
-    args = {};
     args.Transform.SetScale(2.0f);
     ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
     std::shared_ptr<Scene> scenePlane = std::make_shared<Scene>();
@@ -138,7 +152,48 @@ void PathTracer::loadAssets(D3D* d3d)
     d3d->Flush();
 }
 
-void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
+void SceneStudio::loadRasterAssets(const D3D* d3d)
+{
+    D3D12_STATIC_SAMPLER_DESC samplers[1];
+    samplers[0] = {};
+    samplers[0].Filter = D3D12_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
+    samplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    samplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    samplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    samplers[0].ShaderRegister = 0;
+
+    m_rootSigRaster = std::make_shared<RootSig>();
+    m_rootSigRaster->SmartInit(d3d->GetDevice(), 1, 1, 0, samplers, _countof(samplers));
+
+    D3D12_INPUT_ELEMENT_DESC rasterILD[] =
+    {
+        {
+            "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+        },
+        {
+            "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+        },
+        {
+            "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+        },
+        {
+            "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+        },
+        {
+            "BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+        },
+    };
+    m_shaderRaster = std::make_shared<Shader>();
+    m_shaderRaster->InitVsPs(L"Basic3D_GltfVS.hlsl", L"Basic3D_GltfPS.hlsl", {rasterILD, _countof(rasterILD)}, d3d->GetDevice(), m_rootSigRaster->Get());
+}
+
+void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 {
     const float fRtvWidth = static_cast<float>(Config::GetSystem().RtvWidth);
     const float fRtvHeight = static_cast<float>(Config::GetSystem().RtvHeight);
@@ -156,13 +211,13 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
 
     m_heap.SetHeap(cmdList);
 
-    const bool debugMode = m_ptConfig.Mode == eOutputBuffer;
+    const bool debugMode = m_studioConfig.PT.Mode == eOutputBuffer;
 
     ID3D12RootSignature* rootSig = debugMode ? m_rootSigDebug->Get() : m_rootSig->Get();
-    const int debugBufferIdx = debugMode ? m_ptConfig.DebugBufferIdx : -1;
+    const int debugBufferIdx = debugMode ? m_studioConfig.PT.DebugBufferIdx : -1;
 
     ID3D12PipelineState* pso = nullptr;
-    switch (m_ptConfig.Mode)
+    switch (m_studioConfig.PT.Mode)
     {
     case eStandard:
         pso = m_shader->GetPSO();
@@ -181,15 +236,15 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
     case eFurnaceTestEmissive:
         if (!m_furnaceTest.GetIsInitialised())
             m_furnaceTest.Init(d3d, cmdList, m_shaderILD, m_rootSig->Get(), &m_heap);
-        pso = m_ptConfig.Mode == eFurnaceTestClassic ? m_furnaceTest.GetShaderClassic() : m_furnaceTest.GetShaderEmissive();
+        pso = m_studioConfig.PT.Mode == eFurnaceTestClassic ? m_furnaceTest.GetShaderClassic() : m_furnaceTest.GetShaderEmissive();
         break;
     }
 
-    m_ptContext.Render(cmdList, rootSig, pso, &m_camera.GetCamera(), m_projMatrix, m_ptConfig, debugBufferIdx);
+    m_ptContext.Render(cmdList, rootSig, pso, &m_camera.GetCamera(), m_projMatrix, m_studioConfig.PT, debugBufferIdx);
 
 #ifdef _DEBUG
-    if (m_ptConfig.ReadbackEnabled)
-        m_readbackManager.ReadbackPass(d3d, cmdList, &m_ptOutputTex, m_ptConfig.ReadbackEveryFrame);
+    if (m_studioConfig.PT.ReadbackEnabled)
+        m_readbackManager.ReadbackPass(d3d, cmdList, &m_ptOutputTex, m_studioConfig.PT.ReadbackEveryFrame);
 #endif
 
     D12Resource* rtv = d3d->GetRtv();
@@ -198,7 +253,11 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
     ID3D12Resource* srcResource = m_ptOutputTex.GetD12Resource()->GetResource();
     rtv->CopyTextureInto(cmdList, srcResource, Config::GetSystem().WindowAppGuiWidth);
     m_ptOutputTex.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
-
-    GUI();
 }
 
+void SceneStudio::renderRaster(const D3D* d3d, ID3D12GraphicsCommandList* cmdList) const
+{
+    m_heap.SetHeap(cmdList);
+
+    m_rasterContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix);
+}

@@ -25,6 +25,9 @@ class D3D;
 
 class App
 {
+protected:
+    ~App() = default;
+
 public:
     virtual void OnInit(D3D* d3d);
     virtual void OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList) = 0;

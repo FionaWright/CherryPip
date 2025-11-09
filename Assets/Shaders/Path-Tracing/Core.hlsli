@@ -2,7 +2,7 @@
 #include "PtBuffers.h"
 #include "Rand01.hlsli"
 
-#define EPSILON 1e-4
+#define EPSILON 1e-2
 #define RAY_FLAGS RAY_FLAG_CULL_NON_OPAQUE|RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES
 
 struct VsOut
@@ -56,17 +56,16 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             break;
         }
 
-        float3 outMaterialColor = 0, outNormal = 0, outLight = 0;
-        Hit(rngState, outMaterialColor, outNormal, outLight, q);
-
-        float3 newDir = normalize(outNormal + RandDirectionSphere(rngState));
+        float3 outMaterialColor = 0, outNg = 0, outNs = 0, outLight = 0;
+        Hit(rngState, outMaterialColor, outNg, outNs, outLight, q);
 
         color += throughput * outLight;
         throughput *= outMaterialColor;
 
-        float3 hitPos = ray.Origin + ray.Direction * q.CommittedRayT();
-        ray.Direction = newDir;
-        ray.Origin = hitPos + outNormal * EPSILON;
+		float3 hitPos = ray.Origin + ray.Direction * q.CommittedRayT();
+        ray.Origin = hitPos + outNg * EPSILON;
+
+		ray.Direction = normalize(outNs + RandDirectionSphere(rngState));
 
 #ifdef DEBUG_BUFFER
     #include "Path-Tracing/DebugBuffersOnHit.hlsli"
@@ -84,7 +83,7 @@ float4 PSMain(VsOut input) : SV_Target0
 {
     RayQuery<RAY_FLAGS> q;
 
-    uint flags = RAY_FLAGS|RAY_FLAG_CULL_BACK_FACING_TRIANGLES;
+    uint flags = RAY_FLAGS;
 
     uint instanceMask = 0xFF; // ?
 

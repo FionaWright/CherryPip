@@ -30,7 +30,8 @@ struct CbvPathTracing
 
 enum DebugBuffer
 {
-    eNormals,
+    eNormalsShaded,
+    eNormalsGeo,
     eBaseColor,
     eHitPos,
     eFirstBounceDirection,

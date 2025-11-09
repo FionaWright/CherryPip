@@ -82,6 +82,7 @@ void PathTracingContext::BuildScene(ID3D12Device* device, ID3D12GraphicsCommandL
         instanceData.VertexBufferOffset = curVertexBufferOffset;
         instanceData.IndexBufferOffset = curIndexBufferOffset;
         instanceData.MaterialIdx = i;
+        instanceData.M = m_blasList[i]->GetTransform().GetModelMatrix();
         instanceData.MTI = XMMatrixTranspose(XMMatrixInverse(nullptr, m_blasList[i]->GetTransform().GetModelMatrix()));
         m_instanceDataList.emplace_back(instanceData);
 

@@ -4,6 +4,7 @@
 
 #include "imgui.h"
 #include "Apps/PathTracer/Headers/PathTracer.h"
+#include "Render/Scene.h"
 #include "System/Gui.h"
 
 #ifdef _DEBUG
@@ -23,11 +24,35 @@ void PathTracer::GUI()
     ImGui::Text("%s%i", "Frame Index: ", m_ptContext.GetFrameNum());
     ImGui::Text("%s%i", "Total SPP: ", m_ptContext.GetFrameNum() * m_ptConfig.SPP);
 
+    bool ptNeedsReset = false;
+
+    ImGui::Unindent(IM_GUI_INDENTATION);
+    ImGui::SeparatorText("Scene##xx");
+    ImGui::Indent(IM_GUI_INDENTATION);
+
+    const char* curName = m_scenes.at(m_currentScene)->GetName();
+    if (ImGui::BeginCombo("Scene##xx", curName))
+    {
+        for (size_t i = 0; i < m_scenes.size(); i++)
+        {
+            const bool isSelected = m_currentScene == i;
+            if (ImGui::Selectable(m_scenes.at(i)->GetName(), isSelected))
+            {
+                m_currentScene = i;
+                m_sceneDirty = true;
+                ptNeedsReset = true;
+            }
+
+            if (isSelected)
+                ImGui::SetItemDefaultFocus();
+        }
+
+        ImGui::EndCombo();
+    }
+
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Settings##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
-
-    bool ptNeedsReset = false;
 
     ptNeedsReset |= ImGui::Checkbox("Accumulation Enabled##xx", &m_ptConfig.AccumulationEnabled);
     ptNeedsReset |= ImGui::Checkbox("Jitter Enabled##xx", &m_ptConfig.JitterEnabled);

@@ -44,7 +44,30 @@ void Material::AddCBV(ID3D12Device* device, Heap* heap, const size_t size)
     m_cbvs.push_back(cbv);
 }
 
-void Material::AddSRV(ID3D12Device* device, Heap* heap, std::shared_ptr<Texture> tex)
+void Material::SetSRV(ID3D12Device* device, const UINT srvIdx, Heap* heap, D12Resource* d12Resource, const D3D12_SHADER_RESOURCE_VIEW_DESC& desc)
+{
+    if (srvIdx > m_srvs.size())
+        throw std::exception("Invalid srv index");
+
+    ID3D12Resource* resource = d12Resource ? d12Resource->GetResource() : nullptr;
+
+    if (srvIdx == m_srvs.size())
+    {
+        const UINT idx = heap->GetNextDescriptor();
+        heap->InitSRV(device, resource, desc, idx);
+
+        SRV srv = { idx };
+        srv.Resource = d12Resource;
+        m_srvs.push_back(srv);
+        return;
+    }
+
+    SRV& srv = m_srvs.at(srvIdx);
+    srv.Resource = d12Resource;
+    heap->InitSRV(device, resource, desc, srv.HeapIndex);
+}
+
+void Material::SetTex(ID3D12Device* device, const UINT srvIdx, Heap* heap, std::shared_ptr<Texture> tex)
 {
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
@@ -54,15 +77,12 @@ void Material::AddSRV(ID3D12Device* device, Heap* heap, std::shared_ptr<Texture>
     srvDesc.Texture2D.PlaneSlice = 0;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
-    const UINT idx = heap->GetNextDescriptor();
-    heap->InitSRV(device, tex->GetD12Resource()->GetResource(), srvDesc, idx);
+    m_tempTextureOwnership.push_back(tex);
 
-    SRV srv = { idx };
-    srv.Texture = tex;
-    m_srvs.push_back(srv);
+    SetSRV(device, srvIdx, heap, tex->GetD12Resource(), srvDesc);
 }
 
-void Material::AddBuffer(ID3D12Device* device, Heap* heap, std::shared_ptr<D12Resource> resource, const UINT numElements, const size_t stride)
+void Material::SetBuffer(ID3D12Device* device, const UINT srvIdx, Heap* heap, std::shared_ptr<D12Resource> resource, const UINT numElements, const size_t stride)
 {
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
@@ -71,27 +91,20 @@ void Material::AddBuffer(ID3D12Device* device, Heap* heap, std::shared_ptr<D12Re
     srvDesc.Buffer.StructureByteStride = stride;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
-    const UINT idx = heap->GetNextDescriptor();
-    heap->InitSRV(device, resource->GetResource(), srvDesc, idx);
-
-    SRV srv = { idx };
-    srv.Buffer = resource;
-    m_srvs.push_back(srv);
+    m_tempResourceOwnership.push_back(resource);
+    SetSRV(device, srvIdx, heap, resource.get(), srvDesc);
 }
 
-void Material::AddTLAS(ID3D12Device* device, Heap* heap, const std::shared_ptr<TLAS>& tlas)
+void Material::SetTlas(ID3D12Device* device, const UINT srvIdx, Heap* heap, const std::shared_ptr<TLAS>& tlas)
 {
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
     srvDesc.RaytracingAccelerationStructure.Location = tlas->GetResource()->GetGPUVirtualAddress();
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
-    const UINT idx = heap->GetNextDescriptor();
-    heap->InitSRV(device, nullptr, srvDesc, idx);
+    m_tempTlasOwnership.push_back(tlas);
 
-    SRV srv = { idx };
-    srv.TLAS = tlas;
-    m_srvs.push_back(srv);
+    SetSRV(device, srvIdx, heap, nullptr, srvDesc);
 }
 
 void Material::AddUAV(ID3D12Device* device, Heap* heap, const std::shared_ptr<Texture>& tex)
@@ -105,8 +118,9 @@ void Material::AddUAV(ID3D12Device* device, Heap* heap, const std::shared_ptr<Te
     const UINT idx = heap->GetNextDescriptor();
     heap->InitUAV(device, tex->GetD12Resource()->GetResource(), uavDesc, idx);
 
+    m_tempTextureOwnership.push_back(tex);
+
     UAV uav = { idx };
-    uav.Texture = tex;
     m_uavs.push_back(uav);
 }
 
@@ -129,13 +143,9 @@ void Material::TransitionSrvsToPS(ID3D12GraphicsCommandList* cmdList) const
 {
     for (int i = 0; i < m_srvs.size(); i++)
     {
-        if (m_srvs[i].Texture)
+        if (m_srvs[i].Resource)
         {
-            m_srvs[i].Texture->Transition(cmdList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        }
-        else if (m_srvs[i].Buffer)
-        {
-            m_srvs[i].Buffer->Transition(cmdList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+            m_srvs[i].Resource->Transition(cmdList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
         }
     }
 }

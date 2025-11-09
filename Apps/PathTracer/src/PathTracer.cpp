@@ -53,6 +53,12 @@ void PathTracer::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         return;
     }
 
+    if (m_sceneDirty)
+    {
+        m_ptContext.BuildScene(d3d->GetDevice(), cmdList, m_scenes.at(m_currentScene).get(), &m_heap);
+        m_sceneDirty = false;
+    }
+
     populateCommandList(d3d, cmdList);
     const bool moved = m_camera.UpdateCamera();
     if (moved)
@@ -92,30 +98,30 @@ void PathTracer::loadAssets(D3D* d3d)
     GLTFLoadArgs args;
     args.Transform.SetScale(2.0f);
     ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Cornell/scene.gltf", args);
+    std::shared_ptr<Scene> sceneCornellBox = std::make_shared<Scene>();
+    sceneCornellBox->Init("Cornell Box", args.OutObjects);
+    m_scenes.emplace_back(sceneCornellBox);
 
-    std::shared_ptr<Scene> cornellScene = std::make_shared<Scene>();
-    cornellScene->Init(args.OutObjects);
-    m_scenes.emplace_back(cornellScene);
+    auto sphereModel = ModelLoaderGLTF::LoadModelsFromGLTF(d3d, cmdList.Get(), L"Sphere/Sphere.gltf").at(0);
+    std::shared_ptr<Scene> sceneSphere = std::make_shared<Scene>();
+    sceneSphere->Init("Sphere", sphereModel, { XMFLOAT3(1, 1, 1), 3});
+    m_scenes.emplace_back(sceneSphere);
 
-    m_ptContext.Init(device, cmdList.Get(), m_scenes.at(0).get());
+    args = {};
+    args.Transform.SetScale(2.0f);
+    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
+    std::shared_ptr<Scene> scenePlane = std::make_shared<Scene>();
+    scenePlane->Init("FloatPlane", args.OutObjects);
+    m_scenes.emplace_back(scenePlane);
+
+    m_ptContext.Init(device, cmdList.Get(), &m_heap);
 
     m_ptOutputTex.Init(L"PT Output", device, &m_heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight,
                        Config::GetSystem().RTVFormat);
 
-    m_material = std::make_shared<Material>();
-    m_material->Init(&m_heap);
-    m_material->AddCBV(device, &m_heap, sizeof(CbvPathTracing));
-    m_ptContext.FillMaterial(device, m_material.get(), &m_heap);
-
 #ifdef _DEBUG
     m_rootSigDebug = std::make_shared<RootSig>();
     m_rootSigDebug->SmartInit(device, 2, 5, 2);
-
-    m_materialDebug = std::make_shared<Material>();
-    m_materialDebug->Init(&m_heap);
-    m_materialDebug->AddCBV(device, &m_heap, sizeof(CbvPathTracing));
-    m_materialDebug->AddCBV(device, &m_heap, sizeof(CbvPathTracingDebug));
-    m_ptContext.FillMaterial(device, m_materialDebug.get(), &m_heap);
 
     m_readbackManager.Init(d3d, &m_heap, &m_ptOutputTex);
 #endif
@@ -146,9 +152,7 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
     const bool debugMode = m_ptConfig.Mode == eOutputBuffer;
 
     ID3D12RootSignature* rootSig = debugMode ? m_rootSigDebug->Get() : m_rootSig->Get();
-    const Material* mat = debugMode ? m_materialDebug.get() : m_material.get();
     const int debugBufferIdx = debugMode ? m_ptConfig.DebugBufferIdx : -1;
-    PathTracingContext* ptContext = &m_ptContext;
 
     ID3D12PipelineState* pso = nullptr;
     switch (m_ptConfig.Mode)
@@ -170,13 +174,11 @@ void PathTracer::populateCommandList(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
     case eFurnaceTestEmissive:
         if (!m_furnaceTest.GetIsInitialised())
             m_furnaceTest.Init(d3d, cmdList, m_shaderILD, m_rootSig->Get(), &m_heap);
-        ptContext = m_furnaceTest.GetPtContext();
         pso = m_ptConfig.Mode == eFurnaceTestClassic ? m_furnaceTest.GetShaderClassic() : m_furnaceTest.GetShaderEmissive();
-        mat = m_furnaceTest.GetMaterial();
         break;
     }
 
-    ptContext->Render(cmdList, rootSig, pso, &m_camera.GetCamera(), mat, m_projMatrix, m_ptConfig, debugBufferIdx);
+    m_ptContext.Render(cmdList, rootSig, pso, &m_camera.GetCamera(), m_projMatrix, m_ptConfig, debugBufferIdx);
 
 #ifdef _DEBUG
     if (m_ptConfig.ReadbackEnabled)

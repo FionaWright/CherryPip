@@ -27,25 +27,18 @@ struct CBV
 struct SRV
 {
     UINT HeapIndex;
-
-    // TODO: Get rid of material ownership
-    std::shared_ptr<Texture> Texture = nullptr;
-    std::shared_ptr<TLAS> TLAS = nullptr;
-    std::shared_ptr<D12Resource> Buffer = nullptr;
+    D12Resource* Resource = nullptr;
 };
 
 struct UAV
 {
     UINT HeapIndex;
-
-    // TODO: Get rid of material ownership
-    std::shared_ptr<Texture> Texture = nullptr;
 };
 
 struct MaterialData
 {
     DirectX::XMFLOAT3 BaseColorFactor = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
-    float EmmissiveStrength = 0.0f;
+    float EmissiveStrength = 0.0f;
 };
 
 class Material
@@ -57,10 +50,13 @@ public:
     void SetData(const MaterialData& data) { m_materialData = data; }
 
     void AddCBV(ID3D12Device* device, Heap* heap, size_t size);
-    void AddSRV(ID3D12Device* device, Heap* heap, std::shared_ptr<Texture> tex);
-    void AddBuffer(ID3D12Device* device, Heap* heap, std::shared_ptr<D12Resource> resource, UINT numElements,
+    void SetSRV(ID3D12Device* device, UINT srvIdx, Heap* heap, D12Resource* d12Resource,
+                const D3D12_SHADER_RESOURCE_VIEW_DESC& desc);
+    void SetTex(ID3D12Device* device, UINT srvIdx, Heap* heap, std::shared_ptr<Texture> tex);
+    void SetBuffer(ID3D12Device* device, UINT srvIdx, Heap* heap, std::shared_ptr<D12Resource> resource,
+                   UINT numElements,
                    size_t stride);
-    void AddTLAS(ID3D12Device* device, Heap* heap, const std::shared_ptr<TLAS>& tlas);
+    void SetTlas(ID3D12Device* device, UINT srvIdx, Heap* heap, const std::shared_ptr<TLAS>& tlas);
     void AddUAV(ID3D12Device* device, Heap* heap, const std::shared_ptr<Texture>& tex);
     void AddUAV(ID3D12Device* device, Heap* heap, ID3D12Resource* resource, DXGI_FORMAT format);
 
@@ -79,6 +75,11 @@ private:
     std::vector<UAV> m_uavs = {};
 
     MaterialData m_materialData;
+
+    // TODO: Refactor this out!!!!
+    std::vector<std::shared_ptr<Texture>> m_tempTextureOwnership;
+    std::vector<std::shared_ptr<D12Resource>> m_tempResourceOwnership;
+    std::vector<std::shared_ptr<TLAS>> m_tempTlasOwnership;
 };
 
 

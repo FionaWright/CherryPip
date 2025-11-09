@@ -385,7 +385,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
         std::shared_ptr<Material> material = std::make_shared<Material>();
         material->Init(heap);
         material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices));
-        material->AddSRV(d3d->GetDevice(), heap, diffuseTex);
+        material->SetTex(d3d->GetDevice(), 0, heap, diffuseTex);
 
         MaterialData materialData = {};
         material->SetData(materialData);
@@ -447,11 +447,11 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     std::shared_ptr<Material> material = std::make_shared<Material>();
     material->Init(heap);
     material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices));
-    material->AddSRV(d3d->GetDevice(), heap, diffuseTex);
+    material->SetTex(d3d->GetDevice(), 0, heap, diffuseTex);
 
     MaterialData materialData;
     memcpy(&materialData.BaseColorFactor, &mat.pbrData.baseColorFactor, sizeof(float) * 3);
-    materialData.EmmissiveStrength = mat.emissiveStrength;
+    materialData.EmissiveStrength = mat.emissiveStrength;
     material->SetData(materialData);
 
     auto obj = std::make_shared<Object>();

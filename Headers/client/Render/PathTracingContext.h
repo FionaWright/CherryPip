@@ -31,11 +31,11 @@ class TLAS;
 class PathTracingContext
 {
 public:
-    void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const Scene* scene);
-    void FillMaterial(ID3D12Device* device, Material* material, Heap* heap) const;
+    void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap* heap);
+    void BuildScene(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const Scene* scene, Heap* heap);
     void Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSig,
                 ID3D12PipelineState* pso,
-                const Camera* camera, const Material* material, const XMMATRIX& projMatrix, const PtConfig& config,
+                const Camera* camera, const XMMATRIX& projMatrix, const PtConfig& config,
                 int debugModeIdx = -1);
     void Reset();
 
@@ -49,6 +49,8 @@ public:
 private:
     std::shared_ptr<TLAS> m_tlas;
     std::vector<std::shared_ptr<BLAS>> m_blasList;
+
+    std::shared_ptr<Material> m_material;
 
     uint32_t m_numFrames = 0;
 

@@ -20,7 +20,6 @@ StructuredBuffer<PtMaterialData> gMaterials  : register(t4);
 RWTexture2D<float4> gAccum : register(u0);
 #ifdef DEBUG_BUFFER
     ConstantBuffer<CbvPathTracingDebug> c_debug : register(b1);
-    RWTexture2D<float4> gDebugBuffer : register(u1);
 
 	#include "DebugPalette.hlsli"
 #endif

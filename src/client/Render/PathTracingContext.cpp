@@ -16,8 +16,37 @@
 #include "Render/Camera.h"
 #include "System/Config.h"
 
-void PathTracingContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const Scene* scene)
+void PathTracingContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap* heap)
 {
+    m_fullScreenTriangle.InitFullScreenTriangle(device, cmdList);
+
+    m_accumTexture = std::make_shared<Texture>();
+    m_accumTexture->InitEmpty(device, DXGI_FORMAT_R32G32B32A32_FLOAT, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    m_accumTexture->Transition(cmdList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+
+    m_accumClearBuffer = std::make_shared<Texture>();
+    m_accumClearBuffer->InitEmpty(device, m_accumTexture->GetFormat(), Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight);
+    m_accumClearBuffer->Transition(cmdList, D3D12_RESOURCE_STATE_COPY_SOURCE);
+
+    m_material = std::make_shared<Material>();
+    m_material->Init(heap);
+    m_material->AddCBV(device, heap, sizeof(CbvPathTracing));
+#ifdef _DEBUG
+    m_material->AddCBV(device, heap, sizeof(CbvPathTracingDebug));
+#endif
+    m_material->AddUAV(device, heap, m_accumTexture);
+}
+
+void PathTracingContext::BuildScene(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const Scene* scene, Heap* heap)
+{
+    m_instanceDataList.clear();
+    m_blasList.clear();
+    m_tlas.reset();
+    m_instanceDataBuffer.reset();
+    m_vertexMegaBuffer.reset();
+    m_indexMegaBuffer.reset();
+    m_materialBuffer.reset();
+
     ComPtr<ID3D12Device5> device5;
     V(device->QueryInterface(IID_PPV_ARGS(&device5)));
     ComPtr<ID3D12GraphicsCommandList4> cmdList4;
@@ -36,7 +65,7 @@ void PathTracingContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* c
         const MaterialData* objectMaterialData = object->GetMaterial()->GetData();
         PtMaterialData ptMaterialData;
         ptMaterialData.BaseColorFactor = objectMaterialData->BaseColorFactor;
-        ptMaterialData.EmissiveStrength = objectMaterialData->EmmissiveStrength;
+        ptMaterialData.EmissiveStrength = objectMaterialData->EmissiveStrength;
         materialData.emplace_back(ptMaterialData);
     }
 
@@ -110,38 +139,15 @@ void PathTracingContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* c
     m_vertexMegaBuffer->Transition(cmdList, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
     m_indexMegaBuffer->Transition(cmdList, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
 
-    m_fullScreenTriangle.InitFullScreenTriangle(device, cmdList);
-
-    m_accumTexture = std::make_shared<Texture>();
-    m_accumTexture->InitEmpty(device, DXGI_FORMAT_R32G32B32A32_FLOAT, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-    m_accumTexture->Transition(cmdList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-
-    m_accumClearBuffer = std::make_shared<Texture>();
-    m_accumClearBuffer->InitEmpty(device, m_accumTexture->GetFormat(), Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight);
-    m_accumClearBuffer->Transition(cmdList, D3D12_RESOURCE_STATE_COPY_SOURCE);
-
-    D3D12_STATIC_SAMPLER_DESC samplers[1];
-    samplers[0] = {};
-    samplers[0].Filter = D3D12_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
-    samplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-    samplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-    samplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-    samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-    samplers[0].ShaderRegister = 0;
-}
-
-void PathTracingContext::FillMaterial(ID3D12Device* device, Material* material, Heap* heap) const
-{
-    material->AddTLAS(device, heap, m_tlas);
-    material->AddBuffer(device, heap, m_instanceDataBuffer, m_instanceDataList.size(), sizeof(PtInstanceData));
-    material->AddBuffer(device, heap, m_vertexMegaBuffer, m_vertexMegaBufferCount, sizeof(Vertex));
-    material->AddBuffer(device, heap, m_indexMegaBuffer, m_indexMegaBufferCount, sizeof(uint32_t) * 3);
-    material->AddBuffer(device, heap, m_materialBuffer, m_instanceDataList.size(), sizeof(PtMaterialData));
-    material->AddUAV(device, heap, m_accumTexture);
+    m_material->SetTlas(device,0, heap, m_tlas);
+    m_material->SetBuffer(device, 1, heap, m_instanceDataBuffer, m_instanceDataList.size(), sizeof(PtInstanceData));
+    m_material->SetBuffer(device, 2, heap, m_vertexMegaBuffer, m_vertexMegaBufferCount, sizeof(Vertex));
+    m_material->SetBuffer(device, 3, heap, m_indexMegaBuffer, m_indexMegaBufferCount, sizeof(uint32_t) * 3);
+    m_material->SetBuffer(device, 4, heap, m_materialBuffer, m_instanceDataList.size(), sizeof(PtMaterialData));
 }
 
 void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSig,
-                                ID3D12PipelineState* pso, const Camera* camera, const Material* material,
+                                ID3D12PipelineState* pso, const Camera* camera,
                                 const XMMATRIX& projMatrix, const PtConfig& config, int debugModeIdx)
 {
     GPU_SCOPE(cmdList, L"Path Tracing");
@@ -200,16 +206,16 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
             cbv.Jitter.y *= texelSize.y;
         }
 
-        material->UpdateCBV(0, &cbv);
+        m_material->UpdateCBV(0, &cbv);
 
         if (debugModeIdx != -1)
         {
             CbvPathTracingDebug cbvDebug;
             cbvDebug.DebugIdx = static_cast<DebugBuffer>(debugModeIdx);
-            material->UpdateCBV(1, &cbvDebug);
+            m_material->UpdateCBV(1, &cbvDebug);
         }
 
-        material->SetDescriptorTables(cmdList);
+        m_material->SetDescriptorTables(cmdList);
 
         cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         cmdList->IASetVertexBuffers(0, 1, &m_fullScreenTriangle.GetVertexBufferView());

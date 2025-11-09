@@ -62,13 +62,14 @@ private:
     Heap m_heap, m_heapRTV;
     CameraController m_camera;
 
-    std::shared_ptr<Material> m_material, m_materialDebug;
     std::shared_ptr<Shader> m_shader, m_shaderDebug;
     std::shared_ptr<RootSig> m_rootSig, m_rootSigDebug;
 
     std::vector<D3D12_INPUT_ELEMENT_DESC> m_shaderILD;
 
     std::vector<std::shared_ptr<Scene>> m_scenes;
+    uint32_t m_currentScene = 0;
+    bool m_sceneDirty = true;
 
     PathTracingContext m_ptContext;
     PtConfig m_ptConfig;

@@ -11,7 +11,7 @@ using namespace DirectX;
 class Camera
 {
 public:
-    void Init(XMFLOAT3 pos, XMFLOAT3 lookat);
+    void Init(XMFLOAT3 pos, float pitch, float yaw);
     XMMATRIX GetViewMatrix() const;
 
     double GetPitch() const { return m_pitch; }
@@ -24,6 +24,7 @@ public:
 
     void SetPitch(const double pitch) { m_pitch = pitch; }
     void SetYaw(const double yaw) { m_yaw = yaw; }
+    void SetPitchYaw(const double pitch, const double yaw) { m_pitch = pitch; m_yaw = yaw; RecomputeUpRightForward(); }
 
     void SetPosition(const XMFLOAT3& pos) { m_pos = pos; }
     void AddPosition(const XMFLOAT3 offset) { m_pos.x += offset.x; m_pos.y += offset.y; m_pos.z += offset.z; }
@@ -34,6 +35,9 @@ public:
     void SetUp(const XMVECTOR& up) { XMStoreFloat3(&m_up, up); }
     void SetRight(const XMVECTOR& right) { XMStoreFloat3(&m_right, right); }
     void SetForward(const XMVECTOR& forward) { XMStoreFloat3(&m_forward, forward); }
+
+    void RecomputePitchYaw();
+    void RecomputeUpRightForward();
 
 private:
     XMFLOAT3 m_up = {}, m_forward = {}, m_right = {};

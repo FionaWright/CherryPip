@@ -133,6 +133,9 @@ void PathTracingContext::BuildScene(ID3D12Device* device, ID3D12GraphicsCommandL
         cmdList->CopyBufferRegion(m_indexMegaBuffer->GetResource(), iByteOffset, iBuffer->GetResource(), 0,
                                   iBufferSize);
 
+        vBuffer->Transition(cmdList, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+        iBuffer->Transition(cmdList, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+
         vByteOffset += vBufferSize;
         iByteOffset += iBufferSize;
     }

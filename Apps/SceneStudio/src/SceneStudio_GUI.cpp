@@ -18,39 +18,34 @@ void SceneStudio::GUI()
     Gui::BeginWindow("SceneStudio", ImVec2(0, 0),
                      ImVec2(Config::GetSystem().WindowAppGuiWidth, Config::GetSystem().RtvHeight));
 
-    static int e = m_studioConfig.Backend;
-    ImGui::SeparatorText("Render Backend##xx");
-    ImGui::Indent(IM_GUI_INDENTATION);
-    ImGui::RadioButton("Forward", &e, 0); ImGui::SameLine();
-    ImGui::RadioButton("Path Tracer", &e, 1);
     ImGui::Unindent(IM_GUI_INDENTATION);
-    m_studioConfig.Backend = static_cast<RenderBackend>(e);
+    ImGui::SeparatorText("Camera##xx");
+    ImGui::Indent(IM_GUI_INDENTATION);
 
-    switch (m_studioConfig.Backend)
+    bool resetPT = false;
+    XMFLOAT3 pos = m_camera.GetCamera().GetPosition();
+    resetPT |= ImGui::InputFloat3("Camera Position##xx", reinterpret_cast<float*>(&pos));
+    m_camera.GetCamera().SetPosition(pos);
+
+    float pitch = m_camera.GetCamera().GetPitch();
+    float yaw = m_camera.GetCamera().GetYaw();
+    resetPT |= ImGui::DragFloat("Camera Pitch##xx", &pitch, 0.01f);
+    resetPT |= ImGui::DragFloat("Camera Yaw##xx", &yaw, 0.01f);
+    m_camera.GetCamera().SetPitchYaw(pitch, yaw);
+
+    if (ImGui::Button("Reset Camera to Scene Start##xx"))
     {
-    case eForward:
-        GuiRaster();
-        break;
-    case ePathTracer:
-        GuiPathTracer();
-        break;
-    default:
-        break;
+        const Scene* currScene = m_scenes.at(m_currentScene).get();
+        m_camera.GetCamera().SetPosition(currScene->GetCameraPosition());
+        m_camera.GetCamera().SetPitchYaw(currScene->GetPitch(), currScene->GetYaw());
+        resetPT = true;
     }
-
-    Gui::EndWindow();
-}
-
-void SceneStudio::GuiPathTracer()
-{
-    ImGui::Unindent(IM_GUI_INDENTATION);
-    ImGui::SeparatorText("Stats##xx");
-    ImGui::Indent(IM_GUI_INDENTATION);
-
-    ImGui::Text("%s%i", "Frame Index: ", m_ptContext.GetFrameNum());
-    ImGui::Text("%s%i", "Total SPP: ", m_ptContext.GetFrameNum() * m_studioConfig.PT.SPP);
-
-    bool ptNeedsReset = false;
+    if (ImGui::Button("Reset Camera to Origin##xx"))
+    {
+        m_camera.GetCamera().SetPosition({0, 0, 0});
+        m_camera.GetCamera().SetPitchYaw(0, 0);
+        resetPT = true;
+    }
 
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Scene##xx");
@@ -66,7 +61,7 @@ void SceneStudio::GuiPathTracer()
             {
                 m_currentScene = i;
                 m_sceneDirty = true;
-                ptNeedsReset = true;
+                resetPT = true;
             }
 
             if (isSelected)
@@ -75,6 +70,40 @@ void SceneStudio::GuiPathTracer()
 
         ImGui::EndCombo();
     }
+
+    static int e = m_studioConfig.Backend;
+    ImGui::SeparatorText("Render Backend##xx");
+    ImGui::Indent(IM_GUI_INDENTATION);
+    ImGui::RadioButton("Forward", &e, 0); ImGui::SameLine();
+    ImGui::RadioButton("Path Tracer", &e, 1);
+    ImGui::Unindent(IM_GUI_INDENTATION);
+    m_studioConfig.Backend = static_cast<RenderBackend>(e);
+
+    switch (m_studioConfig.Backend)
+    {
+    case eForward:
+        GuiRaster();
+        break;
+    case ePathTracer:
+        GuiPathTracer(resetPT);
+        break;
+    default:
+        break;
+    }
+
+    Gui::EndWindow();
+}
+
+void SceneStudio::GuiPathTracer(const bool resetPT)
+{
+    ImGui::Unindent(IM_GUI_INDENTATION);
+    ImGui::SeparatorText("Stats##xx");
+    ImGui::Indent(IM_GUI_INDENTATION);
+
+    ImGui::Text("%s%i", "Frame Index: ", m_ptContext.GetFrameNum());
+    ImGui::Text("%s%i", "Total SPP: ", m_ptContext.GetFrameNum() * m_studioConfig.PT.SPP);
+
+    bool ptNeedsReset = resetPT;
 
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Settings##xx");

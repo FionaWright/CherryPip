@@ -10,6 +10,7 @@
 #include "System/FileHelper.h"
 #include "System/Gui.h"
 #include "CBV.h"
+#include "MathUtils.h"
 #include "Debug/PythonExecutor.h"
 #include "HWI/BLAS.h"
 #include "HWI/Material.h"
@@ -35,7 +36,7 @@ void SceneStudio::OnInit(D3D* d3d)
     constexpr float farPlane = 100.0f;
     m_projMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), m_AspectRatio, nearPlane, farPlane);
 
-    m_camera.Init({}, {});
+    m_camera.Init(XMFLOAT3(0, 0, 5), 0, PI);
 
     loadAssets(d3d);
 }
@@ -50,8 +51,13 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 
     if (m_sceneDirty)
     {
-        m_ptContext.BuildScene(d3d->GetDevice(), cmdList, m_scenes.at(m_currentScene).get(), &m_heap);
-        m_rasterContext.SetScene(m_scenes.at(m_currentScene).get());
+        Scene* currScene = m_scenes.at(m_currentScene).get();
+        m_ptContext.BuildScene(d3d->GetDevice(), cmdList, currScene, &m_heap);
+        m_rasterContext.SetScene(currScene);
+
+        m_camera.GetCamera().SetPosition(currScene->GetCameraPosition());
+        m_camera.GetCamera().SetPitchYaw(currScene->GetPitch(), currScene->GetYaw());
+
         m_sceneDirty = false;
     }
 
@@ -114,19 +120,22 @@ void SceneStudio::loadAssets(D3D* d3d)
     args.Transform.SetScale(2.0f);
     ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Cornell/scene.gltf", args);
     std::shared_ptr<Scene> sceneCornellBox = std::make_shared<Scene>();
-    sceneCornellBox->Init("Cornell Box", args.OutObjects);
+    sceneCornellBox->Init("Cornell Box", XMFLOAT3(0, 1.5f, 4.5f), 0, PI, args.OutObjects);
     m_scenes.emplace_back(sceneCornellBox);
+    args.OutObjects.clear();
 
     ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Sphere/Sphere.gltf", args);
     std::shared_ptr<Scene> sceneSphere = std::make_shared<Scene>();
-    sceneSphere->Init("Sphere", args.OutObjects);
+    sceneSphere->Init("Sphere", XMFLOAT3(0, 0, -4.3f), 0, 0, args.OutObjects);
     m_scenes.emplace_back(sceneSphere);
+    args.OutObjects.clear();
 
     args.Transform.SetScale(2.0f);
     ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
     std::shared_ptr<Scene> scenePlane = std::make_shared<Scene>();
-    scenePlane->Init("FloatPlane", args.OutObjects);
+    scenePlane->Init("FloatPlane", XMFLOAT3(0, 1.5f, 4.5f), 0, PI, args.OutObjects);
     m_scenes.emplace_back(scenePlane);
+    args.OutObjects.clear();
 
     // args = {};
     // args.Transform.SetScale(2.0f);

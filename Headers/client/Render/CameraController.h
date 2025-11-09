@@ -10,7 +10,7 @@
 class CameraController
 {
 public:
-    void Init(const XMFLOAT3& pos, const XMFLOAT3& lookat) { m_camera.Init(pos, lookat); }
+    void Init(const XMFLOAT3& pos, const float pitch, const float yaw) { m_camera.Init(pos, pitch, yaw); }
     bool UpdateCamera();
 
     XMMATRIX GetViewMatrix() const { return m_camera.GetViewMatrix(); }

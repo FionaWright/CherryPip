@@ -36,7 +36,7 @@ struct PtConfig
     uint32_t NumBounces = 1;
     uint32_t MaxFrameNum = 0;
     PathTracerMode Mode = eStandard;
-    DebugBuffer DebugBufferIdx = DebugBuffer::eNormals;
+    DebugBuffer DebugBufferIdx = DebugBuffer::eNormalsShaded;
     bool AccumulationEnabled = true;
     bool JitterEnabled = false;
     bool ReadbackEnabled = false;

@@ -1,7 +1,9 @@
-if (c_debug.DebugIdx == DebugBuffer::eNormals)
-    return outNormal;
+if (c_debug.DebugIdx == DebugBuffer::eNormalsShaded)
+    return outNs;
+else if (c_debug.DebugIdx == DebugBuffer::eNormalsGeo)
+    return outNg;
 else if (c_debug.DebugIdx == DebugBuffer::eFirstBounceDirection)
-    return newDir;
+    return ray.Direction;
 else if (c_debug.DebugIdx == DebugBuffer::eHitPos)
     return hitPos;
 else if (c_debug.DebugIdx == DebugBuffer::eBaseColor)

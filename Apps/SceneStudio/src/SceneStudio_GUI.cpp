@@ -144,7 +144,8 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
     }
 
     static const std::vector<const char*> c_debugBufferStrMap = {
-        "Normals",
+        "Normals (Ns)",
+        "Normals (Ng)",
         "Base Color",
         "HitPos",
         "First Bounce Direction",

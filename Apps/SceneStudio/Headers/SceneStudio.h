@@ -79,7 +79,7 @@ private:
     void renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void renderRaster(const D3D* d3d, ID3D12GraphicsCommandList* cmdList) const;
     void GUI();
-    void GuiPathTracer();
+    void GuiPathTracer(bool resetPT);
     void GuiRaster();
 
     Heap m_heap, m_heapRTV;

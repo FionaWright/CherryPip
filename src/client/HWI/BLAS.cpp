@@ -59,4 +59,7 @@ void BLAS::Init(ID3D12Device5* device, ID3D12GraphicsCommandList4* cmdList, cons
     barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
     barrier.UAV.pResource = m_blasResult.GetResource();
     cmdList->ResourceBarrier(1, &barrier);
+
+    vertexBuffer->Transition(cmdList, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+    indexBuffer->Transition(cmdList, D3D12_RESOURCE_STATE_INDEX_BUFFER);
 }

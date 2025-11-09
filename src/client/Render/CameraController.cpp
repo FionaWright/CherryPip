@@ -45,9 +45,9 @@ bool CameraController::UpdateCamera()
     if (Input::IsMouseMiddle() && !mouseOverGUI)
     {
         XMFLOAT2 deltaMouse = Input::GetMousePosDelta();
-        const float panSpeed = -3.5f * m_speed;
+        const float panSpeed = 3.5f * m_speed;
         deltaMouse.x *= panSpeed;
-        deltaMouse.y *= panSpeed;
+        deltaMouse.y *= -panSpeed;
 
         const XMFLOAT3 upTranslation = XMFLOAT3(up.x * -deltaMouse.y, up.y * -deltaMouse.y, up.z * -deltaMouse.y);
         m_camera.AddPosition(upTranslation);

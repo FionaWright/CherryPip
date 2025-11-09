@@ -21,7 +21,8 @@ struct PtMaterialData
 
     uint TextureIdx;
     uint NormalMapIdx;
-    uint2 p;
+    float Roughness;
+    float Metalness;
 };
 
 struct Vertex

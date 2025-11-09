@@ -57,7 +57,8 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         }
 
         float3 outMaterialColor = 0, outNg = 0, outNs = 0, outLight = 0;
-        Hit(rngState, outMaterialColor, outNg, outNs, outLight, q);
+		PtMaterialData mat;
+        Hit(rngState, outMaterialColor, outNg, outNs, outLight, mat, q);
 
         color += throughput * outLight;
         throughput *= outMaterialColor;
@@ -65,7 +66,9 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 		float3 hitPos = ray.Origin + ray.Direction * q.CommittedRayT();
         ray.Origin = hitPos + outNg * EPSILON;
 
-		ray.Direction = normalize(outNs + RandDirectionSphere(rngState));
+		float3 diffuseDir = normalize(outNs + RandDirectionSphere(rngState));
+		float3 specularDir = ray.Direction - 2 * dot(ray.Direction, outNs) * outNs;
+		ray.Direction = lerp(specularDir, diffuseDir, mat.Roughness);
 
 #ifdef DEBUG_BUFFER
     #include "Path-Tracing/DebugBuffersOnHit.hlsli"

@@ -4,10 +4,10 @@
 #include "DebugPalette.hlsli"
 #include "Rand01.hlsli"
 
-void Hit(inout uint rngState, out float3 materialColor, out float3 Ng, out float3 Ns, out float3 light, inout RayQuery<RAY_FLAGS> q)
+void Hit(inout uint rngState, out float3 materialColor, out float3 Ng, out float3 Ns, out float3 light, out PtMaterialData mat, inout RayQuery<RAY_FLAGS> q)
 {
     PtInstanceData instance = gInstances[q.CommittedInstanceIndex()];
-    PtMaterialData material = gMaterials[instance.MaterialIdx];
+    mat = gMaterials[instance.MaterialIdx];
 
     uint3 tri = gIndexMegaBuffer[instance.IndexBufferOffset + q.CommittedPrimitiveIndex()];
     Vertex v0 = gVertexMegaBuffer[instance.VertexBufferOffset + tri.x];
@@ -35,8 +35,8 @@ void Hit(inout uint rngState, out float3 materialColor, out float3 Ng, out float
     materialColor = float3(1, 1, 1);
     light = float3(0, 0, 0);
 #else
-    materialColor = material.BaseColorFactor;
-    light = material.EmissiveStrength;
+    materialColor = mat.BaseColorFactor;
+    light = mat.EmissiveStrength;
 #endif
 }
 

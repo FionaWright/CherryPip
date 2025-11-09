@@ -18,9 +18,9 @@
 - [x] Accumulation Buffer
 - [x] PT Debug Views & Systems
 - [x] NaN Test
-- [ ] Switch direction of Engine->App, seperate CMAKE targets
-- [ ] Scene, SceneViewer, Refactor App system
-- [ ] Save/Load Camera Transform
+- [x] Switch direction of Engine->App, seperate CMAKE targets
+- [x] Scene, SceneViewer, Refactor App system
+- [x] Save/Load Camera Transform
 - [ ] Scene Transforms GUI 
 - [ ] CI/CD-like tests
 - [ ] Specular/Reflections
@@ -53,19 +53,3 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ## Notes
 
 Look into russian roulette 
-
-## Scene Refactor part 3
-
-Currently the direction of my engine goes:
-
-main.cpp creates an App vector and passes it into Win32App
-Win32App creates an Engine
-Engine calls the App functions
-
-What I want: 
-
-main.cpp (within app) passes the single App class into Win32App
-client becomes a new target which the app is dependant on
-The app has its own CMakeLists.txt
-
-Leave the functionality for multiple Apps running at once jic

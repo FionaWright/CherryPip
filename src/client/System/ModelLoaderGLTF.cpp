@@ -452,6 +452,8 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     MaterialData materialData;
     memcpy(&materialData.BaseColorFactor, &mat.pbrData.baseColorFactor, sizeof(float) * 3);
     materialData.EmissiveStrength = mat.emissiveStrength;
+    materialData.Roughness = mat.pbrData.roughnessFactor;
+    materialData.Metalness = mat.pbrData.metallicFactor;
     material->SetData(materialData);
 
     auto obj = std::make_shared<Object>();

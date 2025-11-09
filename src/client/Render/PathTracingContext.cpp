@@ -66,6 +66,8 @@ void PathTracingContext::BuildScene(ID3D12Device* device, ID3D12GraphicsCommandL
         PtMaterialData ptMaterialData;
         ptMaterialData.BaseColorFactor = objectMaterialData->BaseColorFactor;
         ptMaterialData.EmissiveStrength = objectMaterialData->EmissiveStrength;
+        ptMaterialData.Roughness = objectMaterialData->Roughness;
+        ptMaterialData.Metalness = objectMaterialData->Metalness;
         materialData.emplace_back(ptMaterialData);
     }
 

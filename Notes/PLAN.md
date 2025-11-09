@@ -17,9 +17,14 @@
 - [x] Furnace Test
 - [x] Accumulation Buffer
 - [x] PT Debug Views & Systems
-- [ ] CI/CD
-- [ ] ...
-- [ ] Reflections
+- [ ] NaN Test, split Furnace and DebugBuffer
+- [ ] Switch direction of Engine->App, seperate CMAKE targets
+- [ ] Scene, SceneViewer, Refactor App system
+- [ ] Save/Load Camera Transform
+- [ ] Scene Transforms GUI 
+- [ ] CI/CD-like tests
+- [ ] Specular/Reflections
+- [ ] NEE 
 - [ ] Glass & Caustics
 - [ ] Ray pipelines
 

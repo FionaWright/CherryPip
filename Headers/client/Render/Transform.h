@@ -27,7 +27,7 @@ public:
     void Rotate(const XMFLOAT3& rotation);
     void Scale(const XMFLOAT3& scale);
 
-    XMMATRIX GetModelMatrix() const;
+    XMMATRIX GetModelMatrix(XMFLOAT3 centroid = {}) const;
 
 private:
     XMFLOAT3 m_position = XMFLOAT3(0, 0, 0);

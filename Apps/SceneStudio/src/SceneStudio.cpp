@@ -123,26 +123,27 @@ void SceneStudio::loadAssets(D3D* d3d)
     sceneCornellBox->Init("Cornell Box", XMFLOAT3(0, 1.5f, 4.5f), 0, PI, args.OutObjects);
     m_scenes.emplace_back(sceneCornellBox);
     args.OutObjects.clear();
+    //
+    // ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Sphere/Sphere.gltf", args);
+    // std::shared_ptr<Scene> sceneSphere = std::make_shared<Scene>();
+    // sceneSphere->Init("Sphere", XMFLOAT3(0, 0, -4.3f), 0, 0, args.OutObjects);
+    // m_scenes.emplace_back(sceneSphere);
+    // args.OutObjects.clear();
+    //
+    // args.Transform = {};
+    // args.Transform.SetScale(1.0f);
+    // ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
+    // std::shared_ptr<Scene> scenePlane = std::make_shared<Scene>();
+    // scenePlane->Init("FloatPlane", XMFLOAT3(0, 1.5f, 4.5f), 0, PI, args.OutObjects);
+    // m_scenes.emplace_back(scenePlane);
+    // args.OutObjects.clear();
 
-    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Sphere/Sphere.gltf", args);
-    std::shared_ptr<Scene> sceneSphere = std::make_shared<Scene>();
-    sceneSphere->Init("Sphere", XMFLOAT3(0, 0, -4.3f), 0, 0, args.OutObjects);
-    m_scenes.emplace_back(sceneSphere);
-    args.OutObjects.clear();
-
-    args.Transform.SetScale(2.0f);
-    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
-    std::shared_ptr<Scene> scenePlane = std::make_shared<Scene>();
-    scenePlane->Init("FloatPlane", XMFLOAT3(0, 1.5f, 4.5f), 0, PI, args.OutObjects);
-    m_scenes.emplace_back(scenePlane);
-    args.OutObjects.clear();
-
-    // args = {};
     // args.Transform.SetScale(2.0f);
     // ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Chess/Chess.gltf", args);
     // std::shared_ptr<Scene> sceneChess = std::make_shared<Scene>();
-    // sceneChess->Init("Chess", args.OutObjects);
+    // sceneChess->Init("Chess", {}, 0, 0, args.OutObjects);
     // m_scenes.emplace_back(sceneChess);
+    // args.OutObjects.clear();
 
     m_ptContext.Init(device, cmdList.Get(), &m_heap);
 

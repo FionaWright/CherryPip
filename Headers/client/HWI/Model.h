@@ -31,6 +31,8 @@ public:
     size_t GetIndexCount() const { return m_indexCount; }
     size_t GetVertexInputSize() const { return m_vertexInputSize; }
 
+    const XMFLOAT3& GetCentroid() const { return m_centroid; }
+
 private:
     std::shared_ptr<D12Resource> m_vertexBuffer;
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {};

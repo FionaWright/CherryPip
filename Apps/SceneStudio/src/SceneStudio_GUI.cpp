@@ -18,6 +18,19 @@ void SceneStudio::GUI()
     Gui::BeginWindow("SceneStudio", ImVec2(0, 0),
                      ImVec2(Config::GetSystem().WindowAppGuiWidth, Config::GetSystem().RtvHeight));
 
+    if (ImGui::BeginMenuBar())
+    {
+        if (ImGui::BeginMenu("A")) {
+            ImGui::Text("content A");
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("B")) {
+            ImGui::Text("content B");
+            ImGui::EndMenu();
+        }
+        ImGui::EndMenuBar();
+    }
+
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Camera##xx");
     ImGui::Indent(IM_GUI_INDENTATION);

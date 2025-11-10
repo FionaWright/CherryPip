@@ -9,6 +9,7 @@
 
 #include "../../../Headers/client/Helper.h"
 #include "HWI/BLAS.h"
+#include "HWI/Model.h"
 using namespace DirectX;
 
 void TLAS::Init(ID3D12Device5* device, ID3D12GraphicsCommandList4* cmdList, const std::vector<std::shared_ptr<BLAS>>& blasList)
@@ -16,7 +17,8 @@ void TLAS::Init(ID3D12Device5* device, ID3D12GraphicsCommandList4* cmdList, cons
     std::vector<D3D12_RAYTRACING_INSTANCE_DESC> instances;
     for (int i = 0; i < blasList.size(); i++)
     {
-        const XMMATRIX modelMatrix = blasList[i]->GetTransform().GetModelMatrix();
+        const XMFLOAT3& centroid = blasList[i]->GetModel()->GetCentroid();
+        const XMMATRIX modelMatrix = blasList[i]->GetTransform().GetModelMatrix(centroid);
 
         D3D12_RAYTRACING_INSTANCE_DESC instance = {};
         XMStoreFloat3x4(reinterpret_cast<XMFLOAT3X4*>(&instance.Transform), modelMatrix);

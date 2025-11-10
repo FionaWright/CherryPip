@@ -25,11 +25,16 @@ void Transform::Scale(const XMFLOAT3& scale)
     m_scale.z *= scale.z;
 }
 
-XMMATRIX Transform::GetModelMatrix() const
+XMMATRIX Transform::GetModelMatrix(const XMFLOAT3 centroid) const
 {
     const XMMATRIX T = XMMatrixTranslation(m_position.x, m_position.y, m_position.z);
     const XMMATRIX R = XMMatrixRotationRollPitchYaw(m_rotationEuler.x, m_rotationEuler.y, m_rotationEuler.z);
     const XMMATRIX S = XMMatrixScaling(m_scale.x, m_scale.y, m_scale.z);
 
-    return XMMatrixMultiply(S, XMMatrixMultiply(R, T));
+    if (centroid.x == 0.0f)
+        return XMMatrixMultiply(S, XMMatrixMultiply(R, T));
+
+    const XMMATRIX C = XMMatrixTranslation(centroid.x, centroid.y, centroid.z);
+    const XMMATRIX CI = XMMatrixInverse(nullptr, C);
+    return XMMatrixMultiply(CI, XMMatrixMultiply(S, XMMatrixMultiply(R, XMMatrixMultiply(T, C))));
 }

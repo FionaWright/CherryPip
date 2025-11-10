@@ -269,7 +269,7 @@ void ModelLoaderGLTF::loadModel(D3D* d3d, ID3D12GraphicsCommandList* cmdList, co
     rollingCentroidSum.X /= vertexCount;
     rollingCentroidSum.Y /= vertexCount;
     rollingCentroidSum.Z /= vertexCount;
-    XMFLOAT3 centroidFloat3 = XMFLOAT3(static_cast<float>(rollingCentroidSum.X),
+    const XMFLOAT3 centroidFloat3 = XMFLOAT3(static_cast<float>(rollingCentroidSum.X),
                                        static_cast<float>(rollingCentroidSum.Y),
                                        static_cast<float>(rollingCentroidSum.Z));
 
@@ -434,7 +434,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     else
         normalTexInput = "Assets/Textures/DefaultNormal.tga";
 
-    std::shared_ptr<Texture> normalTex = std::make_shared<Texture>();
+    //std::shared_ptr<Texture> normalTex = std::make_shared<Texture>();
     if (std::holds_alternative<std::string>(normalTexInput))
     {
         //normalTex->Init(d3d->GetDevice(), cmdList, get<std::string>(normalTexInput), DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
@@ -499,8 +499,7 @@ void ModelLoaderGLTF::loadNode(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Hea
     if (!node.meshIndex.has_value())
         return;
 
-    pos = Mult(pos, scale);
-    worldTransform.SetPosition(pos);
+    worldTransform.SetPosition(Mult(worldTransform.GetPosition(), worldTransform.GetScale()));
 
     args.Transform = worldTransform;
 

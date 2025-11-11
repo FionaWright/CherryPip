@@ -32,6 +32,8 @@ void SceneStudio::OnInit(D3D* d3d)
 
     m_camera.Init(XMFLOAT3(0, 0, 5), 0, PI);
 
+    m_studioConfig.Backend = d3d->GetRayTracingSupported() ? RenderBackend::ePathTracer : RenderBackend::eForward;
+
     loadAssets(d3d);
 }
 
@@ -124,6 +126,22 @@ void SceneStudio::loadAssets(D3D* d3d)
     std::shared_ptr<Scene> scenePlane = std::make_shared<Scene>();
     scenePlane->Init("FloatPlane", XMFLOAT3(0, 1.5f, 4.5f), 0, PI, args.OutObjects);
     m_scenes.emplace_back(scenePlane);
+    args.OutObjects.clear();
+
+    args.Transform = {};
+    args.Transform.SetScale(0.3f);
+    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Utah Teapot/scene.gltf", args);
+    std::shared_ptr<Scene> sceneTeapot = std::make_shared<Scene>();
+    sceneTeapot->Init("Utah Teapot", XMFLOAT3(0, 1.5f, 4.5f), 0, PI, args.OutObjects);
+    m_scenes.emplace_back(sceneTeapot);
+    args.OutObjects.clear();
+
+    args.Transform = {};
+    args.Transform.SetScale(0.3f);
+    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"ParentTest/ParentTest.gltf", args);
+    std::shared_ptr<Scene> sceneParentTest = std::make_shared<Scene>();
+    sceneParentTest->Init("Parent Test", XMFLOAT3(0, 1.5f, 4.5f), 0, PI, args.OutObjects);
+    m_scenes.emplace_back(sceneParentTest);
     args.OutObjects.clear();
 
     // args.Transform.SetScale(2.0f);

@@ -188,7 +188,7 @@ void SceneStudio::loadRasterAssets(const D3D* d3d)
         },
     };
     m_shaderRaster = std::make_shared<Shader>();
-    m_shaderRaster->InitVsPs(L"Basic3D_GltfVS.hlsl", L"Basic3D_GltfPS.hlsl", {rasterILD, _countof(rasterILD)}, d3d->GetDevice(), m_rootSigRaster->Get());
+    m_shaderRaster->InitVsPs(L"Basic3D_GltfVS.hlsl", L"Basic3D_GltfPS.hlsl", {rasterILD, _countof(rasterILD)}, d3d->GetDevice(), m_rootSigRaster->Get(), true);
 }
 
 void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)

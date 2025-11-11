@@ -82,6 +82,8 @@ private:
     void renderRaster(const D3D* d3d, ID3D12GraphicsCommandList* cmdList) const;
     void GuiPathTracer(bool resetPT);
     void GuiRaster();
+    void guiMain();
+    void guiScene();
 
     Heap m_heap, m_heapRTV;
     CameraController m_camera;

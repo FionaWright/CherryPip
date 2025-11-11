@@ -20,7 +20,7 @@ class Object
 {
 public:
     ~Object();
-    void Init(const std::shared_ptr<Transform>& transform,
+    void Init(const char* name, const std::shared_ptr<Transform>& transform,
               const std::shared_ptr<Shader>& shader, const std::shared_ptr<RootSig>& rootSig,
               const std::shared_ptr<Model>& model, const std::shared_ptr<Material>& mat);
     void SetParent(Object* parent);
@@ -33,8 +33,10 @@ public:
     std::shared_ptr<Model> GetModel() const { return m_model; }
     Object* GetParent() const { return m_parent; }
     Material* GetMaterial() const { return m_material.get(); }
+    const char* GetName() const { return m_name.c_str(); }
 
 private:
+    std::string m_name = "";
     Object* m_parent = nullptr;
     std::shared_ptr<Transform> m_transform;
     std::shared_ptr<RootSig> m_rootSig;

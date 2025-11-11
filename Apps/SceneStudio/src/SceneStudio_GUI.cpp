@@ -13,7 +13,7 @@
 
 #define IM_GUI_INDENTATION 20 // Temp
 
-void SceneStudio::GUI()
+void SceneStudio::RenderGUI()
 {
     Gui::BeginWindow("SceneStudio", ImVec2(0, 0),
                      ImVec2(Config::GetSystem().WindowAppGuiWidth, Config::GetSystem().RtvHeight));

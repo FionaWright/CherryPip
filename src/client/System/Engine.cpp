@@ -61,6 +61,7 @@ void Engine::Render()
     rtv->Transition(cmdList.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     m_apps.at(m_selectedAppIdx)->OnUpdate(m_d3d.get(), cmdList.Get());
+    m_apps.at(m_selectedAppIdx)->RenderGUI();
 
     {
         GPU_SCOPE(cmdList.Get(), L"GUI");

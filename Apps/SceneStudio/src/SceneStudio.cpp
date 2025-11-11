@@ -22,12 +22,6 @@ void SceneStudio::OnInit(D3D* d3d)
 {
     App::OnInit(d3d);
 
-    if (!d3d->GetRayTracingSupported())
-    {
-        std::cout << "ERROR: Ray-Tracing not supported!!!" << std::endl;
-        return;
-    }
-
     m_AspectRatio = static_cast<float>(Config::GetSystem().RtvWidth) / static_cast<float>(Config::GetSystem().
         RtvHeight);
 
@@ -43,17 +37,13 @@ void SceneStudio::OnInit(D3D* d3d)
 
 void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 {
-    if (!d3d->GetRayTracingSupported())
-    {
-        std::cout << "ERROR: Ray-Tracing not supported!!!" << std::endl;
-        return;
-    }
-
     if (m_sceneDirty)
     {
         Scene* currScene = m_scenes.at(m_currentScene).get();
-        m_ptContext.BuildScene(d3d->GetDevice(), cmdList, currScene, &m_heap);
         m_rasterContext.SetScene(currScene);
+
+        if (d3d->GetRayTracingSupported())
+            m_ptContext.BuildScene(d3d->GetDevice(), cmdList, currScene, &m_heap);
 
         m_camera.GetCamera().SetPosition(currScene->GetCameraPosition());
         m_camera.GetCamera().SetPitchYaw(currScene->GetPitch(), currScene->GetYaw());
@@ -73,8 +63,6 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         break;
     }
 
-    GUI();
-
     const bool moved = m_camera.UpdateCamera();
     if (moved)
         m_ptContext.Reset();
@@ -93,7 +81,7 @@ void SceneStudio::loadAssets(D3D* d3d)
     m_rootSig = std::make_shared<RootSig>();
     m_rootSig->SmartInit(device, 1, 5, 1);
 
-    // Init Shader/PSO
+    if (d3d->GetRayTracingSupported())
     {
         m_shaderILD =
         {
@@ -205,6 +193,12 @@ void SceneStudio::loadRasterAssets(const D3D* d3d)
 
 void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 {
+    if (!d3d->GetRayTracingSupported())
+    {
+        std::cout << "ERROR: Ray-Tracing not supported!!!" << std::endl;
+        return;
+    }
+
     const float fRtvWidth = static_cast<float>(Config::GetSystem().RtvWidth);
     const float fRtvHeight = static_cast<float>(Config::GetSystem().RtvHeight);
 

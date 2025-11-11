@@ -68,6 +68,7 @@ class SceneStudio final : public App
 public:
     void OnInit(D3D* d3d) override;
     void OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList) override;
+    void RenderGUI() override;
 
     [[nodiscard]] const char* GetName() const override { return "Scene Studio"; }
 
@@ -78,7 +79,6 @@ private:
     void loadRasterAssets(const D3D* d3d);
     void renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void renderRaster(const D3D* d3d, ID3D12GraphicsCommandList* cmdList) const;
-    void GUI();
     void GuiPathTracer(bool resetPT);
     void GuiRaster();
 

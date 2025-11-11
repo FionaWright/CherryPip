@@ -13,10 +13,11 @@ Object::~Object()
     std::cout << "Object Destroyed!" << std::endl;
 }
 
-void Object::Init(const std::shared_ptr<Transform>& transform,
+void Object::Init(const char* name, const std::shared_ptr<Transform>& transform,
                   const std::shared_ptr<Shader>& shader, const std::shared_ptr<RootSig>& rootSig,
                   const std::shared_ptr<Model>& model, const std::shared_ptr<Material>& mat)
 {
+    m_name = name;
     m_transform = transform ? transform : std::make_shared<Transform>();
     m_shader = shader;
     m_rootSig = rootSig;

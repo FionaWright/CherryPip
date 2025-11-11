@@ -392,7 +392,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
         material->SetData(materialData);
 
         auto obj = std::make_shared<Object>();
-        obj->Init(transform, shaderUsed, args.Root, model, material);
+        obj->Init(nodeName.c_str(), transform, shaderUsed, args.Root, model, material);
         args.OutObjects.emplace_back(obj);
         return;
     }
@@ -459,7 +459,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     material->SetData(materialData);
 
     auto obj = std::make_shared<Object>();
-    obj->Init(transform, shaderUsed, args.Root, model, material);
+    obj->Init(nodeName.c_str(), transform, shaderUsed, args.Root, model, material);
     args.OutObjects.emplace_back(obj);
 }
 
@@ -501,7 +501,7 @@ void ModelLoaderGLTF::loadNode(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Hea
     if (!node.meshIndex.has_value())
         return;
 
-    worldTransform.SetPosition(Mult(worldTransform.GetPosition(), worldTransform.GetScale()));
+    //worldTransform.SetPosition(Mult(worldTransform.GetPosition(), worldTransform.GetScale()));
 
     args.Transform = worldTransform;
 

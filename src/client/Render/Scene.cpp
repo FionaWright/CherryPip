@@ -25,14 +25,14 @@ void Scene::Init(const char* name, const XMFLOAT3& camPos, float pitch, float ya
     m_cameraPosition = camPos;
 }
 
-void Scene::Init(const char* name, const XMFLOAT3& camPos, float pitch, float yaw,const std::shared_ptr<Model>& model, const MaterialData& materialData)
+void Scene::Init(const char* name, const XMFLOAT3& camPos, const float pitch, const float yaw, const std::shared_ptr<Model>& model, const MaterialData& materialData)
 {
     m_name = std::string(name);
     const auto material = std::make_shared<Material>();
     material->SetData(materialData);
 
     const auto object = std::make_shared<Object>();
-    object->Init(nullptr, nullptr, nullptr, model, material);
+    object->Init(name, nullptr, nullptr, nullptr, model, material);
     m_objects.push_back(object);
 
     m_cameraPitch = pitch;

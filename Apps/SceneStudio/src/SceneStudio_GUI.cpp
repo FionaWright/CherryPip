@@ -18,97 +18,24 @@ void SceneStudio::RenderGUI()
     Gui::BeginWindow("SceneStudio", ImVec2(0, 0),
                      ImVec2(Config::GetSystem().WindowAppGuiWidth, Config::GetSystem().RtvHeight));
 
-    if (ImGui::BeginMenuBar())
+    if (ImGui::BeginTabBar("Scene Studio GUI"))
     {
-        if (ImGui::BeginMenu("A")) {
-            ImGui::Text("content A");
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("B")) {
-            ImGui::Text("content B");
-            ImGui::EndMenu();
-        }
-        ImGui::EndMenuBar();
-    }
-
-    ImGui::Unindent(IM_GUI_INDENTATION);
-    ImGui::SeparatorText("Camera##xx");
-    ImGui::Indent(IM_GUI_INDENTATION);
-
-    bool resetPT = false;
-    XMFLOAT3 pos = m_camera.GetCamera().GetPosition();
-    resetPT |= ImGui::InputFloat3("Camera Position##xx", reinterpret_cast<float*>(&pos));
-    m_camera.GetCamera().SetPosition(pos);
-
-    float pitch = m_camera.GetCamera().GetPitch();
-    float yaw = m_camera.GetCamera().GetYaw();
-    resetPT |= ImGui::DragFloat("Camera Pitch##xx", &pitch, 0.01f);
-    resetPT |= ImGui::DragFloat("Camera Yaw##xx", &yaw, 0.01f);
-    m_camera.GetCamera().SetPitchYaw(pitch, yaw);
-
-    if (ImGui::Button("Reset Camera to Scene Start##xx"))
-    {
-        const Scene* currScene = m_scenes.at(m_currentScene).get();
-        m_camera.GetCamera().SetPosition(currScene->GetCameraPosition());
-        m_camera.GetCamera().SetPitchYaw(currScene->GetPitch(), currScene->GetYaw());
-        resetPT = true;
-    }
-    if (ImGui::Button("Reset Camera to Origin##xx"))
-    {
-        m_camera.GetCamera().SetPosition({0, 0, 0});
-        m_camera.GetCamera().SetPitchYaw(0, 0);
-        resetPT = true;
-    }
-
-    ImGui::Unindent(IM_GUI_INDENTATION);
-    ImGui::SeparatorText("Scene##xx");
-    ImGui::Indent(IM_GUI_INDENTATION);
-
-    const char* curName = m_scenes.at(m_currentScene)->GetName();
-    if (ImGui::BeginCombo("Scene##xx", curName))
-    {
-        for (size_t i = 0; i < m_scenes.size(); i++)
+        if (ImGui::BeginTabItem("Core"))
         {
-            const bool isSelected = m_currentScene == i;
-            if (ImGui::Selectable(m_scenes.at(i)->GetName(), isSelected))
-            {
-                m_currentScene = i;
-                m_sceneDirty = true;
-                resetPT = true;
-            }
-
-            if (isSelected)
-                ImGui::SetItemDefaultFocus();
+            guiMain();
+            ImGui::EndTabItem();
         }
 
-        ImGui::EndCombo();
+        if (ImGui::BeginTabItem("Scene"))
+        {
+            guiScene();
+            ImGui::EndTabItem();
+        }
+
+        ImGui::EndTabBar();
     }
 
-    if (ImGui::Button("Reload Scene##xx"))
-    {
-        m_sceneDirty = true;
-        resetPT = true;
-    }
 
-    static int e = m_studioConfig.Backend;
-    ImGui::SeparatorText("Render Backend##xx");
-    ImGui::Indent(IM_GUI_INDENTATION);
-    ImGui::RadioButton("Forward", &e, 0); ImGui::SameLine();
-    ImGui::RadioButton("Path Tracer", &e, 1);
-    ImGui::Unindent(IM_GUI_INDENTATION);
-    m_studioConfig.Backend = static_cast<RenderBackend>(e);
-
-    switch (m_studioConfig.Backend)
-    {
-    case eForward:
-        GuiRaster();
-        break;
-    case ePathTracer:
-        GuiPathTracer(resetPT);
-        break;
-    default:
-        break;
-    }
 
     Gui::EndWindow();
 }
@@ -261,4 +188,128 @@ void SceneStudio::GuiRaster()
     }
 
     ImGui::InputFloat3("Directional Lighting##xx", reinterpret_cast<float*>(&m_studioConfig.Raster.DirLighting));
+}
+
+void SceneStudio::guiMain()
+{
+    ImGui::Unindent(IM_GUI_INDENTATION);
+    ImGui::SeparatorText("Camera##xx");
+    ImGui::Indent(IM_GUI_INDENTATION);
+
+    bool resetPT = false;
+    XMFLOAT3 pos = m_camera.GetCamera().GetPosition();
+    resetPT |= ImGui::InputFloat3("Camera Position##xx", reinterpret_cast<float*>(&pos));
+    m_camera.GetCamera().SetPosition(pos);
+
+    float pitch = m_camera.GetCamera().GetPitch();
+    float yaw = m_camera.GetCamera().GetYaw();
+    resetPT |= ImGui::DragFloat("Camera Pitch##xx", &pitch, 0.01f);
+    resetPT |= ImGui::DragFloat("Camera Yaw##xx", &yaw, 0.01f);
+    m_camera.GetCamera().SetPitchYaw(pitch, yaw);
+
+    if (ImGui::Button("Reset Camera to Scene Start##xx"))
+    {
+        const Scene* currScene = m_scenes.at(m_currentScene).get();
+        m_camera.GetCamera().SetPosition(currScene->GetCameraPosition());
+        m_camera.GetCamera().SetPitchYaw(currScene->GetPitch(), currScene->GetYaw());
+        resetPT = true;
+    }
+    if (ImGui::Button("Reset Camera to Origin##xx"))
+    {
+        m_camera.GetCamera().SetPosition({0, 0, 0});
+        m_camera.GetCamera().SetPitchYaw(0, 0);
+        resetPT = true;
+    }
+
+    ImGui::Unindent(IM_GUI_INDENTATION);
+    ImGui::SeparatorText("Scene##xx");
+    ImGui::Indent(IM_GUI_INDENTATION);
+
+    const char* curName = m_scenes.at(m_currentScene)->GetName();
+    if (ImGui::BeginCombo("Scene##xx", curName))
+    {
+        for (size_t i = 0; i < m_scenes.size(); i++)
+        {
+            const bool isSelected = m_currentScene == i;
+            if (ImGui::Selectable(m_scenes.at(i)->GetName(), isSelected))
+            {
+                m_currentScene = i;
+                m_sceneDirty = true;
+                resetPT = true;
+            }
+
+            if (isSelected)
+                ImGui::SetItemDefaultFocus();
+        }
+
+        ImGui::EndCombo();
+    }
+
+    if (ImGui::Button("Reload Scene##xx"))
+    {
+        m_sceneDirty = true;
+        resetPT = true;
+    }
+
+    static int e = m_studioConfig.Backend;
+    ImGui::SeparatorText("Render Backend##xx");
+    ImGui::Indent(IM_GUI_INDENTATION);
+    ImGui::RadioButton("Forward", &e, 0); ImGui::SameLine();
+    ImGui::RadioButton("Path Tracer", &e, 1);
+    ImGui::Unindent(IM_GUI_INDENTATION);
+    m_studioConfig.Backend = static_cast<RenderBackend>(e);
+
+    switch (m_studioConfig.Backend)
+    {
+    case eForward:
+        GuiRaster();
+        break;
+    case ePathTracer:
+        GuiPathTracer(resetPT);
+        break;
+    default:
+        break;
+    }
+}
+
+void SceneStudio::guiScene()
+{
+    auto& objects = m_scenes.at(m_currentScene)->GetObjects();
+
+    ImGui::Unindent(IM_GUI_INDENTATION);
+    ImGui::SeparatorText("Objects##xx");
+    ImGui::Indent(IM_GUI_INDENTATION);
+
+    for (int i = 0; i < objects.size(); i++)
+    {
+        if (ImGui::TreeNode(objects[i]->GetName()))
+        {
+            ImGui::Indent(IM_GUI_INDENTATION);
+
+            auto transform = objects[i]->GetTransform();
+
+            XMFLOAT3 pos = transform->GetPosition();
+            ImGui::InputFloat3("Position##xx", reinterpret_cast<float*>(&pos));
+            transform->SetPosition(pos);
+
+            XMFLOAT3 rot = transform->GetRotation();
+            ImGui::InputFloat3("Rotation##xx", reinterpret_cast<float*>(&rot));
+            transform->SetRotation(rot);
+
+            XMFLOAT3 scale = transform->GetScale();
+            ImGui::InputFloat3("Scale##xx", reinterpret_cast<float*>(&scale));
+            transform->SetScale(scale);
+
+            const XMFLOAT3 centroid = objects[i]->GetModel()->GetCentroid();
+            ImGui::Text("Centroid: (%f, %f, %f)", centroid.x, centroid.y, centroid.z);
+
+            ImGui::Spacing();
+
+            ImGui::Text("Vertex Count: %lld", objects[i]->GetModel()->GetVertexCount());
+            ImGui::Text("Index Count: %lld", objects[i]->GetModel()->GetIndexCount());
+
+            ImGui::Unindent(IM_GUI_INDENTATION);
+            ImGui::TreePop();
+        }
+    }
 }

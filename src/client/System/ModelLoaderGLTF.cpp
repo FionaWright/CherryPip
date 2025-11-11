@@ -385,6 +385,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
         std::shared_ptr<Material> material = std::make_shared<Material>();
         material->Init(heap);
         material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices));
+        material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterDebug));
         material->SetTex(d3d->GetDevice(), 0, heap, diffuseTex);
 
         MaterialData materialData = {};
@@ -409,7 +410,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     else if (mat.iridescence)
         diffuseTexInput = assetDirectory + "Textures/Transparent.png";
     else
-        diffuseTexInput = assetDirectory + "Textures/WhitePOT.png";
+        diffuseTexInput = assetDirectory + "Textures/TestTex.png";
 
     std::shared_ptr<Texture> diffuseTex = std::make_shared<Texture>();
     if (std::holds_alternative<std::string>(diffuseTexInput))
@@ -447,6 +448,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     std::shared_ptr<Material> material = std::make_shared<Material>();
     material->Init(heap);
     material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices));
+    material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterDebug));
     material->SetTex(d3d->GetDevice(), 0, heap, diffuseTex);
 
     MaterialData materialData;

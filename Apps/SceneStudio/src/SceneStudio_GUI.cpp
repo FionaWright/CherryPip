@@ -227,5 +227,38 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
 
 void SceneStudio::GuiRaster()
 {
-    ImGui::Text("%s", "Raster Backend, settings coming soon!");
+    ImGui::Unindent(IM_GUI_INDENTATION);
+    ImGui::SeparatorText("Settings##xx");
+    ImGui::Indent(IM_GUI_INDENTATION);
+
+    static const std::vector<const char*> c_rasterDebugModes = {
+        "Position",
+        "Normals",
+        "Tangents",
+        "Binormals",
+        "UV",
+        "Directional Lighting",
+        "Textures",
+        "Texture Lighting"
+    };
+
+    const char* curSelection = c_rasterDebugModes.at(m_studioConfig.Raster.Mode);
+    if (ImGui::BeginCombo("Debug Mode##xx", curSelection))
+    {
+        for (size_t i = 0; i < c_rasterDebugModes.size(); i++)
+        {
+            const bool isSelected = m_studioConfig.Raster.Mode == i;
+            if (ImGui::Selectable(c_rasterDebugModes.at(i), isSelected))
+            {
+                m_studioConfig.Raster.Mode = static_cast<RasterDebugMode>(i);
+            }
+
+            if (isSelected)
+                ImGui::SetItemDefaultFocus();
+        }
+
+        ImGui::EndCombo();
+    }
+
+    ImGui::InputFloat3("Directional Lighting##xx", reinterpret_cast<float*>(&m_studioConfig.Raster.DirLighting));
 }

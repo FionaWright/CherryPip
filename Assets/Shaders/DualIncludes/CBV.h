@@ -11,6 +11,24 @@ struct CbvMatrices
     float4x4 P; // Projection
 };
 
+enum RasterDebugMode
+{
+    ePosition,
+    eNormals,
+    eTangent,
+    eBinormal,
+    eUV,
+    eDirLighting,
+    eTex,
+    eDirLightingTex,
+};
+
+struct CbvRasterDebug
+{
+    RasterDebugMode Mode;
+    float3 DirLighting;
+};
+
 struct CbvPathTracing
 {
     float4x4 InvP;

@@ -111,20 +111,20 @@ void SceneStudio::loadAssets(D3D* d3d)
     sceneCornellBox->Init("Cornell Box", XMFLOAT3(0, 1.5f, 4.5f), 0, PI, args.OutObjects);
     m_scenes.emplace_back(sceneCornellBox);
     args.OutObjects.clear();
-    //
-    // ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Sphere/Sphere.gltf", args);
-    // std::shared_ptr<Scene> sceneSphere = std::make_shared<Scene>();
-    // sceneSphere->Init("Sphere", XMFLOAT3(0, 0, -4.3f), 0, 0, args.OutObjects);
-    // m_scenes.emplace_back(sceneSphere);
-    // args.OutObjects.clear();
-    //
-    // args.Transform = {};
-    // args.Transform.SetScale(1.0f);
-    // ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
-    // std::shared_ptr<Scene> scenePlane = std::make_shared<Scene>();
-    // scenePlane->Init("FloatPlane", XMFLOAT3(0, 1.5f, 4.5f), 0, PI, args.OutObjects);
-    // m_scenes.emplace_back(scenePlane);
-    // args.OutObjects.clear();
+
+    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Sphere/Sphere.gltf", args);
+    std::shared_ptr<Scene> sceneSphere = std::make_shared<Scene>();
+    sceneSphere->Init("Sphere", XMFLOAT3(0, 0, -4.3f), 0, 0, args.OutObjects);
+    m_scenes.emplace_back(sceneSphere);
+    args.OutObjects.clear();
+
+    args.Transform = {};
+    args.Transform.SetScale(1.0f);
+    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
+    std::shared_ptr<Scene> scenePlane = std::make_shared<Scene>();
+    scenePlane->Init("FloatPlane", XMFLOAT3(0, 1.5f, 4.5f), 0, PI, args.OutObjects);
+    m_scenes.emplace_back(scenePlane);
+    args.OutObjects.clear();
 
     // args.Transform.SetScale(2.0f);
     // ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Chess/Chess.gltf", args);
@@ -162,7 +162,7 @@ void SceneStudio::loadRasterAssets(const D3D* d3d)
     samplers[0].ShaderRegister = 0;
 
     m_rootSigRaster = std::make_shared<RootSig>();
-    m_rootSigRaster->SmartInit(d3d->GetDevice(), 1, 1, 0, samplers, _countof(samplers));
+    m_rootSigRaster->SmartInit(d3d->GetDevice(), 2, 1, 0, samplers, _countof(samplers));
 
     D3D12_INPUT_ELEMENT_DESC rasterILD[] =
     {
@@ -188,7 +188,7 @@ void SceneStudio::loadRasterAssets(const D3D* d3d)
         },
     };
     m_shaderRaster = std::make_shared<Shader>();
-    m_shaderRaster->InitVsPs(L"Basic3D_GltfVS.hlsl", L"Basic3D_GltfPS.hlsl", {rasterILD, _countof(rasterILD)}, d3d->GetDevice(), m_rootSigRaster->Get(), true);
+    m_shaderRaster->InitVsPs(L"RasterDebugVS.hlsl", L"RasterDebugPS.hlsl", {rasterILD, _countof(rasterILD)}, d3d->GetDevice(), m_rootSigRaster->Get(), true);
 }
 
 void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
@@ -262,6 +262,17 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 void SceneStudio::renderRaster(const D3D* d3d, ID3D12GraphicsCommandList* cmdList) const
 {
     m_heap.SetHeap(cmdList);
+
+    CbvRasterDebug rasterDebug;
+    rasterDebug.Mode = m_studioConfig.Raster.Mode;
+    rasterDebug.DirLighting = m_studioConfig.Raster.DirLighting;
+
+    auto& currScene = m_scenes.at(m_currentScene);
+    auto& objects = currScene->GetObjects();
+    for (int i = 0; i < objects.size(); ++i)
+    {
+        objects[i]->GetMaterial()->UpdateCBV(1, &rasterDebug);
+    }
 
     m_rasterContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix);
 }

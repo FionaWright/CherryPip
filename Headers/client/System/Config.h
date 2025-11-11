@@ -22,7 +22,6 @@ struct SettingsSystem
     uint32_t DefaultAppIdx = 0;
 
     bool VSyncEnabled = false;
-    bool DsvEnabled = false;
     bool ForceSyncCpuGpu = true;
     bool AppGuiEnabled = true;
 

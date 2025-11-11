@@ -86,7 +86,7 @@ inline ComPtr<IDxcBlob> CompileShaderDXC(
     return vertexShaderBlob;
 }
 
-void Shader::InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D12Device* device, ID3D12RootSignature* rootSig)
+void Shader::InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D12Device* device, ID3D12RootSignature* rootSig, const bool dsvEnabled)
 {
 #if defined(_DEBUG)
     UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
@@ -110,8 +110,8 @@ void Shader::InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D1
     psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
     psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
     psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-    psoDesc.DepthStencilState.DepthEnable = Config::GetSystem().DsvEnabled ? TRUE : FALSE;
-    psoDesc.DepthStencilState.StencilEnable = Config::GetSystem().DsvEnabled ? TRUE : FALSE;
+    psoDesc.DepthStencilState.DepthEnable = dsvEnabled ? TRUE : FALSE;
+    psoDesc.DepthStencilState.StencilEnable = dsvEnabled ? TRUE : FALSE;
     psoDesc.SampleMask = UINT_MAX;
     psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
     psoDesc.NumRenderTargets = 1;

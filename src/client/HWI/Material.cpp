@@ -152,6 +152,9 @@ void Material::TransitionSrvsToPS(ID3D12GraphicsCommandList* cmdList) const
 
 void Material::UpdateCBV(const UINT regIdx, const void* data) const
 {
+    if (regIdx >= m_cbvs.size())
+        throw std::exception("You made a mistake :(");
+
     const CBV& cbv = m_cbvs[regIdx];
     std::memcpy(cbv.MappedGpuPtr, data, cbv.Size);
 }

@@ -46,7 +46,8 @@ struct PtConfig
 
 struct RasterConfig
 {
-    bool RESERVED;
+    RasterDebugMode Mode = eNormals;
+    XMFLOAT3 DirLighting = XMFLOAT3(1, 0, 1);
 };
 
 enum RenderBackend : uint32_t

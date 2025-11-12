@@ -31,6 +31,7 @@ XMMATRIX Transform::GetModelMatrix(const XMFLOAT3 centroid) const
     const XMMATRIX R = XMMatrixRotationRollPitchYaw(m_rotationEuler.x, m_rotationEuler.y, m_rotationEuler.z);
     const XMMATRIX S = XMMatrixScaling(m_scale.x, m_scale.y, m_scale.z);
 
+    assert(centroid.x == 0.0f); // Disabled for now
     if (centroid.x == 0.0f)
         return XMMatrixMultiply(S, XMMatrixMultiply(R, T));
 

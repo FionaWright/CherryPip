@@ -107,45 +107,44 @@ void SceneStudio::loadAssets(D3D* d3d)
     args.DefaultShaderIndex = 0;
     args.Shaders = { m_shaderRaster };
 
-    // args.Transform.SetScale(2.0f);
-    // ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Cornell/scene.gltf", args);
-    // std::shared_ptr<Scene> sceneCornellBox = std::make_shared<Scene>();
-    // sceneCornellBox->Init("Cornell Box", XMFLOAT3(0, 1.5f, 4.5f), 0, PI, args.OutObjects);
-    // m_scenes.emplace_back(sceneCornellBox);
-    // args.OutObjects.clear();
-    //
-    // ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Sphere/Sphere.gltf", args);
-    // std::shared_ptr<Scene> sceneSphere = std::make_shared<Scene>();
-    // sceneSphere->Init("Sphere", XMFLOAT3(0, 0, -4.3f), 0, 0, args.OutObjects);
-    // m_scenes.emplace_back(sceneSphere);
-    // args.OutObjects.clear();
-    //
-    // args.Transform = {};
-    // args.Transform.SetScale(1.0f);
-    // ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args);
-    // std::shared_ptr<Scene> scenePlane = std::make_shared<Scene>();
-    // scenePlane->Init("FloatPlane", XMFLOAT3(0, 1.5f, 4.5f), 0, PI, args.OutObjects);
-    // m_scenes.emplace_back(scenePlane);
-    // args.OutObjects.clear();
-    //
-    // args.Transform = {};
-    // args.Transform.SetScale(0.3f);
-    // ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Utah Teapot/scene.gltf", args);
-    // std::shared_ptr<Scene> sceneTeapot = std::make_shared<Scene>();
-    // sceneTeapot->Init("Utah Teapot", XMFLOAT3(0, 1.5f, 4.5f), 0, PI, args.OutObjects);
-    // m_scenes.emplace_back(sceneTeapot);
-    // args.OutObjects.clear();
+    Transform t = {};
+    t.SetScale(1.0f);
 
-    args.Transform = {};
-    args.Transform.SetScale(1.0f);
-    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"ParentTest/ParentTest.gltf", args);
+    t.SetScale(2.0f);
+    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Cornell/scene.gltf", args, t);
+    std::shared_ptr<Scene> sceneCornellBox = std::make_shared<Scene>();
+    sceneCornellBox->Init("Cornell Box", XMFLOAT3(0, 1.5f, 4.5f), 0, PI, args.OutObjects);
+    m_scenes.emplace_back(sceneCornellBox);
+    args.OutObjects.clear();
+
+    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Sphere/Sphere.gltf", args, t);
+    std::shared_ptr<Scene> sceneSphere = std::make_shared<Scene>();
+    sceneSphere->Init("Sphere", XMFLOAT3(0, 0, -4.3f), 0, 0, args.OutObjects);
+    m_scenes.emplace_back(sceneSphere);
+    args.OutObjects.clear();
+
+    t.SetScale(1.0f);
+    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args, t);
+    std::shared_ptr<Scene> scenePlane = std::make_shared<Scene>();
+    scenePlane->Init("FloatPlane", XMFLOAT3(0, 1.5f, 4.5f), 0, PI, args.OutObjects);
+    m_scenes.emplace_back(scenePlane);
+    args.OutObjects.clear();
+
+    t.SetScale(0.3f);
+    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Utah Teapot/scene.gltf", args, t);
+    std::shared_ptr<Scene> sceneTeapot = std::make_shared<Scene>();
+    sceneTeapot->Init("Utah Teapot", XMFLOAT3(0, 1.5f, 4.5f), 0, PI, args.OutObjects);
+    m_scenes.emplace_back(sceneTeapot);
+    args.OutObjects.clear();
+
+    t.SetScale(1.0f);
+    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"ParentTest/ParentTest.gltf", args, t);
     std::shared_ptr<Scene> sceneParentTest = std::make_shared<Scene>();
     sceneParentTest->Init("Parent Test", XMFLOAT3(0, 1.5f, 4.5f), 0, PI, args.OutObjects);
     m_scenes.emplace_back(sceneParentTest);
     args.OutObjects.clear();
 
-    args.Transform.SetScale(1.0f);
-    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Chess/Chess.gltf", args);
+    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Chess/Chess.gltf", args, t);
     std::shared_ptr<Scene> sceneChess = std::make_shared<Scene>();
     sceneChess->Init("Chess", {}, 0, 0, args.OutObjects);
     m_scenes.emplace_back(sceneChess);
@@ -281,7 +280,7 @@ void SceneStudio::renderRaster(const D3D* d3d, ID3D12GraphicsCommandList* cmdLis
 {
     m_heap.SetHeap(cmdList);
 
-    CbvRasterDebug rasterDebug;
+    CbvRasterDebug rasterDebug{};
     rasterDebug.Mode = m_studioConfig.Raster.Mode;
     rasterDebug.DirLighting = m_studioConfig.Raster.DirLighting;
 

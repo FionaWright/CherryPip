@@ -25,6 +25,8 @@ std::mutex ModelLoaderGLTF::ms_batchAddMutex;
 
 constexpr bool RIGHT_HANDED_TO_LEFT = true;
 
+// TODO: This is unideal, consider redoing everything
+
 Transform ModelLoaderGLTF::toTransform(fastgltf::TRS& trs)
 {
     Transform transform;
@@ -330,7 +332,7 @@ std::variant<std::string, const std::byte*> ModelLoaderGLTF::loadTexture(
 
 void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, Asset& asset,
                                     const fastgltf::Primitive& primitive, const std::string& modelNameExtensionless,
-                                    fastgltf::Node& node, GLTFLoadArgs& args, std::string id, size_t meshIndex,
+                                    fastgltf::Node& node, GLTFLoadArgs& args, Transform transform, std::string id, size_t meshIndex,
                                     size_t primitiveIndex)
 {
     const uint32_t slashIdx = modelNameExtensionless.find_last_of('/');
@@ -366,8 +368,8 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     std::string nodeName(node.name);
     nodeName = id + "::" + nodeName;
 
-    auto transform = std::make_shared<Transform>();
-    *transform = args.Transform;
+    auto t = std::make_shared<Transform>();
+    *t = transform;
 
     if (shaderIndex == -1)
         shaderIndex = args.DefaultShaderIndex;
@@ -392,7 +394,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
         material->SetData(materialData);
 
         auto obj = std::make_shared<Object>();
-        obj->Init(nodeName.c_str(), transform, shaderUsed, args.Root, model, material);
+        obj->Init(node.name.c_str(), t, shaderUsed, args.Root, model, material);
         args.OutObjects.emplace_back(obj);
         return;
     }
@@ -459,34 +461,34 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     material->SetData(materialData);
 
     auto obj = std::make_shared<Object>();
-    obj->Init(nodeName.c_str(), transform, shaderUsed, args.Root, model, material);
+    obj->Init(node.name.c_str(), t, shaderUsed, args.Root, model, material);
     args.OutObjects.emplace_back(obj);
 }
 
 void ModelLoaderGLTF::loadNode(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, Asset& asset,
-                               const std::string& modelNameExtensionless, fastgltf::Node& node, GLTFLoadArgs& args)
+                               const std::string& modelNameExtensionless, fastgltf::Node& node, GLTFLoadArgs& args, Transform transform)
 {
     if (node.transform.index() != 0)
         throw std::exception("Unsupported transform type");
 
-    fastgltf::TRS& trs = std::get<fastgltf::TRS>(node.transform);
+    auto& trs = std::get<fastgltf::TRS>(node.transform);
 
     Transform localTransform = toTransform(trs);
     Transform worldTransform = {};
 
     XMFLOAT3 pos = localTransform.GetPosition();
     pos.x = -pos.x;
-    pos = Add(pos, args.Transform.GetPosition());
+    pos = Add(pos, transform.GetPosition());
 
     worldTransform.SetPosition(pos);
 
     XMFLOAT3 rot = localTransform.GetRotation();
-    rot = Add(rot, args.Transform.GetRotation());
+    rot = Add(rot, transform.GetRotation());
 
     worldTransform.SetRotation(rot);
 
     XMFLOAT3 scale = localTransform.GetScale();
-    scale = Mult(scale, args.Transform.GetScale());
+    scale = Mult(scale, transform.GetScale());
 
     worldTransform.SetScale(scale);
 
@@ -494,16 +496,13 @@ void ModelLoaderGLTF::loadNode(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Hea
     for (size_t i = 0; i < childCount; i++)
     {
         fastgltf::Node& childNode = (*asset)->nodes[node.children[i]];
-        args.Transform = worldTransform;
-        loadNode(d3d, cmdList, heap, asset, modelNameExtensionless, childNode, args);
+        loadNode(d3d, cmdList, heap, asset, modelNameExtensionless, childNode, args, worldTransform);
     }
 
     if (!node.meshIndex.has_value())
         return;
 
     //worldTransform.SetPosition(Mult(worldTransform.GetPosition(), worldTransform.GetScale()));
-
-    args.Transform = worldTransform;
 
     std::string nodeName(node.name);
     if (args.CullingWhiteList.size() > 0)
@@ -531,13 +530,13 @@ void ModelLoaderGLTF::loadNode(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Hea
     {
         std::string id = modelNameExtensionless + "::NODE(" + std::to_string(meshIndex) + ")::PRIMITIVE(" +
             std::to_string(i) + ")";
-        loadPrimitive(d3d, cmdList, heap, asset, mesh.primitives[i], modelNameExtensionless, node, args, id, meshIndex,
+        loadPrimitive(d3d, cmdList, heap, asset, mesh.primitives[i], modelNameExtensionless, node, args, worldTransform, id, meshIndex,
                       i);
     }
 }
 
 void ModelLoaderGLTF::LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, const std::wstring& name,
-                                     GLTFLoadArgs& args)
+                                     GLTFLoadArgs& args, Transform transform)
 {
     const std::wstring wpath = FileHelper::GetAssetModelFullPath(name.c_str());
     const std::string path = wstringToString(wpath);
@@ -594,7 +593,7 @@ void ModelLoaderGLTF::LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
         {
             const size_t nodeIndex = scene.nodeIndices[n];
             fastgltf::Node& node = (*asset)->nodes[nodeIndex];
-            loadNode(d3d, cmdList, heap, asset, modelNameExtensionless, node, args);
+            loadNode(d3d, cmdList, heap, asset, modelNameExtensionless, node, args, transform);
         }
     }
 }

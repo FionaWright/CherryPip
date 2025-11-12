@@ -35,7 +35,7 @@ void Object::Render(ID3D12GraphicsCommandList* cmdList, CbvMatrices& matrices) c
     cmdList->SetGraphicsRootSignature(m_rootSig->Get());
     cmdList->SetPipelineState(m_shader->GetPSO());
 
-    matrices.M = m_transform->GetModelMatrix(); // TODO: Cache
+    matrices.M = m_transform->GetModelMatrix();
     matrices.MTI = XMMatrixInverse(nullptr, XMMatrixTranspose(matrices.M));
     m_material->UpdateCBV(0, &matrices);
 

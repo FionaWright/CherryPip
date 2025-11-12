@@ -17,8 +17,8 @@ void TLAS::Init(ID3D12Device5* device, ID3D12GraphicsCommandList4* cmdList, cons
     std::vector<D3D12_RAYTRACING_INSTANCE_DESC> instances;
     for (int i = 0; i < blasList.size(); i++)
     {
-        const XMFLOAT3& centroid = blasList[i]->GetModel()->GetCentroid();
-        const XMMATRIX modelMatrix = blasList[i]->GetTransform().GetModelMatrix(centroid);
+        //const XMFLOAT3& centroid = blasList[i]->GetModel()->GetCentroid();
+        const XMMATRIX modelMatrix = blasList[i]->GetTransform().GetModelMatrix();
 
         D3D12_RAYTRACING_INSTANCE_DESC instance = {};
         XMStoreFloat3x4(reinterpret_cast<XMFLOAT3X4*>(&instance.Transform), modelMatrix);

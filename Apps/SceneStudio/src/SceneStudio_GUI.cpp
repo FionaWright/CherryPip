@@ -225,13 +225,13 @@ void SceneStudio::guiMain()
     ImGui::SeparatorText("Scene##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
 
-    const char* curName = m_scenes.at(m_currentScene)->GetName();
+    const char* curName = m_sceneConfigs.at(m_currentScene).Name.c_str();
     if (ImGui::BeginCombo("Scene##xx", curName))
     {
-        for (size_t i = 0; i < m_scenes.size(); i++)
+        for (size_t i = 0; i < m_sceneConfigs.size(); i++)
         {
             const bool isSelected = m_currentScene == i;
-            if (ImGui::Selectable(m_scenes.at(i)->GetName(), isSelected))
+            if (ImGui::Selectable(m_sceneConfigs.at(i).Name.c_str(), isSelected))
             {
                 m_currentScene = i;
                 m_sceneDirty = true;
@@ -274,7 +274,8 @@ void SceneStudio::guiMain()
 
 void SceneStudio::guiScene()
 {
-    auto& objects = m_scenes.at(m_currentScene)->GetObjects();
+    const int sceneIdx = m_sceneConfigs.at(m_currentScene).SceneIdx;
+    auto& objects = m_scenes.at(sceneIdx)->GetObjects();
 
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Objects##xx");

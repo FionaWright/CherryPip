@@ -41,7 +41,12 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 {
     if (m_sceneDirty)
     {
-        Scene* currScene = m_scenes.at(m_currentScene).get();
+        if (m_sceneConfigs.at(m_currentScene).SceneIdx == -1)
+            initScene(d3d, cmdList, m_currentScene);
+
+        const int sceneIdx = m_sceneConfigs.at(m_currentScene).SceneIdx;
+
+        Scene* currScene = m_scenes.at(sceneIdx).get();
         m_rasterContext.SetScene(currScene);
 
         if (d3d->GetRayTracingSupported())
@@ -108,47 +113,57 @@ void SceneStudio::loadAssets(D3D* d3d)
     args.Shaders = { m_shaderRaster };
 
     Transform t = {};
-    t.SetScale(1.0f);
 
     t.SetScale(2.0f);
-    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Cornell/scene.gltf", args, t);
-    std::shared_ptr<Scene> sceneCornellBox = std::make_shared<Scene>();
-    sceneCornellBox->Init("Cornell Box", XMFLOAT3(0, 1.5f, 4.5f), 0, PI, args.OutObjects);
-    m_scenes.emplace_back(sceneCornellBox);
-    args.OutObjects.clear();
+    SceneConfig sceneCornell = {
+        "Cornell Box",
+        L"Cornell/scene.gltf",
+        t,
+        XMFLOAT3(0, 1.5f, 4.5f),
+        XMFLOAT2(0, PI)
+    };
+    m_sceneConfigs.emplace_back(sceneCornell);
 
-    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Sphere/Sphere.gltf", args, t);
-    std::shared_ptr<Scene> sceneSphere = std::make_shared<Scene>();
-    sceneSphere->Init("Sphere", XMFLOAT3(0, 0, -4.3f), 0, 0, args.OutObjects);
-    m_scenes.emplace_back(sceneSphere);
-    args.OutObjects.clear();
+    t = {};
+    SceneConfig sceneSphere = {
+        "Sphere",
+        L"Sphere/Sphere.gltf",
+        t,
+        XMFLOAT3(0, 0, -4.3f),
+        XMFLOAT2(0, 0)
+    };
+    m_sceneConfigs.emplace_back(sceneSphere);
 
-    t.SetScale(1.0f);
-    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"floatplane.glb", args, t);
-    std::shared_ptr<Scene> scenePlane = std::make_shared<Scene>();
-    scenePlane->Init("FloatPlane", XMFLOAT3(0, 1.5f, 4.5f), 0, PI, args.OutObjects);
-    m_scenes.emplace_back(scenePlane);
-    args.OutObjects.clear();
+    t = {};
+    SceneConfig scenePlane = {
+        "FloatPlane",
+        L"floatplane.glb",
+        t,
+        XMFLOAT3(0, 0, -4.3f),
+        XMFLOAT2(0, PI)
+    };
+    m_sceneConfigs.emplace_back(scenePlane);
 
+    t = {};
     t.SetScale(0.3f);
-    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Utah Teapot/scene.gltf", args, t);
-    std::shared_ptr<Scene> sceneTeapot = std::make_shared<Scene>();
-    sceneTeapot->Init("Utah Teapot", XMFLOAT3(0, 1.5f, 4.5f), 0, PI, args.OutObjects);
-    m_scenes.emplace_back(sceneTeapot);
-    args.OutObjects.clear();
+    SceneConfig sceneTeapot = {
+        "Utah Teapot",
+        L"Utah Teapot/scene.gltf",
+        t,
+        XMFLOAT3(0, 0, -4.3f),
+        XMFLOAT2(0, PI)
+    };
+    m_sceneConfigs.emplace_back(sceneTeapot);
 
-    t.SetScale(1.0f);
-    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"ParentTest/ParentTest.gltf", args, t);
-    std::shared_ptr<Scene> sceneParentTest = std::make_shared<Scene>();
-    sceneParentTest->Init("Parent Test", XMFLOAT3(0, 1.5f, 4.5f), 0, PI, args.OutObjects);
-    m_scenes.emplace_back(sceneParentTest);
-    args.OutObjects.clear();
-
-    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList.Get(), &m_heap, L"Chess/Chess.gltf", args, t);
-    std::shared_ptr<Scene> sceneChess = std::make_shared<Scene>();
-    sceneChess->Init("Chess", {}, 0, 0, args.OutObjects);
-    m_scenes.emplace_back(sceneChess);
-    args.OutObjects.clear();
+    t = {};
+    SceneConfig sceneChess = {
+        "Chess",
+        L"Chess/Chess.gltf",
+        t,
+        XMFLOAT3(0, 0.2f, -0.5f),
+        XMFLOAT2(0, 0)
+    };
+    m_sceneConfigs.emplace_back(sceneChess);
 
     m_ptContext.Init(device, cmdList.Get(), &m_heap);
 
@@ -206,6 +221,23 @@ void SceneStudio::loadRasterAssets(const D3D* d3d)
     };
     m_shaderRaster = std::make_shared<Shader>();
     m_shaderRaster->InitVsPs(L"RasterDebugVS.hlsl", L"RasterDebugPS.hlsl", {rasterILD, _countof(rasterILD)}, d3d->GetDevice(), m_rootSigRaster->Get(), true);
+}
+
+void SceneStudio::initScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList, const uint32_t configIdx)
+{
+    GLTFLoadArgs args;
+    args.Root = m_rootSigRaster;
+    args.DefaultShaderIndex = 0;
+    args.Shaders = { m_shaderRaster };
+
+    const SceneConfig config = m_sceneConfigs.at(configIdx);
+
+    ModelLoaderGLTF::LoadSplitModel(d3d, cmdList, &m_heap, config.GltfPath, args, config.Transform);
+
+    m_sceneConfigs.at(configIdx).SceneIdx = static_cast<int>(m_scenes.size());
+    std::shared_ptr<Scene> scene = std::make_shared<Scene>();
+    scene->Init(config.Name.c_str(), config.InitialCamPos, config.InitialCamPitchYaw.x, config.InitialCamPitchYaw.y, args.OutObjects);
+    m_scenes.emplace_back(scene);
 }
 
 void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
@@ -284,7 +316,9 @@ void SceneStudio::renderRaster(const D3D* d3d, ID3D12GraphicsCommandList* cmdLis
     rasterDebug.Mode = m_studioConfig.Raster.Mode;
     rasterDebug.DirLighting = m_studioConfig.Raster.DirLighting;
 
-    auto& currScene = m_scenes.at(m_currentScene);
+    const int sceneIdx = m_sceneConfigs.at(m_currentScene).SceneIdx;
+
+    auto& currScene = m_scenes.at(sceneIdx);
     auto& objects = currScene->GetObjects();
     for (int i = 0; i < objects.size(); ++i)
     {

@@ -64,6 +64,17 @@ struct StudioConfig
     RasterConfig Raster = {};
 };
 
+struct SceneConfig
+{
+    std::string Name;
+    std::wstring GltfPath;
+    Transform Transform;
+    XMFLOAT3 InitialCamPos;
+    XMFLOAT2 InitialCamPitchYaw;
+
+    int SceneIdx = -1;
+};
+
 class SceneStudio final : public App
 {
 public:
@@ -78,6 +89,7 @@ public:
 private:
     void loadAssets(D3D* d3d);
     void loadRasterAssets(const D3D* d3d);
+    void initScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList, uint32_t configIdx);
     void renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void renderRaster(const D3D* d3d, ID3D12GraphicsCommandList* cmdList) const;
     void GuiPathTracer(bool resetPT);
@@ -93,6 +105,7 @@ private:
 
     std::vector<D3D12_INPUT_ELEMENT_DESC> m_shaderILD;
 
+    std::vector<SceneConfig> m_sceneConfigs;
     std::vector<std::shared_ptr<Scene>> m_scenes;
     uint32_t m_currentScene = 0;
     bool m_sceneDirty = true;

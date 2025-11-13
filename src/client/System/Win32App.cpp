@@ -74,7 +74,7 @@ int Win32App::Run(const std::vector<App*>& apps, const HINSTANCE hInstance, cons
     {
         MessageBox(nullptr, "Failed to create window!", "Error", MB_OK);
     }
-    std::cout << "HWND = " << ms_hwnd << std::endl;
+    CherryPrint("HWND = " << ms_hwnd);
 
     ms_engine = std::make_unique<Engine>(apps, ms_hwnd, totalWindowWidth, totalWindowHeight);
 

@@ -60,5 +60,6 @@ void Config::ParseCommandLineArgs(const LPSTR args)
     LinkUInt(argsMap, ms_settingsSystem.RtvWidth, "--window_width");
     LinkUInt(argsMap, ms_settingsSystem.RtvHeight, "--window_height");
     LinkUInt(argsMap, ms_settingsSystem.DefaultAppIdx, "--app");
+    LinkUInt(argsMap, ms_settingsSystem.DefaultSceneIdx, "--scene");
     LinkBool(argsMap, ms_settingsSystem.VSyncEnabled, "--vsync");
 }

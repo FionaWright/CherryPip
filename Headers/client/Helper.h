@@ -15,6 +15,12 @@ using Microsoft::WRL::ComPtr;
 #include <dxcapi.h>
 #include <fstream>
 
+#ifdef _DEBUG
+#define CherryPrint(str) std::cout << str << std::endl
+#else
+#define CherryPrint(str)
+#endif
+
 inline std::string wstringToString(const std::wstring& wstr)
 {
     //setup converter
@@ -45,7 +51,7 @@ inline void V(const HRESULT hr)
 {
     if (FAILED(hr))
     {
-        std::cout << "[ERROR]: " + HrToString(hr) << std::endl;
+        CherryPrint("[ERROR]: " + HrToString(hr));
         throw HrException(hr);
     }
 }

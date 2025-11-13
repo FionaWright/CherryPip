@@ -19,11 +19,9 @@ inline ComPtr<IDxcBlob> CompileShaderDXC(
     UINT compileFlags)
 {
     HMODULE dxCompilerDLL = LoadLibrary("dxcompiler.dll");
-    if (!dxCompilerDLL) {
-        DWORD err = GetLastError();
-        std::cout << "LoadLibrary failed: " << err << "\n";
-    } else {
-        std::cout << "dxcompiler.dll loaded successfully!\n";
+    if (!dxCompilerDLL)
+    {
+        CherryPrint("LoadLibrary failed: " << GetLastError());
     }
 
     // Get DxcCreateInstance function
@@ -38,12 +36,17 @@ inline ComPtr<IDxcBlob> CompileShaderDXC(
     ComPtr<IDxcLibrary> library;
     ComPtr<IDxcIncludeHandler> includeHandler;
     ComPtr<IDxcUtils> utils;
-    try {
+    try
+    {
         V(DxcCreateInstanceFn(CLSID_DxcCompiler, IID_PPV_ARGS(&compiler)));
-    } catch (const std::exception& e) {
-        std::cout << e.what() << std::endl;
-    } catch (...) {
-        OutputDebugStringA("Unknown exception in DxcCreateInstance");
+    }
+    catch (const std::exception& e)
+    {
+        CherryPrint(e.what());
+    }
+    catch (...)
+    {
+        CherryPrint("Unknown exception in DxcCreateInstance");
     }
 
     V(DxcCreateInstanceFn(CLSID_DxcLibrary, IID_PPV_ARGS(&library)));
@@ -62,24 +65,28 @@ inline ComPtr<IDxcBlob> CompileShaderDXC(
 
     ComPtr<IDxcResult> result;
     const wchar_t* args[] = { L"-E", entryPoint, L"-T", targetProfile, L"-I", dualIncludePath.c_str(), L"-I", shadersPath.c_str() };
-    if (FAILED(compiler->Compile(&buffer, args, _countof(args), includeHandler.Get(), IID_PPV_ARGS(&result)))) {
-        std::cerr << "Shader compile failed\n";
+    if (FAILED(compiler->Compile(&buffer, args, _countof(args), includeHandler.Get(), IID_PPV_ARGS(&result))))
+    {
+        CherryPrint("Shader compile failed");
         return nullptr;
     }
 
     // Get compiled blob
     ComPtr<IDxcBlobUtf8> errors;
-    if (FAILED(result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errors), nullptr))) {
-        std::cerr << "Failed to get shader errors\n";
+    if (FAILED(result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errors), nullptr)))
+    {
+        CherryPrint("Failed to get shader errors");
         return nullptr;
     }
-    if (errors && errors->GetStringLength() > 0) {
-        std::cout << "Shader compile warnings/errors:\n" << errors->GetStringPointer() << "\n";
+    if (errors && errors->GetStringLength() > 0)
+    {
+        CherryPrint("Shader compile warnings/errors:\n" << errors->GetStringPointer());
     }
 
     ComPtr<IDxcBlob> vertexShaderBlob;
-    if (FAILED(result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&vertexShaderBlob), nullptr))) {
-        std::cerr << "Failed to get compiled shader\n";
+    if (FAILED(result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&vertexShaderBlob), nullptr)))
+    {
+        CherryPrint("Failed to get compiled shader");
         return nullptr;
     }
 

@@ -54,7 +54,6 @@ size_t BitsPerPixel(_In_ DXGI_FORMAT fmt)
 
 Texture::~Texture()
 {
-    std::cout << "Texture Destroyed!" << std::endl;
 }
 
 void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::string filePath,

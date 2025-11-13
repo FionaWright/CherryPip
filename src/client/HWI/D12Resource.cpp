@@ -13,7 +13,6 @@
 
 D12Resource::~D12Resource()
 {
-    std::cout << "Resource destroyed!" << std::endl;
 }
 
 void D12Resource::Init(const LPCWSTR name, ID3D12Device* device, const D3D12_RESOURCE_DESC& resourceDesc,

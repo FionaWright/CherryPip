@@ -33,7 +33,7 @@ void RootSig::Init(ID3D12Device* device, const CD3DX12_ROOT_PARAMETER1* params, 
         if (errorBlob)
         {
             std::string errorMsg = static_cast<char*>(errorBlob->GetBufferPointer());
-            std::cout << errorMsg.c_str() << std::endl;
+            CherryPrint(errorMsg.c_str());
         }
         throw std::exception();
     }

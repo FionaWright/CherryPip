@@ -68,7 +68,7 @@ void PathTracingContext::BuildScene(ID3D12Device* device, ID3D12GraphicsCommandL
         ptMaterialData.EmissiveStrength = objectMaterialData->EmissiveStrength;
         ptMaterialData.Roughness = objectMaterialData->Roughness;
         ptMaterialData.Metalness = objectMaterialData->Metalness;
-        ptMaterialData.DiffuseProbability = 0.98f;
+        ptMaterialData.DiffuseProbability = 1.0f;
         materialData.emplace_back(ptMaterialData);
     }
 

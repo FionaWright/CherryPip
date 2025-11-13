@@ -551,7 +551,7 @@ void ModelLoaderGLTF::LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
 
     if (data.error() == fastgltf::Error::InvalidPath)
     {
-        std::cout << "Error loading GLTF model (path=\"" + path + "\")" << std::endl;
+        CherryPrint("Error loading GLTF model (path=\"" + path + "\")");
         return;
     }
 
@@ -569,11 +569,11 @@ void ModelLoaderGLTF::LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
 
     Asset asset = std::make_shared<fastgltf::Expected<fastgltf::Asset>>(ms_parser.loadGltf(data.get(), path, options));
     fastgltf::Error error = asset->error();
-    std::cout << fastgltf::getErrorName(error) << std::endl;
+    CherryPrint(fastgltf::getErrorName(error));
 
     if (asset->error() == fastgltf::Error::InvalidPath)
     {
-        std::cout << "Error loading GLTF model (path=\"" + path + "\")" << std::endl;
+        CherryPrint("Error loading GLTF model (path=\"" + path + "\")");
         return;
     }
 

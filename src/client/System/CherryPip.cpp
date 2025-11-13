@@ -21,7 +21,7 @@ int CherryPip::Run(App& app, HINSTANCE hInstance, const LPSTR args, const int nC
     AllocConsole();
     FILE* fp;
     freopen_s(&fp, "CONOUT$", "w", stdout);
-    std::cout << "Console Window Initialised\n";
+    CherryPrint("Console Window Initialised");
 #endif
 
     Config::ParseCommandLineArgs(args);

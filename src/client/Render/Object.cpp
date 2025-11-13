@@ -10,7 +10,7 @@
 
 Object::~Object()
 {
-    std::cout << "Object Destroyed!" << std::endl;
+
 }
 
 void Object::Init(const char* name, const std::shared_ptr<Transform>& transform,

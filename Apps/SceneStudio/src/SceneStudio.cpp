@@ -165,6 +165,8 @@ void SceneStudio::loadAssets(D3D* d3d)
     };
     m_sceneConfigs.emplace_back(sceneChess);
 
+    m_currentScene = Config::GetSystem().DefaultSceneIdx;
+
     m_ptContext.Init(device, cmdList.Get(), &m_heap);
 
     m_ptOutputTex.Init(L"PT Output", device, &m_heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight,

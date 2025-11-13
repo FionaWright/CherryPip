@@ -11,7 +11,7 @@
 Material::~Material()
 {
     // TODO: Unmap cbv.MappedGpuPtrs
-    std::cout << "Material Destroyed!" << std::endl;
+    CherryPrint("Material Destroyed!");
 }
 
 void Material::Init(const Heap* heap)

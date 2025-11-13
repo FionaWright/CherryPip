@@ -163,7 +163,7 @@ void D3D::Init(const size_t width, const size_t height)
             &cookie);
         if (FAILED(hr))
         {
-            std::cerr << "Failed to register debug callback to window. HRESULT = " << std::hex << hr << std::endl;
+            CherryPrint("Failed to register debug callback to window. HRESULT = " << std::hex << hr);
         }
 
         hr = m_infoQueue->RegisterMessageCallback(
@@ -173,7 +173,7 @@ void D3D::Init(const size_t width, const size_t height)
             &cookie);
         if (FAILED(hr))
         {
-            std::cerr << "Failed to register debug callback to log file. HRESULT = " << std::hex << hr << std::endl;
+            CherryPrint("Failed to register debug callback to log file. HRESULT = " << std::hex << hr);
         }
 
         // You can also filter messages if it's too noisy
@@ -289,7 +289,7 @@ void D3D::Init(const size_t width, const size_t height)
     for (int i = 0; i < NUM_FRAMES_IN_FLIGHT; i++)
         m_frameBufferFences[i] = 0;
 
-    std::cout << "D3D Initialized" << std::endl;
+    CherryPrint("D3D Initialized");
 }
 
 ComPtr<ID3D12GraphicsCommandList> D3D::CreateCmdList(ID3D12CommandAllocator* allocator, const D3D12_COMMAND_LIST_TYPE type) const

@@ -10,7 +10,7 @@
 #include "Debug/Profiler.h"
 #include "System/TextureLoader.h"
 
-size_t BitsPerPixel(_In_ DXGI_FORMAT fmt)
+size_t BitsPerPixel(_In_ const DXGI_FORMAT fmt, bool& isBC)
 {
     switch (fmt)
     {
@@ -46,10 +46,23 @@ size_t BitsPerPixel(_In_ DXGI_FORMAT fmt)
     case DXGI_FORMAT_R8_SINT:
         return 8;
 
-    // TODO: Bch, Depth, etc
+    case DXGI_FORMAT_BC1_UNORM:
+    case DXGI_FORMAT_BC1_UNORM_SRGB:
+        isBC = true; return 8;
+    case DXGI_FORMAT_BC2_UNORM:
+    case DXGI_FORMAT_BC2_UNORM_SRGB:
+    case DXGI_FORMAT_BC3_UNORM:
+    case DXGI_FORMAT_BC3_UNORM_SRGB:
+        isBC = true; return 16;
+    case DXGI_FORMAT_BC5_UNORM:
+    case DXGI_FORMAT_BC6H_UF16:
+    case DXGI_FORMAT_BC6H_SF16:
+    case DXGI_FORMAT_BC7_UNORM:
+    case DXGI_FORMAT_BC7_UNORM_SRGB:
+        isBC = true; return 16;
 
     default:
-        return 0;
+        throw std::exception("Unsupported DXGI format");
     }
 }
 
@@ -89,9 +102,21 @@ void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, con
 
     m_resource.Init(filePath.c_str(), device, desc, D3D12_RESOURCE_STATE_COPY_DEST);
 
-    const int rowPitch = m_width * (BitsPerPixel(format) / 8);
-    const int totalBytes = rowPitch * m_height;
-    m_resource.UploadTexture(device, cmdList, pData, totalBytes, rowPitch);
+    bool isBC = false;
+    const uint32_t bpp = BitsPerPixel(format, isBC); // Note: For BC it's not really "Bits Per Pixel" but Block Size
+
+    if (isBC)
+    {
+        const size_t rowPitch = ((m_width + 3) / 4) * bpp;
+        const size_t slicePitch = rowPitch * ((m_height + 3) / 4);
+        m_resource.UploadTexture(device, cmdList, pData, slicePitch, rowPitch);
+    }
+    else
+    {
+        const size_t rowPitch = m_width * (bpp / 8);
+        const size_t totalBytes = rowPitch * m_height;
+        m_resource.UploadTexture(device, cmdList, pData, totalBytes, rowPitch);
+    }
     delete pData;
 
     if (desc.MipLevels > 1 && false)
@@ -146,7 +171,8 @@ void Texture::InitPNG(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, 
 
     m_resource.Init(L"PNG Texture", device, desc, D3D12_RESOURCE_STATE_COPY_DEST);
 
-    const int rowPitch = m_width * (BitsPerPixel(format) / 8);
+    bool isBC = false;
+    const int rowPitch = m_width * (BitsPerPixel(format, isBC) / 8);
     const int totalBytes = rowPitch * m_height;
     m_resource.UploadTexture(device, cmdList, pData, totalBytes, rowPitch);
     delete pData;

@@ -75,7 +75,6 @@ void Engine::RenderGUI()
             if (ImGui::Selectable(m_apps[i]->GetName(), isSelected))
             {
                 m_selectedAppIdx = i;
-                m_changedApps = true;
             }
 
             if (isSelected)

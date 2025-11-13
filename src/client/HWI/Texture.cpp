@@ -7,6 +7,7 @@
 #include <cmath>
 
 #include "Helper.h"
+#include "Debug/Profiler.h"
 #include "System/TextureLoader.h"
 
 size_t BitsPerPixel(_In_ DXGI_FORMAT fmt)
@@ -66,6 +67,8 @@ void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std
 void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::wstring filePath,
                    const DXGI_FORMAT format, const int arraySize, const D3D12_RESOURCE_FLAGS flags)
 {
+    Profiler::AddToStack(filePath);
+
     uint8_t* pData = nullptr;
     bool hasAlpha = false, flip = false, isNormal = false;
     int channels = -1;
@@ -97,6 +100,8 @@ void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std
         m_resource.Transition(cmdList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
         TextureLoader::CreateMipMaps(device, cmdList, &m_resource);
     }
+
+    Profiler::PopAndPrint();
 }
 
 void Texture::InitEmpty(ID3D12Device* device, const DXGI_FORMAT format, const UINT width, const UINT height, const int arraySize,

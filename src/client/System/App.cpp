@@ -4,6 +4,8 @@
 
 #include "../../../Headers/client/System/App.h"
 
+#include "Helper.h"
+
 void App::OnInit(D3D* d3d)
 {
     m_initialized = true;

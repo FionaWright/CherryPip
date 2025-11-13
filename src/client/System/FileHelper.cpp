@@ -9,11 +9,12 @@
 #include <vector>
 #include <wrl/wrappers/corewrappers.h>
 
-std::wstring FileHelper::m_assetsPath;
+std::wstring FileHelper::m_assetsPath, FileHelper::m_shadersPath;
 
 void FileHelper::Init()
 {
     m_assetsPath = std::wstring(ASSETS_SOURCE_DIR) + L"/";
+    m_shadersPath = std::wstring(SHADERS_SOURCE_DIR) + L"/";
 }
 
 std::wstring FileHelper::GetAssetFullPath(LPCWSTR assetName)
@@ -26,12 +27,12 @@ std::wstring FileHelper::GetAssetTextureFullPath(LPCWSTR assetName)
     return m_assetsPath + L"Textures/" + assetName;
 }
 
-std::wstring FileHelper::GetAssetShaderFullPath(LPCWSTR assetName)
+std::wstring FileHelper::GetAssetShaderFullPath(const LPCWSTR assetName)
 {
-    return m_assetsPath + L"Shaders/" + assetName;
+    return m_shadersPath + assetName;
 }
 
-std::wstring FileHelper::GetAssetModelFullPath(LPCWSTR assetName)
+std::wstring FileHelper::GetAssetModelFullPath(const LPCWSTR assetName)
 {
     return m_assetsPath + L"Models/" + assetName;
 }

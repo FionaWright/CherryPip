@@ -58,22 +58,21 @@ Texture::~Texture()
 }
 
 void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::string filePath,
-                   const DXGI_FORMAT format, const int arraySize, const D3D12_RESOURCE_FLAGS flags)
+                   const int arraySize, const D3D12_RESOURCE_FLAGS flags)
 {
     const std::wstring wstr = std::wstring(filePath.begin(), filePath.end());
-    Init(device, cmdList, wstr, format, arraySize, flags);
+    Init(device, cmdList, wstr, arraySize, flags);
 }
 
-void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::wstring filePath,
-                   const DXGI_FORMAT format, const int arraySize, const D3D12_RESOURCE_FLAGS flags)
+void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const std::wstring& filePath,
+                   const int arraySize, const D3D12_RESOURCE_FLAGS flags)
 {
     Profiler::AddToStack(filePath);
 
     uint8_t* pData = nullptr;
-    bool hasAlpha = false, flip = false, isNormal = false;
-    int channels = -1;
+    DXGI_FORMAT format = {};
     const std::string nwPath = wstringToString(filePath);
-    TextureLoader::LoadTex(nwPath, m_width, m_height, &pData, hasAlpha, channels, flip, isNormal);
+    TextureLoader::LoadTex(nwPath, m_width, m_height, &pData, format);
 
     const int maxDim = std::max<int>(m_width, m_height);
 
@@ -95,7 +94,7 @@ void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std
     m_resource.UploadTexture(device, cmdList, pData, totalBytes, rowPitch);
     delete pData;
 
-    if (desc.MipLevels > 1)
+    if (desc.MipLevels > 1 && false)
     {
         m_resource.Transition(cmdList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
         TextureLoader::CreateMipMaps(device, cmdList, &m_resource);

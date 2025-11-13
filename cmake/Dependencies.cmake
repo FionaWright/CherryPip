@@ -56,6 +56,7 @@ file(GLOB THIRD_PARTY_SOURCES CONFIGURE_DEPENDS
         "${CMAKE_SOURCE_DIR}/ThirdParty/imgui/*.h"
         "${CMAKE_SOURCE_DIR}/ThirdParty/spng/*"
         "${CMAKE_SOURCE_DIR}/ThirdParty/zlib/*"
+        "${CMAKE_SOURCE_DIR}/ThirdParty/tinyddsloader/tinyddsloader.h"
         "${CMAKE_SOURCE_DIR}/ThirdParty/WinPixEventRuntime.1.0.240308001/Include/WinPixEventRuntime/*"
 )
 target_sources(client PUBLIC
@@ -70,8 +71,11 @@ target_include_directories(client PUBLIC
         "${CMAKE_SOURCE_DIR}/ThirdParty/imgui"
         "${CMAKE_SOURCE_DIR}/ThirdParty/spng"
         "${CMAKE_SOURCE_DIR}/ThirdParty/zlib"
+        "${CMAKE_SOURCE_DIR}/ThirdParty/tinyddsloader"
         "${CMAKE_SOURCE_DIR}/ThirdParty/WinPixEventRuntime.1.0.240308001/Include/"
 )
+
+target_compile_definitions(client PUBLIC TINYDDSLOADER_IMPLEMENTATION)
 
 add_custom_command(TARGET client POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy

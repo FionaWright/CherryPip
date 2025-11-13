@@ -384,10 +384,10 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     // TODO: Refactor
     if ((*asset)->materials.empty())
     {
-        std::string diffuseTexInput = assetDirectory + "Textures/WhitePOT.png";
+        std::string diffuseTexInput = assetDirectory + "Textures/TestTex.dds";
         std::shared_ptr<Texture> diffuseTex = std::make_shared<Texture>();
-        diffuseTex->Init(d3d->GetDevice(), cmdList, diffuseTexInput, DXGI_FORMAT_R8G8B8A8_UNORM,
-                         1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+        diffuseTex->Init(d3d->GetDevice(), cmdList, diffuseTexInput,
+                         1);
 
         std::shared_ptr<Material> material = std::make_shared<Material>();
         material->Init(heap);
@@ -415,15 +415,19 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
             diffuseTexInput = localDirectory + get<std::string>(diffuseTexInput);
     }
     else if (mat.iridescence)
-        diffuseTexInput = assetDirectory + "Textures/Transparent.png";
+        diffuseTexInput = assetDirectory + "Textures/Transparent.dds";
     else
-        diffuseTexInput = assetDirectory + "Textures/TestTex.png";
+        diffuseTexInput = assetDirectory + "Textures/TestTex.dds";
 
     std::shared_ptr<Texture> diffuseTex = std::make_shared<Texture>();
     if (std::holds_alternative<std::string>(diffuseTexInput))
     {
-        diffuseTex->Init(d3d->GetDevice(), cmdList, get<std::string>(diffuseTexInput), DXGI_FORMAT_R8G8B8A8_UNORM,
-                         1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+        std::string texPath = get<std::string>(diffuseTexInput);
+        const auto pngIdx = texPath.find("png");
+        if (pngIdx != std::string::npos)
+            texPath = texPath.replace(pngIdx, 3, "dds");
+        diffuseTex->Init(d3d->GetDevice(), cmdList, texPath,
+                         1);
     }
     else
     {
@@ -441,16 +445,6 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     }
     else
         normalTexInput = "Assets/Textures/DefaultNormal.tga";
-
-    //std::shared_ptr<Texture> normalTex = std::make_shared<Texture>();
-    if (std::holds_alternative<std::string>(normalTexInput))
-    {
-        //normalTex->Init(d3d->GetDevice(), cmdList, get<std::string>(normalTexInput), DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-    }
-    else
-    {
-        //normalTex->InitPNG(d3d->GetDevice(), cmdList, get<const std::byte*>(normalTexInput), DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-    }
 
     std::shared_ptr<Material> material = std::make_shared<Material>();
     material->Init(heap);

@@ -11,6 +11,7 @@
 #include "System/Gui.h"
 #include "CBV.h"
 #include "MathUtils.h"
+#include "Debug/Profiler.h"
 #include "Debug/PythonExecutor.h"
 #include "HWI/BLAS.h"
 #include "HWI/Material.h"
@@ -227,6 +228,9 @@ void SceneStudio::loadRasterAssets(const D3D* d3d)
 
 void SceneStudio::initScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList, const uint32_t configIdx)
 {
+    CherryPrint("Initializing Scene: " << m_sceneConfigs.at(configIdx).Name << "...");
+    Profiler::AddToStack(m_sceneConfigs.at(configIdx).Name.c_str());
+
     GLTFLoadArgs args;
     args.Root = m_rootSigRaster;
     args.DefaultShaderIndex = 0;
@@ -240,6 +244,9 @@ void SceneStudio::initScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList, const 
     std::shared_ptr<Scene> scene = std::make_shared<Scene>();
     scene->Init(config.Name.c_str(), config.InitialCamPos, config.InitialCamPitchYaw.x, config.InitialCamPitchYaw.y, args.OutObjects);
     m_scenes.emplace_back(scene);
+
+    Profiler::PopAndPrint();
+    CherryPrint("Initialized Scene: " << m_sceneConfigs.at(configIdx).Name);
 }
 
 void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)

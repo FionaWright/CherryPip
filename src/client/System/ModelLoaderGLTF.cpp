@@ -11,6 +11,7 @@
 #include "HWI/Texture.h"
 
 #include "CBV.h"
+#include "Debug/Profiler.h"
 #include "HWI/BLAS.h"
 #include "HWI/Material.h"
 #include "Render/Object.h"
@@ -215,6 +216,8 @@ void ModelLoaderGLTF::loadGLTFIndices(const std::string& directory, std::vector<
 void ModelLoaderGLTF::loadModel(D3D* d3d, ID3D12GraphicsCommandList* cmdList, const std::string& directory,
                                 Asset& asset, const fastgltf::Primitive& primitive, Model* model)
 {
+    Profiler::AddToStack(directory.c_str());
+
     std::vector<VertexInputDataGLTF> vertexBuffer;
 
     loadGLTFVertexData(directory, vertexBuffer, asset, primitive, "POSITION",
@@ -291,6 +294,8 @@ void ModelLoaderGLTF::loadModel(D3D* d3d, ID3D12GraphicsCommandList* cmdList, co
     model->Init(d3d->GetDevice(), vertexBuffer.size(), indexBuffer.size(), sizeof(VertexInputDataGLTF),
                 boundingRadiusSq, centroidFloat3);
     model->SetBuffers(d3d->GetDevice(), cmdList, vertexBuffer.data(), indexBuffer.data());
+
+    Profiler::PopAndPrint();
 }
 
 std::variant<std::string, const std::byte*> ModelLoaderGLTF::loadTexture(
@@ -502,7 +507,7 @@ void ModelLoaderGLTF::loadNode(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Hea
     if (!node.meshIndex.has_value())
         return;
 
-    //worldTransform.SetPosition(Mult(worldTransform.GetPosition(), worldTransform.GetScale()));
+    Profiler::AddToStack(("GLTF Node: " + node.name).c_str());
 
     std::string nodeName(node.name);
     if (args.CullingWhiteList.size() > 0)
@@ -533,6 +538,8 @@ void ModelLoaderGLTF::loadNode(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Hea
         loadPrimitive(d3d, cmdList, heap, asset, mesh.primitives[i], modelNameExtensionless, node, args, worldTransform, id, meshIndex,
                       i);
     }
+
+    Profiler::PopAndPrint();
 }
 
 void ModelLoaderGLTF::LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, const std::wstring& name,

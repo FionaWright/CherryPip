@@ -30,13 +30,23 @@ Engine::Engine(const std::vector<App*>& apps, const HWND hWnd, const UINT window
     m_selectedAppIdx = Config::GetSystem().DefaultAppIdx;
 
     m_apps = apps;
-    m_apps.at(m_selectedAppIdx)->OnInit(m_d3d.get());
 
     Gui::Init(hWnd, m_d3d->GetDevice(), 3);
 }
 
 void Engine::Frame()
 {
+    if (!m_apps.at(m_selectedAppIdx)->GetIsInitialized())
+    {
+        m_d3d->Flush();
+        if (!m_apps.at(m_selectedAppIdx)->GetIsInitialized())
+        {
+            CherryPrint("Initializing App: " << m_apps.at(m_selectedAppIdx)->GetName() << "...");
+            m_apps.at(m_selectedAppIdx)->OnInit(m_d3d.get());
+            CherryPrint("Initialized App: " << m_apps.at(m_selectedAppIdx)->GetName());
+        }
+    }
+
     Gui::BeginFrame();
 
     const TimeArgs timeArgs = m_clock.GetTimeArgs();
@@ -78,14 +88,6 @@ void Engine::Render()
     V(cmdList->Close());
     m_d3d->ExecuteCommandList(cmdList.Get());
     m_d3d->Present();
-
-    if (m_changedApps)
-    {
-        m_d3d->Flush();
-        if (!m_apps.at(m_selectedAppIdx)->GetIsInitialized())
-            m_apps.at(m_selectedAppIdx)->OnInit(m_d3d.get());
-        m_changedApps = false;
-    }
 }
 
 void Engine::CalculateFPS(const double deltaTime)

@@ -23,7 +23,6 @@ public:
 private:
     std::vector<App*> m_apps;
     int m_selectedAppIdx = 0;
-    bool m_changedApps = false;
 
     std::unique_ptr<D3D> m_d3d;
     HighResolutionClock m_clock;

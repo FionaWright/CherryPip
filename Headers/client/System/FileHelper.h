@@ -14,6 +14,7 @@ class FileHelper
 public:
     static void Init();
     static std::wstring GetAssetsPath() { return m_assetsPath; }
+    static std::wstring GetShadersPath() { return m_shadersPath; }
     static std::wstring GetAssetFullPath(LPCWSTR assetName);
     static std::wstring GetAssetTextureFullPath(LPCWSTR assetName);
     static std::wstring GetAssetShaderFullPath(LPCWSTR assetName);
@@ -24,7 +25,7 @@ public:
     static HRESULT ReadDataFromDDSFile(LPCWSTR filename, byte** data, UINT* offset, UINT* size);
 
 private:
-    static std::wstring m_assetsPath;
+    static std::wstring m_assetsPath, m_shadersPath;
 };
 
 #endif //PT_FILEHELPER_H

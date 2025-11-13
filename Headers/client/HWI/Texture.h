@@ -14,10 +14,10 @@ class Texture
 {
 public:
     ~Texture();
-    void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::string filePath, DXGI_FORMAT format,
+    void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::string filePath,
               int arraySize = 1, D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE);
 
-    void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::wstring filePath, DXGI_FORMAT format,
+    void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const std::wstring& filePath,
               int arraySize = 1, D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE);
     void InitEmpty(ID3D12Device* device, DXGI_FORMAT format, UINT width, UINT height, int arraySize = 1,
                    D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE);

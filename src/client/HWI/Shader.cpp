@@ -60,8 +60,8 @@ inline ComPtr<IDxcBlob> CompileShaderDXC(
     buffer.Size = shaderBytes.size();
     buffer.Encoding = DXC_CP_UTF8; // or DXC_CP_ACP if ASCII
 
-    const std::wstring shadersPath = FileHelper::GetAssetsPath() + L"/Shaders/";
-    const std::wstring dualIncludePath = FileHelper::GetAssetsPath() + L"/Shaders/DualIncludes/";
+    const std::wstring shadersPath = FileHelper::GetShadersPath();
+    const std::wstring dualIncludePath = FileHelper::GetShadersPath() + L"DualIncludes/";
 
     ComPtr<IDxcResult> result;
     const wchar_t* args[] = { L"-E", entryPoint, L"-T", targetProfile, L"-I", dualIncludePath.c_str(), L"-I", shadersPath.c_str() };

@@ -17,6 +17,7 @@ StructuredBuffer<PtInstanceData> gInstances : register(t1);
 StructuredBuffer<Vertex> gVertexMegaBuffer : register(t2);
 StructuredBuffer<uint3>  gIndexMegaBuffer  : register(t3);
 StructuredBuffer<PtMaterialData> gMaterials  : register(t4);
+Texture2D<float4> gTextures[] : register(t5);
 RWTexture2D<float4> gAccum : register(u0);
 #ifdef DEBUG_BUFFER
     ConstantBuffer<CbvPathTracingDebug> c_debug : register(b1);

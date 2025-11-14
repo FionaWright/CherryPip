@@ -41,6 +41,9 @@ struct MaterialData
     float EmissiveStrength = 0.0f;
     float Roughness = 1.0f;
     float Metalness = 0.0f;
+
+    int BindlessTexDiffuse = -1;
+    int BindlessTexNormal = -1;
 };
 
 class Material
@@ -54,7 +57,7 @@ public:
     void AddCBV(ID3D12Device* device, Heap* heap, size_t size);
     void SetSRV(ID3D12Device* device, UINT srvIdx, Heap* heap, D12Resource* d12Resource,
                 const D3D12_SHADER_RESOURCE_VIEW_DESC& desc);
-    void SetTex(ID3D12Device* device, UINT srvIdx, Heap* heap, std::shared_ptr<Texture> tex);
+    void AddTex(ID3D12Device* device, Heap* heap, std::shared_ptr<Texture> tex, int* bindlessIdx);
     void SetBuffer(ID3D12Device* device, UINT srvIdx, Heap* heap, std::shared_ptr<D12Resource> resource,
                    UINT numElements,
                    size_t stride);
@@ -74,6 +77,7 @@ private:
 
     std::vector<CBV> m_cbvs = {};
     std::vector<SRV> m_srvs = {};
+    std::vector<SRV> m_srvsTextures = {};
     std::vector<UAV> m_uavs = {};
 
     MaterialData m_materialData;

@@ -389,13 +389,14 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
         diffuseTex->Init(d3d->GetDevice(), cmdList, diffuseTexInput,
                          1);
 
+        MaterialData materialData = {};
+
         std::shared_ptr<Material> material = std::make_shared<Material>();
         material->Init(heap);
         material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices));
         material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterDebug));
-        material->SetTex(d3d->GetDevice(), 0, heap, diffuseTex);
+        material->AddTex(d3d->GetDevice(), heap, diffuseTex, &materialData.BindlessTexDiffuse);
 
-        MaterialData materialData = {};
         material->SetData(materialData);
 
         auto obj = std::make_shared<Object>();
@@ -446,13 +447,14 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     else
         normalTexInput = "Assets/Textures/DefaultNormal.tga";
 
+    MaterialData materialData = {};
+
     std::shared_ptr<Material> material = std::make_shared<Material>();
     material->Init(heap);
     material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices));
     material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterDebug));
-    material->SetTex(d3d->GetDevice(), 0, heap, diffuseTex);
+    material->AddTex(d3d->GetDevice(), heap, diffuseTex, &materialData.BindlessTexDiffuse);
 
-    MaterialData materialData;
     memcpy(&materialData.BaseColorFactor, &mat.pbrData.baseColorFactor, sizeof(float) * 3);
     materialData.EmissiveStrength = mat.emissiveStrength;
     materialData.Roughness = mat.pbrData.roughnessFactor;

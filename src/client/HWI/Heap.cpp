@@ -12,6 +12,8 @@ void Heap::Init(ID3D12Device* device, const size_t numDescriptors, const D3D12_D
     m_descriptorIncSize = device->GetDescriptorHandleIncrementSize(m_type);
     m_heapSize = numDescriptors;
 
+    m_currentHeapIndexBindlessTex = m_heapSize / 2; // Should I give more control to the user?
+
     D3D12_DESCRIPTOR_HEAP_DESC desc = {};
     desc.Type = m_type;
     desc.NumDescriptors = numDescriptors;
@@ -29,6 +31,16 @@ UINT Heap::GetNextDescriptor()
 
     const UINT idx = m_currentHeapIndex;
     m_currentHeapIndex++;
+    return idx;
+}
+
+UINT Heap::GetNextDescriptorBindlessTexture()
+{
+    if (m_currentHeapIndexBindlessTex == m_heapSize)
+        throw std::exception("Heap is too smol :(");
+
+    const UINT idx = m_currentHeapIndexBindlessTex;
+    m_currentHeapIndexBindlessTex++;
     return idx;
 }
 

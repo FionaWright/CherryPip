@@ -11,12 +11,10 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_CONFIGURATION_TYPES MATCHES "Debug
     set(PROJECT_SOURCES
             ${PROJECT_SOURCES}
             src/ReadbackManager.cpp
-            src/FurnaceTest.cpp
     )
     set(PROJECT_HEADERS
             ${PROJECT_HEADERS}
             Headers/ReadbackManager.h
-            Headers/FurnaceTest.h
     )
 endif()
 

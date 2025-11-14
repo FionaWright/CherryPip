@@ -59,6 +59,12 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         m_sceneDirty = false;
     }
 
+    if (m_shaderDirty)
+    {
+        compilePtShader(d3d);
+        m_shaderDirty = false;
+    }
+
     switch (m_studioConfig.Backend)
     {
     case eForward:
@@ -97,25 +103,6 @@ void SceneStudio::loadAssets(D3D* d3d)
 
     m_rootSig = std::make_shared<RootSig>();
     m_rootSig->SmartInit(device, 1, 5, 1, true, samplers, _countof(samplers));
-
-    if (d3d->GetRayTracingSupported())
-    {
-        m_shaderILD =
-        {
-            {
-                "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
-                D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
-            },
-            {
-                "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
-                D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
-            }
-        };
-        const D3D12_INPUT_LAYOUT_DESC ild = {m_shaderILD.data(), static_cast<UINT>(m_shaderILD.size())};
-
-        m_shader = std::make_shared<Shader>();
-        m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/PS.hlsl", ild, device, m_rootSig->Get());
-    }
 
     GLTFLoadArgs args;
     args.Root = m_rootSigRaster;
@@ -291,9 +278,6 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     ID3D12PipelineState* pso = nullptr;
     switch (m_studioConfig.PT.Mode)
     {
-    case eStandard:
-        pso = m_shader->GetPSO();
-        break;
     case eOutputBuffer:
         if (!m_shaderDebug)
         {
@@ -304,12 +288,8 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         }
         pso = m_shaderDebug->GetPSO();
         break;
-    case eFurnaceTestClassic:
-    case eFurnaceTestEmissive:
-        if (!m_furnaceTest.GetIsInitialised())
-            m_furnaceTest.Init(d3d, cmdList, m_shaderILD, m_rootSig->Get(), &m_heap);
-        pso = m_studioConfig.PT.Mode == eFurnaceTestClassic ? m_furnaceTest.GetShaderClassic() : m_furnaceTest.GetShaderEmissive();
-        break;
+    default:
+        pso = m_shader->GetPSO();
     }
 
     m_ptContext.Render(cmdList, rootSig, pso, &m_camera.GetCamera(), &m_heap, m_projMatrix, m_studioConfig.PT, debugBufferIdx);
@@ -345,4 +325,36 @@ void SceneStudio::renderRaster(const D3D* d3d, ID3D12GraphicsCommandList* cmdLis
     }
 
     m_rasterContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix);
+}
+
+void SceneStudio::compilePtShader(const D3D* d3d)
+{
+    if (!d3d->GetRayTracingSupported())
+        return;
+
+    const WCHAR* shaderMap[] = {
+        L"Path-Tracing/PS.hlsl",
+        L"INVALID - (DEBUG MODE)",
+        L"Path-Tracing/FurnaceClassicPS.hlsl",
+        L"Path-Tracing/FurnaceEmissivePS.hlsl"
+    };
+    const WCHAR* shaderPath = shaderMap[m_studioConfig.PT.Mode];
+
+    CherryPrint("Loading Shader: " << wstringToString(shaderPath));
+
+    m_shaderILD =
+    {
+        {
+            "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+        },
+        {
+            "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+        }
+    };
+    const D3D12_INPUT_LAYOUT_DESC ild = {m_shaderILD.data(), static_cast<UINT>(m_shaderILD.size())};
+
+    m_shader = std::make_shared<Shader>();
+    m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", shaderPath, ild, d3d->GetDevice(), m_rootSig->Get());
 }

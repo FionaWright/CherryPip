@@ -16,7 +16,6 @@
 #include "Render/Transform.h"
 
 #ifdef _DEBUG
-#include "FurnaceTest.h"
 #include "ReadbackManager.h"
 #endif
 
@@ -92,6 +91,7 @@ private:
     void initScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList, uint32_t configIdx);
     void renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void renderRaster(const D3D* d3d, ID3D12GraphicsCommandList* cmdList) const;
+    void compilePtShader(const D3D* d3d);
     void GuiPathTracer(bool resetPT);
     void GuiRaster();
     void guiMain();
@@ -104,6 +104,7 @@ private:
     std::shared_ptr<RootSig> m_rootSig, m_rootSigDebug, m_rootSigRaster;
 
     std::vector<D3D12_INPUT_ELEMENT_DESC> m_shaderILD;
+    bool m_shaderDirty = true;
 
     std::vector<SceneConfig> m_sceneConfigs;
     std::vector<std::shared_ptr<Scene>> m_scenes;
@@ -121,7 +122,6 @@ private:
     XMMATRIX m_projMatrix = {};
 
 #ifdef _DEBUG
-    FurnaceTest m_furnaceTest;
     ReadbackManager m_readbackManager;
 #endif
 };

@@ -86,8 +86,17 @@ void SceneStudio::loadAssets(D3D* d3d)
 
     loadRasterAssets(d3d);
 
+    D3D12_STATIC_SAMPLER_DESC samplers[1];
+    samplers[0] = {};
+    samplers[0].Filter = D3D12_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
+    samplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    samplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    samplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    samplers[0].ShaderRegister = 0;
+
     m_rootSig = std::make_shared<RootSig>();
-    m_rootSig->SmartInit(device, 1, 5, 1, true);
+    m_rootSig->SmartInit(device, 1, 5, 1, true, samplers, _countof(samplers));
 
     if (d3d->GetRayTracingSupported())
     {
@@ -303,7 +312,7 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         break;
     }
 
-    m_ptContext.Render(cmdList, rootSig, pso, &m_camera.GetCamera(), m_projMatrix, m_studioConfig.PT, debugBufferIdx);
+    m_ptContext.Render(cmdList, rootSig, pso, &m_camera.GetCamera(), &m_heap, m_projMatrix, m_studioConfig.PT, debugBufferIdx);
 
 #ifdef _DEBUG
     if (m_studioConfig.PT.ReadbackEnabled)

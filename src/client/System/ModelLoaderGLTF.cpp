@@ -418,7 +418,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     else if (mat.iridescence)
         diffuseTexInput = assetDirectory + "Textures/Transparent.dds";
     else
-        diffuseTexInput = assetDirectory + "Textures/WhitePOT.dds";
+        diffuseTexInput = assetDirectory + "Textures/TestTex.dds";
 
     std::shared_ptr<Texture> diffuseTex = std::make_shared<Texture>();
     if (std::holds_alternative<std::string>(diffuseTexInput))

@@ -28,6 +28,9 @@ void Hit(inout uint rngState, out float3 materialColor, out float3 Ng, out float
     Ns = q.CommittedTriangleFrontFace() == 0 ? -Ns : Ns;
     Ns = normalize(Ns);
 
+    float2 uv = v0.uv * bary.x + v1.uv * bary.y + v2.uv * bary.z;
+    float3 albedo = gTextures[mat.TextureIdx].Sample(c_sampler, uv).rgb;
+
 #if defined(FURNACE_TEST_EMISSIVE)
     materialColor = float3(0, 0, 0);
     light = float3(1, 1, 1);
@@ -35,7 +38,7 @@ void Hit(inout uint rngState, out float3 materialColor, out float3 Ng, out float
     materialColor = float3(1, 1, 1);
     light = float3(0, 0, 0);
 #else
-    materialColor = mat.BaseColorFactor;
+    materialColor = mat.BaseColorFactor * albedo;
     light = mat.EmissiveStrength;
 #endif
 }

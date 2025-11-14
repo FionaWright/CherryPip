@@ -12,7 +12,8 @@ void Heap::Init(ID3D12Device* device, const size_t numDescriptors, const D3D12_D
     m_descriptorIncSize = device->GetDescriptorHandleIncrementSize(m_type);
     m_heapSize = numDescriptors;
 
-    m_currentHeapIndexBindlessTex = m_heapSize / 2; // Should I give more control to the user?
+    m_baseBindlessTex = m_heapSize / 2;
+    m_currentHeapIndexBindlessTex = m_baseBindlessTex; // Should I give more control to the user?
 
     D3D12_DESCRIPTOR_HEAP_DESC desc = {};
     desc.Type = m_type;

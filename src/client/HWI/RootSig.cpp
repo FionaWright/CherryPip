@@ -63,18 +63,18 @@ void RootSig::SmartInit(ID3D12Device* device, const UINT numCBV, const UINT numS
     {
         CD3DX12_DESCRIPTOR_RANGE1 range;
         range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, numSRV, 0, 0);
-        srvRanges.emplace_back(range);
+
+        CD3DX12_ROOT_PARAMETER1 param;
+        param.InitAsDescriptorTable(1, &range, D3D12_SHADER_VISIBILITY_ALL);
+        params.emplace_back(param);
     }
     if (hasSrvTextures)
     {
         CD3DX12_DESCRIPTOR_RANGE1 range;
-        range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, UINT_MAX, numSRV, 0);
-        srvRanges.emplace_back(range);
-    }
-    if (srvRanges.size() > 0)
-    {
+        range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, UINT_MAX, numSRV, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE);
+
         CD3DX12_ROOT_PARAMETER1 param;
-        param.InitAsDescriptorTable(srvRanges.size(), srvRanges.data(), D3D12_SHADER_VISIBILITY_ALL);
+        param.InitAsDescriptorTable(1, &range, D3D12_SHADER_VISIBILITY_ALL);
         params.emplace_back(param);
     }
     if (numUAV > 0)

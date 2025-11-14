@@ -11,6 +11,7 @@
 #include <wrl/client.h>
 
 #include "Camera.h"
+#include "CBV.h"
 #include "HWI/D12Resource.h"
 #include "HWI/Heap.h"
 #include "HWI/Model.h"
@@ -27,6 +28,28 @@ using Microsoft::WRL::ComPtr;
 
 class BLAS;
 class TLAS;
+
+enum PathTracerMode : uint32_t
+{
+    eLambertDiff,
+    eGlossy,
+    eFurnaceTestClassic,
+    eFurnaceTestEmissive
+};
+
+struct PtConfig
+{
+    uint32_t SPP = 1;
+    uint32_t NumBounces = 1;
+    uint32_t MaxFrameNum = 0;
+    PathTracerMode Mode = eGlossy;
+    DebugBuffer DebugBufferIdx = DebugBuffer::eNormalsShaded;
+    alignas(4) bool DebugMode = false;
+    alignas(4) bool AccumulationEnabled = true;
+    alignas(4) bool JitterEnabled = false;
+    alignas(4) bool ReadbackEnabled = false;
+    alignas(4) bool ReadbackEveryFrame = false;
+};
 
 class PathTracingContext
 {

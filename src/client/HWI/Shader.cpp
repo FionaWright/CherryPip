@@ -65,7 +65,7 @@ inline ComPtr<IDxcBlob> CompileShaderDXC(
     const std::wstring dualIncludePath = FileHelper::GetShadersPath() + L"DualIncludes/";
 
     ComPtr<IDxcResult> result;
-    const std::vector stdArgs = { L"-E", entryPoint, L"-T", targetProfile, L"-I", dualIncludePath.c_str(), L"-I", shadersPath.c_str() };
+    const std::vector<const wchar_t*> stdArgs = { L"-E", entryPoint, L"-T", targetProfile, L"-I", dualIncludePath.c_str(), L"-I", shadersPath.c_str() };
     args.insert(args.end(), stdArgs.begin(), stdArgs.end());
     if (FAILED(compiler->Compile(&buffer, args.data(), args.size(), includeHandler.Get(), IID_PPV_ARGS(&result))))
     {

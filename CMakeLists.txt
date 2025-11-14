@@ -24,7 +24,7 @@ include_directories(
         Headers
         Headers/client
         Assets/Shaders/DualIncludes
-        ${CMAKE_SOURCE_DIR}
+        Assets/Resources
 )
 
 include(cmake/Dependencies.cmake)

@@ -2,7 +2,7 @@
 // Created by fionaw on 09/11/2025.
 //
 
-#include "Apps/PathTracer/Headers/ReadbackManager.h"
+#include "Apps/SceneStudio/Headers/ReadbackManager.h"
 
 #include "CBV.h"
 #include "ThirdParty/imgui/imgui.h"

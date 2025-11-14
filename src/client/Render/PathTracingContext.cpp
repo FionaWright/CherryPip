@@ -9,11 +9,12 @@
 #include "CBV.h"
 #include "Helper.h"
 #include "../../../Headers/client/Render/Scene.h"
-#include "Apps/PathTracer/Headers/PathTracer.h"
 #include "Debug/GPUEventScoped.h"
 #include "HWI/BLAS.h"
 #include "HWI/Material.h"
+#include "HWI/TLAS.h"
 #include "Render/Camera.h"
+#include "Render/Object.h"
 #include "System/Config.h"
 
 void PathTracingContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap* heap)

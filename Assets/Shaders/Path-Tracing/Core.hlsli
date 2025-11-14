@@ -12,18 +12,19 @@ struct VsOut
 };
 
 ConstantBuffer<CbvPathTracing> c_pathTracing : register(b0);
+#ifdef DEBUG_BUFFER
+    ConstantBuffer<CbvPathTracingDebug> c_debug : register(b1);
+	#include "DebugPalette.hlsli"
+#endif
 RaytracingAccelerationStructure gTLAS : register(t0);
 StructuredBuffer<PtInstanceData> gInstances : register(t1);
 StructuredBuffer<Vertex> gVertexMegaBuffer : register(t2);
 StructuredBuffer<uint3>  gIndexMegaBuffer  : register(t3);
 StructuredBuffer<PtMaterialData> gMaterials  : register(t4);
-Texture2D<float4> gTextures[] : register(t5);
-RWTexture2D<float4> gAccum : register(u0);
-#ifdef DEBUG_BUFFER
-    ConstantBuffer<CbvPathTracingDebug> c_debug : register(b1);
+Texture2D<float3> gEnvMap  : register(t5);
+Texture2D<float4> gTextures[] : register(t6);
 
-	#include "DebugPalette.hlsli"
-#endif
+RWTexture2D<float4> gAccum : register(u0);
 
 SamplerState c_sampler : register(s0);
 

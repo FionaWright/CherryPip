@@ -69,7 +69,35 @@ void Material::SetSRV(ID3D12Device* device, const UINT srvIdx, Heap* heap, D12Re
     heap->InitSRV(device, resource, desc, srv.HeapIndex);
 }
 
-void Material::AddTex(ID3D12Device* device, Heap* heap, std::shared_ptr<Texture> tex, int* bindlessIdx)
+void Material::SetTex(ID3D12Device* device, const UINT srvIdx, Heap* heap, std::shared_ptr<Texture> tex)
+{
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Format = tex->GetFormat();
+    srvDesc.Texture2D.MipLevels = tex->GetDesc().MipLevels;
+    srvDesc.Texture2D.MostDetailedMip = 0;
+    srvDesc.Texture2D.PlaneSlice = 0;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+    m_tempTextureOwnership.push_back(tex);
+
+    SetSRV(device, srvIdx, heap, tex->GetD12Resource(), srvDesc);
+}
+
+void Material::SetTex(ID3D12Device* device, const UINT srvIdx, Heap* heap, D12Resource* d12Resource)
+{
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Format = d12Resource->GetDesc().Format;
+    srvDesc.Texture2D.MipLevels = d12Resource->GetDesc().MipLevels;
+    srvDesc.Texture2D.MostDetailedMip = 0;
+    srvDesc.Texture2D.PlaneSlice = 0;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+    SetSRV(device, srvIdx, heap, d12Resource, srvDesc);
+}
+
+void Material::AddTexBindless(ID3D12Device* device, Heap* heap, std::shared_ptr<Texture> tex, int* bindlessIdx)
 {
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;

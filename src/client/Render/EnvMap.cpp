@@ -68,4 +68,6 @@ void EnvMap::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, cons
     cmdList->SetPipelineState(m_shaderPanoToEA.GetPSO());
     cmdList->SetComputeRootSignature(m_rootSigPanoToEA.Get());
     cmdList->Dispatch(groupSizeX, groupSizeY, 1);
+
+    m_ea.Transition(cmdList, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
 }

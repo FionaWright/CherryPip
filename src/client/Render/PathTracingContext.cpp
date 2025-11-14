@@ -14,6 +14,7 @@
 #include "HWI/Material.h"
 #include "HWI/TLAS.h"
 #include "Render/Camera.h"
+#include "Render/EnvMap.h"
 #include "Render/Object.h"
 #include "System/Config.h"
 
@@ -38,7 +39,7 @@ void PathTracingContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* c
     m_material->AddUAV(device, heap, m_accumTexture);
 }
 
-void PathTracingContext::BuildScene(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const Scene* scene, Heap* heap)
+void PathTracingContext::BuildScene(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const Scene* scene, Heap* heap, EnvMap* envMap)
 {
     m_instanceDataList.clear();
     m_blasList.clear();
@@ -153,6 +154,7 @@ void PathTracingContext::BuildScene(ID3D12Device* device, ID3D12GraphicsCommandL
     m_material->SetBuffer(device, 2, heap, m_vertexMegaBuffer, m_vertexMegaBufferCount, sizeof(Vertex));
     m_material->SetBuffer(device, 3, heap, m_indexMegaBuffer, m_indexMegaBufferCount, sizeof(uint32_t) * 3);
     m_material->SetBuffer(device, 4, heap, m_materialBuffer, m_instanceDataList.size(), sizeof(PtMaterialData));
+    m_material->SetTex(device, 5, heap, envMap->GetEA());
 }
 
 void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSig,

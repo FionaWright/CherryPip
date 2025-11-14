@@ -62,8 +62,8 @@ void EnvMap::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, cons
     m_matPanoToEA.UpdateCBV(0, &cbv);
     m_matPanoToEA.SetDescriptorTables(cmdList, true);
 
-    uint32_t groupSizeX = (m_pano.GetDesc().Width + 15) / 16;
-    uint32_t groupSizeY = (m_pano.GetDesc().Height + 15) / 16;
+    uint32_t groupSizeX = (m_ea.GetDesc().Width + 15) / 16;
+    uint32_t groupSizeY = (m_ea.GetDesc().Height + 15) / 16;
 
     cmdList->SetPipelineState(m_shaderPanoToEA.GetPSO());
     cmdList->SetComputeRootSignature(m_rootSigPanoToEA.Get());

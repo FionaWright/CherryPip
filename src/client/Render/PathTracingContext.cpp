@@ -199,7 +199,7 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
         cbv.NumBounces = config.NumBounces;
         cbv.SPP = config.SPP;
         cbv.NumFrames = m_numFrames;
-        cbv.AccumulationEnabled = config.AccumulationEnabled ? 1 : 0;
+        cbv.AccumulationEnabled = config.AccumulationEnabled ? 1u : 0u;
         cbv.WindowAppGuiWidth = Config::GetSystem().WindowAppGuiWidth;
         cbv.UpdateAccumulation = frameIncAllowed ? 1 : 0;
 

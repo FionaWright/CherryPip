@@ -17,7 +17,7 @@
 #include "../../../Headers/client/Debug/HotReloader.h"
 #endif
 
-#include "Assets/Resources/Resources.h"
+#include "Resources.h"
 
 HWND Win32App::ms_hwnd = nullptr;
 std::unique_ptr<Engine> Win32App::ms_engine = nullptr;

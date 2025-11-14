@@ -22,28 +22,6 @@
 class BLAS;
 using Microsoft::WRL::ComPtr;
 
-enum PathTracerMode : uint32_t
-{
-    eLambertDiff,
-    eGlossy,
-    eFurnaceTestClassic,
-    eFurnaceTestEmissive
-};
-
-struct PtConfig
-{
-    uint32_t SPP = 1;
-    uint32_t NumBounces = 1;
-    uint32_t MaxFrameNum = 0;
-    PathTracerMode Mode = eGlossy;
-    DebugBuffer DebugBufferIdx = DebugBuffer::eNormalsShaded;
-    bool DebugMode = false;
-    bool AccumulationEnabled = true;
-    bool JitterEnabled = false;
-    bool ReadbackEnabled = false;
-    bool ReadbackEveryFrame = false;
-};
-
 struct RasterConfig
 {
     RasterDebugMode Mode = eNormals;

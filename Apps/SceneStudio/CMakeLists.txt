@@ -53,3 +53,7 @@ add_custom_command(TARGET SceneStudio POST_BUILD
         "${CMAKE_BINARY_DIR}/dxil.dll"
         $<TARGET_FILE_DIR:SceneStudio>
 )
+
+include_directories(
+        ${CMAKE_SOURCE_DIR}
+)

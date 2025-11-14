@@ -63,17 +63,27 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 		PtMaterialData mat;
         Hit(rngState, outMaterialColor, outNg, outNs, outLight, mat, q);
 
+        float3 hitPos = ray.Origin + ray.Direction * q.CommittedRayT();
+        ray.Origin = hitPos + outNg * EPSILON;
+
+#if defined(LIGHTING_LAMB_DIFF)
+        bool isDiffuse = mat.DiffuseProbability >= PcgRand01(rngState);
+
+        color += throughput * outLight;
+        throughput *= outMaterialColor;
+
+        float3 diffuseDir = normalize(outNs + RandDirectionSphere(rngState));
+        ray.Direction = diffuseDir;
+#elif defined(LIGHTING_GLOSSY)
 		bool isDiffuse = mat.DiffuseProbability >= PcgRand01(rngState);
 
         color += throughput * outLight;
         throughput *= lerp(float3(1, 1, 1), outMaterialColor, isDiffuse);
 
-		float3 hitPos = ray.Origin + ray.Direction * q.CommittedRayT();
-        ray.Origin = hitPos + outNg * EPSILON;
-
 		float3 diffuseDir = normalize(outNs + RandDirectionSphere(rngState));
 		float3 specularDir = ray.Direction - 2 * dot(ray.Direction, outNs) * outNs;
 		ray.Direction = lerp(specularDir, diffuseDir, mat.Roughness * isDiffuse);
+#endif
 
 #ifdef DEBUG_BUFFER
     #include "Path-Tracing/DebugBuffersOnHit.hlsli"

@@ -104,6 +104,11 @@ void SceneStudio::loadAssets(D3D* d3d)
     m_rootSig = std::make_shared<RootSig>();
     m_rootSig->SmartInit(device, 1, 5, 1, true, samplers, _countof(samplers));
 
+#ifdef _DEBUG
+    m_rootSigDebug = std::make_shared<RootSig>();
+    m_rootSigDebug->SmartInit(device, 2, 5, 1, true, samplers, _countof(samplers));
+#endif
+
     GLTFLoadArgs args;
     args.Root = m_rootSigRaster;
     args.DefaultShaderIndex = 0;
@@ -171,9 +176,6 @@ void SceneStudio::loadAssets(D3D* d3d)
                        Config::GetSystem().RTVFormat);
 
 #ifdef _DEBUG
-    m_rootSigDebug = std::make_shared<RootSig>();
-    m_rootSigDebug->SmartInit(device, 2, 6, 2);
-
     m_readbackManager.Init(d3d, &m_heap, &m_ptOutputTex);
 #endif
 
@@ -270,29 +272,10 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 
     m_heap.SetHeap(cmdList);
 
-    const bool debugMode = m_studioConfig.PT.Mode == eOutputBuffer;
+    ID3D12RootSignature* rootSig = m_studioConfig.PT.DebugMode ? m_rootSigDebug->Get() : m_rootSig->Get();
+    const int debugBufferIdx = m_studioConfig.PT.DebugMode ? m_studioConfig.PT.DebugBufferIdx : -1;
 
-    ID3D12RootSignature* rootSig = debugMode ? m_rootSigDebug->Get() : m_rootSig->Get();
-    const int debugBufferIdx = debugMode ? m_studioConfig.PT.DebugBufferIdx : -1;
-
-    ID3D12PipelineState* pso = nullptr;
-    switch (m_studioConfig.PT.Mode)
-    {
-    case eOutputBuffer:
-        if (!m_shaderDebug)
-        {
-            const D3D12_INPUT_LAYOUT_DESC ild = {m_shaderILD.data(), static_cast<UINT>(m_shaderILD.size())};
-            m_shaderDebug = std::make_shared<Shader>();
-            m_shaderDebug->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/DebugPS.hlsl", ild, d3d->GetDevice(),
-                                    m_rootSigDebug->Get());
-        }
-        pso = m_shaderDebug->GetPSO();
-        break;
-    default:
-        pso = m_shader->GetPSO();
-    }
-
-    m_ptContext.Render(cmdList, rootSig, pso, &m_camera.GetCamera(), &m_heap, m_projMatrix, m_studioConfig.PT, debugBufferIdx);
+    m_ptContext.Render(cmdList, rootSig, m_shader->GetPSO(), &m_camera.GetCamera(), &m_heap, m_projMatrix, m_studioConfig.PT, debugBufferIdx);
 
 #ifdef _DEBUG
     if (m_studioConfig.PT.ReadbackEnabled)
@@ -333,14 +316,22 @@ void SceneStudio::compilePtShader(const D3D* d3d)
         return;
 
     const WCHAR* shaderMap[] = {
-        L"Path-Tracing/PS.hlsl",
-        L"INVALID - (DEBUG MODE)",
-        L"Path-Tracing/FurnaceClassicPS.hlsl",
-        L"Path-Tracing/FurnaceEmissivePS.hlsl"
+        L"Path-Tracing/Entry/LambDiffPS.hlsl",
+        L"Path-Tracing/Entry/GlossyPS.hlsl",
+        L"Path-Tracing/Entry/FurnaceClassicPS.hlsl",
+        L"Path-Tracing/Entry/FurnaceEmissivePS.hlsl"
     };
     const WCHAR* shaderPath = shaderMap[m_studioConfig.PT.Mode];
 
     CherryPrint("Loading Shader: " << wstringToString(shaderPath));
+
+    ID3D12RootSignature* rootSig = m_rootSig->Get();
+    std::vector<const WCHAR*> args = {};
+    if (m_studioConfig.PT.DebugMode)
+    {
+        args.push_back(L"-DDEBUG_BUFFER");
+        rootSig = m_rootSigDebug->Get();
+    }
 
     m_shaderILD =
     {
@@ -356,5 +347,5 @@ void SceneStudio::compilePtShader(const D3D* d3d)
     const D3D12_INPUT_LAYOUT_DESC ild = {m_shaderILD.data(), static_cast<UINT>(m_shaderILD.size())};
 
     m_shader = std::make_shared<Shader>();
-    m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", shaderPath, ild, d3d->GetDevice(), m_rootSig->Get());
+    m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", shaderPath, ild, d3d->GetDevice(), rootSig);
 }

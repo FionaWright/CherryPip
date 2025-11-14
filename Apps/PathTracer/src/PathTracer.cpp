@@ -92,7 +92,7 @@ void PathTracer::loadAssets(D3D* d3d)
         const D3D12_INPUT_LAYOUT_DESC ild = {m_shaderILD.data(), static_cast<UINT>(m_shaderILD.size())};
 
         m_shader = std::make_shared<Shader>();
-        m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/PS.hlsl", ild, device, m_rootSig->Get());
+        m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/LambDiffPS.hlsl", ild, device, m_rootSig->Get());
     }
 
     GLTFLoadArgs args;

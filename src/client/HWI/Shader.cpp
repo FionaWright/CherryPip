@@ -14,9 +14,10 @@
 
 inline ComPtr<IDxcBlob> CompileShaderDXC(
     const std::wstring& filePath,
-    LPCWSTR entryPoint,
+    const LPCWSTR entryPoint,
     LPCWSTR targetProfile,
-    UINT compileFlags)
+    UINT compileFlags,
+    std::vector<const WCHAR*> args)
 {
     HMODULE dxCompilerDLL = LoadLibrary("dxcompiler.dll");
     if (!dxCompilerDLL)
@@ -64,8 +65,9 @@ inline ComPtr<IDxcBlob> CompileShaderDXC(
     const std::wstring dualIncludePath = FileHelper::GetShadersPath() + L"DualIncludes/";
 
     ComPtr<IDxcResult> result;
-    const wchar_t* args[] = { L"-E", entryPoint, L"-T", targetProfile, L"-I", dualIncludePath.c_str(), L"-I", shadersPath.c_str() };
-    if (FAILED(compiler->Compile(&buffer, args, _countof(args), includeHandler.Get(), IID_PPV_ARGS(&result))))
+    const std::vector stdArgs = { L"-E", entryPoint, L"-T", targetProfile, L"-I", dualIncludePath.c_str(), L"-I", shadersPath.c_str() };
+    args.insert(args.end(), stdArgs.begin(), stdArgs.end());
+    if (FAILED(compiler->Compile(&buffer, args.data(), args.size(), includeHandler.Get(), IID_PPV_ARGS(&result))))
     {
         CherryPrint("Shader compile failed");
         return nullptr;
@@ -93,7 +95,7 @@ inline ComPtr<IDxcBlob> CompileShaderDXC(
     return vertexShaderBlob;
 }
 
-void Shader::InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D12Device* device, ID3D12RootSignature* rootSig, const bool dsvEnabled)
+void Shader::InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D12Device* device, ID3D12RootSignature* rootSig, const bool dsvEnabled, const std::vector<const WCHAR*>& args)
 {
 #if defined(_DEBUG)
     UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
@@ -104,8 +106,8 @@ void Shader::InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D1
     std::wstring vsPath = FileHelper::GetAssetShaderFullPath(vs);
     std::wstring psPath = FileHelper::GetAssetShaderFullPath(ps);
 
-    ComPtr<IDxcBlob> vertexShader = CompileShaderDXC(vsPath.c_str(), L"VSMain", L"vs_6_6", compileFlags);
-    ComPtr<IDxcBlob> pixelShader = CompileShaderDXC(psPath.c_str(), L"PSMain", L"ps_6_6", compileFlags);
+    ComPtr<IDxcBlob> vertexShader = CompileShaderDXC(vsPath.c_str(), L"VSMain", L"vs_6_6", compileFlags, args);
+    ComPtr<IDxcBlob> pixelShader = CompileShaderDXC(psPath.c_str(), L"PSMain", L"ps_6_6", compileFlags, args);
     
     D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
     psoDesc.InputLayout = ild;
@@ -134,7 +136,7 @@ void Shader::InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D1
 #endif
 }
 
-void Shader::InitCs(const LPCWSTR cs, ID3D12Device* device, ID3D12RootSignature* rootSig)
+void Shader::InitCs(const LPCWSTR cs, ID3D12Device* device, ID3D12RootSignature* rootSig, const std::vector<const WCHAR*>& args)
 {
 #if defined(_DEBUG)
     UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
@@ -143,7 +145,7 @@ void Shader::InitCs(const LPCWSTR cs, ID3D12Device* device, ID3D12RootSignature*
 #endif
 
     std::wstring csPath = FileHelper::GetAssetShaderFullPath(cs);
-    ComPtr<IDxcBlob> computeShader = CompileShaderDXC(csPath.c_str(), L"CSMain", L"cs_6_6", compileFlags);
+    ComPtr<IDxcBlob> computeShader = CompileShaderDXC(csPath.c_str(), L"CSMain", L"cs_6_6", compileFlags, args);
 
     D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
     psoDesc.pRootSignature = rootSig;

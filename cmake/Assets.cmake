@@ -37,6 +37,7 @@ endforeach()
 add_custom_target(GenerateDDS ALL
         DEPENDS ${GENERATED_DDS_FILES}
 )
+add_dependencies(client GenerateDDS)
 
 # All files under Assets/Models
 file(GLOB_RECURSE MODEL_FILES

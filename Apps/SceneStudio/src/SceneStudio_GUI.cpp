@@ -104,13 +104,20 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
         "NaN",
     };
 
-    static int e = 0;
+    static int e = m_studioConfig.PT.Mode;
     ImGui::Text("%s", "Path Tracer Mode:");
     ImGui::Indent(IM_GUI_INDENTATION);
-    m_shaderDirty |= ImGui::RadioButton("Standard", &e, 0);
-    m_shaderDirty |= ImGui::RadioButton("Debug Buffer", &e, 1);
-    if (m_studioConfig.PT.Mode == eOutputBuffer)
+    m_shaderDirty |= ImGui::RadioButton("StandardLD", &e, 0);
+    m_shaderDirty |= ImGui::RadioButton("StandardG", &e, 1);
+    m_shaderDirty |= ImGui::RadioButton("Furnace Test (Classic)", &e, 2);
+    m_shaderDirty |= ImGui::RadioButton("Furnace Test (Emissive)", &e, 3);
+    ImGui::Unindent(IM_GUI_INDENTATION);
+    m_studioConfig.PT.Mode = static_cast<PathTracerMode>(e);
+
+    m_shaderDirty |= ImGui::Checkbox("Debug Buffers##xx", &m_studioConfig.PT.DebugMode);
+    if (m_studioConfig.PT.DebugMode)
     {
+        ImGui::Indent(IM_GUI_INDENTATION);
         const char* curSelection = c_debugBufferStrMap.at(m_studioConfig.PT.DebugBufferIdx);
         if (ImGui::BeginCombo("Debug Buffer##xx", curSelection))
         {
@@ -127,13 +134,11 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
                     ImGui::SetItemDefaultFocus();
             }
 
+            ImGui::Unindent(IM_GUI_INDENTATION);
             ImGui::EndCombo();
         }
     }
-    m_shaderDirty |= ImGui::RadioButton("Furnace Test (Classic)", &e, 2);
-    m_shaderDirty |= ImGui::RadioButton("Furnace Test (Emissive)", &e, 3);
-    ImGui::Unindent(IM_GUI_INDENTATION);
-    m_studioConfig.PT.Mode = static_cast<PathTracerMode>(e);
+
     ptNeedsReset |= m_shaderDirty;
 
     if (ptNeedsReset && m_studioConfig.PT.ReadbackEveryFrame)

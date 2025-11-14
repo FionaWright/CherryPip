@@ -63,8 +63,6 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 		PtMaterialData mat;
         Hit(rngState, outMaterialColor, outNg, outNs, outLight, mat, q);
 
-        return outMaterialColor;
-
 		bool isDiffuse = mat.DiffuseProbability >= PcgRand01(rngState);
 
         color += throughput * outLight;

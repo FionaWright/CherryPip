@@ -21,10 +21,11 @@
 - [x] Switch direction of Engine->App, seperate CMAKE targets
 - [x] Scene, SceneViewer, Refactor App system
 - [x] Save/Load Camera Transform
-- [ ] Scene Transforms/Materials GUI + Fix Chess
+- [ ] Scene Transforms/Materials GUI
 - [ ] CI/CD-like tests
 - [x] Specular/Reflections
 - [ ] Russian Roulette
+- [ ] Texture Sampling
 - [ ] Allow for changing lighting models at runtime (Recompile shader with defines)
 - [ ] EA Mapping
 - [ ] NEE 
@@ -54,6 +55,22 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - [x] Fix whatever makes the furnace test fail
 - [ ] RMSE Convergence Graph 
 
-## Notes
+## Texture Array
 
-Look into russian roulette 
+The shader contains as its last SRV
+Texture2D<float4> gTextures[] : register(tK);
+
+The Heap on the CPU side now needs to have all DDS textures consecutive 
+gTextures gets set to the base of the DDS textures
+PtMaterialData.TextureIdx = Heap.IndexOf(ddsTex) - Heap.BaseDDS;
+
+Don't call them DDS in code, find a better name. Material Textures?
+Don't forget the sampler
+
+Heap:
+CBVs
+UAVs
+SRVs (TLAS, StructuredBuffers, etc)
+SRVs (DDS Textures) <-- Base
+
+Ez Pz let's do this

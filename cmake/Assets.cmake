@@ -43,6 +43,7 @@ add_dependencies(client GenerateDDS)
 file(GLOB_RECURSE MODEL_FILES
         "${CMAKE_SOURCE_DIR}/Assets/Models/*"
         "${CMAKE_SOURCE_DIR}/Assets/Resources/*"
+        "${CMAKE_SOURCE_DIR}/Assets/Textures/*.hdr"
 )
 
 set(FILES_TO_COPY "")

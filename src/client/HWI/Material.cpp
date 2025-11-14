@@ -14,11 +14,13 @@ Material::~Material()
     CherryPrint("Material Destroyed!");
 }
 
-void Material::Init(const Heap* heap)
+void Material::Init(const Heap* heap, bool hasBindlessParam)
 {
     m_cpuHandle = heap->GetCPUHandle();
     m_gpuHandle = heap->GetGPUHandle();
     m_descriptorIncSize = heap->GetIncrementSize();
+
+    m_hasBindlessParam = hasBindlessParam;
 }
 
 void Material::AddCBV(ID3D12Device* device, Heap* heap, const size_t size)
@@ -194,8 +196,8 @@ void Material::SetDescriptorTables(ID3D12GraphicsCommandList* cmdList, const boo
         paramIdx++;
     }
 
-    // Bindless Tex
-    paramIdx++;
+    if (m_hasBindlessParam)
+        paramIdx++;
 
     if (m_uavs.size() > 0)
     {

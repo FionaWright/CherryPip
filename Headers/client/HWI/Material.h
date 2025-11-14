@@ -50,7 +50,7 @@ class Material
 {
 public:
     ~Material();
-    void Init(const Heap* heap);
+    void Init(const Heap* heap, bool hasBindlessParam = false);
     const MaterialData* GetData() const { return &m_materialData; }
     void SetData(const MaterialData& data) { m_materialData = data; }
 
@@ -74,6 +74,8 @@ private:
     D3D12_CPU_DESCRIPTOR_HANDLE m_cpuHandle = {};
     D3D12_GPU_DESCRIPTOR_HANDLE m_gpuHandle = {};
     UINT m_descriptorIncSize = 0;
+
+    bool m_hasBindlessParam = false;
 
     std::vector<CBV> m_cbvs = {};
     std::vector<SRV> m_srvs = {};

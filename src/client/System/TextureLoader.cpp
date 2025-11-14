@@ -53,6 +53,12 @@ void TextureLoader::LoadTex(const std::string& filePath, int& width, int& height
         return;
     }
 
+    if (fileExtension == "hdr")
+    {
+        LoadHDR(filePath, width, height, pData, format);
+        return;
+    }
+
     throw new std::exception(("Invalid texture file type: ." + fileExtension).c_str());
 }
 
@@ -285,7 +291,7 @@ void ReadRLEData(std::ifstream& fin, uint8_t*& data, int width, int height)
     delete[] scanline_buffer;
 }
 
-void TextureLoader::LoadHDR(std::string filePath, int& width, int& height, std::vector<uint8_t*>& pDatas, int& channels)
+void TextureLoader::LoadHDR(std::string filePath, int& width, int& height, uint8_t** pData, DXGI_FORMAT& format)
 {
     size_t dotIndex = filePath.find_last_of('.');
     if (dotIndex == std::string::npos)
@@ -302,19 +308,6 @@ void TextureLoader::LoadHDR(std::string filePath, int& width, int& height, std::
     if (confirmation != "#?RADIANCE")
         throw std::exception("Invalid HDR file");
 
-    std::string madeWithPhotoshop;
-    std::getline(fin, madeWithPhotoshop);
-    if (madeWithPhotoshop != "# Made with Adobe Photoshop")
-        throw std::exception("Invalid HDR file");
-
-    std::string gammaStr;
-    std::getline(fin, gammaStr);
-    size_t equalsIndex = gammaStr.find_first_of('=');
-    int gamma = atoi(gammaStr.substr(equalsIndex + 1, gammaStr.size() - equalsIndex - 1).c_str());
-
-    std::string primariesStr;
-    std::getline(fin, primariesStr);
-
     std::string formatStr;
     std::getline(fin, formatStr);
     if (formatStr != "FORMAT=32-bit_rle_rgbe")
@@ -329,68 +322,31 @@ void TextureLoader::LoadHDR(std::string filePath, int& width, int& height, std::
     int hdrHeight = atoi(sizeStr.substr(Yindex + 2, Xindex - 2 - Yindex + 2).c_str());
     int hdrWidth = atoi(sizeStr.substr(Xindex + 2, sizeStr.size() - Xindex + 1).c_str());
 
-    channels = 4;
+    uint32_t channels = 4; // Rgbe8
     int totalPixelCount = hdrWidth * hdrHeight;
-    int totalChannelCount = totalPixelCount * channels;
-    uint8_t* hdrData = new uint8_t[totalChannelCount];
+    int totalBytes = totalPixelCount * channels;
+
+    uint8_t* hdrData = new uint8_t[totalBytes];
     ReadRLEData(fin, hdrData, hdrWidth, hdrHeight);
 
-    std::vector<XMFLOAT3> faceDirections = {
-        {-1, 0, 0},
-        {1, 0, 0},
-        {0, 1, 0},
-        {0, -1, 0},
-        {0, 0, -1},
-        {0, 0, 1}
-    };
-
-    std::vector<XMFLOAT3> faceRights = {
-        {0, 0, 1},
-        {0, 0, -1},
-        {-1, 0, 0},
-        {-1, 0, 0},
-        {-1, 0, 0},
-        {1, 0, 0}
-    };
-
-    std::vector<XMFLOAT3> faceUps = {
-        {0, -1, 0},
-        {0, -1, 0},
-        {0, 0, -1},
-        {0, 0, 1},
-        {0, -1, 0},
-        {0, -1, 0}
-    };
-
-    pDatas.resize(6);
-
     height = hdrHeight;
-    width = hdrHeight;
+    width = hdrWidth;
 
-    for (int face = 0; face < 6; ++face)
+    format = DXGI_FORMAT_R32G32B32_FLOAT;
+    *pData = new uint8_t[width * height * sizeof(float) * 3];
+    float* outData = reinterpret_cast<float*>(*pData);
+
+    for (int i = 0; i < width * height; ++i)
     {
-        pDatas[face] = new uint8_t[width * height * channels];
+        uint8_t r = hdrData[i * 4 + 0];
+        uint8_t g = hdrData[i * 4 + 1];
+        uint8_t b = hdrData[i * 4 + 2];
+        uint8_t e = hdrData[i * 4 + 3];
 
-        for (int y = 0; y < height; ++y)
-            for (int x = 0; x < width; ++x)
-            {
-                float u = ((x / static_cast<float>(width - 1)) - 0.5f) * 2;
-                float v = ((y / static_cast<float>(height - 1)) - 0.5f) * 2;
-
-                XMFLOAT3 up = Mult(faceUps[face], v);
-                XMFLOAT3 right = Mult(faceRights[face], u);
-                XMFLOAT3 direction = Add(Add(faceDirections[face], up), right);
-                direction = Normalize(direction);
-
-                XMFLOAT3 col = SampleHDR(hdrData, direction, hdrWidth, hdrHeight);
-                col = Saturate(col);
-
-                int texIndex = y * width + x;
-                pDatas[face][texIndex * 4 + 0] = static_cast<uint8_t>(col.x * 255);
-                pDatas[face][texIndex * 4 + 1] = static_cast<uint8_t>(col.y * 255);
-                pDatas[face][texIndex * 4 + 2] = static_cast<uint8_t>(col.z * 255);
-                pDatas[face][texIndex * 4 + 3] = 255u;
-            }
+        float f = (e) ? ldexp(1.0f, e - (128 + 8)) : 0.0f;
+        outData[i * 3 + 0] = r * f;
+        outData[i * 3 + 1] = g * f;
+        outData[i * 3 + 2] = b * f;
     }
 
     fin.close();

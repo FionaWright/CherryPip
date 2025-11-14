@@ -9,6 +9,7 @@
 #include "HWI/Texture.h"
 #include "HWI/TLAS.h"
 #include "Render/CameraController.h"
+#include "Render/EnvMap.h"
 #include "Render/Object.h"
 #include "Render/PathTracingContext.h"
 #include "Render/RasterContext.h"
@@ -79,7 +80,7 @@ private:
     Heap m_heap, m_heapRTV;
     CameraController m_camera;
 
-    std::shared_ptr<Shader> m_shader, m_shaderDebug;
+    std::shared_ptr<Shader> m_shader;
     std::shared_ptr<RootSig> m_rootSig, m_rootSigDebug, m_rootSigRaster;
 
     std::vector<D3D12_INPUT_ELEMENT_DESC> m_shaderILD;
@@ -94,6 +95,8 @@ private:
 
     PathTracingContext m_ptContext;
     TextureRTV m_ptOutputTex;
+
+    EnvMap m_envMap;
 
     RasterContext m_rasterContext;
     std::shared_ptr<Shader> m_shaderRaster;

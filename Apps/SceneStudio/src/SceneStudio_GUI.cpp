@@ -107,8 +107,8 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
     static int e = 0;
     ImGui::Text("%s", "Path Tracer Mode:");
     ImGui::Indent(IM_GUI_INDENTATION);
-    ptNeedsReset |= ImGui::RadioButton("Standard", &e, 0);
-    ptNeedsReset |= ImGui::RadioButton("Debug Buffer", &e, 1);
+    m_shaderDirty |= ImGui::RadioButton("Standard", &e, 0);
+    m_shaderDirty |= ImGui::RadioButton("Debug Buffer", &e, 1);
     if (m_studioConfig.PT.Mode == eOutputBuffer)
     {
         const char* curSelection = c_debugBufferStrMap.at(m_studioConfig.PT.DebugBufferIdx);
@@ -130,10 +130,11 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
             ImGui::EndCombo();
         }
     }
-    ptNeedsReset |= ImGui::RadioButton("Furnace Test (Classic)", &e, 2);
-    ptNeedsReset |= ImGui::RadioButton("Furnace Test (Emissive)", &e, 3);
+    m_shaderDirty |= ImGui::RadioButton("Furnace Test (Classic)", &e, 2);
+    m_shaderDirty |= ImGui::RadioButton("Furnace Test (Emissive)", &e, 3);
     ImGui::Unindent(IM_GUI_INDENTATION);
     m_studioConfig.PT.Mode = static_cast<PathTracerMode>(e);
+    ptNeedsReset |= m_shaderDirty;
 
     if (ptNeedsReset && m_studioConfig.PT.ReadbackEveryFrame)
         m_readbackManager.SetInReadbackProcess(true);

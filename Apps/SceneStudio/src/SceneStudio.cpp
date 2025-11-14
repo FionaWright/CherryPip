@@ -51,7 +51,7 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         m_rasterContext.SetScene(currScene);
 
         if (d3d->GetRayTracingSupported())
-            m_ptContext.BuildScene(d3d->GetDevice(), cmdList, currScene, &m_heap);
+            m_ptContext.BuildScene(d3d->GetDevice(), cmdList, currScene, &m_heap, &m_envMap);
 
         m_camera.GetCamera().SetPosition(currScene->GetCameraPosition());
         m_camera.GetCamera().SetPitchYaw(currScene->GetPitch(), currScene->GetYaw());
@@ -102,11 +102,11 @@ void SceneStudio::loadAssets(D3D* d3d)
     samplers[0].ShaderRegister = 0;
 
     m_rootSig = std::make_shared<RootSig>();
-    m_rootSig->SmartInit(device, 1, 5, 1, true, samplers, _countof(samplers));
+    m_rootSig->SmartInit(device, 1, 6, 1, true, samplers, _countof(samplers));
 
 #ifdef _DEBUG
     m_rootSigDebug = std::make_shared<RootSig>();
-    m_rootSigDebug->SmartInit(device, 2, 5, 1, true, samplers, _countof(samplers));
+    m_rootSigDebug->SmartInit(device, 2, 6, 1, true, samplers, _countof(samplers));
 #endif
 
     GLTFLoadArgs args;

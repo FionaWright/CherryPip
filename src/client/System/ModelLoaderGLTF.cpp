@@ -395,7 +395,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
         material->Init(heap);
         material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices));
         material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterDebug));
-        material->AddTex(d3d->GetDevice(), heap, diffuseTex, &materialData.BindlessTexDiffuse);
+        material->AddTexBindless(d3d->GetDevice(), heap, diffuseTex, &materialData.BindlessTexDiffuse);
 
         material->SetData(materialData);
 
@@ -453,7 +453,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     material->Init(heap);
     material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices));
     material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterDebug));
-    material->AddTex(d3d->GetDevice(), heap, diffuseTex, &materialData.BindlessTexDiffuse);
+    material->AddTexBindless(d3d->GetDevice(), heap, diffuseTex, &materialData.BindlessTexDiffuse);
 
     memcpy(&materialData.BaseColorFactor, &mat.pbrData.baseColorFactor, sizeof(float) * 3);
     materialData.EmissiveStrength = mat.emissiveStrength;

@@ -57,7 +57,9 @@ public:
     void AddCBV(ID3D12Device* device, Heap* heap, size_t size);
     void SetSRV(ID3D12Device* device, UINT srvIdx, Heap* heap, D12Resource* d12Resource,
                 const D3D12_SHADER_RESOURCE_VIEW_DESC& desc);
-    void AddTex(ID3D12Device* device, Heap* heap, std::shared_ptr<Texture> tex, int* bindlessIdx);
+    void SetTex(ID3D12Device* device, UINT srvIdx, Heap* heap, std::shared_ptr<Texture> tex);
+    void SetTex(ID3D12Device* device, UINT srvIdx, Heap* heap, D12Resource* d12Resource);
+    void AddTexBindless(ID3D12Device* device, Heap* heap, std::shared_ptr<Texture> tex, int* bindlessIdx);
     void SetBuffer(ID3D12Device* device, UINT srvIdx, Heap* heap, std::shared_ptr<D12Resource> resource,
                    UINT numElements,
                    size_t stride);

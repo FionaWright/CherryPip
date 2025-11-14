@@ -67,7 +67,7 @@ void Material::SetSRV(ID3D12Device* device, const UINT srvIdx, Heap* heap, D12Re
     heap->InitSRV(device, resource, desc, srv.HeapIndex);
 }
 
-void Material::SetTex(ID3D12Device* device, const UINT srvIdx, Heap* heap, std::shared_ptr<Texture> tex)
+void Material::AddTex(ID3D12Device* device, Heap* heap, std::shared_ptr<Texture> tex, int* bindlessIdx)
 {
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
@@ -79,7 +79,15 @@ void Material::SetTex(ID3D12Device* device, const UINT srvIdx, Heap* heap, std::
 
     m_tempTextureOwnership.push_back(tex);
 
-    SetSRV(device, srvIdx, heap, tex->GetD12Resource(), srvDesc);
+    const UINT idx = heap->GetNextDescriptorBindlessTexture();
+    heap->InitSRV(device, tex->GetD12Resource()->GetResource(), srvDesc, idx);
+
+    if (bindlessIdx)
+        *bindlessIdx = idx - heap->GetBindlessTexBase();
+
+    SRV srv = { idx };
+    srv.Resource = tex->GetD12Resource();
+    m_srvsTextures.push_back(srv);
 }
 
 void Material::SetBuffer(ID3D12Device* device, const UINT srvIdx, Heap* heap, std::shared_ptr<D12Resource> resource, const UINT numElements, const size_t stride)
@@ -178,6 +186,17 @@ void Material::SetDescriptorTables(ID3D12GraphicsCommandList* cmdList, const boo
     if (m_srvs.size() > 0)
     {
         const CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(m_gpuHandle, m_srvs[0].HeapIndex,
+                                            m_descriptorIncSize);
+        if (isCompute)
+            cmdList->SetComputeRootDescriptorTable(paramIdx, srvHandle);
+        else
+            cmdList->SetGraphicsRootDescriptorTable(paramIdx, srvHandle);
+        paramIdx++;
+    }
+
+    if (m_srvsTextures.size() > 0)
+    {
+        const CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(m_gpuHandle, m_srvsTextures[0].HeapIndex,
                                             m_descriptorIncSize);
         if (isCompute)
             cmdList->SetComputeRootDescriptorTable(paramIdx, srvHandle);

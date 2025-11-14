@@ -14,6 +14,8 @@ class Heap
 public:
     void Init(ID3D12Device* device, size_t numDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE type);
     UINT GetNextDescriptor();
+    UINT GetNextDescriptorBindlessTexture();
+    UINT GetBindlessTexBase() const { return m_currentHeapIndexBindlessTex; }
 
     void InitCBV(ID3D12Device* device, ID3D12Resource* resource, size_t size, UINT idx) const;
     void InitSRV(ID3D12Device* device, ID3D12Resource* resource, const D3D12_SHADER_RESOURCE_VIEW_DESC& desc, UINT idx) const;
@@ -33,6 +35,7 @@ private:
     D3D12_DESCRIPTOR_HEAP_TYPE m_type = {};
 
     size_t m_currentHeapIndex = 0;
+    size_t m_currentHeapIndexBindlessTex = 0;
     size_t m_heapSize = 0;
 };
 

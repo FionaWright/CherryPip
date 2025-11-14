@@ -87,7 +87,7 @@ void SceneStudio::loadAssets(D3D* d3d)
     loadRasterAssets(d3d);
 
     m_rootSig = std::make_shared<RootSig>();
-    m_rootSig->SmartInit(device, 1, 5, 1);
+    m_rootSig->SmartInit(device, 1, 5, 1, true);
 
     if (d3d->GetRayTracingSupported())
     {
@@ -176,7 +176,7 @@ void SceneStudio::loadAssets(D3D* d3d)
 
 #ifdef _DEBUG
     m_rootSigDebug = std::make_shared<RootSig>();
-    m_rootSigDebug->SmartInit(device, 2, 5, 2);
+    m_rootSigDebug->SmartInit(device, 2, 6, 2);
 
     m_readbackManager.Init(d3d, &m_heap, &m_ptOutputTex);
 #endif
@@ -198,7 +198,7 @@ void SceneStudio::loadRasterAssets(const D3D* d3d)
     samplers[0].ShaderRegister = 0;
 
     m_rootSigRaster = std::make_shared<RootSig>();
-    m_rootSigRaster->SmartInit(d3d->GetDevice(), 2, 1, 0, samplers, _countof(samplers));
+    m_rootSigRaster->SmartInit(d3d->GetDevice(), 2, 1, 0, false, samplers, _countof(samplers));
 
     D3D12_INPUT_ELEMENT_DESC rasterILD[] =
     {

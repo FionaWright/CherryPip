@@ -154,7 +154,7 @@ void PathTracingContext::BuildScene(ID3D12Device* device, ID3D12GraphicsCommandL
     m_material->SetBuffer(device, 2, heap, m_vertexMegaBuffer, m_vertexMegaBufferCount, sizeof(Vertex));
     m_material->SetBuffer(device, 3, heap, m_indexMegaBuffer, m_indexMegaBufferCount, sizeof(uint32_t) * 3);
     m_material->SetBuffer(device, 4, heap, m_materialBuffer, m_instanceDataList.size(), sizeof(PtMaterialData));
-    m_material->SetTex(device, 5, heap, envMap->GetEA());
+    m_material->SetTex(device, 5, heap, envMap->GetPano());
 }
 
 void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSig,

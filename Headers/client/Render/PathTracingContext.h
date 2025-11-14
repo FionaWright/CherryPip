@@ -35,7 +35,7 @@ public:
     void BuildScene(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const Scene* scene, Heap* heap);
     void Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSig,
                 ID3D12PipelineState* pso,
-                const Camera* camera, const XMMATRIX& projMatrix, const PtConfig& config,
+                const Camera* camera, Heap* heap, const XMMATRIX& projMatrix, const PtConfig& config,
                 int debugModeIdx = -1);
     void Reset();
 

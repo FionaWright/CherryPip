@@ -194,16 +194,8 @@ void Material::SetDescriptorTables(ID3D12GraphicsCommandList* cmdList, const boo
         paramIdx++;
     }
 
-    if (m_srvsTextures.size() > 0)
-    {
-        const CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(m_gpuHandle, m_srvsTextures[0].HeapIndex,
-                                            m_descriptorIncSize);
-        if (isCompute)
-            cmdList->SetComputeRootDescriptorTable(paramIdx, srvHandle);
-        else
-            cmdList->SetGraphicsRootDescriptorTable(paramIdx, srvHandle);
-        paramIdx++;
-    }
+    // Bindless Tex
+    paramIdx++;
 
     if (m_uavs.size() > 0)
     {

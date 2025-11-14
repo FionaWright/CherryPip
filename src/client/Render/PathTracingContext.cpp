@@ -155,7 +155,7 @@ void PathTracingContext::BuildScene(ID3D12Device* device, ID3D12GraphicsCommandL
 }
 
 void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSig,
-                                ID3D12PipelineState* pso, const Camera* camera,
+                                ID3D12PipelineState* pso, const Camera* camera, Heap* heap,
                                 const XMMATRIX& projMatrix, const PtConfig& config, int debugModeIdx)
 {
     GPU_SCOPE(cmdList, L"Path Tracing");
@@ -224,6 +224,9 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
         }
 
         m_material->SetDescriptorTables(cmdList);
+
+        const CD3DX12_GPU_DESCRIPTOR_HANDLE bindlessHandle(heap->GetGPUHandle(), heap->GetBindlessTexBase(), heap->GetIncrementSize());
+        cmdList->SetGraphicsRootDescriptorTable(2, bindlessHandle);
 
         cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         cmdList->IASetVertexBuffers(0, 1, &m_fullScreenTriangle.GetVertexBufferView());

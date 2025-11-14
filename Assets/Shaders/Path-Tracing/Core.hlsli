@@ -25,6 +25,8 @@ RWTexture2D<float4> gAccum : register(u0);
 	#include "DebugPalette.hlsli"
 #endif
 
+SamplerState c_sampler : register(s0);
+
 #include "Path-Tracing/Hit.hlsli"
 #include "Path-Tracing/Miss.hlsli"
 
@@ -60,6 +62,8 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         float3 outMaterialColor = 0, outNg = 0, outNs = 0, outLight = 0;
 		PtMaterialData mat;
         Hit(rngState, outMaterialColor, outNg, outNs, outLight, mat, q);
+
+        return outMaterialColor;
 
 		bool isDiffuse = mat.DiffuseProbability >= PcgRand01(rngState);
 

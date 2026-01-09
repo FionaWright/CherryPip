@@ -34,6 +34,7 @@ enum PathTracerMode : uint32_t
 {
     eLambertDiff,
     eGlossy,
+    eGlass,
     eFurnaceTestClassic,
     eFurnaceTestEmissive
 };

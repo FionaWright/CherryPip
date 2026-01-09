@@ -36,7 +36,6 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         Hit(rngState, brdf, outNg, outNs, Li, mat, q);
 
         float3 hitPos = ray.Origin + ray.Direction * q.CommittedRayT();
-        ray.Origin = hitPos + outNg * EPSILON;
 
         float3 wo = ray.Direction;
 
@@ -44,7 +43,12 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         Model_LambertionDiffuse(rngState, Lo, throughput, outNs, Li, brdf, ray.Direction);
 #elif defined(LIGHTING_GLOSSY)
         Model_Glossy(rngState, Lo, throughput, mat.DiffuseProbability, mat.Roughness, outNs, Li, brdf, wo, ray.Direction);
+#elif defined(LIGHTING_GLASS)
+        bool isBackface = q.CommittedTriangleFrontFace()==0;
+        Model_Glass(rngState, Lo, throughput, mat, isBackface, outNs, Li, brdf, wo, ray.Direction);
 #endif
+
+        ray.Origin = hitPos + outNg * EPSILON * sign(dot(outNg, ray.Direction));
 
 #ifdef DEBUG_BUFFER
 #include "Path-Tracing/DebugBuffersOnHit.hlsli"

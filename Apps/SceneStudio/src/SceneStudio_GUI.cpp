@@ -106,10 +106,12 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
     static int e = m_studioConfig.PT.Mode;
     ImGui::Text("%s", "Path Tracer Mode:");
     ImGui::Indent(IM_GUI_INDENTATION);
-    m_shaderDirty |= ImGui::RadioButton("StandardLD", &e, 0);
-    m_shaderDirty |= ImGui::RadioButton("StandardG", &e, 1);
-    m_shaderDirty |= ImGui::RadioButton("Furnace Test (Classic)", &e, 2);
-    m_shaderDirty |= ImGui::RadioButton("Furnace Test (Emissive)", &e, 3);
+    int idx = 0;
+    m_shaderDirty |= ImGui::RadioButton("Lambert", &e, idx++);
+    m_shaderDirty |= ImGui::RadioButton("Glossy", &e, idx++);
+    m_shaderDirty |= ImGui::RadioButton("Glass", &e, idx++);
+    m_shaderDirty |= ImGui::RadioButton("Furnace Test (HDR)", &e, idx++);
+    m_shaderDirty |= ImGui::RadioButton("Furnace Test (HHE)", &e, idx++);
     ImGui::Unindent(IM_GUI_INDENTATION);
     m_studioConfig.PT.Mode = static_cast<PathTracerMode>(e);
 

@@ -7,7 +7,7 @@ else if (c_debug.DebugIdx == DebugBuffer::eFirstBounceDirection)
 else if (c_debug.DebugIdx == DebugBuffer::eHitPos)
     return hitPos;
 else if (c_debug.DebugIdx == DebugBuffer::eBaseColor)
-    return outMaterialColor;
+    return brdf;
 else if (c_debug.DebugIdx == DebugBuffer::eMissHit)
     return float3(1, 1, 1);
 else if (c_debug.DebugIdx == DebugBuffer::eHitDistRay0)

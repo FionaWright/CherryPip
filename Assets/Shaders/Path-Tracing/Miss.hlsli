@@ -47,24 +47,23 @@ float2 PanoSphereToSquare(float3 d)
 
 float3 Miss(float3 origin, float3 direction)
 {
-#if defined(FURNACE_TEST_EMISSIVE)
+#if defined(FURNACE_TEST_HEMI_HEMI_EMIT)
     return float3(0, 0, 0);
-#elif defined(FURNACE_TEST_CLASSIC)
+#elif defined(FURNACE_TEST_HEMI_DIR_REFLECT)
     return float3(1, 1, 1);
-#else
+#endif
 
-#   if defined(ENV_MAP_OFF)
+#if defined(ENV_MAP_OFF)
     return float3(0, 0, 0);
-#   endif
+#endif
 
-#   if defined(ENV_MAP_EA)
+#if defined(ENV_MAP_EA)
     float2 uv = EaSphereToSquare(direction);
-#   else
+#else
     float2 uv = PanoSphereToSquare(direction);
-#   endif
+#endif
 
     return saturate(gEnvMap.Sample(c_sampler, uv).rgb);
-#endif
 }
 
 #endif

@@ -4,7 +4,7 @@
 #include "DebugPalette.hlsli"
 #include "Rand01.hlsli"
 
-void Hit(inout uint rngState, out float3 materialColor, out float3 Ng, out float3 Ns, out float3 light, out PtMaterialData mat, inout RayQuery<RAY_FLAGS> q)
+void Hit(inout uint rngState, out float3 brdf, out float3 Ng, out float3 Ns, out float3 Li, out PtMaterialData mat, inout RayQuery<RAY_FLAGS> q)
 {
     PtInstanceData instance = gInstances[q.CommittedInstanceIndex()];
     mat = gMaterials[instance.MaterialIdx];
@@ -31,15 +31,15 @@ void Hit(inout uint rngState, out float3 materialColor, out float3 Ng, out float
     float2 uv = v0.uv * bary.x + v1.uv * bary.y + v2.uv * bary.z;
     float3 albedo = gTextures[mat.TextureIdx].Sample(c_sampler, uv).rgb;
 
-#if defined(FURNACE_TEST_EMISSIVE)
-    materialColor = float3(0, 0, 0);
-    light = float3(1, 1, 1);
-#elif defined(FURNACE_TEST_CLASSIC)
-    materialColor = float3(1, 1, 1);
-    light = float3(0, 0, 0);
+#if defined(FURNACE_TEST_HEMI_DIR_REFLECT)
+    brdf = float3(0, 0, 0);
+    Li = float3(1, 1, 1);
+#elif defined(FURNACE_TEST_HEMI_HEMI_EMIT)
+    brdf = float3(1, 1, 1);
+    Li = float3(0, 0, 0);
 #else
-    materialColor = mat.BaseColorFactor * albedo;
-    light = mat.EmissiveStrength;
+    brdf = mat.BaseColorFactor * albedo;
+    Li = mat.EmissiveStrength;
 #endif
 }
 

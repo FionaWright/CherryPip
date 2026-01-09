@@ -59,9 +59,6 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
             m_ptContext.BuildScene(d3d->GetDevice(), cmdList, currScene, &m_heap, envMap);
         }
 
-        //m_camera.GetCamera().SetPosition(currScene->GetCameraPosition());
-        //m_camera.GetCamera().SetPitchYaw(currScene->GetPitch(), currScene->GetYaw());
-
         m_sceneDirty = false;
     }
 
@@ -344,6 +341,8 @@ void SceneStudio::compilePtShader(const D3D* d3d)
         args.push_back(L"-DDEBUG_BUFFER");
         rootSig = m_rootSigDebug->Get();
     }
+    if (!m_studioConfig.EnvMapEnabled)
+        args.push_back(L"-DENV_MAP_OFF");
     if (m_studioConfig.EnvMapIsEqualArea)
         args.push_back(L"-DENV_MAP_EA");
 

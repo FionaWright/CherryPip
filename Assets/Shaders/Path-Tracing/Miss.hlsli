@@ -52,11 +52,17 @@ float3 Miss(float3 origin, float3 direction)
 #elif defined(FURNACE_TEST_CLASSIC)
     return float3(1, 1, 1);
 #else
+
+#   if defined(ENV_MAP_OFF)
+    return float3(0, 0, 0);
+#   endif
+
 #   if defined(ENV_MAP_EA)
     float2 uv = EaSphereToSquare(direction);
 #   else
     float2 uv = PanoSphereToSquare(direction);
 #   endif
+
     return saturate(gEnvMap.Sample(c_sampler, uv).rgb);
 #endif
 }

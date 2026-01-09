@@ -16,58 +16,33 @@ cbuffer CB : register(b0)
 
 #define PI 3.141592653589793
 
-// Concentric square→disk (Shirley–Chiu)
-float2 SquareToDiskConcentric(float2 a)
+float CopySign(float mag, float sign)
 {
-    // a ∈ [-1,1]^2
-    if (a.x == 0 && a.y == 0)
-        return float2(0, 0);
-
-    float r, theta;
-    float ax = abs(a.x);
-    float ay = abs(a.y);
-
-    if (ax > ay)
-    {
-        r = ax;
-        theta = (PI * 0.25f) * (a.y / a.x);
-    }
-    else
-    {
-        r = ay;
-        theta = (PI * 0.5f) - (PI * 0.25f) * (a.x / a.y);
-    }
-
-    float cs = cos(theta);
-    float sn = sin(theta);
-    return r * float2(cs, sn);
+	return sign < 0.0f ? -abs(mag) : abs(mag);
 }
 
-float3 EaUvToDir(float2 uv)
+float SafeSqrt(float x) { return sqrt(max(0.0f, x)); }
+
+float3 EaSquareToSphere(float2 uv)
 {
-    // 1) uv → [-1,1]
-    float2 a = uv * 2.0f - 1.0f;
+	// Transform to [-1, 1]^2
+    float2 a = 2 * uv - 1;
+	float2 absa = abs(a);
 
-    // 2) square → disk
-    float2 d = SquareToDiskConcentric(a);
+	// Compute radius and angle
+	float signedDist = 1 - (absa.x + absa.y); // Signed distance to the u + v = 1 diagonal diamond
+	float d = abs(signedDist);
+	float r = 1 - d;
+	float phi = (r == 0 ? 1 : (absa.y - absa.x) / r + 1) * PI / 4;
 
-    // 3) scale to Lambert disk coordinates (radius ≤ 2)
-    float2 X = d * 2.0f;
-
-    // 4) inverse Lambert azimuthal equal-area projection
-    float rr = dot(X, X);            // X^2 + Y^2
-    float s  = max(0.0f, 1.0f - 0.25f * rr);
-    float k  = sqrt(s);
-
-    float3 dir;
-    dir.x = k * X.x;
-    dir.y = -1.0f + 0.5f * rr;       // south pole at disk center
-    dir.z = k * X.y;
-
-    return normalize(dir);
+	// Compute vector
+	float y = CopySign(1 - r * r, signedDist);
+	float cosPhi = CopySign(cos(phi), a.x);
+	float sinPhi = CopySign(sin(phi), a.y);
+	return float3(cosPhi * r * SafeSqrt(2 - r * r), y, sinPhi * r * SafeSqrt(2 - r * r));
 }
 
-float2 DirToPanoUv(float3 d)
+float2 PanoSphereToSquare(float3 d)
 {
     float lambda = atan2(d.z, d.x);    // [-pi,pi]
     float phi = asin(clamp(d.y, -1.0f, 1.0f));
@@ -87,8 +62,8 @@ void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID)
     float u = (dispatchThreadID.x + 0.5f) / gOutputWidth;
     float v = (dispatchThreadID.y + 0.5f) / gOutputHeight;
 
-    float3 dir = EaUvToDir(float2(u, 1 - v));
-    float2 panoUV = DirToPanoUv(dir);
+    float3 dir = EaSquareToSphere(float2(u, 1 - v));
+    float2 panoUV = PanoSphereToSquare(dir);
 
     float3 color = gPano.SampleLevel(gSampler, panoUV, 0.0f).rgb;
 

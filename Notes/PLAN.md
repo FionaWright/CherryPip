@@ -25,8 +25,8 @@
 - [ ] CI/CD-like tests
 - [x] Specular/Reflections
 - [ ] Russian Roulette
-- [ ] Texture Sampling
-- [ ] Allow for changing lighting models at runtime (Recompile shader with defines)
+- [x] Texture Sampling
+- [x] Allow for changing lighting models at runtime (Recompile shader with defines)
 - [ ] EA Mapping
 - [ ] NEE 
 - [ ] Glass & Caustics
@@ -45,32 +45,10 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 ## PT-TODO:
 
-### The Big Debug Feature Expansion
-
-- [x] Readback pixel value
-- [x] Output Buffers
-- [x] Furnace Test
-- [x] Change PathTracer to render into a local buffer which debug can modify/use/etc which then gets copied/rendered to the back buffer
-- [x] Plot readback data into histogram (I think I should write to a file -> Execute python script -> Use Bokeh)
-- [x] Fix whatever makes the furnace test fail
-- [ ] RMSE Convergence Graph 
-
-## Texture Array
-
-The shader contains as its last SRV
-Texture2D<float4> gTextures[] : register(tK);
-
-The Heap on the CPU side now needs to have all DDS textures consecutive 
-gTextures gets set to the base of the DDS textures
-PtMaterialData.TextureIdx = Heap.IndexOf(ddsTex) - Heap.BaseDDS;
-
-Don't call them DDS in code, find a better name. Material Textures?
-Don't forget the sampler
-
-Heap:
-CBVs
-UAVs
-SRVs (TLAS, StructuredBuffers, etc)
-SRVs (DDS Textures) <-- Base
-
-Ez Pz let's do this
+- Fix accum brightning the env map
+- Get EA map working
+- Env map GUI 
+- Shader refactor to use better names + BRDF/BTDF distinction 
+- Make sure albedo is working 
+- Get to work on glass + caustics 
+- Russian Roulette 

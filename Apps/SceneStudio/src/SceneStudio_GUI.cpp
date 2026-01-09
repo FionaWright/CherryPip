@@ -42,7 +42,6 @@ void SceneStudio::RenderGUI()
 
 void SceneStudio::GuiPathTracer(const bool resetPT)
 {
-    ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Stats##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
 
@@ -160,7 +159,6 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
 
 void SceneStudio::GuiRaster()
 {
-    ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Settings##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
 
@@ -241,7 +239,6 @@ void SceneStudio::guiMain()
             {
                 m_currentScene = i;
                 m_sceneDirty = true;
-                resetPT = true;
             }
 
             if (isSelected)
@@ -251,26 +248,33 @@ void SceneStudio::guiMain()
         ImGui::EndCombo();
     }
 
-    if (ImGui::Button("Reload Scene##xx"))
-    {
-        m_sceneDirty = true;
-        resetPT = true;
-    }
+    m_sceneDirty |= ImGui::Button("Reload Scene##xx");
 
-    static int e = m_studioConfig.Backend;
+    ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Render Backend##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
+
+    static int e = m_studioConfig.Backend;
     ImGui::RadioButton("Forward", &e, 0); ImGui::SameLine();
     ImGui::RadioButton("Path Tracer", &e, 1);
-    ImGui::Unindent(IM_GUI_INDENTATION);
     m_studioConfig.Backend = static_cast<RenderBackend>(e);
 
+    ImGui::Unindent(IM_GUI_INDENTATION);
+    ImGui::SeparatorText("Environment Map##xx");
+    ImGui::Indent(IM_GUI_INDENTATION);
+
+    const bool changedEnvMap = ImGui::Checkbox("Equal-Area Map##xx", &m_studioConfig.EnvMapIsEqualArea);
+    m_sceneDirty |= changedEnvMap;
+    m_shaderDirty |= changedEnvMap;
+
+    ImGui::Unindent(IM_GUI_INDENTATION);
     switch (m_studioConfig.Backend)
     {
     case eForward:
         GuiRaster();
         break;
     case ePathTracer:
+        resetPT |= m_sceneDirty;
         GuiPathTracer(resetPT);
         break;
     default:

@@ -1,6 +1,7 @@
 #include "CBV.h"
 #include "PtBuffers.h"
 #include "Rand01.hlsli"
+#include "BRDF.hlsli"
 
 #define EPSILON 1e-2
 #define RAY_FLAGS RAY_FLAG_CULL_NON_OPAQUE|RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES
@@ -38,7 +39,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             inout uint rngState
 )
 {
-    float3 color = float3(0, 0, 0);
+    float3 Lo = float3(0, 0, 0);
     float3 throughput = float3(1, 1, 1);
 
 #ifdef DEBUG_BUFFER
@@ -48,7 +49,6 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
     for (uint i = 0; i <= c_pathTracing.NumBounces; i++)
     {
         q.TraceRayInline(gTLAS, flags, instanceMask, ray);
-
         q.Proceed();
 
         if (q.CommittedStatus() != COMMITTED_TRIANGLE_HIT)
@@ -56,34 +56,24 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 #ifdef DEBUG_BUFFER
     #include "Path-Tracing/DebugBuffersOnMiss.hlsli"
 #endif
-            color += Miss(ray.Origin, ray.Direction);
+            float3 Li = Miss(ray.Origin, ray.Direction);
+            Lo += Li;
             break;
         }
 
-        float3 outMaterialColor = 0, outNg = 0, outNs = 0, outLight = 0;
+        float3 brdf = 0, outNg = 0, outNs = 0, Li = 0;
 		PtMaterialData mat;
-        Hit(rngState, outMaterialColor, outNg, outNs, outLight, mat, q);
+        Hit(rngState, brdf, outNg, outNs, Li, mat, q);
 
         float3 hitPos = ray.Origin + ray.Direction * q.CommittedRayT();
         ray.Origin = hitPos + outNg * EPSILON;
 
+        float3 wo = ray.Direction;
+
 #if defined(LIGHTING_LAMB_DIFF)
-        bool isDiffuse = mat.DiffuseProbability >= PcgRand01(rngState);
-
-        color += throughput * outLight;
-        throughput *= outMaterialColor;
-
-        float3 diffuseDir = normalize(outNs + RandDirectionSphere(rngState));
-        ray.Direction = diffuseDir;
+        Model_LambertionDiffuse(rngState, Lo, throughput, outNs, Li, brdf, ray.Direction);
 #elif defined(LIGHTING_GLOSSY)
-		bool isDiffuse = mat.DiffuseProbability >= PcgRand01(rngState);
-
-        color += throughput * outLight;
-        throughput *= lerp(float3(1, 1, 1), outMaterialColor, isDiffuse);
-
-		float3 diffuseDir = normalize(outNs + RandDirectionSphere(rngState));
-		float3 specularDir = ray.Direction - 2 * dot(ray.Direction, outNs) * outNs;
-		ray.Direction = lerp(specularDir, diffuseDir, mat.Roughness * isDiffuse);
+		Model_Glossy(rngState, Lo, throughput, mat.DiffuseProbability, mat.Roughness, outNs, Li, brdf, wo, ray.Direction);
 #endif
 
 #ifdef DEBUG_BUFFER
@@ -95,7 +85,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
     #include "Path-Tracing/DebugBuffersPostTrace.hlsli"
 #endif
 
-    return color;
+    return Lo;
 }
 
 float4 PSMain(VsOut input) : SV_Target0

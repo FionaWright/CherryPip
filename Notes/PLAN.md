@@ -45,9 +45,6 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 ## PT-TODO:
 
-- Fix accum brightning the env map
-- Get EA map working
-- Env map GUI 
 - Shader refactor to use better names + BRDF/BTDF distinction 
 - Make sure albedo is working 
 - Get to work on glass + caustics 

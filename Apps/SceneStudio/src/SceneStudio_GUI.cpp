@@ -263,9 +263,10 @@ void SceneStudio::guiMain()
     ImGui::SeparatorText("Environment Map##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
 
-    const bool changedEnvMap = ImGui::Checkbox("Equal-Area Map##xx", &m_studioConfig.EnvMapIsEqualArea);
-    m_sceneDirty |= changedEnvMap;
-    m_shaderDirty |= changedEnvMap;
+    m_shaderDirty |= ImGui::Checkbox("Enabled##xx", &m_studioConfig.EnvMapEnabled);
+    const bool envMapEAChanged = ImGui::Checkbox("Equal-Area Map##xx", &m_studioConfig.EnvMapIsEqualArea);
+    m_sceneDirty |= envMapEAChanged;
+    m_shaderDirty |= envMapEAChanged;
 
     ImGui::Unindent(IM_GUI_INDENTATION);
     switch (m_studioConfig.Backend)

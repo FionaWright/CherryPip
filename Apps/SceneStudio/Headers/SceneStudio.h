@@ -42,6 +42,7 @@ struct StudioConfig
     PtConfig PT = {};
     RasterConfig Raster = {};
 
+    bool EnvMapEnabled = true;
     bool EnvMapIsEqualArea = true;
 };
 

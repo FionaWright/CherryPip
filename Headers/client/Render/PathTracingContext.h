@@ -56,7 +56,7 @@ class PathTracingContext
 {
 public:
     void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap* heap);
-    void BuildScene(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const Scene* scene, Heap* heap, EnvMap* envMap);
+    void BuildScene(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const Scene* scene, Heap* heap, D12Resource* envMap);
     void Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSig,
                 ID3D12PipelineState* pso,
                 const Camera* camera, Heap* heap, const XMMATRIX& projMatrix, const PtConfig& config,

@@ -35,6 +35,16 @@ float2 EaSphereToSquare(float3 d)
     return float2(0.5f * (u + 1), 0.5f * (v + 1));
 }
 
+float2 PanoSphereToSquare(float3 d)
+{
+    float lambda = atan2(d.z, d.x);    // [-pi,pi]
+    float phi = asin(clamp(d.y, -1.0f, 1.0f));
+    float u = (lambda + PI) / (2.0f * PI);
+    float v = (phi + 0.5 * PI) / PI;
+    u = frac(u);
+    return float2(u, 1-v);
+}
+
 float3 Miss(float3 origin, float3 direction)
 {
 #if defined(FURNACE_TEST_EMISSIVE)
@@ -42,7 +52,11 @@ float3 Miss(float3 origin, float3 direction)
 #elif defined(FURNACE_TEST_CLASSIC)
     return float3(1, 1, 1);
 #else
+#   if defined(ENV_MAP_EA)
     float2 uv = EaSphereToSquare(direction);
+#   else
+    float2 uv = PanoSphereToSquare(direction);
+#   endif
     return saturate(gEnvMap.Sample(c_sampler, uv).rgb);
 #endif
 }

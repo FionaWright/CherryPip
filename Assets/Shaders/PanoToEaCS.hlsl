@@ -62,8 +62,9 @@ void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID)
     float u = (dispatchThreadID.x + 0.5f) / gOutputWidth;
     float v = (dispatchThreadID.y + 0.5f) / gOutputHeight;
 
-    float3 dir = EaSquareToSphere(float2(u, 1 - v));
+    float3 dir = EaSquareToSphere(float2(u, v));
     float2 panoUV = PanoSphereToSquare(dir);
+    panoUV.y = 1 - panoUV.y;
 
     float3 color = gPano.SampleLevel(gSampler, panoUV, 0.0f).rgb;
 

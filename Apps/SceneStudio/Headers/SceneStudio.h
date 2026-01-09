@@ -41,6 +41,8 @@ struct StudioConfig
     RenderBackend Backend = ePathTracer;
     PtConfig PT = {};
     RasterConfig Raster = {};
+
+    bool EnvMapIsEqualArea = true;
 };
 
 struct SceneConfig

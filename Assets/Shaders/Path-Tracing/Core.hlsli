@@ -151,5 +151,5 @@ float4 PSMain(VsOut input) : SV_Target0
     if (c_pathTracing.UpdateAccumulation)
         gAccum[pixelCoord].rgb = average;
 
-    return float4(pow(average, 1/2.2f), 1);
+    return float4(average, 1);
 }

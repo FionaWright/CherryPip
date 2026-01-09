@@ -11,13 +11,16 @@
 #include "System/Gui.h"
 #include "CBV.h"
 #include "MathUtils.h"
-#include "Debug/Profiler.h"
-#include "Debug/PythonExecutor.h"
 #include "HWI/BLAS.h"
 #include "HWI/Material.h"
 #include "Render/Scene.h"
 #include "System/Input.h"
 #include "System/ModelLoaderGLTF.h"
+
+#ifdef _DEBUG
+#include "Debug/Profiler.h"
+#include "Debug/PythonExecutor.h"
+#endif
 
 void SceneStudio::OnInit(D3D* d3d)
 {
@@ -230,7 +233,9 @@ void SceneStudio::loadRasterAssets(const D3D* d3d)
 void SceneStudio::initScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList, const uint32_t configIdx)
 {
     CherryPrint("Initializing Scene: " << m_sceneConfigs.at(configIdx).Name << "...");
+#ifdef _DEBUG
     Profiler::AddToStack(m_sceneConfigs.at(configIdx).Name.c_str());
+#endif
 
     GLTFLoadArgs args;
     args.Root = m_rootSigRaster;
@@ -246,7 +251,9 @@ void SceneStudio::initScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList, const 
     scene->Init(config.Name.c_str(), config.InitialCamPos, config.InitialCamPitchYaw.x, config.InitialCamPitchYaw.y, args.OutObjects);
     m_scenes.emplace_back(scene);
 
+#ifdef _DEBUG
     Profiler::PopAndPrint();
+#endif
     CherryPrint("Initialized Scene: " << m_sceneConfigs.at(configIdx).Name);
 }
 

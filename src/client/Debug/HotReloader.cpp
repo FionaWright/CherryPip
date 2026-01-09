@@ -87,6 +87,8 @@ void HotReloader::CheckFiles(D3D* d3d)
 
         d3d->Flush();
 
+        assert(s_shadersVsPs[i].ShaderPtr);
+
         const D3D12_INPUT_LAYOUT_DESC ild = { s_shadersVsPs[i].ild.data(), static_cast<UINT>(s_shadersVsPs[i].ild.size()) };
         s_shadersVsPs[i].ShaderPtr->InitVsPs(s_shadersVsPs[i].VS.c_str(), s_shadersVsPs[i].PS.c_str(), ild, d3d->GetDevice(),
                                              s_shadersVsPs[i].RootSig);

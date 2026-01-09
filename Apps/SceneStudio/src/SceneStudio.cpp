@@ -327,8 +327,9 @@ void SceneStudio::compilePtShader(const D3D* d3d)
     const WCHAR* shaderMap[] = {
         L"Path-Tracing/Entry/LambDiffPS.hlsl",
         L"Path-Tracing/Entry/GlossyPS.hlsl",
-        L"Path-Tracing/Entry/FurnaceClassicPS.hlsl",
-        L"Path-Tracing/Entry/FurnaceEmissivePS.hlsl"
+        L"Path-Tracing/Entry/GlassPS.hlsl",
+        L"Path-Tracing/Entry/FurnaceHdReflectPS.hlsl",
+        L"Path-Tracing/Entry/FurnaceHhEmitPS.hlsl"
     };
     const WCHAR* shaderPath = shaderMap[m_studioConfig.PT.Mode];
 

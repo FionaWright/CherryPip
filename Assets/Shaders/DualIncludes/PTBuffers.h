@@ -25,7 +25,8 @@ struct PtMaterialData
     float Metalness;
 
     float DiffuseProbability;
-    float3 p;
+    float IoR;
+    float2 p;
 };
 
 struct Vertex

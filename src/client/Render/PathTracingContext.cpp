@@ -71,6 +71,7 @@ void PathTracingContext::BuildScene(ID3D12Device* device, ID3D12GraphicsCommandL
         ptMaterialData.Metalness = objectMaterialData->Metalness;
         ptMaterialData.DiffuseProbability = 1.0f;
         ptMaterialData.TextureIdx = objectMaterialData->BindlessTexDiffuse;
+        ptMaterialData.IoR = 1.5f;
         materialData.emplace_back(ptMaterialData);
     }
 

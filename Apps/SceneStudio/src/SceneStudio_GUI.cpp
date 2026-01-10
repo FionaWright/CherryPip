@@ -331,18 +331,18 @@ void SceneStudio::guiScene()
             Material* mat = objects[i]->GetMaterial();
             MaterialData* matData = mat->GetData();
 
-            ImGui::ColorEdit3("Base Color Factor##xx", std::bit_cast<float*>(&matData->BaseColorFactor));
+            m_sceneDirty |= ImGui::ColorEdit3("Base Color Factor##xx", std::bit_cast<float*>(&matData->BaseColorFactor));
 
-            ImGui::InputFloat("Emissive Strength##xx", &matData->EmissiveStrength);
-            ImGui::InputFloat("Roughness##xx", &matData->Roughness);
-            ImGui::InputFloat("Metalness##xx", &matData->Metalness);
-            ImGui::InputFloat("IoR##xx", &matData->IoR);
+            m_sceneDirty |= ImGui::InputFloat("Emissive Strength##xx", &matData->EmissiveStrength);
+            m_sceneDirty |= ImGui::InputFloat("Roughness##xx", &matData->Roughness);
+            m_sceneDirty |= ImGui::InputFloat("Metalness##xx", &matData->Metalness);
+            m_sceneDirty |= ImGui::InputFloat("IoR##xx", &matData->IoR);
 
-            ImGui::InputInt("Diffuse Tex Idx##xx", &matData->BindlessTexDiffuse);
-            ImGui::InputInt("Normal Tex Idx##xx", &matData->BindlessTexNormal);
+            m_sceneDirty |= ImGui::InputInt("Diffuse Tex Idx##xx", &matData->BindlessTexDiffuse);
+            m_sceneDirty |= ImGui::InputInt("Normal Tex Idx##xx", &matData->BindlessTexNormal);
 
             bool isGlass = matData->Flags & PtMaterialFlags::eIsGlass;
-            ImGui::Checkbox("Is Glass##xx", &isGlass);
+            m_sceneDirty |= ImGui::Checkbox("Is Glass##xx", &isGlass);
             matData->Flags = isGlass ? PtMaterialFlags::eIsGlass : PtMaterialFlags::eNone;
 
             ImGui::Unindent(IM_GUI_INDENTATION);

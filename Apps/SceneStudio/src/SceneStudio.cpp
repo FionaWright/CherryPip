@@ -175,6 +175,13 @@ void SceneStudio::loadAssets(D3D* d3d)
 
     m_currentScene = Config::GetSystem().DefaultSceneIdx;
 
+    auto currScene = m_sceneConfigs.at(m_currentScene);
+    if (m_currentScene != 0)
+    {
+        m_camera.GetCamera().SetPosition(currScene.InitialCamPos);
+        m_camera.GetCamera().SetPitchYaw(currScene.InitialCamPitchYaw.x, currScene.InitialCamPitchYaw.y);
+    }
+
     m_ptContext.Init(device, cmdList.Get(), &m_heap);
 
     m_ptOutputTex.Init(L"PT Output", device, &m_heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight,
@@ -280,13 +287,17 @@ void SceneStudio::initCustomScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     // Empty cornell box
     {
         t.SetScale(2.0f);
-        args.CullingWhiteList = { "Object_0", "Object_1", "Object_2", "Object_3", "Object_4", "Object_5", "Object_6", "Object_7" };
+        args.CullingWhiteList = { "Object_0", "Object_1", "Object_2", "Object_3", "Object_4", "Object_5", "Object_6", "Object_7", "Object_8" };
         ModelLoaderGLTF::LoadSplitModel(d3d, cmdList, &m_heap, L"Cornell/scene.gltf", args, t);
+        args.OutObjects.back()->GetTransform()->SetPosition(0.25f, 0.02f, -0.5f);
+        args.OutObjects.back()->GetTransform()->SetRotation(-1.57f, 0.5f, 0.0f);
+        args.OutObjects.back()->GetTransform()->SetScale(2.5f);
         args.CullingWhiteList.clear();
         t = {};
     }
 
     // Sphere
+    if (false)
     {
         t.SetPosition(0, 1, 0);
         ModelLoaderGLTF::LoadSplitModel(d3d, cmdList, &m_heap, L"Sphere/Sphere.gltf", args, t);
@@ -299,6 +310,8 @@ void SceneStudio::initCustomScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 
     constexpr auto initialCamPos = XMFLOAT3(0, 1.5f, 4.5f);
     constexpr auto initialCamRot = XMFLOAT2(0, PI);
+    m_camera.GetCamera().SetPosition(initialCamPos);
+    m_camera.GetCamera().SetPitchYaw(initialCamRot.x, initialCamRot.y);
 
     m_sceneConfigs.at(0).SceneIdx = static_cast<int>(m_scenes.size());
     std::shared_ptr<Scene> scene = std::make_shared<Scene>();

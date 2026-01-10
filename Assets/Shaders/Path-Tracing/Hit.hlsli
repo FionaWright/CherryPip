@@ -21,12 +21,13 @@ void Hit(inout uint rngState, out float3 brdf, out float3 Ng, out float3 Ns, out
 	float3 p1 = mul(instance.M, float4(v1.position,1)).xyz;
 	float3 p2 = mul(instance.M, float4(v2.position,1)).xyz;
 	Ng = normalize( cross(p1 - p0, p2 - p0) );
-	if(q.CommittedTriangleFrontFace()==0) Ng = -Ng;
 
     Ns = v0.normal * bary.x + v1.normal * bary.y + v2.normal * bary.z;
     Ns = mul((float3x3)instance.MTI, Ns);
-    Ns = q.CommittedTriangleFrontFace() == 0 ? -Ns : Ns;
     Ns = normalize(Ns);
+
+    Ng = q.CommittedTriangleFrontFace() == 0 ? -Ng : Ng;
+    Ns = q.CommittedTriangleFrontFace() == 0 ? -Ns : Ns;
 
     float2 uv = v0.uv * bary.x + v1.uv * bary.y + v2.uv * bary.z;
     float3 albedo = gTextures[mat.TextureIdx].Sample(c_sampler, uv).rgb;

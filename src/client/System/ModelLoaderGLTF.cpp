@@ -455,10 +455,18 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterDebug));
     material->AddTexBindless(d3d->GetDevice(), heap, diffuseTex, &materialData.BindlessTexDiffuse);
 
+    bool isGlass = (mat.transmission && mat.transmission->transmissionFactor > 0.0) ||
+        (mat.alphaMode == fastgltf::AlphaMode::Blend &&
+         mat.pbrData.metallicFactor < 0.1 &&
+         mat.pbrData.roughnessFactor < 0.1);
+
     memcpy(&materialData.BaseColorFactor, &mat.pbrData.baseColorFactor, sizeof(float) * 3);
     materialData.EmissiveStrength = mat.emissiveStrength;
     materialData.Roughness = mat.pbrData.roughnessFactor;
     materialData.Metalness = mat.pbrData.metallicFactor;
+    materialData.IoR = mat.ior;
+    if (isGlass)
+        materialData.Flags = PtMaterialFlags::eIsGlass;
     material->SetData(materialData);
 
     auto obj = std::make_shared<Object>();
@@ -474,7 +482,7 @@ void ModelLoaderGLTF::loadNode(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Hea
 
     auto& trs = std::get<fastgltf::TRS>(node.transform);
 
-    Transform localTransform = toTransform(trs);
+    const Transform localTransform = toTransform(trs);
     Transform worldTransform = {};
 
     XMFLOAT3 pos = localTransform.GetPosition();
@@ -564,7 +572,10 @@ void ModelLoaderGLTF::LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
     if (!ms_initialisedParser)
     {
         ms_parser = fastgltf::Parser(
-            fastgltf::Extensions::KHR_materials_specular | fastgltf::Extensions::KHR_materials_iridescence | fastgltf::Extensions::KHR_materials_emissive_strength);
+            fastgltf::Extensions::KHR_materials_specular |
+            fastgltf::Extensions::KHR_materials_iridescence |
+            fastgltf::Extensions::KHR_materials_ior |
+            fastgltf::Extensions::KHR_materials_emissive_strength);
         ms_initialisedParser = true;
     }
 

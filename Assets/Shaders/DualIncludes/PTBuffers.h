@@ -14,6 +14,12 @@ struct PtInstanceData
     float4x4 MTI;
 };
 
+enum PtMaterialFlags : uint
+{
+    eNone = 0,
+    eIsGlass = 1
+};
+
 struct PtMaterialData
 {
     float3 BaseColorFactor;
@@ -26,7 +32,8 @@ struct PtMaterialData
 
     float DiffuseProbability;
     float IoR;
-    float2 p;
+    PtMaterialFlags Flags;
+    float p;
 };
 
 struct Vertex

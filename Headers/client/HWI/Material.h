@@ -8,6 +8,7 @@
 #include <memory>
 #include <vector>
 
+#include "PTBuffers.h"
 #include "HWI/D12Resource.h"
 #include "HWI/Texture.h"
 
@@ -44,6 +45,8 @@ struct MaterialData
 
     int BindlessTexDiffuse = -1;
     int BindlessTexNormal = -1;
+    PtMaterialFlags Flags = PtMaterialFlags::eNone;
+    float IoR = 1.5f;
 };
 
 class Material

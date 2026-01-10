@@ -107,7 +107,6 @@ void Model_Glass(
     float3 wo,
     out float3 wi)
 {
-    //Lo += throughput * Li;
     if (isBackface)
         throughput *= brdf; // TODO: Absorb light as it enters object
 

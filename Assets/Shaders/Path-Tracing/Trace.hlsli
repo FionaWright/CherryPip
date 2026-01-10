@@ -44,8 +44,13 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 #elif defined(LIGHTING_GLOSSY)
         Model_Glossy(rngState, Lo, throughput, mat.DiffuseProbability, mat.Roughness, outNs, Li, brdf, wo, ray.Direction);
 #elif defined(LIGHTING_GLASS)
-        bool isBackface = q.CommittedTriangleFrontFace()==0;
-        Model_Glass(rngState, Lo, throughput, mat, isBackface, outNs, Li, brdf, wo, ray.Direction);
+        if (mat.Flags & PtMaterialFlags::eIsGlass)
+        {
+            bool isBackface = q.CommittedTriangleFrontFace()==0;
+            Model_Glass(rngState, Lo, throughput, mat, isBackface, outNs, Li, brdf, wo, ray.Direction);
+        }
+        else
+            Model_Glossy(rngState, Lo, throughput, mat.DiffuseProbability, mat.Roughness, outNs, Li, brdf, wo, ray.Direction);
 #endif
 
         ray.Origin = hitPos + outNg * EPSILON * sign(dot(outNg, ray.Direction));

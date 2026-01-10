@@ -2,6 +2,8 @@
 // Created by fionaw on 09/11/2025.
 //
 
+#include <bit>
+
 #include "ThirdParty/imgui/imgui.h"
 #include "Apps/SceneStudio/Headers/SceneStudio.h"
 #include "Render/Scene.h"
@@ -296,11 +298,12 @@ void SceneStudio::guiScene()
 
     for (int i = 0; i < objects.size(); i++)
     {
-        if (ImGui::TreeNode(objects[i]->GetName()))
+        const std::string name = std::string(objects[i]->GetName()) + " (" + objects[i]->GetMaterial()->GetName() + ")";
+        if (ImGui::TreeNode(name.c_str()))
         {
             ImGui::Indent(IM_GUI_INDENTATION);
 
-            auto transform = objects[i]->GetTransform();
+            const auto transform = objects[i]->GetTransform();
 
             XMFLOAT3 pos = transform->GetPosition();
             ImGui::InputFloat3("Position##xx", reinterpret_cast<float*>(&pos));
@@ -321,6 +324,26 @@ void SceneStudio::guiScene()
 
             ImGui::Text("Vertex Count: %lld", objects[i]->GetModel()->GetVertexCount());
             ImGui::Text("Index Count: %lld", objects[i]->GetModel()->GetIndexCount());
+
+            ImGui::Spacing();
+            ImGui::SeparatorText("Material##xx");
+
+            Material* mat = objects[i]->GetMaterial();
+            MaterialData* matData = mat->GetData();
+
+            ImGui::ColorEdit3("Base Color Factor##xx", std::bit_cast<float*>(&matData->BaseColorFactor));
+
+            ImGui::InputFloat("Emissive Strength##xx", &matData->EmissiveStrength);
+            ImGui::InputFloat("Roughness##xx", &matData->Roughness);
+            ImGui::InputFloat("Metalness##xx", &matData->Metalness);
+            ImGui::InputFloat("IoR##xx", &matData->IoR);
+
+            ImGui::InputInt("Diffuse Tex Idx##xx", &matData->BindlessTexDiffuse);
+            ImGui::InputInt("Normal Tex Idx##xx", &matData->BindlessTexNormal);
+
+            bool isGlass = matData->Flags & PtMaterialFlags::eIsGlass;
+            ImGui::Checkbox("Is Glass##xx", &isGlass);
+            matData->Flags = isGlass ? PtMaterialFlags::eIsGlass : PtMaterialFlags::eNone;
 
             ImGui::Unindent(IM_GUI_INDENTATION);
             ImGui::TreePop();

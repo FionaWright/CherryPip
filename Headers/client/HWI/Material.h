@@ -54,8 +54,10 @@ class Material
 public:
     ~Material();
     void Init(const Heap* heap, bool hasBindlessParam = false);
-    const MaterialData* GetData() const { return &m_materialData; }
+    MaterialData* GetData() { return &m_materialData; }
     void SetData(const MaterialData& data) { m_materialData = data; }
+    const char* GetName() const { return m_name.c_str(); }
+    void SetName(const char* str) { m_name = str; }
 
     void AddCBV(ID3D12Device* device, Heap* heap, size_t size);
     void SetSRV(ID3D12Device* device, UINT srvIdx, Heap* heap, D12Resource* d12Resource,
@@ -76,6 +78,8 @@ public:
     void SetDescriptorTables(ID3D12GraphicsCommandList* cmdList, bool isCompute = false) const;
 
 private:
+    std::string m_name = "Unnamed Material";
+
     D3D12_CPU_DESCRIPTOR_HANDLE m_cpuHandle = {};
     D3D12_GPU_DESCRIPTOR_HANDLE m_gpuHandle = {};
     UINT m_descriptorIncSize = 0;

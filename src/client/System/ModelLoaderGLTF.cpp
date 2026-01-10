@@ -460,6 +460,8 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
          mat.pbrData.metallicFactor < 0.1 &&
          mat.pbrData.roughnessFactor < 0.1);
 
+    material->SetName(mat.name.c_str());
+
     memcpy(&materialData.BaseColorFactor, &mat.pbrData.baseColorFactor, sizeof(float) * 3);
     materialData.EmissiveStrength = mat.emissiveStrength;
     materialData.Roughness = mat.pbrData.roughnessFactor;

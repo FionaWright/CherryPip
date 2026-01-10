@@ -29,12 +29,14 @@ float ReflectanceProportion(float3 wo, float3 Ns, float iorA, float iorB)
 {
     float relIor = iorA / iorB;
     float cosI = -dot(wo, Ns);
+    if (cosI <= 0) return 1; // Bad input
+
     float sin2T = relIor * relIor * (1 - cosI * cosI);
     if (sin2T >= 1) return 1; // Fully reflected
 
     float cosT = sqrt(1 - sin2T);
     float denomPerp = iorA * cosI + iorB * cosT;
-    float denomPara = iorB * cosI + iorA * cosT;
+    float denomPara = iorA * cosI + iorB * cosT; // iorA, iorB or iorB, iorA ?????
 
     if (min(denomPerp, denomPara) < 1E-8) return 1;
 
@@ -96,7 +98,7 @@ void Model_Glass(
     inout float3 Lo,
     inout float3 throughput,
     PtMaterialData mat,
-    bool isBackface,
+    bool entering,
     float hitDist,
     float3 Ns,
     float3 Li,
@@ -104,22 +106,24 @@ void Model_Glass(
     float3 wo,
     out float3 wi)
 {
-    bool entering = !isBackface;
-
     if (!entering)
-        throughput *= exp(-0 * hitDist); // TODO: sigma_a
+    {
+        float attenuationDistance = 1.0f; // TODO: Unhardcode and fix issues
+        float3 sigma_a = -log(mat.BaseColorFactor) / attenuationDistance;
+        sigma_a = 0;
+        throughput *= exp(-sigma_a * hitDist);
+    }
 
     float iorCurrent = entering ? IOR_AIR : mat.IoR;
     float iorNext = entering ? mat.IoR : IOR_AIR;
     GlassResponse res = CalcReflectRefract(wo, Ns, iorCurrent, iorNext);
 
     float3 diffuseDir = normalize(Ns + RandDirectionSphere(rngState));
-    res.reflectDir = normalize(lerp(res.reflectDir, diffuseDir, mat.DiffuseProbability));
-    res.refractDir = normalize(lerp(res.refractDir, diffuseDir, mat.Roughness));
+    res.reflectDir = normalize(lerp(res.reflectDir, diffuseDir, mat.DiffuseProbability)); // Why diffuseprobability and not roughness?
+    res.refractDir = normalize(lerp(res.refractDir, -diffuseDir, mat.Roughness));
 
     bool reflect = PcgRand01(rngState) <= res.reflectWeight;
     wi = reflect ? res.reflectDir : res.refractDir;
 
-    // TODO: Weight throughput by reflect pdf
-    //throughput *= reflect ? res.reflectWeight : (1.0 - res.reflectWeight);
+    throughput *= reflect ? res.reflectWeight : (1.0 - res.reflectWeight);
 }

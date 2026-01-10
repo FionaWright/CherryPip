@@ -21,7 +21,7 @@
 - [x] Switch direction of Engine->App, seperate CMAKE targets
 - [x] Scene, SceneViewer, Refactor App system
 - [x] Save/Load Camera Transform
-- [ ] Scene Transforms/Materials GUI
+- [x] Scene Transforms/Materials GUI
 - [ ] CI/CD-like tests
 - [x] Specular/Reflections
 - [ ] Russian Roulette
@@ -29,8 +29,10 @@
 - [x] Allow for changing lighting models at runtime (Recompile shader with defines)
 - [ ] EA Mapping
 - [ ] NEE 
-- [ ] Glass & Caustics
+- [x] Glass & Caustics
 - [ ] Ray pipelines
+- [ ] Spectral Path-Tracing (Hero, make separate from RGB PT)
+- [ ] ReSTIR
 
 https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d12-raytracing-samples-win32/
 
@@ -45,6 +47,9 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 ## PT-TODO:
 
-- Get to work on glass + caustics 
+- Fix glass issue at grazing angles (Read PBRT section, stop using the goddamn GPT)
+- Fix glass attenuation after, add attenuationDistance field
+- Add stanford dragon model to test with and perform glass ball test with it (Object behind should be vertically flipped depending on distance)
 - Russian Roulette 
 - Fix issue with hot reloading, env maps breaking on scene reload, camera movement being messed up (Is the screen flipped??)
+- Mist (Randomly scatter rays depending on distance travelled, see SL video)

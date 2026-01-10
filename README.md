@@ -24,6 +24,8 @@ Trying to work on it during my college semesters in my free time
 - See a specific pixels value using readback system
 - Two furnace tests
 - See different parts of the path tracer using Debug Buffer system (Normals, Albedo, HitDist, RNG, FirstBounceDirection, etc)
+- Lambertian, Glossy and Glass lighting models
+- Environment maps with support for Panoramic and Octohedral Equal-Area
 
 ## Progress 
 
@@ -38,6 +40,7 @@ Progress as of 09/11/25:
 
 Progress as of 10/01/26 (Took a long break):
 <img width="1020" height="573" alt="image" src="https://github.com/user-attachments/assets/f13adf28-8360-4225-a2ab-e718a83e969b" />
+
 
 
 

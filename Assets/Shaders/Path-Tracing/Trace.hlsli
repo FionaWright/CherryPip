@@ -47,7 +47,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         if (mat.Flags & PtMaterialFlags::eIsGlass)
         {
             bool isBackface = q.CommittedTriangleFrontFace()==0;
-            Model_Glass(rngState, Lo, throughput, mat, isBackface, outNs, Li, brdf, wo, ray.Direction);
+            Model_Glass(rngState, Lo, throughput, mat, isBackface, q.CommittedRayT(), outNs, Li, brdf, wo, ray.Direction);
         }
         else
             Model_Glossy(rngState, Lo, throughput, mat.DiffuseProbability, mat.Roughness, outNs, Li, brdf, wo, ray.Direction);

@@ -292,6 +292,7 @@ void SceneStudio::initCustomScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         args.OutObjects.back()->GetTransform()->SetPosition(0.25f, 0.02f, -0.5f);
         args.OutObjects.back()->GetTransform()->SetRotation(-1.57f, 0.5f, 0.0f);
         args.OutObjects.back()->GetTransform()->SetScale(2.5f);
+        args.OutObjects.back()->GetMaterial()->GetData()->DiffuseProbability = 0.0f;
         args.CullingWhiteList.clear();
         t = {};
     }

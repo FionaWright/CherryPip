@@ -334,6 +334,7 @@ void SceneStudio::guiScene()
             m_sceneDirty |= ImGui::ColorEdit3("Base Color Factor##xx", std::bit_cast<float*>(&matData->BaseColorFactor));
 
             m_sceneDirty |= ImGui::InputFloat("Emissive Strength##xx", &matData->EmissiveStrength);
+            m_sceneDirty |= ImGui::InputFloat("Diffuse Probability##xx", &matData->DiffuseProbability);
             m_sceneDirty |= ImGui::InputFloat("Roughness##xx", &matData->Roughness);
             m_sceneDirty |= ImGui::InputFloat("Metalness##xx", &matData->Metalness);
             m_sceneDirty |= ImGui::InputFloat("IoR##xx", &matData->IoR);
@@ -348,5 +349,13 @@ void SceneStudio::guiScene()
             ImGui::Unindent(IM_GUI_INDENTATION);
             ImGui::TreePop();
         }
+    }
+
+    if (m_sceneDirty)
+    {
+        m_ptContext.Reset();
+#ifdef _DEBUG
+        m_readbackManager.ClearReadbackData();
+#endif
     }
 }

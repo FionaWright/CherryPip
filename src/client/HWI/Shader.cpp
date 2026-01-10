@@ -103,6 +103,8 @@ void Shader::InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D1
     UINT compileFlags = 0;
 #endif
 
+    m_pso.Reset();
+
     std::wstring vsPath = FileHelper::GetAssetShaderFullPath(vs);
     std::wstring psPath = FileHelper::GetAssetShaderFullPath(ps);
 

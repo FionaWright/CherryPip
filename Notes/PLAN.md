@@ -45,7 +45,6 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 ## PT-TODO:
 
-- Shader refactor to use better names + BRDF/BTDF distinction 
-- Make sure albedo is working 
 - Get to work on glass + caustics 
 - Russian Roulette 
+- Fix issue with hot reloading, env maps breaking on scene reload, camera movement being messed up (Is the screen flipped??)

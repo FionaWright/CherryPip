@@ -47,6 +47,8 @@ struct MaterialData
     int BindlessTexNormal = -1;
     PtMaterialFlags Flags = PtMaterialFlags::eNone;
     float IoR = 1.5f;
+
+    float DiffuseProbability = 1.0f; // TODO: Compute in shader using luminance/F0/etc
 };
 
 class Material

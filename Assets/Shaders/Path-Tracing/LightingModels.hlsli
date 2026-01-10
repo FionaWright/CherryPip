@@ -1,11 +1,12 @@
+// Caller must flip normals + swap IoRs if exiting
 float3 Refract(float3 wo, float3 Ns, float iorA, float iorB)
 {
     float relIor = iorA / iorB;
-    float cosAngleIn = -dot(wo, Ns);
-    float sinSqrAngleRefraction = relIor * relIor * (1 - cosAngleIn * cosAngleIn);
-    if (sinSqrAngleRefraction > 1) return 0; // Fully reflected, no refraction
+    float cosI = -dot(wo, Ns);
+    float sin2T = relIor * relIor * (1 - cosI * cosI);
+    if (sin2T > 1) return float3(0,0,0); // Fully reflected, no refraction
 
-    return wo * relIor + Ns * (relIor * cosAngleIn - sqrt(1 - sinSqrAngleRefraction));
+    return normalize(wo * relIor + Ns * (relIor * cosI - sqrt(1 - sin2T)));
 }
 
 float3 Reflect(float3 wo, float3 Ns)
@@ -23,29 +24,24 @@ struct GlassResponse
 };
 
 // Calculated via the Fresnel equation
+// Caller must flip normals + swap IoRs if exiting
 float ReflectanceProportion(float3 wo, float3 Ns, float iorA, float iorB)
 {
     float relIor = iorA / iorB;
-    float cosAngleIn = -dot(wo, Ns);
-    float sinSqrAngleRefraction = relIor * relIor * (1 - cosAngleIn * cosAngleIn);
-    if (sinSqrAngleRefraction >= 1) return 1; // Fully reflected
+    float cosI = -dot(wo, Ns);
+    float sin2T = relIor * relIor * (1 - cosI * cosI);
+    if (sin2T >= 1) return 1; // Fully reflected
 
-    float cosAngleOfRefraction = sqrt(1 - sinSqrAngleRefraction);
-    float denominatorPerpendicular = iorA * cosAngleIn + iorB * cosAngleOfRefraction;
-    float denominatorParallel = iorA * cosAngleIn + iorB * cosAngleOfRefraction;
+    float cosT = sqrt(1 - sin2T);
+    float denomPerp = iorA * cosI + iorB * cosT;
+    float denomPara = iorB * cosI + iorA * cosT;
 
-    if (min(denominatorPerpendicular, denominatorParallel) < 1E-8) return 1;
+    if (min(denomPerp, denomPara) < 1E-8) return 1;
 
-    // Perpendicular polarization
-    float rPerpendicular = (iorA * cosAngleIn - iorB * cosAngleOfRefraction) / denominatorPerpendicular;
-    rPerpendicular *= rPerpendicular;
+    float rPerp = (iorA * cosI - iorB * cosT) / denomPerp;
+    float rPara = (iorB * cosI - iorA * cosT) / denomPara;
 
-    // Parallel polarization
-    float rParallel = (iorB * cosAngleIn - iorA * cosAngleOfRefraction) / denominatorParallel;
-    rParallel *= rParallel;
-
-    // Return the average of the perpendicular and parallel polarizations
-    return (rPerpendicular + rParallel) / 2;
+    return 0.5f * (rPerp * rPerp + rPara * rPara);
 }
 
 GlassResponse CalcReflectRefract(float3 wo, float3 Ns, float iorA, float iorB)
@@ -91,7 +87,7 @@ void Model_Glossy(
     throughput *= lerp(float3(1, 1, 1), brdf, isDiffuse);
 
     float3 diffuseDir = normalize(Ns + RandDirectionSphere(rngState));
-    float3 specularDir = wo - 2 * dot(wo, Ns) * Ns; // TODO: Replace with Reflect/2
+    float3 specularDir = Reflect(wo, Ns);
     wi = lerp(specularDir, diffuseDir, roughness * isDiffuse);
 }
 
@@ -101,23 +97,29 @@ void Model_Glass(
     inout float3 throughput,
     PtMaterialData mat,
     bool isBackface,
+    float hitDist,
     float3 Ns,
     float3 Li,
     float3 brdf,
     float3 wo,
     out float3 wi)
 {
-    if (isBackface)
-        throughput *= brdf; // TODO: Absorb light as it enters object
+    bool entering = !isBackface;
 
-    float iorCurrent = isBackface ? mat.IoR : IOR_AIR;
-    float iorNext = isBackface ? IOR_AIR : mat.IoR;
+    if (!entering)
+        throughput *= exp(-0 * hitDist); // TODO: sigma_a
+
+    float iorCurrent = entering ? IOR_AIR : mat.IoR;
+    float iorNext = entering ? mat.IoR : IOR_AIR;
     GlassResponse res = CalcReflectRefract(wo, Ns, iorCurrent, iorNext);
 
     float3 diffuseDir = normalize(Ns + RandDirectionSphere(rngState));
     res.reflectDir = normalize(lerp(res.reflectDir, diffuseDir, mat.DiffuseProbability));
-    res.refractDir = normalize(lerp(res.refractDir, -diffuseDir, mat.Roughness));
+    res.refractDir = normalize(lerp(res.refractDir, diffuseDir, mat.Roughness));
 
     bool reflect = PcgRand01(rngState) <= res.reflectWeight;
     wi = reflect ? res.reflectDir : res.refractDir;
+
+    // TODO: Weight throughput by reflect pdf
+    //throughput *= reflect ? res.reflectWeight : (1.0 - res.reflectWeight);
 }

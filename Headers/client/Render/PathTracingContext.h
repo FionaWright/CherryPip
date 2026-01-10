@@ -44,7 +44,7 @@ struct PtConfig
     uint32_t SPP = 1;
     uint32_t NumBounces = 1;
     uint32_t MaxFrameNum = 0;
-    PathTracerMode Mode = eGlossy;
+    PathTracerMode Mode = eGlass;
     DebugBuffer DebugBufferIdx = DebugBuffer::eNormalsShaded;
     alignas(4) bool DebugMode = false;
     alignas(4) bool AccumulationEnabled = true;

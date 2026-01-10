@@ -112,10 +112,10 @@ void SceneStudio::loadAssets(D3D* d3d)
     m_rootSigDebug->SmartInit(device, 2, 6, 1, true, samplers, _countof(samplers));
 #endif
 
-    GLTFLoadArgs args;
-    args.Root = m_rootSigRaster;
-    args.DefaultShaderIndex = 0;
-    args.Shaders = { m_shaderRaster };
+    SceneConfig customScene = {
+        "Custom"
+    };
+    m_sceneConfigs.emplace_back(customScene);
 
     Transform t = {};
 
@@ -232,6 +232,12 @@ void SceneStudio::loadRasterAssets(const D3D* d3d)
 
 void SceneStudio::initScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList, const uint32_t configIdx)
 {
+    if (configIdx == 0)
+    {
+        initCustomScene(d3d, cmdList);
+        return;
+    }
+
     CherryPrint("Initializing Scene: " << m_sceneConfigs.at(configIdx).Name << "...");
 #ifdef _DEBUG
     Profiler::AddToStack(m_sceneConfigs.at(configIdx).Name.c_str());
@@ -255,6 +261,54 @@ void SceneStudio::initScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList, const 
     Profiler::PopAndPrint();
 #endif
     CherryPrint("Initialized Scene: " << m_sceneConfigs.at(configIdx).Name);
+}
+
+void SceneStudio::initCustomScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
+{
+    CherryPrint("Initializing Custom Scene");
+#ifdef _DEBUG
+    Profiler::AddToStack(m_sceneConfigs.at(0).Name.c_str());
+#endif
+
+    GLTFLoadArgs args;
+    args.Root = m_rootSigRaster;
+    args.DefaultShaderIndex = 0;
+    args.Shaders = { m_shaderRaster };
+
+    Transform t = {};
+
+    // Empty cornell box
+    {
+        t.SetScale(2.0f);
+        args.CullingWhiteList = { "Object_0", "Object_1", "Object_2", "Object_3", "Object_4", "Object_5", "Object_6", "Object_7" };
+        ModelLoaderGLTF::LoadSplitModel(d3d, cmdList, &m_heap, L"Cornell/scene.gltf", args, t);
+        args.CullingWhiteList.clear();
+        t = {};
+    }
+
+    // Sphere
+    {
+        t.SetPosition(0, 1, 0);
+        ModelLoaderGLTF::LoadSplitModel(d3d, cmdList, &m_heap, L"Sphere/Sphere.gltf", args, t);
+        args.OutObjects.back()->GetMaterial()->GetData()->BindlessTexDiffuse = 0;
+        args.OutObjects.back()->GetMaterial()->GetData()->Metalness = 0;
+        args.OutObjects.back()->GetMaterial()->GetData()->Roughness = 0;
+        args.OutObjects.back()->GetMaterial()->GetData()->Flags = PtMaterialFlags::eIsGlass;
+        t = {};
+    }
+
+    constexpr auto initialCamPos = XMFLOAT3(0, 1.5f, 4.5f);
+    constexpr auto initialCamRot = XMFLOAT2(0, PI);
+
+    m_sceneConfigs.at(0).SceneIdx = static_cast<int>(m_scenes.size());
+    std::shared_ptr<Scene> scene = std::make_shared<Scene>();
+    scene->Init("Custom", initialCamPos, initialCamRot.x, initialCamRot.y, args.OutObjects);
+    m_scenes.emplace_back(scene);
+
+#ifdef _DEBUG
+    Profiler::PopAndPrint();
+#endif
+    CherryPrint("Initialized Custom Scene");
 }
 
 void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)

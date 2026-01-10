@@ -28,6 +28,13 @@ RWTexture2D<float4> gAccum : register(u0);
 
 SamplerState c_sampler : register(s0);
 
+// TODO: Put this somewhere else
+// https://sakibsaikia.github.io/graphics/2022/01/04/Nan-Checks-In-HLSL.html
+bool IsNaN(float x)
+{
+    return (asuint(x) & 0x7fffffff) > 0x7f800000;
+}
+
 #include "Trace.hlsli"
 
 float4 PSMain(VsOut input) : SV_Target0

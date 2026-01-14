@@ -477,7 +477,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
 }
 
 void ModelLoaderGLTF::loadNode(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, Asset& asset,
-                               const std::string& modelNameExtensionless, fastgltf::Node& node, GLTFLoadArgs& args, Transform transform)
+                               const std::string& modelNameExtensionless, fastgltf::Node& node, GLTFLoadArgs& args, Transform parentTransform)
 {
     if (node.transform.index() != 0)
         throw std::exception("Unsupported transform type");
@@ -487,23 +487,19 @@ void ModelLoaderGLTF::loadNode(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Hea
     const Transform localTransform = toTransform(trs);
     Transform worldTransform = {};
 
-    XMFLOAT3 pos = localTransform.GetPosition();
-    pos.x = -pos.x;
-    pos = Add(pos, transform.GetPosition());
+    XMFLOAT3 localPos = localTransform.GetPosition();
+    const XMFLOAT3 worldPos = Add(parentTransform.GetPosition(),  Mult(parentTransform.GetScale(), localPos));
+    worldTransform.SetPosition(worldPos);
 
-    worldTransform.SetPosition(pos);
+    const XMFLOAT3 localRot = localTransform.GetRotation();
+    const XMFLOAT3 worldRot = Add(localRot, parentTransform.GetRotation());
+    worldTransform.SetRotation(worldRot);
 
-    XMFLOAT3 rot = localTransform.GetRotation();
-    rot = Add(rot, transform.GetRotation());
+    const XMFLOAT3 localScale = localTransform.GetScale();
+    const XMFLOAT3 worldScale = Mult(localScale, parentTransform.GetScale());
+    worldTransform.SetScale(worldScale);
 
-    worldTransform.SetRotation(rot);
-
-    XMFLOAT3 scale = localTransform.GetScale();
-    scale = Mult(scale, transform.GetScale());
-
-    worldTransform.SetScale(scale);
-
-    size_t childCount = node.children.size();
+    const size_t childCount = node.children.size();
     for (size_t i = 0; i < childCount; i++)
     {
         fastgltf::Node& childNode = (*asset)->nodes[node.children[i]];
@@ -515,13 +511,13 @@ void ModelLoaderGLTF::loadNode(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Hea
 
     Profiler::AddToStack(("GLTF Node: " + node.name).c_str());
 
-    std::string nodeName(node.name);
-    if (args.CullingWhiteList.size() > 0)
+    const std::string nodeName(node.name);
+    if (!args.CullingWhiteList.empty())
     {
         bool found = false;
-        for (int j = 0; j < args.CullingWhiteList.size(); j++)
+        for (const auto & j : args.CullingWhiteList)
         {
-            if (nodeName.starts_with(args.CullingWhiteList[j]))
+            if (nodeName.starts_with(j))
             {
                 found = true;
                 break;
@@ -532,14 +528,12 @@ void ModelLoaderGLTF::loadNode(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Hea
             return;
     }
 
-    size_t meshIndex = node.meshIndex.value();
-    fastgltf::Mesh& mesh = (*asset)->meshes.at(meshIndex);
-
-    std::vector<std::jthread> threads;
+    const size_t meshIndex = node.meshIndex.value();
+    const fastgltf::Mesh& mesh = (*asset)->meshes.at(meshIndex);
 
     for (size_t i = 0; i < mesh.primitives.size(); i++)
     {
-        std::string id = modelNameExtensionless + "::NODE(" + std::to_string(meshIndex) + ")::PRIMITIVE(" +
+        const std::string id = modelNameExtensionless + "::NODE(" + std::to_string(meshIndex) + ")::PRIMITIVE(" +
             std::to_string(i) + ")";
         loadPrimitive(d3d, cmdList, heap, asset, mesh.primitives[i], modelNameExtensionless, node, args, worldTransform, id, meshIndex,
                       i);
@@ -569,7 +563,7 @@ void ModelLoaderGLTF::LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
     }
 
     if (data.error() != fastgltf::Error::None)
-        throw new std::exception("FastGLTF error");
+        throw std::exception("FastGLTF error");
 
     if (!ms_initialisedParser)
     {
@@ -594,11 +588,11 @@ void ModelLoaderGLTF::LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
     }
 
     if (error != fastgltf::Error::None)
-        throw new std::exception("FastGLTF error");
+        throw std::exception("FastGLTF error");
 
     error = fastgltf::validate(asset->get());
     if (error != fastgltf::Error::None)
-        throw new std::exception("FastGLTF error");
+        throw std::exception("FastGLTF error");
 
     for (int i = 0; i < (*asset)->scenes.size(); i++)
     {

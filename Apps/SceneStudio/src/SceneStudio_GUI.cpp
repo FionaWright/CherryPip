@@ -309,9 +309,9 @@ void SceneStudio::guiScene()
             ImGui::InputFloat3("Position##xx", reinterpret_cast<float*>(&pos));
             transform->SetPosition(pos);
 
-            XMFLOAT3 rot = transform->GetRotation();
+            XMFLOAT3 rot = transform->GetRotationE();
             ImGui::InputFloat3("Rotation##xx", reinterpret_cast<float*>(&rot));
-            transform->SetRotation(rot);
+            transform->SetRotationE(rot);
 
             XMFLOAT3 scale = transform->GetScale();
             ImGui::InputFloat3("Scale##xx", reinterpret_cast<float*>(&scale));

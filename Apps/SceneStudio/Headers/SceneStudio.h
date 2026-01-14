@@ -53,6 +53,7 @@ struct SceneConfig
     Transform Transform;
     XMFLOAT3 InitialCamPos;
     XMFLOAT2 InitialCamPitchYaw;
+    bool ConvertRhToLh = true;
 
     int SceneIdx = -1;
 };

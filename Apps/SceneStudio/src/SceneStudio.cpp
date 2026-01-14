@@ -171,6 +171,17 @@ void SceneStudio::loadAssets(D3D* d3d)
     };
     m_sceneConfigs.emplace_back(sceneChess);
 
+    t = {};
+    t.SetScale(2.0f);
+    SceneConfig sceneLantern = {
+        "Lantern",
+        L"Lantern/Lantern.gltf",
+        t,
+        XMFLOAT3(0.967f, 11.963f, 50.213f),
+        XMFLOAT2(0, 0)
+    };
+    m_sceneConfigs.emplace_back(sceneLantern);
+
     m_envMap.Init(device, cmdList.Get(), L"Env Maps/autumn_field_puresky_4k.hdr", 0, &m_heap);
 
     m_currentScene = Config::GetSystem().DefaultSceneIdx;
@@ -234,7 +245,7 @@ void SceneStudio::loadRasterAssets(const D3D* d3d)
         },
     };
     m_shaderRaster = std::make_shared<Shader>();
-    m_shaderRaster->InitVsPs(L"RasterDebugVS.hlsl", L"RasterDebugPS.hlsl", {rasterILD, _countof(rasterILD)}, d3d->GetDevice(), m_rootSigRaster->Get(), true);
+    m_shaderRaster->InitVsPs(L"Raster/RasterDebugVS.hlsl", L"Raster/RasterDebugPS.hlsl", {rasterILD, _countof(rasterILD)}, d3d->GetDevice(), m_rootSigRaster->Get(), true);
 }
 
 void SceneStudio::initScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList, const uint32_t configIdx)

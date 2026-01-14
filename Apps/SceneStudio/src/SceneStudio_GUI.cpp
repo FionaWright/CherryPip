@@ -217,9 +217,9 @@ void SceneStudio::guiMain()
 
     if (ImGui::Button("Reset Camera to Scene Start##xx"))
     {
-        const Scene* currScene = m_scenes.at(m_currentScene).get();
-        m_camera.GetCamera().SetPosition(currScene->GetCameraPosition());
-        m_camera.GetCamera().SetPitchYaw(currScene->GetPitch(), currScene->GetYaw());
+        const auto currScene = m_sceneConfigs.at(m_currentScene);
+        m_camera.GetCamera().SetPosition(currScene.InitialCamPos);
+        m_camera.GetCamera().SetPitchYaw(currScene.InitialCamPitchYaw.x, currScene.InitialCamPitchYaw.y);
         resetPT = true;
     }
     if (ImGui::Button("Reset Camera to Origin##xx"))

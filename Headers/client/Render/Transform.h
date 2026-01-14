@@ -11,9 +11,10 @@ using namespace DirectX;
 class Transform
 {
 public:
-    const XMFLOAT3& GetPosition() const { return m_position; }
-    const XMFLOAT3& GetRotation() const { return m_rotationEuler; }
-    const XMFLOAT3& GetScale() const { return m_scale; }
+    [[nodiscard]] const XMFLOAT3& GetPosition() const { return m_position; }
+    [[nodiscard]] const XMFLOAT3& GetRotation() const { return m_rotationEuler; }
+    [[nodiscard]] XMVECTOR GetRotationQ() const { return XMQuaternionRotationRollPitchYaw(m_rotationEuler.x, m_rotationEuler.y,m_rotationEuler.z); }
+    [[nodiscard]] const XMFLOAT3& GetScale() const { return m_scale; }
 
     void SetPosition(const XMFLOAT3& position) { m_position = position; }
     void SetPosition(const float x, const float y, const float z) { m_position = {x, y, z}; }
@@ -27,7 +28,7 @@ public:
     void Rotate(const XMFLOAT3& rotation);
     void Scale(const XMFLOAT3& scale);
 
-    XMMATRIX GetModelMatrix(XMFLOAT3 centroid = {}) const;
+    [[nodiscard]] XMMATRIX GetModelMatrix(XMFLOAT3 centroid = {}) const;
 
 private:
     XMFLOAT3 m_position = XMFLOAT3(0, 0, 0);

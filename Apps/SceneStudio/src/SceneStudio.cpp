@@ -161,7 +161,7 @@ void SceneStudio::loadAssets(D3D* d3d)
     m_sceneConfigs.emplace_back(sceneTeapot);
 
     t = {};
-    t.SetScale(5.0f);
+    t.SetScale(1.0f);
     SceneConfig sceneChess = {
         "Chess",
         L"Chess/Chess.gltf",
@@ -178,7 +178,7 @@ void SceneStudio::loadAssets(D3D* d3d)
         L"Lantern/Lantern.gltf",
         t,
         XMFLOAT3(0.967f, 11.963f, 50.213f),
-        XMFLOAT2(0, 0)
+        XMFLOAT2(0, PI)
     };
     m_sceneConfigs.emplace_back(sceneLantern);
 

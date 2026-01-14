@@ -53,4 +53,4 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Add stanford dragon model to test with and perform glass ball test with it (Object behind should be vertically flipped depending on distance)
 - Russian Roulette 
 - Fix issue with hot reloading, env maps breaking on scene reload, camera movement being messed up (Is the screen flipped??)
-- Mist (Randomly scatter rays depending on distance travelled, see SL video)
+- Mist (Randomly scatter rays depending on distance travelled, see SL video) (Rayleigh scattering! Requires spectral renderer?)

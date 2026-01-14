@@ -24,8 +24,6 @@ fastgltf::Parser ModelLoaderGLTF::ms_parser;
 bool ModelLoaderGLTF::ms_initialisedParser;
 std::mutex ModelLoaderGLTF::ms_batchAddMutex;
 
-constexpr bool RIGHT_HANDED_TO_LEFT = true;
-
 // TODO: This is unideal, consider redoing everything
 
 Transform ModelLoaderGLTF::toTransform(fastgltf::TRS& trs)
@@ -38,15 +36,7 @@ Transform ModelLoaderGLTF::toTransform(fastgltf::TRS& trs)
     auto& rot = trs.rotation;
     const XMFLOAT4 rotFloat4 = XMFLOAT4(rot.x(), rot.y(), rot.z(), rot.w());
     const XMVECTOR rotVec = XMLoadFloat4(&rotFloat4);
-    const XMMATRIX rotationMatrix = XMMatrixRotationQuaternion(rotVec);
-    float pitch = std::atan2(rotationMatrix.r[1].m128_f32[2], rotationMatrix.r[2].m128_f32[2]);
-    float yaw = std::atan2(-rotationMatrix.r[0].m128_f32[2],
-                           std::sqrt(
-                               rotationMatrix.r[1].m128_f32[2] * rotationMatrix.r[1].m128_f32[2] + rotationMatrix.r[2].
-                               m128_f32[2] * rotationMatrix.r[2].m128_f32[2]));
-    float roll = std::atan2(rotationMatrix.r[0].m128_f32[1], rotationMatrix.r[0].m128_f32[0]);
-    transform.SetRotation(pitch, yaw, roll);
-
+    transform.SetRotationQ(rotVec);
     auto& scale = trs.scale;
     transform.SetScale(scale.x(), scale.y(), scale.z());
 
@@ -110,7 +100,7 @@ void loadGLTFVertexData(const std::string& directory, std::vector<VertexInputDat
 }
 
 void ModelLoaderGLTF::loadGLTFIndices(const std::string& directory, std::vector<uint32_t>& iBuffer, Asset& asset,
-                                      const fastgltf::Primitive& primitive)
+                                      const fastgltf::Primitive& primitive, bool convertRhToLh)
 {
     const auto& accessor = (*asset)->accessors[primitive.indicesAccessor.value()];
     const auto& bufferView = (*asset)->bufferViews[*accessor.bufferViewIndex];
@@ -128,7 +118,7 @@ void ModelLoaderGLTF::loadGLTFIndices(const std::string& directory, std::vector<
     else if (bufferData.index() == 2)
     {
         auto& uri = std::get<fastgltf::sources::URI>(bufferData);
-        std::string path(uri.uri.path());
+        const std::string path(uri.uri.path());
         std::ifstream file(directory + path, std::ios::binary);
 
         if (!file.is_open())
@@ -136,7 +126,7 @@ void ModelLoaderGLTF::loadGLTFIndices(const std::string& directory, std::vector<
 
         file.seekg(dataOffset + uri.fileByteOffset, std::ios::beg);
 
-        size_t totalBytes = accessor.count * indexByteSize;
+        const size_t totalBytes = accessor.count * indexByteSize;
         pTempFileData.resize(totalBytes);
         file.read(reinterpret_cast<char*>(pTempFileData.data()), totalBytes);
         file.close();
@@ -147,11 +137,11 @@ void ModelLoaderGLTF::loadGLTFIndices(const std::string& directory, std::vector<
             throw std::runtime_error("Failed to read the required data from file.");
     }
     else
-        throw new std::exception("Invalid buffer data type");
+        throw std::exception("Invalid buffer data type");
 
     iBuffer.resize(accessor.count);
 
-    if (!RIGHT_HANDED_TO_LEFT && indexByteSize == 4)
+    if (!convertRhToLh && indexByteSize == 4)
     {
         std::memcpy(iBuffer.data(), pData, accessor.count * 4);
         return;
@@ -166,7 +156,7 @@ void ModelLoaderGLTF::loadGLTFIndices(const std::string& directory, std::vector<
         switch (indexByteSize)
         {
         case 1:
-            if (RIGHT_HANDED_TO_LEFT)
+            if (convertRhToLh)
             {
                 iBuffer[i + 2] = static_cast<uint8_t>(*indexData0);
                 iBuffer[i + 1] = static_cast<uint8_t>(*indexData1);
@@ -182,7 +172,7 @@ void ModelLoaderGLTF::loadGLTFIndices(const std::string& directory, std::vector<
         case 2:
             uint16_t value16;
 
-            if (RIGHT_HANDED_TO_LEFT)
+            if (convertRhToLh)
             {
                 std::memcpy(&value16, indexData0, sizeof(uint16_t));
                 iBuffer[i + 2] = value16;
@@ -213,18 +203,18 @@ void ModelLoaderGLTF::loadGLTFIndices(const std::string& directory, std::vector<
     }
 }
 
-void ModelLoaderGLTF::loadModel(D3D* d3d, ID3D12GraphicsCommandList* cmdList, const std::string& directory,
-                                Asset& asset, const fastgltf::Primitive& primitive, Model* model)
+void ModelLoaderGLTF::loadModel(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, const std::string& directory,
+                                Asset& asset, const fastgltf::Primitive& primitive, Model* model, bool convertRhToLh)
 {
     Profiler::AddToStack(directory.c_str());
 
     std::vector<VertexInputDataGLTF> vertexBuffer;
 
     loadGLTFVertexData(directory, vertexBuffer, asset, primitive, "POSITION",
-                       [](const std::byte* address, VertexInputDataGLTF* output)
+                       [convertRhToLh](const std::byte* address, VertexInputDataGLTF* output)
                        {
                            output->Position = *reinterpret_cast<const XMFLOAT3*>(address);
-                           if (RIGHT_HANDED_TO_LEFT)
+                           if (convertRhToLh)
                                output->Position.x = -output->Position.x;
                        });
 
@@ -239,20 +229,20 @@ void ModelLoaderGLTF::loadModel(D3D* d3d, ID3D12GraphicsCommandList* cmdList, co
                        });
 
     loadGLTFVertexData(directory, vertexBuffer, asset, primitive, "NORMAL",
-                       [](const std::byte* address, VertexInputDataGLTF* output)
+                       [convertRhToLh](const std::byte* address, VertexInputDataGLTF* output)
                        {
                            output->Normal = Normalize(*reinterpret_cast<const XMFLOAT3*>(address));
-                           if (RIGHT_HANDED_TO_LEFT)
+                           if (convertRhToLh)
                                output->Normal.x = -output->Normal.x;
                        });
 
     loadGLTFVertexData(directory, vertexBuffer, asset, primitive, "TANGENT",
-                       [](const std::byte* address, VertexInputDataGLTF* output)
+                       [convertRhToLh](const std::byte* address, VertexInputDataGLTF* output)
                        {
                            const auto* data = reinterpret_cast<const XMFLOAT4*>(address);
-                           float handedness = data->w > 0.0f ? 1.0f : -1.0f;
+                           const float handedness = data->w > 0.0f ? 1.0f : -1.0f;
                            output->Tangent = Normalize(Mult(XMFLOAT3(data->x, data->y, data->z), handedness));
-                           if (RIGHT_HANDED_TO_LEFT)
+                           if (convertRhToLh)
                                output->Tangent.x = -output->Tangent.x;
                        });
 
@@ -289,7 +279,7 @@ void ModelLoaderGLTF::loadModel(D3D* d3d, ID3D12GraphicsCommandList* cmdList, co
     boundingRadiusSq = std::sqrt(boundingRadiusSq);
 
     std::vector<uint32_t> indexBuffer;
-    loadGLTFIndices(directory, indexBuffer, asset, primitive);
+    loadGLTFIndices(directory, indexBuffer, asset, primitive, convertRhToLh);
 
     model->Init(d3d->GetDevice(), vertexBuffer.size(), indexBuffer.size(), sizeof(VertexInputDataGLTF),
                 boundingRadiusSq, centroidFloat3);
@@ -345,17 +335,17 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     const std::string localDirectory = assetDirectory + "Models/" + modelNameExtensionless.substr(0, slashIdx) + "/";
 
     std::shared_ptr<Model> model = std::make_shared<Model>();
-    loadModel(d3d, cmdList, localDirectory, asset, primitive, model.get());
+    loadModel(d3d, cmdList, localDirectory, asset, primitive, model.get(), args.ConvertRhToLh);
 
     UINT shaderIndex = -1;
 
-    for (size_t i = 0; i < args.Overrides.size(); i++)
+    for (auto & Override : args.Overrides)
     {
-        if (args.Overrides[i].WhiteList.empty())
+        if (Override.WhiteList.empty())
             continue;
 
         bool found = false;
-        for (const auto& str : args.Overrides[i].WhiteList)
+        for (const auto& str : Override.WhiteList)
         {
             if (node.name.starts_with(str))
             {
@@ -366,7 +356,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
         if (!found)
             continue;
 
-        shaderIndex = args.Overrides[i].ShaderIndex;
+        shaderIndex = Override.ShaderIndex;
         break;
     }
 
@@ -488,14 +478,22 @@ void ModelLoaderGLTF::loadNode(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Hea
     Transform worldTransform = {};
 
     XMFLOAT3 localPos = localTransform.GetPosition();
-    const XMFLOAT3 worldPos = Add(parentTransform.GetPosition(),  Mult(parentTransform.GetScale(), localPos));
+    XMVECTOR localRot = localTransform.GetRotationQ();
+    const XMFLOAT3 localScale = localTransform.GetScale();
+
+    if (args.ConvertRhToLh)
+    {
+        localPos.z = -localPos.z;
+        localRot = XMVectorSetZ(localRot, -XMVectorGetZ(localRot)); // flip Z
+        localRot = XMVectorSetY(localRot, -XMVectorGetY(localRot)); // flip Y
+    }
+
+    XMFLOAT3 worldPos = Add(parentTransform.GetPosition(), Mult(parentTransform.GetScale(), localPos));
     worldTransform.SetPosition(worldPos);
 
-    const XMFLOAT3 localRot = localTransform.GetRotation();
-    const XMFLOAT3 worldRot = Add(localRot, parentTransform.GetRotation());
-    worldTransform.SetRotation(worldRot);
+    XMVECTOR worldRot = XMQuaternionMultiply(parentTransform.GetRotationQ(), localRot);
+    worldTransform.SetRotationQ(worldRot);
 
-    const XMFLOAT3 localScale = localTransform.GetScale();
     const XMFLOAT3 worldScale = Mult(localScale, parentTransform.GetScale());
     worldTransform.SetScale(worldScale);
 
@@ -610,13 +608,13 @@ void ModelLoaderGLTF::LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
 
 void ModelLoaderGLTF::loadModelsFromNode(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Asset& asset,
                                          const std::string& modelNameExtensionless, fastgltf::Node& node,
-                                         std::vector<std::shared_ptr<Model>>& modelList)
+                                         std::vector<std::shared_ptr<Model>>& modelList, bool convertRhToLh)
 {
     const size_t childCount = node.children.size();
     for (size_t i = 0; i < childCount; i++)
     {
         fastgltf::Node& childNode = (*asset)->nodes[node.children[i]];
-        loadModelsFromNode(d3d, cmdList, asset, modelNameExtensionless, childNode, modelList);
+        loadModelsFromNode(d3d, cmdList, asset, modelNameExtensionless, childNode, modelList, convertRhToLh);
     }
 
     if (!node.meshIndex.has_value())
@@ -635,13 +633,13 @@ void ModelLoaderGLTF::loadModelsFromNode(D3D* d3d, ID3D12GraphicsCommandList* cm
             std::to_string(i) + ")";
 
         std::shared_ptr<Model> model = std::make_shared<Model>();
-        loadModel(d3d, cmdList, localDirectory, asset, mesh.primitives[i], model.get());
+        loadModel(d3d, cmdList, localDirectory, asset, mesh.primitives[i], model.get(), convertRhToLh);
         modelList.push_back(model);
     }
 }
 
 std::vector<std::shared_ptr<Model>> ModelLoaderGLTF::LoadModelsFromGLTF(D3D* d3d, ID3D12GraphicsCommandList* cmdList,
-                                                                        const std::wstring& modelName)
+                                                                        const std::wstring& modelName, bool convertRhToLh)
 {
     const std::wstring wpath = FileHelper::GetAssetModelFullPath(modelName.c_str());
     const std::string path = wstringToString(wpath);
@@ -678,7 +676,7 @@ std::vector<std::shared_ptr<Model>> ModelLoaderGLTF::LoadModelsFromGLTF(D3D* d3d
         {
             const size_t nodeIndex = scene.nodeIndices[n];
             fastgltf::Node& node = (*asset)->nodes[nodeIndex];
-            loadModelsFromNode(d3d, cmdList, asset, modelNameExtensionless, node, modelList);
+            loadModelsFromNode(d3d, cmdList, asset, modelNameExtensionless, node, modelList, convertRhToLh);
         }
     }
 

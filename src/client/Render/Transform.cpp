@@ -2,6 +2,8 @@
 // Created by fiona on 25/09/2025.
 //
 
+#include <cmath>
+
 #include "Render/Transform.h"
 
 void Transform::Translate(const XMFLOAT3& offset)
@@ -11,7 +13,7 @@ void Transform::Translate(const XMFLOAT3& offset)
     m_position.z += offset.z;
 }
 
-void Transform::Rotate(const XMFLOAT3& rotation)
+void Transform::RotateE(const XMFLOAT3& rotation)
 {
     m_rotationEuler.x += rotation.x;
     m_rotationEuler.y += rotation.y;
@@ -28,7 +30,7 @@ void Transform::Scale(const XMFLOAT3& scale)
 XMMATRIX Transform::GetModelMatrix(const XMFLOAT3 centroid) const
 {
     const XMMATRIX T = XMMatrixTranslation(m_position.x, m_position.y, m_position.z);
-    const XMMATRIX R = XMMatrixRotationRollPitchYaw(m_rotationEuler.x, m_rotationEuler.y, m_rotationEuler.z);
+    const XMMATRIX R = XMMatrixRotationQuaternion(m_rotationQ);
     const XMMATRIX S = XMMatrixScaling(m_scale.x, m_scale.y, m_scale.z);
 
     assert(centroid.x == 0.0f); // Disabled for now
@@ -38,4 +40,12 @@ XMMATRIX Transform::GetModelMatrix(const XMFLOAT3 centroid) const
     const XMMATRIX C = XMMatrixTranslation(centroid.x, centroid.y, centroid.z);
     const XMMATRIX CI = XMMatrixInverse(nullptr, C);
     return XMMatrixMultiply(CI, XMMatrixMultiply(S, XMMatrixMultiply(R, XMMatrixMultiply(T, C))));
+}
+
+void Transform::rotationQtoE() // For GUI purposes only
+{
+    const XMMATRIX rotMatrix = XMMatrixRotationQuaternion(m_rotationQ);
+    m_rotationEuler.x = std::asin(-rotMatrix.r[2].m128_f32[1]); // X-axis rotation
+    m_rotationEuler.y = std::atan2(rotMatrix.r[2].m128_f32[0], rotMatrix.r[2].m128_f32[2]); // Y-axis
+    m_rotationEuler.z = std::atan2(rotMatrix.r[0].m128_f32[1], rotMatrix.r[1].m128_f32[1]); // Z-axis
 }

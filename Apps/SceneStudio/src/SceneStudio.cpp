@@ -125,7 +125,8 @@ void SceneStudio::loadAssets(D3D* d3d)
         L"Cornell/scene.gltf",
         t,
         XMFLOAT3(0, 1.5f, 4.5f),
-        XMFLOAT2(0, PI)
+        XMFLOAT2(0, PI),
+        true
     };
     m_sceneConfigs.emplace_back(sceneCornell);
 
@@ -135,7 +136,8 @@ void SceneStudio::loadAssets(D3D* d3d)
         L"Sphere/Sphere.gltf",
         t,
         XMFLOAT3(0, 0, -4.3f),
-        XMFLOAT2(0, 0)
+        XMFLOAT2(0, 0),
+        true
     };
     m_sceneConfigs.emplace_back(sceneSphere);
 
@@ -145,7 +147,8 @@ void SceneStudio::loadAssets(D3D* d3d)
         L"floatplane.glb",
         t,
         XMFLOAT3(0, 0, -4.3f),
-        XMFLOAT2(0, PI)
+        XMFLOAT2(0, PI),
+        true
     };
     m_sceneConfigs.emplace_back(scenePlane);
 
@@ -156,7 +159,8 @@ void SceneStudio::loadAssets(D3D* d3d)
         L"Utah Teapot/scene.gltf",
         t,
         XMFLOAT3(0, 0, -4.3f),
-        XMFLOAT2(0, PI)
+        XMFLOAT2(0, PI),
+        true
     };
     m_sceneConfigs.emplace_back(sceneTeapot);
 
@@ -167,7 +171,8 @@ void SceneStudio::loadAssets(D3D* d3d)
         L"Chess/Chess.gltf",
         t,
         XMFLOAT3(0, 0.2f, -0.5f),
-        XMFLOAT2(0, 0)
+        XMFLOAT2(0, 0),
+        false
     };
     m_sceneConfigs.emplace_back(sceneChess);
 
@@ -178,7 +183,8 @@ void SceneStudio::loadAssets(D3D* d3d)
         L"Lantern/Lantern.gltf",
         t,
         XMFLOAT3(0.967f, 11.963f, 50.213f),
-        XMFLOAT2(0, PI)
+        XMFLOAT2(0, PI),
+        true
     };
     m_sceneConfigs.emplace_back(sceneLantern);
 
@@ -261,12 +267,13 @@ void SceneStudio::initScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList, const 
     Profiler::AddToStack(m_sceneConfigs.at(configIdx).Name.c_str());
 #endif
 
+    const SceneConfig config = m_sceneConfigs.at(configIdx);
+
     GLTFLoadArgs args;
     args.Root = m_rootSigRaster;
     args.DefaultShaderIndex = 0;
     args.Shaders = { m_shaderRaster };
-
-    const SceneConfig config = m_sceneConfigs.at(configIdx);
+    args.ConvertRhToLh = config.ConvertRhToLh;
 
     ModelLoaderGLTF::LoadSplitModel(d3d, cmdList, &m_heap, config.GltfPath, args, config.Transform);
 
@@ -301,7 +308,7 @@ void SceneStudio::initCustomScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         args.CullingWhiteList = { "Object_0", "Object_1", "Object_2", "Object_3", "Object_4", "Object_5", "Object_6", "Object_7", "Object_8" };
         ModelLoaderGLTF::LoadSplitModel(d3d, cmdList, &m_heap, L"Cornell/scene.gltf", args, t);
         args.OutObjects.back()->GetTransform()->SetPosition(0.25f, 0.02f, -0.5f);
-        args.OutObjects.back()->GetTransform()->SetRotation(-1.57f, 0.5f, 0.0f);
+        args.OutObjects.back()->GetTransform()->SetRotationE(-1.57f, 0.5f, 0.0f);
         args.OutObjects.back()->GetTransform()->SetScale(2.5f);
         args.OutObjects.back()->GetMaterial()->GetData()->DiffuseProbability = 0.0f;
         args.CullingWhiteList.clear();

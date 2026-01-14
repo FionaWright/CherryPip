@@ -56,3 +56,18 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Mist (Randomly scatter rays depending on distance travelled, see SL video) (Rayleigh scattering! Requires spectral renderer?)
 - Fix transform issue in chess scene!!! Then get some new larger scenes
 - Is light from the env map being used as if it's a light source correctly? Should there be a separate dir light? 
+
+## Raster TODO:
+
+- Skybox
+- Fix transform issue
+
+## Spectral Tracing
+
+Surface/Volume interactions stay mostly the same, but you use wavelengths instead of colors
+First test: Do a color roundtrip, reconstruct an srgb image using random samples in the spectral domain. Then convert to CIE and srgb. When the error is less than 1 ppm then it's good.
+Requires rewriting the shaders
+Hero model doesn't work with transmission (Glass, clouds, etc). This is because it assumes scatttering has no wavelength dependency 
+
+See:
+https://github.com/ashpil/moonshine 

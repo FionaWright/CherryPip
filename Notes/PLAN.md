@@ -54,3 +54,4 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Russian Roulette 
 - Fix issue with hot reloading, env maps breaking on scene reload, camera movement being messed up (Is the screen flipped??)
 - Mist (Randomly scatter rays depending on distance travelled, see SL video) (Rayleigh scattering! Requires spectral renderer?)
+- Fix transform issue in chess scene!!! Then get some new larger scenes 

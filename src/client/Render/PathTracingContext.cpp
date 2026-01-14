@@ -201,6 +201,7 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
         cbv.InvP = XMMatrixInverse(nullptr, projMatrix);
         cbv.InvV = XMMatrixInverse(nullptr, camera->GetViewMatrix());
         cbv.NumBounces = config.NumBounces;
+        cbv.RussianRouletteMinBounces = config.RussianRouletteMinBounces;
         cbv.SPP = config.SPP;
         cbv.NumFrames = m_numFrames;
         cbv.AccumulationEnabled = config.AccumulationEnabled ? 1u : 0u;

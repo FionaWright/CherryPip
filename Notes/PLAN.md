@@ -25,6 +25,7 @@
 - [ ] CI/CD-like tests
 - [x] Specular/Reflections
 - [ ] Russian Roulette
+- [ ] DoF
 - [x] Texture Sampling
 - [x] Allow for changing lighting models at runtime (Recompile shader with defines)
 - [ ] EA Mapping

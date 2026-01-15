@@ -268,9 +268,12 @@ void SceneStudio::guiMain()
     ImGui::Indent(IM_GUI_INDENTATION);
 
     m_shaderDirty |= ImGui::Checkbox("Enabled##xx", &m_studioConfig.EnvMapEnabled);
-    const bool envMapEAChanged = ImGui::Checkbox("Equal-Area Map##xx", &m_studioConfig.EnvMapIsEqualArea);
-    m_sceneDirty |= envMapEAChanged;
-    m_shaderDirty |= envMapEAChanged;
+    if (m_studioConfig.Backend == RenderBackend::ePathTracer)
+    {
+        const bool envMapEAChanged = ImGui::Checkbox("Equal-Area Map##xx", &m_studioConfig.PT.EnvMapIsEqualArea);
+        m_sceneDirty |= envMapEAChanged;
+        m_shaderDirty |= envMapEAChanged;
+    }
 
     ImGui::Unindent(IM_GUI_INDENTATION);
     switch (m_studioConfig.Backend)

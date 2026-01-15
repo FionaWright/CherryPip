@@ -65,6 +65,7 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
 
     float3 dir = UvToDir(face, uv);
     float2 panoUV = PanoSphereToSquare(dir);
+    panoUV.x = frac(panoUV.x + gRotation);
     panoUV.y = 1 - panoUV.y;
 
     float3 color = gPano.SampleLevel(gSampler, panoUV, 0.0f).rgb;

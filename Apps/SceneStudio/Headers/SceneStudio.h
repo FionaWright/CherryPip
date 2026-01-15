@@ -44,6 +44,7 @@ struct StudioConfig
     RasterConfig Raster = {};
 
     bool EnvMapEnabled = true;
+    float EnvMapRotation = 180.0f;
 };
 
 struct SceneConfig

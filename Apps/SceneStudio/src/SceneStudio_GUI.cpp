@@ -271,6 +271,8 @@ void SceneStudio::guiMain()
     m_shaderDirty |= ImGui::Checkbox("Enabled##xx", &m_studioConfig.EnvMapEnabled);
     if (m_studioConfig.EnvMapEnabled)
     {
+        m_envMapDirty |= ImGui::InputFloat("Rotation##xx", &m_studioConfig.EnvMapRotation);
+
         if (m_studioConfig.Backend == RenderBackend::ePathTracer)
         {
             const bool envMapEAChanged = ImGui::Checkbox("Equal-Area Map##xx", &m_studioConfig.PT.EnvMapIsEqualArea);

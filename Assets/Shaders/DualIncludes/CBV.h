@@ -87,4 +87,15 @@ struct CbvFilterBoxAndGauss
     float p;
 };
 
+struct CbvFilterATrous
+{
+    uint StepWidth;
+    float2 TexelSize;
+    float phiC;
+
+    float phiN;
+    float phiP;
+    float2 p;
+};
+
 #endif

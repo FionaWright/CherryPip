@@ -50,7 +50,11 @@ struct DenoisingConfig
 {
     bool Enabled = true;
     int BoxRadius = 1;
+    int ATrousIterations = 5;
     DenoisingType Type = eBox;
+    float ATrousPhiC = 0.05f;
+    float ATrousPhiN = 0.05f;
+    float ATrousPhiP = 0.05f;
 };
 
 struct StudioConfig

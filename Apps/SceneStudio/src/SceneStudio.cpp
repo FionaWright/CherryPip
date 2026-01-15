@@ -70,7 +70,8 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 
     if (m_envMapDirty)
     {
-        m_envMap.Init(d3d->GetDevice(), cmdList, m_envMapList.at(m_selectedEnvMapIdx), m_studioConfig.EnvMapRotation, &m_heap);
+        m_envMap.Init(d3d->GetDevice(), cmdList, m_envMapList.at(m_selectedEnvMapIdx), m_studioConfig.EnvMapRotation,
+                      &m_heap);
         m_envMap.InitCubemap(d3d->GetDevice(), cmdList, &m_heap);
         m_skybox.Init(d3d->GetDevice(), cmdList, &m_heap, m_envMap.GetCubemap());
         m_envMapDirty = false;
@@ -214,11 +215,13 @@ void SceneStudio::loadAssets(D3D* d3d)
     m_ptContext.Init(device, cmdList.Get(), &m_heap);
 
     m_rtvPingPong1.Init(L"PT Output", device, &m_heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight,
-                       Config::GetSystem().RTVFormat);
-    m_rtvPingPong2.Init(L"Denoising Output", device, &m_heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight,
-                       Config::GetSystem().RTVFormat);
+                        Config::GetSystem().RTVFormat);
+    m_rtvPingPong2.Init(L"Denoising Output", device, &m_heapRTV, Config::GetSystem().RtvWidth,
+                        Config::GetSystem().RtvHeight,
+                        Config::GetSystem().RTVFormat);
 
-    m_denoisingManager.Init(device, cmdList.Get(), &m_heap, m_rtvPingPong1.GetD12Resource(), m_rtvPingPong2.GetD12Resource());
+    m_denoisingManager.Init(device, cmdList.Get(), &m_heap, m_rtvPingPong1.GetD12Resource(),
+                            m_rtvPingPong2.GetD12Resource());
 
 #ifdef _DEBUG
     m_readbackManager.Init(d3d, &m_heap, &m_rtvPingPong1);
@@ -267,7 +270,8 @@ void SceneStudio::loadRasterAssets(const D3D* d3d)
         },
     };
     m_shaderRaster = std::make_shared<Shader>();
-    m_shaderRaster->InitVsPs(L"Raster/RasterDebugVS.hlsl", L"Raster/RasterDebugPS.hlsl", {rasterILD, _countof(rasterILD)}, d3d->GetDevice(), m_rootSigRaster->Get(), true);
+    m_shaderRaster->InitVsPs(L"Raster/RasterDebugVS.hlsl", L"Raster/RasterDebugPS.hlsl",
+                             {rasterILD, _countof(rasterILD)}, d3d->GetDevice(), m_rootSigRaster->Get(), true);
 }
 
 void SceneStudio::initScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList, const uint32_t configIdx)
@@ -288,14 +292,15 @@ void SceneStudio::initScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList, const 
     GLTFLoadArgs args;
     args.Root = m_rootSigRaster;
     args.DefaultShaderIndex = 0;
-    args.Shaders = { m_shaderRaster };
+    args.Shaders = {m_shaderRaster};
     args.ConvertRhToLh = config.ConvertRhToLh;
 
     ModelLoaderGLTF::LoadSplitModel(d3d, cmdList, &m_heap, config.GltfPath, args, config.Transform);
 
     m_sceneConfigs.at(configIdx).SceneIdx = static_cast<int>(m_scenes.size());
     std::shared_ptr<Scene> scene = std::make_shared<Scene>();
-    scene->Init(config.Name.c_str(), config.InitialCamPos, config.InitialCamPitchYaw.x, config.InitialCamPitchYaw.y, args.OutObjects);
+    scene->Init(config.Name.c_str(), config.InitialCamPos, config.InitialCamPitchYaw.x, config.InitialCamPitchYaw.y,
+                args.OutObjects);
     m_scenes.emplace_back(scene);
 
 #ifdef _DEBUG
@@ -314,14 +319,16 @@ void SceneStudio::initCustomScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     GLTFLoadArgs args;
     args.Root = m_rootSigRaster;
     args.DefaultShaderIndex = 0;
-    args.Shaders = { m_shaderRaster };
+    args.Shaders = {m_shaderRaster};
 
     Transform t = {};
 
     // Empty cornell box
     {
         t.SetScale(2.0f);
-        args.CullingWhiteList = { "Object_0", "Object_1", "Object_2", "Object_3", "Object_4", "Object_5", "Object_6", "Object_7", "Object_8" };
+        args.CullingWhiteList = {
+            "Object_0", "Object_1", "Object_2", "Object_3", "Object_4", "Object_5", "Object_6", "Object_7", "Object_8"
+        };
         ModelLoaderGLTF::LoadSplitModel(d3d, cmdList, &m_heap, L"Cornell/scene.gltf", args, t);
         args.OutObjects.back()->GetTransform()->SetPosition(0.25f, 0.02f, -0.5f);
         args.OutObjects.back()->GetTransform()->SetRotationE(-1.57f, 0.5f, 0.0f);
@@ -391,13 +398,15 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     {
         m_rtvPingPong1.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
         const UINT rtvIdx = m_rtvPingPong1.GetHeapIdx();
-        const auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_heapRTV.GetCPUHandle(), rtvIdx, m_heapRTV.GetIncrementSize());
+        const auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_heapRTV.GetCPUHandle(), rtvIdx,
+                                                          m_heapRTV.GetIncrementSize());
         cmdList->OMSetRenderTargets(1, &handle, FALSE, nullptr);
 
         ID3D12RootSignature* rootSig = m_studioConfig.PT.DebugMode ? m_rootSigDebug->Get() : m_rootSig->Get();
         const int debugBufferIdx = m_studioConfig.PT.DebugMode ? m_studioConfig.PT.DebugBufferIdx : -1;
 
-        m_ptContext.Render(cmdList, rootSig, m_shader->GetPSO(), &m_camera.GetCamera(), &m_heap, m_projMatrix, m_studioConfig.PT, debugBufferIdx);
+        m_ptContext.Render(cmdList, rootSig, m_shader->GetPSO(), &m_camera.GetCamera(), &m_heap, m_projMatrix,
+                           m_studioConfig.PT, debugBufferIdx);
     }
 
 #ifdef _DEBUG
@@ -434,7 +443,8 @@ void SceneStudio::renderRaster(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     {
         m_rtvPingPong1.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
         const UINT rtvIdx = m_rtvPingPong1.GetHeapIdx();
-        const auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_heapRTV.GetCPUHandle(), rtvIdx, m_heapRTV.GetIncrementSize());
+        const auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_heapRTV.GetCPUHandle(), rtvIdx,
+                                                          m_heapRTV.GetIncrementSize());
 
         const Skybox* skybox = m_studioConfig.EnvMapEnabled ? &m_skybox : nullptr;
         m_rasterContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, handle, skybox);
@@ -447,10 +457,19 @@ void SceneStudio::renderRaster(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         switch (m_studioConfig.Denoising.Type)
         {
         case eBox:
-            outputRTV = m_denoisingManager.DenoiseBox(cmdList, &m_rtvPingPong1, &m_rtvPingPong2, m_studioConfig.Denoising.BoxRadius);
+            outputRTV = m_denoisingManager.DenoiseBox(cmdList, &m_rtvPingPong1, &m_rtvPingPong2,
+                                                      m_studioConfig.Denoising.BoxRadius);
             break;
         case eGaussian:
-            outputRTV = m_denoisingManager.DenoiseGauss(cmdList, &m_rtvPingPong1, &m_rtvPingPong2, m_studioConfig.Denoising.BoxRadius);
+            outputRTV = m_denoisingManager.DenoiseGauss(cmdList, &m_rtvPingPong1, &m_rtvPingPong2,
+                                                        m_studioConfig.Denoising.BoxRadius);
+            break;
+        case eATrous:
+            outputRTV = m_denoisingManager.DenoiseATrous(cmdList, &m_rtvPingPong1, &m_rtvPingPong2,
+                                                         m_studioConfig.Denoising.ATrousIterations,
+                                                         m_studioConfig.Denoising.ATrousPhiC,
+                                                         m_studioConfig.Denoising.ATrousPhiN,
+                                                         m_studioConfig.Denoising.ATrousPhiP);
             break;
         default:
             throw std::exception("Unsupported Denoiser");

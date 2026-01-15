@@ -308,8 +308,12 @@ void TextureLoader::LoadHDR(std::string filePath, int& width, int& height, uint8
     if (confirmation != "#?RADIANCE")
         throw std::exception("Invalid HDR file");
 
-    std::string formatStr;
-    std::getline(fin, formatStr);
+    std::string formatStr = "";
+    while (formatStr.empty() ||
+            formatStr.starts_with("# Made") ||
+            formatStr.starts_with("GAMMA=") ||
+            formatStr.starts_with("PRIMARIES="))
+        std::getline(fin, formatStr);
     if (formatStr != "FORMAT=32-bit_rle_rgbe")
         throw std::exception("Invalid HDR file");
 

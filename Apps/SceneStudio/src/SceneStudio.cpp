@@ -68,6 +68,14 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         m_shaderDirty = false;
     }
 
+    if (m_envMapDirty)
+    {
+        m_envMap.Init(d3d->GetDevice(), cmdList, m_envMapList.at(m_selectedEnvMapIdx), 0, &m_heap);
+        m_envMap.InitCubemap(d3d->GetDevice(), cmdList, &m_heap);
+        m_skybox.Init(d3d->GetDevice(), cmdList, &m_heap, m_envMap.GetCubemap());
+        m_envMapDirty = false;
+    }
+
     switch (m_studioConfig.Backend)
     {
     case eForward:
@@ -188,9 +196,11 @@ void SceneStudio::loadAssets(D3D* d3d)
     };
     m_sceneConfigs.emplace_back(sceneLantern);
 
-    m_envMap.Init(device, cmdList.Get(), L"Env Maps/autumn_field_puresky_4k.hdr", 0, &m_heap);
-    m_envMap.InitCubemap(device, cmdList.Get(), &m_heap);
-    m_skybox.Init(device, cmdList.Get(), &m_heap, m_envMap.GetCubemap());
+    m_envMapList = {
+        L"Env Maps/autumn_field_puresky_4k.hdr",
+        L"Env Maps/shanghai_bund_4k.hdr"
+    };
+    m_selectedEnvMapIdx = 0;
 
     m_currentScene = Config::GetSystem().DefaultSceneIdx;
 

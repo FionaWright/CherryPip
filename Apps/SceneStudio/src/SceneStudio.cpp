@@ -70,7 +70,7 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 
     if (m_envMapDirty)
     {
-        m_envMap.Init(d3d->GetDevice(), cmdList, m_envMapList.at(m_selectedEnvMapIdx), 0, &m_heap);
+        m_envMap.Init(d3d->GetDevice(), cmdList, m_envMapList.at(m_selectedEnvMapIdx), m_studioConfig.EnvMapRotation, &m_heap);
         m_envMap.InitCubemap(d3d->GetDevice(), cmdList, &m_heap);
         m_skybox.Init(d3d->GetDevice(), cmdList, &m_heap, m_envMap.GetCubemap());
         m_envMapDirty = false;

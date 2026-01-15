@@ -32,6 +32,8 @@ public:
         m_resource.Transition(cmdList, newState, subresourceIdx);
     }
 
+    bool IsInitialized() const { return m_width != -1 && m_height != -1; }
+
     D12Resource* GetD12Resource() { return &m_resource; }
     DXGI_FORMAT GetFormat() const { return m_resource.GetDesc().Format; }
     D3D12_RESOURCE_DESC GetDesc() const { return m_resource.GetDesc(); }

@@ -9,7 +9,7 @@
 - [x] Implement better console/logging
 - [x] Implement Dear ImGui
 - [x] GLTF Model Importing (fastgltf)
-- [ ] Build shaders in cmake
+- [ ] ~~Build shaders in cmake~~
 - [x] Hot reloading
 - [x] Add destructors and scene switching
 - [x] Clean up CMAKE
@@ -28,11 +28,17 @@
 - [ ] DoF
 - [x] Texture Sampling
 - [x] Allow for changing lighting models at runtime (Recompile shader with defines)
-- [ ] EA Mapping
+- [x] EA Mapping
+- [x] Raster skyboxes
 - [ ] NEE 
-- [x] Glass & Caustics
+- [x] Glass model
+- [ ] Importance Sampling
+- [ ] MIS
 - [ ] Ray pipelines
 - [ ] Spectral Path-Tracing (Hero, make separate from RGB PT)
+- [ ] Rayleigh scattering
+- [ ] GBuffer pre-pass
+- [ ] Denoising (A-Trous, NRD)
 - [ ] ReSTIR
 
 https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d12-raytracing-samples-win32/
@@ -45,6 +51,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - PCH Compilation? 
 - Consider dropping tangent/bitangent from attribute data (Needs CI test to see if it's faster)
 - Check for memory leaks, there's probably a lot
+- Make only a few scenes part of the repo, larger ones are not included by default 
 
 ## PT-TODO:
 
@@ -52,15 +59,14 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Fix glass attenuation after, add attenuationDistance field
 - Add stanford dragon model to test with and perform glass ball test with it (Object behind should be vertically flipped depending on distance)
 - Russian Roulette 
-- Fix issue with hot reloading, env maps breaking on scene reload, camera movement being messed up (Is the screen flipped??)
 - Mist (Randomly scatter rays depending on distance travelled, see SL video) (Rayleigh scattering! Requires spectral renderer?)
-- Fix transform issue in chess scene!!! Then get some new larger scenes
 - Is light from the env map being used as if it's a light source correctly? Should there be a separate dir light? 
+- Get a big scene that isn't bistro 
 
-## Raster TODO:
+## Laptop TODO (Raster only):
 
-- Skybox + env map rotations
-- Fix transform issue
+- Env map switching + rotations
+- Fix issue with hot reloading, env maps breaking on scene reload, camera movement being messed up (Is the screen flipped??)
 
 ## Spectral Tracing
 
@@ -68,6 +74,8 @@ Surface/Volume interactions stay mostly the same, but you use wavelengths instea
 First test: Do a color roundtrip, reconstruct an srgb image using random samples in the spectral domain. Then convert to CIE and srgb. When the error is less than 1 ppm then it's good.
 Requires rewriting the shaders
 Hero model doesn't work with transmission (Glass, clouds, etc). This is because it assumes scatttering has no wavelength dependency 
+
+Put all spectral notes into a new file, this might get large
 
 See:
 https://github.com/ashpil/moonshine 

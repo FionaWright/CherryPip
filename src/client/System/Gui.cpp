@@ -35,7 +35,7 @@ void Gui::Init(const HWND hwnd, ID3D12Device* device, const int framesInFlight)
     const auto hGpu = ms_cbvSrvUavHeap->GetGPUDescriptorHandleForHeapStart();
 
     ImGui_ImplWin32_Init(hwnd);
-    ImGui_ImplDX12_Init(device, framesInFlight, Config::GetSystem().RTVFormat, ms_cbvSrvUavHeap.Get(), hCpu, hGpu);
+    ImGui_ImplDX12_Init(device, framesInFlight, Config::GetSystem().RtvFormat, ms_cbvSrvUavHeap.Get(), hCpu, hGpu);
 
     ImGui_ImplDX12_CreateDeviceObjects();
 }

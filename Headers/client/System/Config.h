@@ -28,7 +28,7 @@ struct SettingsSystem
 
     bool ProfilingEnabled = true;
 
-    DXGI_FORMAT RTVFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+    DXGI_FORMAT RtvFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
     FLOAT RtvClearColor[4] = {0.0f, 0.2f, 0.4f, 1.0f};
 };
 

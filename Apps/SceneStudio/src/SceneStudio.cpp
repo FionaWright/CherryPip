@@ -215,10 +215,10 @@ void SceneStudio::loadAssets(D3D* d3d)
     m_ptContext.Init(device, cmdList.Get(), &m_heap);
 
     m_rtvPingPong1.Init(L"PT Output", device, &m_heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight,
-                        Config::GetSystem().RTVFormat);
+                        Config::GetSystem().RtvFormat);
     m_rtvPingPong2.Init(L"Denoising Output", device, &m_heapRTV, Config::GetSystem().RtvWidth,
                         Config::GetSystem().RtvHeight,
-                        Config::GetSystem().RTVFormat);
+                        Config::GetSystem().RtvFormat);
 
     m_denoisingManager.Init(device, cmdList.Get(), &m_heap, m_rtvPingPong1.GetD12Resource(),
                             m_rtvPingPong2.GetD12Resource());
@@ -450,7 +450,12 @@ void SceneStudio::renderRaster(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         m_rasterContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, handle, skybox);
     }
 
-    // Denoising Pass (PP1 to ? to RTV)
+    // GBuffer Pass (Temporary for testing, move to PT)
+    {
+
+    }
+
+    // Denoising Pass (PP1 to ? to RTV) (Temporary for testing, move to PT)
     if (m_studioConfig.Denoising.Enabled)
     {
         TextureRTV* outputRTV = nullptr;

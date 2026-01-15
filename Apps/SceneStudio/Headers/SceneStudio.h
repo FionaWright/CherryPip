@@ -38,14 +38,29 @@ enum RenderBackend : uint32_t
     MAX_COUNT,
 };
 
+enum DenoisingType : uint32_t
+{
+    eBox,
+    eGaussian,
+    eATrous,
+    eNRD
+};
+
+struct DenoisingConfig
+{
+    bool Enabled = true;
+    int BoxRadius = 1;
+    DenoisingType Type = eBox;
+};
+
 struct StudioConfig
 {
     RenderBackend Backend = ePathTracer;
     PtConfig PT = {};
     RasterConfig Raster = {};
+    DenoisingConfig Denoising = {}; // TODO: Move to PTConfig
 
     bool EnvMapEnabled = true;
-    bool DenoisingEnabled = true; // TODO: Move to PTConfig?
     float EnvMapRotation = 180.0f;
 };
 

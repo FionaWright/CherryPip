@@ -329,7 +329,7 @@ void SceneStudio::guiMain()
             ImGui::EndCombo();
         }
 
-        if (m_studioConfig.Denoising.Type == DenoisingType::eBox)
+        if (m_studioConfig.Denoising.Type == eBox || m_studioConfig.Denoising.Type == eGaussian)
         {
             ImGui::InputInt("Radius##xx", &m_studioConfig.Denoising.BoxRadius);
             m_studioConfig.Denoising.BoxRadius = std::max(0, m_studioConfig.Denoising.BoxRadius);

@@ -14,6 +14,8 @@ void TextureRTV::Init(const LPCWSTR name, ID3D12Device* device, Heap* heap, cons
 {
     assert(heap->GetType() == D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
+    m_pHeapRTV = heap;
+
     D3D12_RESOURCE_DESC resourceDesc = {};
     resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
     resourceDesc.Alignment = 0;
@@ -42,4 +44,9 @@ void TextureRTV::Init(const LPCWSTR name, ID3D12Device* device, Heap* heap, cons
     const auto rtvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(heap->GetCPUHandle(), m_heapIdx, heap->GetIncrementSize());
 
     device->CreateRenderTargetView(m_d12Resource.GetResource(), &rtvDesc, rtvHandle);
+}
+
+CD3DX12_CPU_DESCRIPTOR_HANDLE TextureRTV::GetCpuHandle() const
+{
+    return CD3DX12_CPU_DESCRIPTOR_HANDLE(m_pHeapRTV->GetCPUHandle(), m_heapIdx, m_pHeapRTV->GetIncrementSize());
 }

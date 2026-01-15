@@ -80,7 +80,7 @@ struct CbvHighlightPixel
     uint2 p;
 };
 
-struct CbvFilterBox
+struct CbvFilterBoxAndGauss
 {
     float2 TexelSize;
     int Radius;      // box radius (e.g. 1 = 3x3, 2 = 5x5)

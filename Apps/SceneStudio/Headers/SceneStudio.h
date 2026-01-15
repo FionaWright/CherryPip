@@ -117,9 +117,8 @@ private:
     StudioConfig m_studioConfig = {};
 
     PathTracingContext m_ptContext;
-    TextureRTV m_rtvPT;
     DenoisingManager m_denoisingManager;
-    TextureRTV m_rtvDenoising;
+    TextureRTV m_rtvPingPong1, m_rtvPingPong2;
 
     EnvMap m_envMap;
     Skybox m_skybox;
@@ -129,7 +128,6 @@ private:
 
     RasterContext m_rasterContext;
     std::shared_ptr<Shader> m_shaderRaster;
-    TextureRTV m_rtvRaster;
 
     XMMATRIX m_projMatrix = {};
 

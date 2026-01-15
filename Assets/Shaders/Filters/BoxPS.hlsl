@@ -6,7 +6,7 @@ struct VsOut
     float2 uv : TEXCOORD0;
 };
 
-ConstantBuffer<CbvFilterBox> c_box : register(b0);
+ConstantBuffer<CbvFilterBoxAndGauss> c_box : register(b0);
 
 Texture2D    gTex  : register(t0);
 SamplerState gSampler : register(s0);

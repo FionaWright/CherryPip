@@ -59,7 +59,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 ## Raster TODO:
 
-- Skybox
+- Skybox + env map rotations
 - Fix transform issue
 
 ## Spectral Tracing

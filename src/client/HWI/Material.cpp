@@ -177,6 +177,15 @@ void Material::AddUAV(ID3D12Device* device, Heap* heap, ID3D12Resource* resource
     m_uavs.push_back(uav);
 }
 
+void Material::AddUAV(ID3D12Device* device, Heap* heap, ID3D12Resource* resource, const D3D12_UNORDERED_ACCESS_VIEW_DESC& desc)
+{
+    const UINT idx = heap->GetNextDescriptor();
+    heap->InitUAV(device, resource, desc, idx);
+
+    const UAV uav = { idx };
+    m_uavs.push_back(uav);
+}
+
 void Material::TransitionSrvsToPS(ID3D12GraphicsCommandList* cmdList) const
 {
     for (int i = 0; i < m_srvs.size(); i++)

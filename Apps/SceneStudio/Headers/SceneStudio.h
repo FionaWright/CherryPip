@@ -13,6 +13,7 @@
 #include "Render/Object.h"
 #include "Render/PathTracingContext.h"
 #include "Render/RasterContext.h"
+#include "Render/Skybox.h"
 #include "Render/TextureRTV.h"
 #include "Render/Transform.h"
 
@@ -102,6 +103,7 @@ private:
     TextureRTV m_ptOutputTex;
 
     EnvMap m_envMap;
+    Skybox m_skybox;
 
     RasterContext m_rasterContext;
     std::shared_ptr<Shader> m_shaderRaster;

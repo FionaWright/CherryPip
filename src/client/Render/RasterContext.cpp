@@ -6,13 +6,14 @@
 
 #include "CBV.h"
 #include "Render/Object.h"
+#include "Render/Skybox.h"
 
 void RasterContext::SetScene(Scene* scene)
 {
     m_scene = scene;
 }
 
-void RasterContext::Render(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vMatrix, const XMMATRIX& pMatrix) const
+void RasterContext::Render(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vMatrix, const XMMATRIX& pMatrix, const Skybox* skybox) const
 {
     const float fRtvWidth = static_cast<float>(Config::GetSystem().RtvWidth);
     const float fRtvHeight = static_cast<float>(Config::GetSystem().RtvHeight);
@@ -36,6 +37,9 @@ void RasterContext::Render(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, c
     CbvMatrices matrices = {};
     matrices.V = vMatrix;
     matrices.P = pMatrix;
+
+    if (skybox)
+        skybox->Render(d3d, cmdList, vMatrix, pMatrix);
 
     const auto& objects = m_scene->GetObjects();
     for (int i = 0; i < objects.size(); ++i)

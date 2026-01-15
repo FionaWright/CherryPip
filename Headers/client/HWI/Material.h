@@ -73,6 +73,8 @@ public:
     void SetTlas(ID3D12Device* device, UINT srvIdx, Heap* heap, const std::shared_ptr<TLAS>& tlas);
     void AddUAV(ID3D12Device* device, Heap* heap, const std::shared_ptr<Texture>& tex);
     void AddUAV(ID3D12Device* device, Heap* heap, ID3D12Resource* resource, DXGI_FORMAT format);
+    void AddUAV(ID3D12Device* device, Heap* heap, ID3D12Resource* resource,
+                const D3D12_UNORDERED_ACCESS_VIEW_DESC& desc);
 
     void TransitionSrvsToPS(ID3D12GraphicsCommandList* cmdList) const;
 

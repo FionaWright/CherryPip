@@ -438,15 +438,19 @@ void SceneStudio::renderRaster(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     }
 
     // Denoising Pass
+    if (m_studioConfig.Denoising.Enabled)
     {
         m_rtvDenoising.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
         const UINT rtvIdx = m_rtvDenoising.GetHeapIdx();
         const auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_heapRTV.GetCPUHandle(), rtvIdx, m_heapRTV.GetIncrementSize());
         cmdList->OMSetRenderTargets(1, &handle, FALSE, nullptr);
-        m_denoisingManager.DenoiseBox(cmdList, m_rtvRaster.GetD12Resource(), 1);
+        m_denoisingManager.DenoiseBox(cmdList, m_rtvRaster.GetD12Resource(), m_studioConfig.Denoising.BoxRadius);
+
+        copyRtvTex(cmdList, d3d->GetRtv(), m_rtvDenoising);
+        return;
     }
 
-    copyRtvTex(cmdList, d3d->GetRtv(), m_rtvDenoising);
+    copyRtvTex(cmdList, d3d->GetRtv(), m_rtvRaster);
 }
 
 void SceneStudio::compilePtShader(const D3D* d3d)

@@ -301,6 +301,42 @@ void SceneStudio::guiMain()
     }
 
     ImGui::Unindent(IM_GUI_INDENTATION);
+    ImGui::SeparatorText("Denoising##xx");
+    ImGui::Indent(IM_GUI_INDENTATION);
+
+    static const std::vector<const char*> denoisingTypeMap = {
+        "Box", "Gaussian", "A-Trous", "NVIDIA NRD"
+    };
+
+    ImGui::Checkbox("Enabled##xxx", &m_studioConfig.Denoising.Enabled);
+    if (m_studioConfig.Denoising.Enabled)
+    {
+        const auto currType = denoisingTypeMap.at(m_studioConfig.Denoising.Type);
+        if (ImGui::BeginCombo("Type##xx", currType))
+        {
+            for (size_t i = 0; i < denoisingTypeMap.size(); i++)
+            {
+                const bool isSelected = m_studioConfig.Denoising.Type == i;
+                if (ImGui::Selectable(denoisingTypeMap.at(i), isSelected))
+                {
+                    m_studioConfig.Denoising.Type = static_cast<DenoisingType>(i);
+                }
+
+                if (isSelected)
+                    ImGui::SetItemDefaultFocus();
+            }
+
+            ImGui::EndCombo();
+        }
+
+        if (m_studioConfig.Denoising.Type == DenoisingType::eBox)
+        {
+            ImGui::InputInt("Radius##xx", &m_studioConfig.Denoising.BoxRadius);
+            m_studioConfig.Denoising.BoxRadius = std::max(0, m_studioConfig.Denoising.BoxRadius);
+        }
+    }
+
+    ImGui::Unindent(IM_GUI_INDENTATION);
     switch (m_studioConfig.Backend)
     {
     case eForward:

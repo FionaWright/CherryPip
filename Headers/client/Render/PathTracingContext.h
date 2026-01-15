@@ -51,6 +51,7 @@ struct PtConfig
     alignas(4) bool JitterEnabled = false;
     alignas(4) bool ReadbackEnabled = false;
     alignas(4) bool ReadbackEveryFrame = false;
+    alignas(4) bool EnvMapIsEqualArea = true;
 };
 
 class PathTracingContext

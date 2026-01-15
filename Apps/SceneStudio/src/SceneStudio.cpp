@@ -55,7 +55,7 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 
         if (d3d->GetRayTracingSupported())
         {
-            D12Resource* envMap = m_studioConfig.EnvMapIsEqualArea ? m_envMap.GetEA() : m_envMap.GetPano();
+            D12Resource* envMap = m_studioConfig.PT.EnvMapIsEqualArea ? m_envMap.GetEA() : m_envMap.GetPano();
             m_ptContext.BuildScene(d3d->GetDevice(), cmdList, currScene, &m_heap, envMap);
         }
 
@@ -404,7 +404,8 @@ void SceneStudio::renderRaster(const D3D* d3d, ID3D12GraphicsCommandList* cmdLis
         objects[i]->GetMaterial()->UpdateCBV(1, &rasterDebug);
     }
 
-    m_rasterContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, &m_skybox);
+    const Skybox* skybox = m_studioConfig.EnvMapEnabled ? &m_skybox : nullptr;
+    m_rasterContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, skybox);
 }
 
 void SceneStudio::compilePtShader(const D3D* d3d)
@@ -432,7 +433,7 @@ void SceneStudio::compilePtShader(const D3D* d3d)
     }
     if (!m_studioConfig.EnvMapEnabled)
         args.push_back(L"-DENV_MAP_OFF");
-    if (m_studioConfig.EnvMapIsEqualArea)
+    if (m_studioConfig.PT.EnvMapIsEqualArea)
         args.push_back(L"-DENV_MAP_EA");
 
     m_shaderILD =

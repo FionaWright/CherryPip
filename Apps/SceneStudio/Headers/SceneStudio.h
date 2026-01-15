@@ -44,7 +44,6 @@ struct StudioConfig
     RasterConfig Raster = {};
 
     bool EnvMapEnabled = true;
-    bool EnvMapIsEqualArea = true;
 };
 
 struct SceneConfig

@@ -19,6 +19,10 @@ Trying to work on it during my college semesters in my free time
 - Can render GLTF scenes in either the rasterizer or path-tracer
 - Dear ImGui for the GUI
 
+### Rasterizer 
+- Different debug view modes (WorldPos, Normals, Tangents, Binormals, UV, Lambert, Albedo)
+- Skybox
+
 ### Path Tracer
 - Using RayQuery through a pixel shader
 - See a specific pixels value using readback system
@@ -40,6 +44,7 @@ Progress as of 09/11/25:
 
 Progress as of 10/01/26 (Took a long break):
 <img width="1020" height="573" alt="image" src="https://github.com/user-attachments/assets/f13adf28-8360-4225-a2ab-e718a83e969b" />
+
 
 
 

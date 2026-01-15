@@ -9,6 +9,7 @@
 #include "HWI/Texture.h"
 #include "HWI/TLAS.h"
 #include "Render/CameraController.h"
+#include "Render/DenoisingManager.h"
 #include "Render/EnvMap.h"
 #include "Render/Object.h"
 #include "Render/PathTracingContext.h"
@@ -44,6 +45,7 @@ struct StudioConfig
     RasterConfig Raster = {};
 
     bool EnvMapEnabled = true;
+    bool DenoisingEnabled = true; // TODO: Move to PTConfig?
     float EnvMapRotation = 180.0f;
 };
 
@@ -76,7 +78,7 @@ private:
     void initScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList, uint32_t configIdx);
     void initCustomScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
-    void renderRaster(const D3D* d3d, ID3D12GraphicsCommandList* cmdList) const;
+    void renderRaster(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void compilePtShader(const D3D* d3d);
     void GuiPathTracer(bool resetPT);
     void GuiRaster();
@@ -100,7 +102,9 @@ private:
     StudioConfig m_studioConfig = {};
 
     PathTracingContext m_ptContext;
-    TextureRTV m_ptOutputTex;
+    TextureRTV m_rtvPT;
+    DenoisingManager m_denoisingManager;
+    TextureRTV m_rtvDenoising;
 
     EnvMap m_envMap;
     Skybox m_skybox;
@@ -110,6 +114,7 @@ private:
 
     RasterContext m_rasterContext;
     std::shared_ptr<Shader> m_shaderRaster;
+    TextureRTV m_rtvRaster;
 
     XMMATRIX m_projMatrix = {};
 

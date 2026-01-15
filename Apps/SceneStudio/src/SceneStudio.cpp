@@ -220,7 +220,7 @@ void SceneStudio::loadAssets(D3D* d3d)
     m_rtvRaster.Init(L"Raster Output", device, &m_heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight,
                        Config::GetSystem().RTVFormat);
 
-    m_denoisingManager.Init(device, cmdList.Get(), &m_heap, m_rtvPT.GetD12Resource());
+    m_denoisingManager.Init(device, cmdList.Get(), &m_heap, m_rtvRaster.GetD12Resource());
 
 #ifdef _DEBUG
     m_readbackManager.Init(d3d, &m_heap, &m_rtvPT);
@@ -411,27 +411,42 @@ void SceneStudio::renderRaster(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 {
     m_heap.SetHeap(cmdList);
 
-    CbvRasterDebug rasterDebug{};
-    rasterDebug.Mode = m_studioConfig.Raster.Mode;
-    rasterDebug.DirLighting = m_studioConfig.Raster.DirLighting;
-
-    const int sceneIdx = m_sceneConfigs.at(m_currentScene).SceneIdx;
-
-    const auto& currScene = m_scenes.at(sceneIdx);
-    auto& objects = currScene->GetObjects();
-    for (int i = 0; i < objects.size(); ++i)
+    // Update CBVs
     {
-        objects[i]->GetMaterial()->UpdateCBV(1, &rasterDebug);
+        CbvRasterDebug rasterDebug{};
+        rasterDebug.Mode = m_studioConfig.Raster.Mode;
+        rasterDebug.DirLighting = m_studioConfig.Raster.DirLighting;
+
+        const int sceneIdx = m_sceneConfigs.at(m_currentScene).SceneIdx;
+
+        const auto& currScene = m_scenes.at(sceneIdx);
+        auto& objects = currScene->GetObjects();
+        for (int i = 0; i < objects.size(); ++i)
+        {
+            objects[i]->GetMaterial()->UpdateCBV(1, &rasterDebug);
+        }
     }
 
-    m_rtvRaster.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    const UINT rtvIdx = m_rtvRaster.GetHeapIdx();
-    const auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_heapRTV.GetCPUHandle(), rtvIdx, m_heapRTV.GetIncrementSize());
+    // Main Pass
+    {
+        m_rtvRaster.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        const UINT rtvIdx = m_rtvRaster.GetHeapIdx();
+        const auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_heapRTV.GetCPUHandle(), rtvIdx, m_heapRTV.GetIncrementSize());
 
-    const Skybox* skybox = m_studioConfig.EnvMapEnabled ? &m_skybox : nullptr;
-    m_rasterContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, handle, skybox);
+        const Skybox* skybox = m_studioConfig.EnvMapEnabled ? &m_skybox : nullptr;
+        m_rasterContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, handle, skybox);
+    }
 
-    copyRtvTex(cmdList, d3d->GetRtv(), m_rtvRaster);
+    // Denoising Pass
+    {
+        m_rtvDenoising.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        const UINT rtvIdx = m_rtvDenoising.GetHeapIdx();
+        const auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_heapRTV.GetCPUHandle(), rtvIdx, m_heapRTV.GetIncrementSize());
+        cmdList->OMSetRenderTargets(1, &handle, FALSE, nullptr);
+        m_denoisingManager.DenoiseBox(cmdList, m_rtvRaster.GetD12Resource(), 1);
+    }
+
+    copyRtvTex(cmdList, d3d->GetRtv(), m_rtvDenoising);
 }
 
 void SceneStudio::compilePtShader(const D3D* d3d)

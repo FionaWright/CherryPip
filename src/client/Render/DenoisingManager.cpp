@@ -39,7 +39,7 @@ void DenoisingManager::initBox(ID3D12Device* device, Heap* heap, D12Resource* te
     samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
     samplers[0].ShaderRegister = 0;
 
-    m_rootSigBox.SmartInit(device, 1, 1, 1, false, samplers, _countof(samplers));
+    m_rootSigBox.SmartInit(device, 1, 1, 0, false, samplers, _countof(samplers));
 
     m_shaderBox.InitVsPs(L"FullScreenTriangleVS.hlsl", L"Filters/BoxPS.hlsl", m_ild, device, m_rootSigBox.Get());
 
@@ -59,7 +59,7 @@ void DenoisingManager::initGauss(ID3D12Device* device, Heap* heap, D12Resource* 
     samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
     samplers[0].ShaderRegister = 0;
 
-    m_rootSigGauss.SmartInit(device, 1, 1, 1, false, samplers, _countof(samplers));
+    m_rootSigGauss.SmartInit(device, 1, 1, 0, false, samplers, _countof(samplers));
 
     m_shaderGaussH.InitVsPs(L"FullScreenTriangleVS.hlsl", L"Filters/GaussianHPS.hlsl", m_ild, device, m_rootSigGauss.Get());
     m_shaderGaussV.InitVsPs(L"FullScreenTriangleVS.hlsl", L"Filters/GaussianVPS.hlsl", m_ild, device, m_rootSigGauss.Get());
@@ -71,6 +71,34 @@ void DenoisingManager::initGauss(ID3D12Device* device, Heap* heap, D12Resource* 
     m_matGaussV.Init(heap);
     m_matGaussV.AddCBV(device, heap, sizeof(CbvFilterBoxAndGauss));
     m_matGaussV.SetTex(device, 0, heap, pp2);
+}
+
+void DenoisingManager::initATrous(ID3D12Device* device, Heap* heap, D12Resource* pp1, D12Resource* pp2, D12Resource* normals, D12Resource* worldPos)
+{
+    D3D12_STATIC_SAMPLER_DESC samplers[1];
+    samplers[0] = {};
+    samplers[0].Filter = D3D12_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
+    samplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    samplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    samplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    samplers[0].ShaderRegister = 0;
+
+    m_rootSigATrous.SmartInit(device, 1, 3, 0, false, samplers, _countof(samplers));
+
+    m_shaderGaussH.InitVsPs(L"FullScreenTriangleVS.hlsl", L"Filters/ATrousPS.hlsl", m_ild, device, m_rootSigATrous.Get());
+
+    m_matATrous1to2.Init(heap);
+    m_matATrous1to2.AddCBV(device, heap, sizeof(CbvFilterATrous));
+    m_matATrous1to2.SetTex(device, 0, heap, pp1);
+    m_matATrous1to2.SetTex(device, 1, heap, normals);
+    m_matATrous1to2.SetTex(device, 2, heap, worldPos);
+
+    m_matATrous2to1.Init(heap);
+    m_matATrous2to1.AddCBV(device, heap, sizeof(CbvFilterATrous));
+    m_matATrous2to1.SetTex(device, 0, heap, pp2);
+    m_matATrous2to1.SetTex(device, 1, heap, normals);
+    m_matATrous2to1.SetTex(device, 2, heap, worldPos);
 }
 
 TextureRTV* DenoisingManager::DenoiseBox(ID3D12GraphicsCommandList* cmdList, TextureRTV* pp1, TextureRTV* pp2, const uint32_t radius) const
@@ -145,4 +173,45 @@ TextureRTV* DenoisingManager::DenoiseGauss(ID3D12GraphicsCommandList* cmdList, T
     }
 
     return pp1;
+}
+
+TextureRTV* DenoisingManager::DenoiseATrous(ID3D12GraphicsCommandList* cmdList, TextureRTV* pp1, TextureRTV* pp2, const uint32_t iterations, const float phiC, const float phiN, const float phiP) const
+{
+    cmdList->SetGraphicsRootSignature(m_rootSigATrous.Get());
+
+    CbvFilterATrous cbv = {};
+    cbv.TexelSize.x = 1.0f / static_cast<float>(pp1->GetD12Resource()->GetDesc().Width);
+    cbv.TexelSize.y = 1.0f / static_cast<float>(pp1->GetD12Resource()->GetDesc().Height);
+    cbv.phiC = phiC;
+    cbv.phiN = phiN;
+    cbv.phiP = phiP;
+
+    m_matATrous1to2.TransitionSrvsToPS(cmdList);
+    m_matATrous1to2.SetDescriptorTables(cmdList);
+
+    m_matATrous2to1.TransitionSrvsToPS(cmdList);
+    m_matATrous2to1.SetDescriptorTables(cmdList);
+
+    for (int i = 0; i < iterations; i++)
+    {
+        const bool pp1to2 = i % 2 == 0;
+        TextureRTV* output = pp1to2 ? pp2 : pp1;
+
+        const Material* mat = pp1to2 ? &m_matATrous1to2 : &m_matATrous2to1;
+        cbv.StepWidth = pow(2, i);
+        mat->UpdateCBV(0, &cbv);
+
+        output->GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        const auto handle = output->GetCpuHandle();
+        cmdList->OMSetRenderTargets(1, &handle, FALSE, nullptr);
+
+        cmdList->SetPipelineState(m_shaderATrous.GetPSO());
+
+        cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        cmdList->IASetVertexBuffers(0, 1, &m_fullScreenTriangle.GetVertexBufferView());
+        cmdList->IASetIndexBuffer(&m_fullScreenTriangle.GetIndexBufferView());
+        cmdList->DrawIndexedInstanced(static_cast<UINT>(m_fullScreenTriangle.GetIndexCount()), 1, 0, 0, 0);
+    }
+
+    return iterations % 2 == 0 ? pp1 : pp2;
 }

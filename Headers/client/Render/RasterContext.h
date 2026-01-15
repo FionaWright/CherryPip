@@ -8,11 +8,13 @@
 #include "HWI/D3D.h"
 
 
+class Skybox;
+
 class RasterContext
 {
 public:
     void SetScene(Scene* scene);
-    void Render(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vMatrix, const XMMATRIX& pMatrix) const;
+    void Render(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vMatrix, const XMMATRIX& pMatrix, const Skybox* skybox = nullptr) const;
 
 private:
     Scene* m_scene = nullptr;

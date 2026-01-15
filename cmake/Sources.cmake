@@ -18,6 +18,7 @@ set(PROJECT_SOURCES
         src/client/Render/PathTracingContext.cpp
         src/client/Render/RasterContext.cpp
         src/client/Render/Scene.cpp
+        src/client/Render/Skybox.cpp
         src/client/Render/TextureRTV.cpp
         src/client/Render/Transform.cpp
         src/client/System/App.cpp
@@ -55,6 +56,7 @@ set(PROJECT_HEADERS
         Headers/client/Render/PathTracingContext.h
         Headers/client/Render/RasterContext.h
         Headers/client/Render/Scene.h
+        Headers/client/Render/Skybox.h
         Headers/client/Render/TextureRTV.h
         Headers/client/Render/Transform.h
         Headers/client/System/App.h

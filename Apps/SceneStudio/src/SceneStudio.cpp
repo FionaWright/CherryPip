@@ -165,7 +165,7 @@ void SceneStudio::loadAssets(D3D* d3d)
     m_sceneConfigs.emplace_back(sceneTeapot);
 
     t = {};
-    t.SetScale(1.0f);
+    t.SetScale(2.0f);
     SceneConfig sceneChess = {
         "Chess",
         L"Chess/Chess.gltf",
@@ -189,6 +189,8 @@ void SceneStudio::loadAssets(D3D* d3d)
     m_sceneConfigs.emplace_back(sceneLantern);
 
     m_envMap.Init(device, cmdList.Get(), L"Env Maps/autumn_field_puresky_4k.hdr", 0, &m_heap);
+    m_envMap.InitCubemap(device, cmdList.Get(), &m_heap);
+    m_skybox.Init(device, cmdList.Get(), &m_heap, m_envMap.GetCubemap());
 
     m_currentScene = Config::GetSystem().DefaultSceneIdx;
 
@@ -402,7 +404,7 @@ void SceneStudio::renderRaster(const D3D* d3d, ID3D12GraphicsCommandList* cmdLis
         objects[i]->GetMaterial()->UpdateCBV(1, &rasterDebug);
     }
 
-    m_rasterContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix);
+    m_rasterContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, &m_skybox);
 }
 
 void SceneStudio::compilePtShader(const D3D* d3d)

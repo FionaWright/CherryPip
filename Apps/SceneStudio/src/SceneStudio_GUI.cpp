@@ -4,6 +4,7 @@
 
 #include <bit>
 
+#include "Helper.h"
 #include "ThirdParty/imgui/imgui.h"
 #include "Apps/SceneStudio/Headers/SceneStudio.h"
 #include "Render/Scene.h"
@@ -268,11 +269,33 @@ void SceneStudio::guiMain()
     ImGui::Indent(IM_GUI_INDENTATION);
 
     m_shaderDirty |= ImGui::Checkbox("Enabled##xx", &m_studioConfig.EnvMapEnabled);
-    if (m_studioConfig.Backend == RenderBackend::ePathTracer)
+    if (m_studioConfig.EnvMapEnabled)
     {
-        const bool envMapEAChanged = ImGui::Checkbox("Equal-Area Map##xx", &m_studioConfig.PT.EnvMapIsEqualArea);
-        m_sceneDirty |= envMapEAChanged;
-        m_shaderDirty |= envMapEAChanged;
+        if (m_studioConfig.Backend == RenderBackend::ePathTracer)
+        {
+            const bool envMapEAChanged = ImGui::Checkbox("Equal-Area Map##xx", &m_studioConfig.PT.EnvMapIsEqualArea);
+            m_sceneDirty |= envMapEAChanged;
+            m_shaderDirty |= envMapEAChanged;
+        }
+
+        const auto currMap = wstringToString(m_envMapList.at(m_selectedEnvMapIdx));
+        if (ImGui::BeginCombo("Map##xx", currMap.c_str()))
+        {
+            for (size_t i = 0; i < m_envMapList.size(); i++)
+            {
+                const bool isSelected = m_selectedEnvMapIdx == i;
+                if (ImGui::Selectable(wstringToString(m_envMapList.at(i)).c_str(), isSelected))
+                {
+                    m_selectedEnvMapIdx = i;
+                    m_envMapDirty = true;
+                }
+
+                if (isSelected)
+                    ImGui::SetItemDefaultFocus();
+            }
+
+            ImGui::EndCombo();
+        }
     }
 
     ImGui::Unindent(IM_GUI_INDENTATION);

@@ -103,6 +103,9 @@ private:
 
     EnvMap m_envMap;
     Skybox m_skybox;
+    std::vector<const wchar_t*> m_envMapList;
+    uint32_t m_selectedEnvMapIdx = 0;
+    bool m_envMapDirty = true;
 
     RasterContext m_rasterContext;
     std::shared_ptr<Shader> m_shaderRaster;

@@ -13,6 +13,7 @@ set(PROJECT_SOURCES
         src/client/HWI/TLAS.cpp
         src/client/Render/Camera.cpp
         src/client/Render/CameraController.cpp
+        src/client/Render/DenoisingManager.cpp
         src/client/Render/EnvMap.cpp
         src/client/Render/Object.cpp
         src/client/Render/PathTracingContext.cpp
@@ -51,6 +52,7 @@ set(PROJECT_HEADERS
         Headers/client/HWI/TLAS.h
         Headers/client/Render/Camera.h
         Headers/client/Render/CameraController.h
+        Headers/client/Render/DenoisingManager.h
         Headers/client/Render/EnvMap.h
         Headers/client/Render/Object.h
         Headers/client/Render/PathTracingContext.h

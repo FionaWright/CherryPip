@@ -14,7 +14,7 @@ class RasterContext
 {
 public:
     void SetScene(Scene* scene);
-    void Render(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vMatrix, const XMMATRIX& pMatrix, const Skybox* skybox = nullptr) const;
+    void Render(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vMatrix, const XMMATRIX& pMatrix, D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle, const Skybox* skybox = nullptr) const;
 
 private:
     Scene* m_scene = nullptr;

@@ -63,10 +63,9 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Is light from the env map being used as if it's a light source correctly? Should there be a separate dir light? 
 - Get a big scene that isn't bistro 
 
-## Laptop TODO (Raster only):
-
-- Env map switching + rotations
-- Fix issue with hot reloading, env maps breaking on scene reload, camera movement being messed up (Is the screen flipped??)
+- Hot reloading broken on PC only
+- Env map breaks on scene reload on PC only
+- Camera movement gets messed up sometimes
 
 ## Spectral Tracing
 

@@ -13,21 +13,17 @@ void RasterContext::SetScene(Scene* scene)
     m_scene = scene;
 }
 
-void RasterContext::Render(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vMatrix, const XMMATRIX& pMatrix, const Skybox* skybox) const
+void RasterContext::Render(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vMatrix, const XMMATRIX& pMatrix, const D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle, const Skybox* skybox) const
 {
     const float fRtvWidth = static_cast<float>(Config::GetSystem().RtvWidth);
     const float fRtvHeight = static_cast<float>(Config::GetSystem().RtvHeight);
-    const float fAppGuiWidth = static_cast<float>(Config::GetSystem().WindowAppGuiWidth);
 
-    const CD3DX12_VIEWPORT viewport(fAppGuiWidth, 0.0f, fRtvWidth, fRtvHeight);
-    const CD3DX12_RECT scissorRect(Config::GetSystem().WindowAppGuiWidth, 0,
-                                   Config::GetSystem().RtvWidth + Config::GetSystem().WindowAppGuiWidth,
-                                   Config::GetSystem().RtvHeight);
+    const CD3DX12_VIEWPORT viewport(0.0f, 0.0f, fRtvWidth, fRtvHeight);
+    const CD3DX12_RECT scissorRect(0, 0, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight);
 
     cmdList->RSSetViewports(1, &viewport);
     cmdList->RSSetScissorRects(1, &scissorRect);
 
-    const D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = d3d->GetRtvHandle();
     const CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(d3d->GetDsvHeapStart(), d3d->GetFrameIndex(), d3d->GetDsvDescriptorSize());
     cmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 

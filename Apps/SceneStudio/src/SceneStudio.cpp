@@ -99,7 +99,7 @@ void SceneStudio::loadAssets(D3D* d3d)
     const ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
     m_heap.Init(device, 10000, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-    m_heapRTV.Init(device, 5, D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    m_heapRTV.Init(device, 20, D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
     loadRasterAssets(d3d);
 
@@ -213,11 +213,17 @@ void SceneStudio::loadAssets(D3D* d3d)
 
     m_ptContext.Init(device, cmdList.Get(), &m_heap);
 
-    m_ptOutputTex.Init(L"PT Output", device, &m_heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight,
+    m_rtvPT.Init(L"PT Output", device, &m_heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight,
+                       Config::GetSystem().RTVFormat);
+    m_rtvDenoising.Init(L"Denoising Output", device, &m_heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight,
+                       Config::GetSystem().RTVFormat);
+    m_rtvRaster.Init(L"Raster Output", device, &m_heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight,
                        Config::GetSystem().RTVFormat);
 
+    m_denoisingManager.Init(device, cmdList.Get(), &m_heap, m_rtvPT.GetD12Resource());
+
 #ifdef _DEBUG
-    m_readbackManager.Init(d3d, &m_heap, &m_ptOutputTex);
+    m_readbackManager.Init(d3d, &m_heap, &m_rtvPT);
 #endif
 
     V(cmdList->Close());
@@ -355,6 +361,15 @@ void SceneStudio::initCustomScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     CherryPrint("Initialized Custom Scene");
 }
 
+void copyRtvTex(ID3D12GraphicsCommandList* cmdList, D12Resource* d3dRTV, TextureRTV& rtvTex)
+{
+    rtvTex.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_COPY_SOURCE);
+    d3dRTV->Transition(cmdList, D3D12_RESOURCE_STATE_COPY_DEST);
+    ID3D12Resource* srcResource = rtvTex.GetD12Resource()->GetResource();
+    d3dRTV->CopyTextureInto(cmdList, srcResource, Config::GetSystem().WindowAppGuiWidth);
+    rtvTex.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+}
+
 void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 {
     if (!d3d->GetRayTracingSupported())
@@ -372,8 +387,8 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     cmdList->RSSetViewports(1, &viewport);
     cmdList->RSSetScissorRects(1, &scissorRect);
 
-    m_ptOutputTex.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    const UINT rtvIdx = m_ptOutputTex.GetHeapIdx();
+    m_rtvPT.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    const UINT rtvIdx = m_rtvPT.GetHeapIdx();
     const auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_heapRTV.GetCPUHandle(), rtvIdx, m_heapRTV.GetIncrementSize());
     cmdList->OMSetRenderTargets(1, &handle, FALSE, nullptr);
 
@@ -386,18 +401,13 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 
 #ifdef _DEBUG
     if (m_studioConfig.PT.ReadbackEnabled)
-        m_readbackManager.ReadbackPass(d3d, cmdList, &m_ptOutputTex, m_studioConfig.PT.ReadbackEveryFrame);
+        m_readbackManager.ReadbackPass(d3d, cmdList, &m_rtvPT, m_studioConfig.PT.ReadbackEveryFrame);
 #endif
 
-    D12Resource* rtv = d3d->GetRtv();
-    m_ptOutputTex.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_COPY_SOURCE);
-    rtv->Transition(cmdList, D3D12_RESOURCE_STATE_COPY_DEST);
-    ID3D12Resource* srcResource = m_ptOutputTex.GetD12Resource()->GetResource();
-    rtv->CopyTextureInto(cmdList, srcResource, Config::GetSystem().WindowAppGuiWidth);
-    m_ptOutputTex.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    copyRtvTex(cmdList, d3d->GetRtv(), m_rtvPT);
 }
 
-void SceneStudio::renderRaster(const D3D* d3d, ID3D12GraphicsCommandList* cmdList) const
+void SceneStudio::renderRaster(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 {
     m_heap.SetHeap(cmdList);
 
@@ -407,15 +417,21 @@ void SceneStudio::renderRaster(const D3D* d3d, ID3D12GraphicsCommandList* cmdLis
 
     const int sceneIdx = m_sceneConfigs.at(m_currentScene).SceneIdx;
 
-    auto& currScene = m_scenes.at(sceneIdx);
+    const auto& currScene = m_scenes.at(sceneIdx);
     auto& objects = currScene->GetObjects();
     for (int i = 0; i < objects.size(); ++i)
     {
         objects[i]->GetMaterial()->UpdateCBV(1, &rasterDebug);
     }
 
+    m_rtvRaster.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    const UINT rtvIdx = m_rtvRaster.GetHeapIdx();
+    const auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_heapRTV.GetCPUHandle(), rtvIdx, m_heapRTV.GetIncrementSize());
+
     const Skybox* skybox = m_studioConfig.EnvMapEnabled ? &m_skybox : nullptr;
-    m_rasterContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, skybox);
+    m_rasterContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, handle, skybox);
+
+    copyRtvTex(cmdList, d3d->GetRtv(), m_rtvRaster);
 }
 
 void SceneStudio::compilePtShader(const D3D* d3d)

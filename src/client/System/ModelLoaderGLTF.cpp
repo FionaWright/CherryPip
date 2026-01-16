@@ -385,7 +385,9 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
         material->Init(heap);
         material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices));
         material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterDebug));
-        material->AddTexBindless(d3d->GetDevice(), heap, diffuseTex, &materialData.BindlessTexDiffuse);
+        material->SetTex(d3d->GetDevice(), 0, heap, diffuseTex);
+
+        material->AddTexBindless(d3d->GetDevice(), heap, diffuseTex, &materialData.BindlessTexDiffuse); // TODO: REMOVE?
 
         material->SetData(materialData);
 
@@ -443,6 +445,8 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     material->Init(heap);
     material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices));
     material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterDebug));
+    material->SetTex(d3d->GetDevice(), 0, heap, diffuseTex);
+
     material->AddTexBindless(d3d->GetDevice(), heap, diffuseTex, &materialData.BindlessTexDiffuse);
 
     bool isGlass = (mat.transmission && mat.transmission->transmissionFactor > 0.0) ||

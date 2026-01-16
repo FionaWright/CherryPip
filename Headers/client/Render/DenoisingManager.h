@@ -13,6 +13,8 @@
 #include "HWI/RootSig.h"
 #include "HWI/Shader.h"
 
+#define MAX_ATROUS_ITERATIONS 10
+
 class DenoisingManager
 {
 public:
@@ -46,7 +48,7 @@ private:
 
     RootSig m_rootSigATrous;
     Shader m_shaderATrous;
-    Material m_matATrous1to2, m_matATrous2to1;
+    std::vector<Material> m_matsATrous; // Inefficient, should use root constants but no support yet
 };
 
 

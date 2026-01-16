@@ -97,6 +97,7 @@ void Material::SetTex(ID3D12Device* device, const UINT srvIdx, Heap* heap, D12Re
     SetSRV(device, srvIdx, heap, d12Resource, srvDesc);
 }
 
+// TODO: REMOVE?
 void Material::AddTexBindless(ID3D12Device* device, Heap* heap, std::shared_ptr<Texture> tex, int* bindlessIdx)
 {
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};

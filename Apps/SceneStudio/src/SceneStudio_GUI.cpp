@@ -334,6 +334,16 @@ void SceneStudio::guiMain()
             ImGui::InputInt("Radius##xx", &m_studioConfig.Denoising.BoxRadius);
             m_studioConfig.Denoising.BoxRadius = std::max(0, m_studioConfig.Denoising.BoxRadius);
         }
+
+        if (m_studioConfig.Denoising.Type == eATrous)
+        {
+            ImGui::InputInt("Iterations##xx", &m_studioConfig.Denoising.ATrousIterations);
+            if (m_studioConfig.Denoising.ATrousIterations > MAX_ATROUS_ITERATIONS)
+                m_studioConfig.Denoising.ATrousIterations = MAX_ATROUS_ITERATIONS;
+            ImGui::InputFloat("Color Phi##xx", &m_studioConfig.Denoising.ATrousPhiC);
+            ImGui::InputFloat("Normals Phi##xx", &m_studioConfig.Denoising.ATrousPhiN);
+            ImGui::InputFloat("Position Phi##xx", &m_studioConfig.Denoising.ATrousPhiP);
+        }
     }
 
     ImGui::Unindent(IM_GUI_INDENTATION);

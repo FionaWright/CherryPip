@@ -80,6 +80,7 @@ public:
 
     void UpdateCBV(UINT regIdx, const void* data) const;
     void SetDescriptorTables(ID3D12GraphicsCommandList* cmdList, bool isCompute = false) const;
+    void GetCbvGpuHandle(uint32_t idx) const;
 
 private:
     std::string m_name = "Unnamed Material";

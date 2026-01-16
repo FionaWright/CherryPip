@@ -475,6 +475,9 @@ void SceneStudio::renderRaster(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
             outputRTV = m_denoisingManager.DenoiseGauss(cmdList, &m_rtvPingPong1, &m_rtvPingPong2,
                                                         m_studioConfig.Denoising.BoxRadius);
             break;
+        case eMedian:
+            outputRTV = m_denoisingManager.DenoiseMedian(cmdList, &m_rtvPingPong1, &m_rtvPingPong2);
+            break;
         case eATrous:
             outputRTV = m_denoisingManager.DenoiseATrous(cmdList, m_camera.GetViewMatrix(), m_projMatrix,
                                                          &m_rtvPingPong1, &m_rtvPingPong2,

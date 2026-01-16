@@ -39,14 +39,6 @@ enum RenderBackend : uint32_t
     MAX_COUNT,
 };
 
-enum DenoisingType : uint32_t
-{
-    eBox,
-    eGaussian,
-    eATrous,
-    eNRD
-};
-
 struct DenoisingConfig
 {
     bool Enabled = true;

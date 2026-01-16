@@ -37,8 +37,10 @@
 - [ ] Ray pipelines
 - [ ] Spectral Path-Tracing (Hero, make separate from RGB PT)
 - [ ] Rayleigh scattering
-- [ ] GBuffer pre-pass
-- [ ] Denoising (A-Trous, NRD)
+- [x] GBuffer pre-pass
+- [x] Denoising (Box/Gauss/A-Trous)
+- [ ] Denoising Median
+- [ ] Denoising NRD
 - [ ] ReSTIR
 
 https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d12-raytracing-samples-win32/
@@ -71,6 +73,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 - Get proper BSDF for forward renderer
 - Add deferred render backend
+- GBuffer debug viewer
 
 ## Spectral Tracing
 

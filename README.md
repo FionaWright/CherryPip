@@ -26,10 +26,13 @@ Trying to work on it during my college semesters in my free time
 - Two furnace tests 
 - See different parts of the path tracer using Debug Buffer system (Normals, Albedo, HitDist, RNG, FirstBounceDirection, etc)
 - Lambertian, Glossy and Glass lighting models
-- Environment maps with support for Panoramic and Octohedral Equal-Area (+Cubemap Skyboxes for the forward/deferred backend)
-- Denoising (Box, Gaussian, Edge-Avoiding A-Trous) using deferred GBuffer pre-pass
+- Environment maps with support for Panoramic and Octohedral Equal-Area (+Cubemap Skyboxes for the raster backends)
+- Denoising (Box, Gaussian, Median, Edge-Avoiding A-Trous) using deferred GBuffer pre-pass
 
-## Progress 
+### Spectral Tracer
+- Work in Progress! 
+
+## History 
 
 Progress as of 29/10/25:
 <img width="1699" height="606" alt="image" src="https://github.com/user-attachments/assets/3c638d43-bdc2-465f-8689-2469e6ab254d" />
@@ -42,6 +45,7 @@ Progress as of 09/11/25:
 
 Progress as of 10/01/26 (Took a long break):
 <img width="1020" height="573" alt="image" src="https://github.com/user-attachments/assets/f13adf28-8360-4225-a2ab-e718a83e969b" />
+
 
 
 

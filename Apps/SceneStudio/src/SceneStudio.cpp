@@ -52,6 +52,7 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 
         Scene* currScene = m_scenes.at(sceneIdx).get();
         m_rasterContext.SetScene(currScene);
+        m_deferredContext.SetScene(currScene);
 
         if (d3d->GetRayTracingSupported())
         {
@@ -221,7 +222,9 @@ void SceneStudio::loadAssets(D3D* d3d)
                         Config::GetSystem().RtvFormat);
 
     m_denoisingManager.Init(device, cmdList.Get(), &m_heap, m_rtvPingPong1.GetD12Resource(),
-                            m_rtvPingPong2.GetD12Resource());
+                            m_rtvPingPong2.GetD12Resource()); // TODO: Only init when needed
+
+    m_deferredContext.Init(device, cmdList.Get(), &m_heapRTV); // TODO: Only init when needed
 
 #ifdef _DEBUG
     m_readbackManager.Init(d3d, &m_heap, &m_rtvPingPong1);
@@ -452,7 +455,7 @@ void SceneStudio::renderRaster(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 
     // GBuffer Pass (Temporary for testing, move to PT)
     {
-
+        m_deferredContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, nullptr);
     }
 
     // Denoising Pass (PP1 to ? to RTV) (Temporary for testing, move to PT)

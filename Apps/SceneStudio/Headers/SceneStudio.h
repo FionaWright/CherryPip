@@ -9,6 +9,7 @@
 #include "HWI/Texture.h"
 #include "HWI/TLAS.h"
 #include "Render/CameraController.h"
+#include "Render/DeferredContext.h"
 #include "Render/DenoisingManager.h"
 #include "Render/EnvMap.h"
 #include "Render/Object.h"
@@ -123,6 +124,8 @@ private:
     PathTracingContext m_ptContext;
     DenoisingManager m_denoisingManager;
     TextureRTV m_rtvPingPong1, m_rtvPingPong2;
+
+    DeferredContext m_deferredContext;
 
     EnvMap m_envMap;
     Skybox m_skybox;

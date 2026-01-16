@@ -18,7 +18,7 @@ struct GBufferOut
     float4 RgbNormal_AReserved : SV_Target1;
 };
 
-GBufferOut PSMain(VsOut input) : SV_Target
+GBufferOut PSMain(VsOut input)
 {
     GBufferOut output;
 

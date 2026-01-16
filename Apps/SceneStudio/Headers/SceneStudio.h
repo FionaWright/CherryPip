@@ -28,7 +28,7 @@ using Microsoft::WRL::ComPtr;
 
 struct RasterConfig
 {
-    RasterDebugMode Mode = eNormals;
+    RasterDebugMode Mode = eDirLightingTex;
     XMFLOAT3 DirLighting = XMFLOAT3(1, 0, 1);
 };
 
@@ -52,10 +52,10 @@ struct DenoisingConfig
     bool Enabled = true;
     int BoxRadius = 1;
     int ATrousIterations = 5;
-    DenoisingType Type = eBox;
-    float ATrousPhiC = 0.05f;
-    float ATrousPhiN = 0.05f;
-    float ATrousPhiP = 0.05f;
+    DenoisingType Type = eATrous;
+    float ATrousPhiC = 4.0f; // Tune this third
+    float ATrousPhiN = 0.1f; // Tune this first
+    float ATrousPhiP = 1.0f; // Tune this second
 };
 
 struct StudioConfig

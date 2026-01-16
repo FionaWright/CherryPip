@@ -68,12 +68,14 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Hot reloading broken on PC only
 - Env map breaks on scene reload on PC only
 - Camera movement gets messed up sometimes
+- IMPORTANT: Material::AddTexBindless seems like it does something COMPELETELY DISJOINT FROM THE MATERIALS PURPOSE!!! ModelLoader should just use the heap to put it on
 
 ## Laptop-TODO
 
 - Get proper BSDF for forward renderer
 - Add deferred render backend
 - GBuffer debug viewer
+- Add support for root constants in Material and RootSig and apply to ATrous filter
 
 ## Spectral Tracing
 

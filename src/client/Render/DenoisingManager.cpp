@@ -90,15 +90,15 @@ void DenoisingManager::initATrous(ID3D12Device* device, Heap* heap, D12Resource*
 
     m_shaderATrous.InitVsPs(L"FullScreenTriangleVS.hlsl", L"Filters/ATrousPS.hlsl", m_ild, device, m_rootSigATrous.Get());
 
-    m_matATrous1to2.Init(heap);
-    m_matATrous1to2.AddCBV(device, heap, sizeof(CbvFilterATrous));
-    m_matATrous1to2.SetTex(device, 0, heap, pp1);
-    m_matATrous1to2.SetTex(device, 1, heap, normalsDepth);
-
-    m_matATrous2to1.Init(heap);
-    m_matATrous2to1.AddCBV(device, heap, sizeof(CbvFilterATrous));
-    m_matATrous2to1.SetTex(device, 0, heap, pp2);
-    m_matATrous2to1.SetTex(device, 1, heap, normalsDepth);
+    for (int i = 0; i < MAX_ATROUS_ITERATIONS; i++)
+    {
+        Material mat;
+        mat.Init(heap);
+        mat.AddCBV(device, heap, sizeof(CbvFilterATrous));
+        mat.SetTex(device, 0, heap, i % 2 == 0 ? pp1 : pp2);
+        mat.SetTex(device, 1, heap, normalsDepth);
+        m_matsATrous.emplace_back(mat);
+    }
 }
 
 TextureRTV* DenoisingManager::DenoiseBox(ID3D12GraphicsCommandList* cmdList, TextureRTV* pp1, TextureRTV* pp2, const uint32_t radius) const
@@ -193,9 +193,6 @@ TextureRTV* DenoisingManager::DenoiseATrous(ID3D12GraphicsCommandList* cmdList, 
     cbv.phiP = phiP;
     cbv.InvVP = XMMatrixInverse(nullptr, vMatrix * pMatrix);
 
-    m_matATrous1to2.TransitionSrvsToPS(cmdList);
-    m_matATrous2to1.TransitionSrvsToPS(cmdList);
-
     for (int i = 0; i < iterations; i++)
     {
         const bool pp1to2 = i % 2 == 0;
@@ -208,10 +205,11 @@ TextureRTV* DenoisingManager::DenoiseATrous(ID3D12GraphicsCommandList* cmdList, 
         const auto handle = output->GetCpuHandle();
         cmdList->OMSetRenderTargets(1, &handle, FALSE, nullptr);
 
-        const Material* mat = pp1to2 ? &m_matATrous1to2 : &m_matATrous2to1;
-        cbv.StepWidth = pow(2, i);
-        mat->UpdateCBV(0, &cbv);
-        mat->SetDescriptorTables(cmdList);
+        const Material& mat = m_matsATrous.at(i);
+        cbv.StepWidth = static_cast<uint32_t>(1 << i);
+        mat.UpdateCBV(0, &cbv);
+        mat.TransitionSrvsToPS(cmdList);
+        mat.SetDescriptorTables(cmdList);
 
         cmdList->SetPipelineState(m_shaderATrous.GetPSO());
 

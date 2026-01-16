@@ -28,7 +28,7 @@ void Skybox::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap
             D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
         }
     };
-    m_shaderForward.InitVsPs(L"Raster/SkyboxVS.hlsl", L"Raster/SkyboxPS.hlsl", {rasterILD, _countof(rasterILD)}, device, m_rootSig.Get(), false);
+    m_shaderForward.InitVsPs(L"Raster/SkyboxVS.hlsl", L"Raster/SkyboxPS.hlsl", {rasterILD, _countof(rasterILD)}, device, m_rootSig.Get(), true);
 
     constexpr XMFLOAT3 vertexBuffer[8] = {
         {-1, -1, -1}, {1, -1, -1}, {1, 1, -1}, {-1, 1, -1},

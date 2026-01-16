@@ -39,7 +39,7 @@
 - [ ] Rayleigh scattering
 - [x] GBuffer pre-pass
 - [x] Denoising (Box/Gauss/A-Trous)
-- [ ] Denoising Median
+- [x] Denoising Median
 - [ ] Denoising NRD
 - [ ] ReSTIR
 

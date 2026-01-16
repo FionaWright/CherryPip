@@ -8,10 +8,26 @@ struct VsOut
 
 ConstantBuffer<CbvFilterATrous> c_atrous : register(b0);
 
-Texture2D    gColor  : register(t0);
-Texture2D    gNormals  : register(t1);
-Texture2D    gWorldPos  : register(t2);
+Texture2D<float4>    gColor  : register(t0);
+Texture2D<float4>    gNormalsDepth  : register(t1);
 SamplerState gSampler : register(s0);
+
+float3 ReconstructWorldPosition(float2 uv, float depth)
+{
+    float4 ndc;
+    ndc.xy = uv * 2.0f - 1.0f;
+    ndc.z  = depth;
+    ndc.w  = 1.0f;
+
+    float4 world = mul(ndc, c_atrous.InvVP);
+    return world.xyz / world.w;
+}
+
+float3 SampleWorldPos(float2 uv)
+{
+	float depthSample = gNormalsDepth.Sample(gSampler, uv).a;
+	return ReconstructWorldPosition(uv, depthSample);
+}
 
 // https://jo.dreggn.org/home/2010_atrous.pdf
 float4 PSMain(VsOut input) : SV_Target
@@ -33,8 +49,8 @@ float4 PSMain(VsOut input) : SV_Target
     };
 
     float3 valC = gColor.Sample(gSampler, input.uv).rgb;
-    float3 valN = gNormals.Sample(gSampler, input.uv).rgb;
-    float3 valP = gWorldPos.Sample(gSampler, input.uv).rgb;
+    float3 valN = gNormalsDepth.Sample(gSampler, input.uv).rgb;
+    float3 valP = SampleWorldPos(input.uv);
 
     float cumW = 0.0f;
     float3 sum = 0.0f;
@@ -50,12 +66,12 @@ float4 PSMain(VsOut input) : SV_Target
         float distC2 = dot(tC, tC);
         float wC = min(1.0f, exp(-distC2/c_atrous.phiC));
 
-        float3 sampleN = gNormals.Sample(gSampler, uv).rgb;
+        float3 sampleN = gNormalsDepth.Sample(gSampler, uv).rgb;
         float3 tN = valN - sampleN;
         float distN2 = dot(tN, tN);
         float wN = min(1.0f, exp(-distN2/c_atrous.phiN));
 
-        float3 sampleP = gWorldPos.Sample(gSampler, uv).rgb;
+        float3 sampleP = SampleWorldPos(uv);
         float3 tP = valP - sampleP;
         float distP2 = max(0.0f, dot(tN, tN) / stepWidth2);
         float wP = min(1.0f, exp(-distP2/c_atrous.phiP));

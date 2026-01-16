@@ -96,6 +96,8 @@ struct CbvFilterATrous
     float phiN;
     float phiP;
     float2 p;
+
+    float4x4 InvVP;
 };
 
 #endif

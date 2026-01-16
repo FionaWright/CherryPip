@@ -67,6 +67,11 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Env map breaks on scene reload on PC only
 - Camera movement gets messed up sometimes
 
+## Laptop-TODO
+
+- Get proper BSDF for forward renderer
+- Add deferred render backend
+
 ## Spectral Tracing
 
 Surface/Volume interactions stay mostly the same, but you use wavelengths instead of colors

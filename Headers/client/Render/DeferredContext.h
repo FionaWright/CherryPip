@@ -21,8 +21,11 @@ public:
 
     void Render(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vMatrix, const XMMATRIX& pMatrix, const Skybox* skybox);
 
+    D12Resource* GetAlbedo() { return m_rtvAlbedo.GetD12Resource(); }
+    D12Resource* GetNormalsDepth() { return m_rtvNormalsDepth.GetD12Resource(); }
+
 private:
-    TextureRTV m_rtvAlbedo, m_rtvNormal;
+    TextureRTV m_rtvAlbedo, m_rtvNormalsDepth;
     std::vector<CD3DX12_CPU_DESCRIPTOR_HANDLE> m_rtvHandles;
     Scene* m_scene = nullptr;
 

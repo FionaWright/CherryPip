@@ -16,18 +16,20 @@
 class DenoisingManager
 {
 public:
-    void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap* heap, D12Resource* pp1, D12Resource* pp2);
+    void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap* heap, D12Resource* pp1, D12Resource* pp2,
+              D12Resource* normalsDepth);
 
     TextureRTV* DenoiseBox(ID3D12GraphicsCommandList* cmdList, TextureRTV* pp1, TextureRTV* pp2, uint32_t radius) const;
-    TextureRTV* DenoiseGauss(ID3D12GraphicsCommandList* cmdList, TextureRTV* pp1, TextureRTV* pp2, uint32_t radius) const;
-    TextureRTV* DenoiseATrous(ID3D12GraphicsCommandList* cmdList, TextureRTV* pp1, TextureRTV* pp2, uint32_t iterations,
+    TextureRTV* DenoiseGauss(ID3D12GraphicsCommandList* cmdList, TextureRTV* pp1, TextureRTV* pp2,
+                             uint32_t radius) const;
+    TextureRTV* DenoiseATrous(ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vMatrix, const XMMATRIX& pMatrix,
+                              TextureRTV* pp1, TextureRTV* pp2, uint32_t iterations,
                               float phiC, float phiN, float phiP) const;
 
 private:
     void initBox(ID3D12Device* device, Heap* heap, D12Resource* pp1);
     void initGauss(ID3D12Device* device, Heap* heap, D12Resource* pp1, D12Resource* pp2);
-    void initATrous(ID3D12Device* device, Heap* heap, D12Resource* pp1, D12Resource* pp2, D12Resource* normals,
-                    D12Resource* worldPos);
+    void initATrous(ID3D12Device* device, Heap* heap, D12Resource* pp1, D12Resource* pp2, D12Resource* normalsDepth);
 
     Model m_fullScreenTriangle;
     Heap* m_pHeap = nullptr;
@@ -39,7 +41,7 @@ private:
     Material m_matBox;
 
     RootSig m_rootSigGauss;
-    Shader m_shaderGaussH,  m_shaderGaussV;
+    Shader m_shaderGaussH, m_shaderGaussV;
     Material m_matGaussH, m_matGaussV;
 
     RootSig m_rootSigATrous;

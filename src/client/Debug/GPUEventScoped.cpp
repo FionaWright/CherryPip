@@ -8,7 +8,15 @@
 #include <WinPixEventRuntime/pix3.h>
 #endif
 
-GPUEventScoped::GPUEventScoped(ID3D12GraphicsCommandList* cmdList, LPCWSTR label)
+GPUEventScoped::GPUEventScoped(ID3D12GraphicsCommandList* cmdList, const LPCWSTR label)
+{
+#ifdef _DEBUG
+    PIXBeginEvent(cmdList, 0, label);
+    m_heldCmdList = cmdList;
+#endif
+}
+
+GPUEventScoped::GPUEventScoped(ID3D12GraphicsCommandList* cmdList, const LPCSTR label)
 {
 #ifdef _DEBUG
     PIXBeginEvent(cmdList, 0, label);

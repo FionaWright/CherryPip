@@ -28,7 +28,7 @@ void Skybox::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap
             D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
         }
     };
-    m_shader.InitVsPs(L"Raster/SkyboxVS.hlsl", L"Raster/SkyboxPS.hlsl", {rasterILD, _countof(rasterILD)}, device, m_rootSig.Get(), false);
+    m_shaderForward.InitVsPs(L"Raster/SkyboxVS.hlsl", L"Raster/SkyboxPS.hlsl", {rasterILD, _countof(rasterILD)}, device, m_rootSig.Get(), false);
 
     constexpr XMFLOAT3 vertexBuffer[8] = {
         {-1, -1, -1}, {1, -1, -1}, {1, 1, -1}, {-1, 1, -1},
@@ -64,14 +64,14 @@ void Skybox::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap
     m_mat.SetSRV(device, 0, heap, cubemap, srvDesc);
 }
 
-void Skybox::Render(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vMatrix, const XMMATRIX& pMatrix) const
+void Skybox::RenderForward(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vMatrix, const XMMATRIX& pMatrix) const
 {
     CbvMatrices matrices = {};
     matrices.V = vMatrix;
     matrices.P = pMatrix;
 
     cmdList->SetGraphicsRootSignature(m_rootSig.Get());
-    cmdList->SetPipelineState(m_shader.GetPSO());
+    cmdList->SetPipelineState(m_shaderForward.GetPSO());
 
     m_mat.UpdateCBV(0, &matrices);
 

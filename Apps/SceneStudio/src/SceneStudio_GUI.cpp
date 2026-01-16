@@ -305,7 +305,7 @@ void SceneStudio::guiMain()
     ImGui::Indent(IM_GUI_INDENTATION);
 
     static const std::vector<const char*> denoisingTypeMap = {
-        "Box", "Gaussian", "A-Trous", "NVIDIA NRD"
+        "Box", "Gaussian", "Median(3x3)", "A-Trous", "NVIDIA NRD"
     };
 
     ImGui::Checkbox("Enabled##xxx", &m_studioConfig.Denoising.Enabled);

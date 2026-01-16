@@ -215,16 +215,17 @@ void SceneStudio::loadAssets(D3D* d3d)
 
     m_ptContext.Init(device, cmdList.Get(), &m_heap);
 
-    m_rtvPingPong1.Init(L"PT Output", device, &m_heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight,
+    m_rtvPingPong1.Init(L"Ping Pong 1", device, &m_heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight,
                         Config::GetSystem().RtvFormat);
-    m_rtvPingPong2.Init(L"Denoising Output", device, &m_heapRTV, Config::GetSystem().RtvWidth,
+    m_rtvPingPong2.Init(L"Ping Pong 2", device, &m_heapRTV, Config::GetSystem().RtvWidth,
                         Config::GetSystem().RtvHeight,
                         Config::GetSystem().RtvFormat);
 
-    m_denoisingManager.Init(device, cmdList.Get(), &m_heap, m_rtvPingPong1.GetD12Resource(),
-                            m_rtvPingPong2.GetD12Resource()); // TODO: Only init when needed
-
     m_deferredContext.Init(device, cmdList.Get(), &m_heapRTV); // TODO: Only init when needed
+
+    m_denoisingManager.Init(device, cmdList.Get(), &m_heap, m_rtvPingPong1.GetD12Resource(),
+                            m_rtvPingPong2.GetD12Resource(),
+                            m_deferredContext.GetNormalsDepth()); // TODO: Only init when needed
 
 #ifdef _DEBUG
     m_readbackManager.Init(d3d, &m_heap, &m_rtvPingPong1);
@@ -454,6 +455,7 @@ void SceneStudio::renderRaster(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     }
 
     // GBuffer Pass (Temporary for testing, move to PT)
+    if (m_studioConfig.Denoising.Enabled && m_studioConfig.Denoising.Type == eATrous)
     {
         m_deferredContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, nullptr);
     }
@@ -473,7 +475,8 @@ void SceneStudio::renderRaster(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
                                                         m_studioConfig.Denoising.BoxRadius);
             break;
         case eATrous:
-            outputRTV = m_denoisingManager.DenoiseATrous(cmdList, &m_rtvPingPong1, &m_rtvPingPong2,
+            outputRTV = m_denoisingManager.DenoiseATrous(cmdList, m_camera.GetViewMatrix(), m_projMatrix,
+                                                         &m_rtvPingPong1, &m_rtvPingPong2,
                                                          m_studioConfig.Denoising.ATrousIterations,
                                                          m_studioConfig.Denoising.ATrousPhiC,
                                                          m_studioConfig.Denoising.ATrousPhiN,

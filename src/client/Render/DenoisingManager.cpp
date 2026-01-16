@@ -6,7 +6,7 @@
 
 #include "CBV.h"
 
-void DenoisingManager::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap* heap, D12Resource* pp1, D12Resource* pp2)
+void DenoisingManager::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap* heap, D12Resource* pp1, D12Resource* pp2, D12Resource* normalsDepth)
 {
     m_fullScreenTriangle.InitFullScreenTriangle(device, cmdList);
 
@@ -26,6 +26,7 @@ void DenoisingManager::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmd
     // TODO: Don't initialize unused filters
     initBox(device, heap, pp1);
     initGauss(device, heap, pp1, pp2);
+    initATrous(device, heap, pp1, pp2, normalsDepth);
 }
 
 void DenoisingManager::initBox(ID3D12Device* device, Heap* heap, D12Resource* tex)
@@ -73,7 +74,7 @@ void DenoisingManager::initGauss(ID3D12Device* device, Heap* heap, D12Resource* 
     m_matGaussV.SetTex(device, 0, heap, pp2);
 }
 
-void DenoisingManager::initATrous(ID3D12Device* device, Heap* heap, D12Resource* pp1, D12Resource* pp2, D12Resource* normals, D12Resource* worldPos)
+void DenoisingManager::initATrous(ID3D12Device* device, Heap* heap, D12Resource* pp1, D12Resource* pp2, D12Resource* normalsDepth)
 {
     D3D12_STATIC_SAMPLER_DESC samplers[1];
     samplers[0] = {};
@@ -84,21 +85,19 @@ void DenoisingManager::initATrous(ID3D12Device* device, Heap* heap, D12Resource*
     samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
     samplers[0].ShaderRegister = 0;
 
-    m_rootSigATrous.SmartInit(device, 1, 3, 0, false, samplers, _countof(samplers));
+    m_rootSigATrous.SmartInit(device, 1, 2, 0, false, samplers, _countof(samplers));
 
-    m_shaderGaussH.InitVsPs(L"FullScreenTriangleVS.hlsl", L"Filters/ATrousPS.hlsl", m_ild, device, m_rootSigATrous.Get());
+    m_shaderATrous.InitVsPs(L"FullScreenTriangleVS.hlsl", L"Filters/ATrousPS.hlsl", m_ild, device, m_rootSigATrous.Get());
 
     m_matATrous1to2.Init(heap);
     m_matATrous1to2.AddCBV(device, heap, sizeof(CbvFilterATrous));
     m_matATrous1to2.SetTex(device, 0, heap, pp1);
-    m_matATrous1to2.SetTex(device, 1, heap, normals);
-    m_matATrous1to2.SetTex(device, 2, heap, worldPos);
+    m_matATrous1to2.SetTex(device, 1, heap, normalsDepth);
 
     m_matATrous2to1.Init(heap);
     m_matATrous2to1.AddCBV(device, heap, sizeof(CbvFilterATrous));
     m_matATrous2to1.SetTex(device, 0, heap, pp2);
-    m_matATrous2to1.SetTex(device, 1, heap, normals);
-    m_matATrous2to1.SetTex(device, 2, heap, worldPos);
+    m_matATrous2to1.SetTex(device, 1, heap, normalsDepth);
 }
 
 TextureRTV* DenoisingManager::DenoiseBox(ID3D12GraphicsCommandList* cmdList, TextureRTV* pp1, TextureRTV* pp2, const uint32_t radius) const
@@ -175,7 +174,7 @@ TextureRTV* DenoisingManager::DenoiseGauss(ID3D12GraphicsCommandList* cmdList, T
     return pp1;
 }
 
-TextureRTV* DenoisingManager::DenoiseATrous(ID3D12GraphicsCommandList* cmdList, TextureRTV* pp1, TextureRTV* pp2, const uint32_t iterations, const float phiC, const float phiN, const float phiP) const
+TextureRTV* DenoisingManager::DenoiseATrous(ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vMatrix, const XMMATRIX& pMatrix, TextureRTV* pp1, TextureRTV* pp2, const uint32_t iterations, const float phiC, const float phiN, const float phiP) const
 {
     cmdList->SetGraphicsRootSignature(m_rootSigATrous.Get());
 
@@ -185,25 +184,27 @@ TextureRTV* DenoisingManager::DenoiseATrous(ID3D12GraphicsCommandList* cmdList, 
     cbv.phiC = phiC;
     cbv.phiN = phiN;
     cbv.phiP = phiP;
+    cbv.InvVP = XMMatrixInverse(nullptr, vMatrix * pMatrix);
 
     m_matATrous1to2.TransitionSrvsToPS(cmdList);
-    m_matATrous1to2.SetDescriptorTables(cmdList);
-
     m_matATrous2to1.TransitionSrvsToPS(cmdList);
-    m_matATrous2to1.SetDescriptorTables(cmdList);
 
     for (int i = 0; i < iterations; i++)
     {
         const bool pp1to2 = i % 2 == 0;
+        TextureRTV* input = pp1to2 ? pp1 : pp2;
         TextureRTV* output = pp1to2 ? pp2 : pp1;
+
+        input->GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
+        output->GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+        const auto handle = output->GetCpuHandle();
+        cmdList->OMSetRenderTargets(1, &handle, FALSE, nullptr);
 
         const Material* mat = pp1to2 ? &m_matATrous1to2 : &m_matATrous2to1;
         cbv.StepWidth = pow(2, i);
         mat->UpdateCBV(0, &cbv);
-
-        output->GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
-        const auto handle = output->GetCpuHandle();
-        cmdList->OMSetRenderTargets(1, &handle, FALSE, nullptr);
+        mat->SetDescriptorTables(cmdList);
 
         cmdList->SetPipelineState(m_shaderATrous.GetPSO());
 

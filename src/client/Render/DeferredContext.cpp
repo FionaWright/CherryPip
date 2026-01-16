@@ -12,11 +12,11 @@
 void DeferredContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap* heap)
 {
     m_rtvAlbedo.Init(L"Albedo GBuffer", device, heap, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
-    m_rtvNormal.Init(L"Normals GBuffer", device, heap, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
+    m_rtvNormalsDepth.Init(L"Normals GBuffer", device, heap, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
 
     m_rtvHandles = {
         m_rtvAlbedo.GetCpuHandle(),
-        m_rtvNormal.GetCpuHandle()
+        m_rtvNormalsDepth.GetCpuHandle()
     };
 
     D3D12_STATIC_SAMPLER_DESC samplers[1];
@@ -73,6 +73,9 @@ void DeferredContext::Render(const D3D* d3d, ID3D12GraphicsCommandList* cmdList,
 
     cmdList->RSSetViewports(1, &viewport);
     cmdList->RSSetScissorRects(1, &scissorRect);
+
+    m_rtvAlbedo.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    m_rtvNormalsDepth.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     const CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(d3d->GetDsvHeapStart(), d3d->GetFrameIndex(), d3d->GetDsvDescriptorSize());
     cmdList->OMSetRenderTargets(m_rtvHandles.size(), m_rtvHandles.data(), FALSE, &dsvHandle);

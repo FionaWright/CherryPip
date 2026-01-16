@@ -162,7 +162,7 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
                                 ID3D12PipelineState* pso, const Camera* camera, Heap* heap,
                                 const XMMATRIX& projMatrix, const PtConfig& config, int debugModeIdx)
 {
-    GPU_SCOPE(cmdList, L"Path Tracing");
+    GPU_SCOPE(cmdList, L"Path Tracing Backend");
 
     const bool frameIncAllowed = config.MaxFrameNum == 0 || m_numFrames < config.MaxFrameNum;
 

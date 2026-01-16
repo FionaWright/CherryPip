@@ -443,6 +443,8 @@ void SceneStudio::renderRaster(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         }
     }
 
+    const Skybox* skybox = m_studioConfig.EnvMapEnabled ? &m_skybox : nullptr;
+
     // Main Pass (Into PP1)
     {
         m_rtvPingPong1.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -450,14 +452,13 @@ void SceneStudio::renderRaster(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         const auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_heapRTV.GetCPUHandle(), rtvIdx,
                                                           m_heapRTV.GetIncrementSize());
 
-        const Skybox* skybox = m_studioConfig.EnvMapEnabled ? &m_skybox : nullptr;
         m_rasterContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, handle, skybox);
     }
 
     // GBuffer Pass (Temporary for testing, move to PT)
     if (m_studioConfig.Denoising.Enabled && m_studioConfig.Denoising.Type == eATrous)
     {
-        m_deferredContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, nullptr);
+        m_deferredContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, skybox);
     }
 
     // Denoising Pass (PP1 to ? to RTV) (Temporary for testing, move to PT)

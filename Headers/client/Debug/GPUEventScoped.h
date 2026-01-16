@@ -9,13 +9,14 @@
 
 #include "../System/App.h"
 
-#define GPU_SCOPE(cmdList, label) GPUEventScoped CONCAT(scope_, __LINE__)(cmdList, label)
+#define GPU_SCOPE(cmdList, label) GPUEventScoped CONCAT(scope_, __COUNTER__)(cmdList, label)
 #define CONCAT(a, b) a##b
 
 class GPUEventScoped
 {
 public:
     GPUEventScoped(ID3D12GraphicsCommandList* cmdList, LPCWSTR label);
+    GPUEventScoped(ID3D12GraphicsCommandList* cmdList, LPCSTR label);
     ~GPUEventScoped();
 
 private:

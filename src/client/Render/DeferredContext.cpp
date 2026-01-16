@@ -9,6 +9,8 @@
 #include "Render/Skybox.h"
 #include "System/Config.h"
 
+#include "Debug/GPUEventScoped.h"
+
 void DeferredContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap* heap)
 {
     m_rtvAlbedo.Init(L"Albedo GBuffer", device, heap, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
@@ -63,6 +65,8 @@ void DeferredContext::SetScene(Scene* scene)
 
 void DeferredContext::Render(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vMatrix, const XMMATRIX& pMatrix, const Skybox* skybox)
 {
+    GPU_SCOPE(cmdList, L"Deferred Backend");
+
     assert(m_scene);
 
     const float fRtvWidth = static_cast<float>(Config::GetSystem().RtvWidth);
@@ -88,15 +92,14 @@ void DeferredContext::Render(const D3D* d3d, ID3D12GraphicsCommandList* cmdList,
     matrices.V = vMatrix;
     matrices.P = pMatrix;
 
-    //if (skybox)
-        //skybox->Render(d3d, cmdList, vMatrix, pMatrix);
-
     cmdList->SetGraphicsRootSignature(m_rootSigGBuffer.Get());
     cmdList->SetPipelineState(m_shaderGBuffer.GetPSO());
 
     const auto& objects = m_scene->GetObjects();
     for (const auto & object : objects)
     {
+        GPU_SCOPE(cmdList, object->GetName());
+
         const Transform* transform = object->GetTransform();
         const auto model = object->GetModel();
         const auto mat = object->GetMaterial();
@@ -112,5 +115,16 @@ void DeferredContext::Render(const D3D* d3d, ID3D12GraphicsCommandList* cmdList,
         cmdList->IASetVertexBuffers(0, 1, &model->GetVertexBufferView());
         cmdList->IASetIndexBuffer(&model->GetIndexBufferView());
         cmdList->DrawIndexedInstanced(static_cast<UINT>(model->GetIndexCount()), 1, 0, 0, 0);
+    }
+
+    // Skybox into Albedo pass
+    {
+        GPU_SCOPE(cmdList, "Skybox -> GBuffer");
+
+        const auto albedoHandle = m_rtvAlbedo.GetCpuHandle();
+        cmdList->OMSetRenderTargets(1, &albedoHandle, FALSE, &dsvHandle);
+
+        if (skybox)
+            skybox->RenderForward(d3d, cmdList, vMatrix, pMatrix);
     }
 }

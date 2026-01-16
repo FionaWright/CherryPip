@@ -5,6 +5,7 @@
 #include "Render/RasterContext.h"
 
 #include "CBV.h"
+#include "Debug/GPUEventScoped.h"
 #include "Render/Object.h"
 #include "Render/Skybox.h"
 
@@ -15,6 +16,8 @@ void RasterContext::SetScene(Scene* scene)
 
 void RasterContext::Render(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vMatrix, const XMMATRIX& pMatrix, const D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle, const Skybox* skybox) const
 {
+    GPU_SCOPE(cmdList, "Forward Backend");
+
     const float fRtvWidth = static_cast<float>(Config::GetSystem().RtvWidth);
     const float fRtvHeight = static_cast<float>(Config::GetSystem().RtvHeight);
 
@@ -34,12 +37,17 @@ void RasterContext::Render(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, c
     matrices.V = vMatrix;
     matrices.P = pMatrix;
 
-    if (skybox)
-        skybox->Render(d3d, cmdList, vMatrix, pMatrix);
+    {
+        GPU_SCOPE(cmdList, "Skybox Pass");
+
+        if (skybox)
+            skybox->RenderForward(d3d, cmdList, vMatrix, pMatrix);
+    }
 
     const auto& objects = m_scene->GetObjects();
     for (int i = 0; i < objects.size(); ++i)
     {
+        GPU_SCOPE(cmdList, objects[i]->GetName());
         objects[i]->Render(cmdList, matrices);
     }
 }

@@ -5,6 +5,7 @@
 #include "Render/DenoisingManager.h"
 
 #include "CBV.h"
+#include "Debug/GPUEventScoped.h"
 
 void DenoisingManager::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap* heap, D12Resource* pp1, D12Resource* pp2, D12Resource* normalsDepth)
 {
@@ -102,6 +103,8 @@ void DenoisingManager::initATrous(ID3D12Device* device, Heap* heap, D12Resource*
 
 TextureRTV* DenoisingManager::DenoiseBox(ID3D12GraphicsCommandList* cmdList, TextureRTV* pp1, TextureRTV* pp2, const uint32_t radius) const
 {
+    GPU_SCOPE(cmdList, "Denoising (Box)");
+
     pp2->GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
     const auto handle = pp2->GetCpuHandle();
     cmdList->OMSetRenderTargets(1, &handle, FALSE, nullptr);
@@ -128,6 +131,8 @@ TextureRTV* DenoisingManager::DenoiseBox(ID3D12GraphicsCommandList* cmdList, Tex
 
 TextureRTV* DenoisingManager::DenoiseGauss(ID3D12GraphicsCommandList* cmdList, TextureRTV* pp1, TextureRTV* pp2, const uint32_t radius) const
 {
+    GPU_SCOPE(cmdList, "Denoising (Gaussian)");
+
     cmdList->SetGraphicsRootSignature(m_rootSigGauss.Get());
 
     CbvFilterBoxAndGauss cbv = {};
@@ -176,6 +181,8 @@ TextureRTV* DenoisingManager::DenoiseGauss(ID3D12GraphicsCommandList* cmdList, T
 
 TextureRTV* DenoisingManager::DenoiseATrous(ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vMatrix, const XMMATRIX& pMatrix, TextureRTV* pp1, TextureRTV* pp2, const uint32_t iterations, const float phiC, const float phiN, const float phiP) const
 {
+    GPU_SCOPE(cmdList, "Denoising (A-Trous)");
+
     cmdList->SetGraphicsRootSignature(m_rootSigATrous.Get());
 
     CbvFilterATrous cbv = {};

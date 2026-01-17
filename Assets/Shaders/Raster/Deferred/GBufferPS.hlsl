@@ -23,7 +23,7 @@ GBufferOut PSMain(VsOut input)
     GBufferOut output;
 
     output.RgbaAlbedo = gAlbedo.Sample(gSampler, input.uv).rgba;
-    output.RgbNormal_ADepth.rgb = normalize(input.normal);
+    output.RgbNormal_ADepth.rgb = normalize(input.normal) * 0.5f + 0.5f; // [-1,1] -> [0,1]
     output.RgbNormal_ADepth.a = input.position.z / input.position.w;
 
     return output;

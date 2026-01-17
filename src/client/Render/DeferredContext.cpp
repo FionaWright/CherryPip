@@ -13,6 +13,7 @@
 
 void DeferredContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap* heap)
 {
+    // Could improve precision here for increased bandwidth
     m_rtvAlbedo.Init(L"Albedo GBuffer", device, heap, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
     m_rtvNormalsDepth.Init(L"Normals GBuffer", device, heap, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
 

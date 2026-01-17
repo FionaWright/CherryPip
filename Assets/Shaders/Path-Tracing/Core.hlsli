@@ -14,6 +14,7 @@ struct VsOut
 ConstantBuffer<CbvPathTracing> c_pathTracing : register(b0);
 #ifdef DEBUG_BUFFER
     ConstantBuffer<CbvPathTracingDebug> c_debug : register(b1);
+    #include "Debug/DebugUtils.hlsli"
 	#include "DebugPalette.hlsli"
 #endif
 RaytracingAccelerationStructure gTLAS : register(t0);
@@ -27,13 +28,6 @@ Texture2D<float4> gTextures[] : register(t6);
 RWTexture2D<float4> gAccum : register(u0);
 
 SamplerState c_sampler : register(s0);
-
-// TODO: Put this somewhere else
-// https://sakibsaikia.github.io/graphics/2022/01/04/Nan-Checks-In-HLSL.html
-bool IsNaN(float x)
-{
-    return (asuint(x) & 0x7fffffff) > 0x7f800000;
-}
 
 #include "Trace.hlsli"
 

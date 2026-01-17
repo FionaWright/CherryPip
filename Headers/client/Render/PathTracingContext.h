@@ -49,7 +49,7 @@ struct PtConfig
     DebugBuffer DebugBufferIdx = DebugBuffer::eNormalsShaded;
     alignas(4) bool DebugMode = false;
     alignas(4) bool AccumulationEnabled = true;
-    alignas(4) bool JitterEnabled = false;
+    alignas(4) bool JitterEnabled = true;
     alignas(4) bool ReadbackEnabled = false;
     alignas(4) bool ReadbackEveryFrame = false;
     alignas(4) bool EnvMapIsEqualArea = true;

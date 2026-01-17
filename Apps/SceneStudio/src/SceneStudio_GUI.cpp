@@ -308,6 +308,8 @@ void SceneStudio::guiMain()
         }
     }
 
+    m_shaderDirty |= m_envMapDirty;
+
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Denoising##xx");
     ImGui::Indent(IM_GUI_INDENTATION);

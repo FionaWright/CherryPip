@@ -60,7 +60,6 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Fix glass issue at grazing angles (Read PBRT section, stop using the goddamn GPT)
 - Fix glass attenuation after, add attenuationDistance field
 - Add stanford dragon model to test with and perform glass ball test with it (Object behind should be vertically flipped depending on distance)
-- Russian Roulette 
 - Mist (Randomly scatter rays depending on distance travelled, see SL video) (Rayleigh scattering! Requires spectral renderer?)
 - Is light from the env map being used as if it's a light source correctly? Should there be a separate dir light? 
 - Get a big scene that isn't bistro 

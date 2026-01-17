@@ -416,52 +416,21 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 #ifdef _DEBUG
     // Readback Pass (PP1 to RTV)
     if (m_studioConfig.PT.ReadbackEnabled)
+    {
         m_readbackManager.ReadbackPass(d3d, cmdList, &m_rtvPingPong1, m_studioConfig.PT.ReadbackEveryFrame);
+        copyRtvTex(cmdList, d3d->GetRtv(), m_rtvPingPong1.GetD12Resource());
+        return;
+    }
 #endif
 
-    // PP1 to RTV
-    copyRtvTex(cmdList, d3d->GetRtv(), m_rtvPingPong1.GetD12Resource());
-}
-
-void SceneStudio::renderRaster(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
-{
-    m_heap.SetHeap(cmdList);
-
-    // Update CBVs
-    {
-        CbvRasterDebug rasterDebug{};
-        rasterDebug.Mode = m_studioConfig.Raster.Mode;
-        rasterDebug.DirLighting = m_studioConfig.Raster.DirLighting;
-
-        const int sceneIdx = m_sceneConfigs.at(m_currentScene).SceneIdx;
-
-        const auto& currScene = m_scenes.at(sceneIdx);
-        auto& objects = currScene->GetObjects();
-        for (int i = 0; i < objects.size(); ++i)
-        {
-            objects[i]->GetMaterial()->UpdateCBV(1, &rasterDebug);
-        }
-    }
-
-    const Skybox* skybox = m_studioConfig.EnvMapEnabled ? &m_skybox : nullptr;
-
-    // Main Pass (Into PP1)
-    {
-        m_rtvPingPong1.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
-        const UINT rtvIdx = m_rtvPingPong1.GetHeapIdx();
-        const auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_heapRTV.GetCPUHandle(), rtvIdx,
-                                                          m_heapRTV.GetIncrementSize());
-
-        m_rasterContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, handle, skybox);
-    }
-
-    // GBuffer Pass (Temporary for testing, move to PT)
+    // GBuffer Pass
     if (m_studioConfig.Denoising.Enabled && m_studioConfig.Denoising.Type == eATrous)
     {
+        const Skybox* skybox = m_studioConfig.EnvMapEnabled ? &m_skybox : nullptr;
         m_deferredContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, skybox);
     }
 
-    // Denoising Pass (PP1 to ? to RTV) (Temporary for testing, move to PT)
+    // Denoising Pass (PP1 to ? to RTV)
     if (m_studioConfig.Denoising.Enabled)
     {
         TextureRTV* outputRTV = nullptr;
@@ -492,6 +461,41 @@ void SceneStudio::renderRaster(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 
         copyRtvTex(cmdList, d3d->GetRtv(), outputRTV->GetD12Resource());
         return;
+    }
+
+    // PP1 to RTV
+    copyRtvTex(cmdList, d3d->GetRtv(), m_rtvPingPong1.GetD12Resource());
+}
+
+void SceneStudio::renderRaster(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
+{
+    m_heap.SetHeap(cmdList);
+
+    // Update CBVs
+    {
+        CbvRasterDebug rasterDebug{};
+        rasterDebug.Mode = m_studioConfig.Raster.Mode;
+        rasterDebug.DirLighting = m_studioConfig.Raster.DirLighting;
+
+        const int sceneIdx = m_sceneConfigs.at(m_currentScene).SceneIdx;
+
+        const auto& currScene = m_scenes.at(sceneIdx);
+        auto& objects = currScene->GetObjects();
+        for (int i = 0; i < objects.size(); ++i)
+        {
+            objects[i]->GetMaterial()->UpdateCBV(1, &rasterDebug);
+        }
+    }
+
+    // Main Pass (Into PP1)
+    {
+        m_rtvPingPong1.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        const UINT rtvIdx = m_rtvPingPong1.GetHeapIdx();
+        const auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_heapRTV.GetCPUHandle(), rtvIdx,
+                                                          m_heapRTV.GetIncrementSize());
+
+        const Skybox* skybox = m_studioConfig.EnvMapEnabled ? &m_skybox : nullptr;
+        m_rasterContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, handle, skybox);
     }
 
     copyRtvTex(cmdList, d3d->GetRtv(), m_rtvPingPong1.GetD12Resource());

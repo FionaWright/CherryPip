@@ -65,12 +65,14 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Get a big scene that isn't bistro 
 
 - Hot reloading broken on PC only
-- Env map breaks on scene reload on PC only
 - Camera movement gets messed up sometimes
 - IMPORTANT: Material::AddTexBindless seems like it does something COMPELETELY DISJOINT FROM THE MATERIALS PURPOSE!!! ModelLoader should just use the heap to put it on
 
 - FPS has heavily dropped since I was away, possibly due to all the extra shaders/etc. Make sure they can be deleted properly when not in use
 - Materials being destroyed a lot at startup!
+- Russian roulette causing lost energy somewhere
+- A-Trous seam (near/far plane imprecision or smth?)
+- A-Trous overblurring (Are you SURE it's not meant to diminish with each iteration??)
 
 ## Laptop-TODO
 

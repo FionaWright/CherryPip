@@ -13,7 +13,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
     float3 throughput = float3(1, 1, 1);
 
 #ifdef DEBUG_BUFFER
-#include "Path-Tracing/DebugBuffersPreTrace.hlsli"
+#include "Debug/DebugBuffersPreTrace.hlsli"
 #endif
 
     for (uint i = 0; i <= c_pathTracing.NumBounces; i++)
@@ -24,7 +24,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         if (q.CommittedStatus() != COMMITTED_TRIANGLE_HIT)
         {
 #ifdef DEBUG_BUFFER
-#include "Path-Tracing/DebugBuffersOnMiss.hlsli"
+#include "Debug/DebugBuffersOnMiss.hlsli"
 #endif
             float3 Li = Miss(ray.Origin, ray.Direction);
             Lo += Li;
@@ -56,12 +56,12 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         ray.Origin = hitPos + outNg * EPSILON * sign(dot(outNg, ray.Direction));
 
 #ifdef DEBUG_BUFFER
-#include "Path-Tracing/DebugBuffersOnHit.hlsli"
+#include "Debug/DebugBuffersOnHit.hlsli"
 #endif
     }
 
 #ifdef DEBUG_BUFFER
-#include "Path-Tracing/DebugBuffersPostTrace.hlsli"
+#include "Debug/DebugBuffersPostTrace.hlsli"
 #endif
 
     return Lo;

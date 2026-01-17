@@ -43,6 +43,15 @@ void SceneStudio::OnInit(D3D* d3d)
 
 void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 {
+    if (m_envMapDirty)
+    {
+        m_envMap.Init(d3d->GetDevice(), cmdList, m_envMapList.at(m_selectedEnvMapIdx), m_studioConfig.EnvMapRotation,
+                      &m_heap);
+        m_envMap.InitCubemap(d3d->GetDevice(), cmdList, &m_heap);
+        m_skybox.Init(d3d->GetDevice(), cmdList, &m_heap, m_envMap.GetCubemap());
+        m_envMapDirty = false;
+    }
+
     if (m_sceneDirty)
     {
         if (m_sceneConfigs.at(m_currentScene).SceneIdx == -1)
@@ -67,15 +76,6 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     {
         compilePtShader(d3d);
         m_shaderDirty = false;
-    }
-
-    if (m_envMapDirty)
-    {
-        m_envMap.Init(d3d->GetDevice(), cmdList, m_envMapList.at(m_selectedEnvMapIdx), m_studioConfig.EnvMapRotation,
-                      &m_heap);
-        m_envMap.InitCubemap(d3d->GetDevice(), cmdList, &m_heap);
-        m_skybox.Init(d3d->GetDevice(), cmdList, &m_heap, m_envMap.GetCubemap());
-        m_envMapDirty = false;
     }
 
     switch (m_studioConfig.Backend)

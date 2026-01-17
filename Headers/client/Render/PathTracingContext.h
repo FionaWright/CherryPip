@@ -42,7 +42,7 @@ enum PathTracerMode : uint32_t
 struct PtConfig
 {
     uint32_t SPP = 1;
-    uint32_t NumBounces = 1;
+    uint32_t NumBounces = 8;
     uint32_t MaxFrameNum = 0;
     PathTracerMode Mode = eGlass;
     DebugBuffer DebugBufferIdx = DebugBuffer::eNormalsShaded;

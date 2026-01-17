@@ -59,6 +59,14 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
 
     ptNeedsReset |= ImGui::Checkbox("Accumulation Enabled##xx", &m_studioConfig.PT.AccumulationEnabled);
     ptNeedsReset |= ImGui::Checkbox("Jitter Enabled##xx", &m_studioConfig.PT.JitterEnabled);
+    m_shaderDirty |= ImGui::Checkbox("Russian Roulette##xx", &m_studioConfig.PT.RussianRouletteEnabled);
+
+    if (m_studioConfig.PT.RussianRouletteEnabled)
+    {
+        int rrmb = static_cast<int>(m_studioConfig.PT.RussianRouletteMinBounces);
+        ptNeedsReset |= ImGui::InputInt("Russian Roulette Min Bounces##xx", &rrmb);
+        m_studioConfig.PT.RussianRouletteMinBounces = static_cast<uint32_t>(rrmb);
+    }
 
     int spp = static_cast<int>(m_studioConfig.PT.SPP);
     ptNeedsReset |= ImGui::DragInt("SPP##xx", &spp, 1, 1, 256);

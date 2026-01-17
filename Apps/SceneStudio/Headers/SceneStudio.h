@@ -41,7 +41,7 @@ enum RenderBackend : uint32_t
 
 struct DenoisingConfig
 {
-    bool Enabled = true;
+    bool Enabled = false;
     int BoxRadius = 1;
     int ATrousIterations = 5;
     DenoisingType Type = eATrous;

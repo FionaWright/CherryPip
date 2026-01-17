@@ -53,6 +53,19 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             Model_Glossy(rngState, Lo, throughput, mat.DiffuseProbability, mat.Roughness, outNs, Li, brdf, wo, ray.Direction);
 #endif
 
+#if defined(RUSSIAN_ROULETTE_ENABLED)
+        if (i >= c_pathTracing.RussianRouletteMinBounces) // Standard is 2-3
+        {
+            float p = saturate(max(throughput.r, max(throughput.g, throughput.b)));
+            if (p < 1e-6) // Terminate near-zero throughput rays as they contribute nothing and waste computation. Careful! This may cause issues with certain materials
+                break;
+            p = max(p, 0.05); // Minimum-survival probability 
+            if (PcgRand01(rngState) > p)
+                break;
+            throughput /= p;
+        }
+#endif
+
         ray.Origin = hitPos + outNg * EPSILON * sign(dot(outNg, ray.Direction));
 
 #ifdef DEBUG_BUFFER

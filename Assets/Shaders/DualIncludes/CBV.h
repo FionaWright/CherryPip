@@ -36,7 +36,7 @@ struct CbvPathTracing
     float3 CameraPositionWorld;
     uint NumBounces;
 
-    uint RESERVED;
+    uint RussianRouletteMinBounces;
     uint SPP;
     uint NumFrames;
     uint AccumulationEnabled;

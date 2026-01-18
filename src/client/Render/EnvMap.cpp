@@ -7,6 +7,7 @@
 #include "Buffers.h"
 #include "CBV.h"
 #include "Helper.h"
+#include "MathUtils.h"
 #include "Debug/GPUEventScoped.h"
 #include "Debug/ReadbackBuffer.h"
 #include "HWI/Heap.h"
@@ -134,12 +135,40 @@ void EnvMap::initResources(ID3D12Device* device)
     m_rootSigPanoToEA.SmartInit(device, 1, 1, 1, false, samplers, _countof(samplers));
     m_shaderPanoToEA.InitCs(L"PanoToEaCS.hlsl", device, m_rootSigPanoToEA.Get());
 
-    m_ea.InitEmpty(device, DXGI_FORMAT_R8G8B8A8_UNORM, 4096, 4096, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    m_ea.InitEmpty(device, DXGI_FORMAT_R16G16B16A16_FLOAT, 4096, 4096, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 
     m_rootSigPanoToCM.SmartInit(device, 1, 1, 1, false, samplers, _countof(samplers));
     m_shaderPanoToCM.InitCs(L"PanoToCubemapCS.hlsl", device, m_rootSigPanoToCM.Get());
 
     m_resourcesInitialized = true;
+}
+
+float CopySign(const float mag, const float sign)
+{
+    return sign < 0.0f ? -abs(mag) : abs(mag);
+}
+
+float SafeSqrt(const float x) { return sqrt(std::max(0.0f, x)); }
+
+XMFLOAT3 EaSquareToSphere(const XMFLOAT2 uv)
+{
+    // Transform to [-1, 1]^2
+    const float ax = 2.0f * uv.x - 1.0f;
+    const float ay = 2.0f * uv.y - 1.0f;
+    const float absax = abs(ax);
+    const float absay = abs(ay);
+
+    // Compute radius and angle
+    const float signedDist = 1 - (absax + absay); // Signed distance to the u + v = 1 diagonal diamond
+    const float d = abs(signedDist);
+    const float r = 1 - d;
+    const float phi = (r == 0 ? 1 : (absay - absax) / r + 1) * PI / 4;
+
+    // Compute vector
+    const float y = CopySign(1 - r * r, signedDist);
+    const float cosPhi = CopySign(cos(phi), ax);
+    const float sinPhi = CopySign(sin(phi), ay);
+    return XMFLOAT3(cosPhi * r * SafeSqrt(2 - r * r), y, sinPhi * r * SafeSqrt(2 - r * r));
 }
 
 XMFLOAT3 EnvMap::GetDirectionOfHighestIntensity(D3D* d3d, Heap* heap)
@@ -192,10 +221,11 @@ XMFLOAT3 EnvMap::GetDirectionOfHighestIntensity(D3D* d3d, Heap* heap)
     d3d->Flush();
 
     auto cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
-    GPU_SCOPE(cmdList.Get(), "Get Direction of Highest Intensity from EA Map");
 
     // Compute Dispatches
     {
+        GPU_SCOPE(cmdList.Get(), "Get Direction of Highest Intensity from EA Map");
+
         m_bufferMaxLumRedSearch.Transition(cmdList.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
         CbvMaxLumRedSearch cbv;
@@ -257,7 +287,10 @@ XMFLOAT3 EnvMap::GetDirectionOfHighestIntensity(D3D* d3d, Heap* heap)
         }
     }
 
-    // TODO: Convert UV to dir
-    CherryPrint("YES!");
-    return XMFLOAT3(0.0f, 0.0f, 0.0f);
+    const auto [x, y] = readbackData[maxIdx].UV;
+    XMFLOAT2 fUv = XMFLOAT2(x, y);
+    fUv.x /= fWidth;
+    fUv.y /= fHeight;
+    const XMFLOAT3 dir = EaSquareToSphere(fUv);
+    return dir;
 }

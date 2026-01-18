@@ -58,7 +58,7 @@ struct StudioConfig
     DenoisingConfig Denoising = {};
 
     bool EnvMapEnabled = true;
-    float EnvMapRotation = 180.0f;
+    float EnvMapRotation = 0.0f;
 };
 
 struct SceneConfig
@@ -125,6 +125,7 @@ private:
     std::vector<const wchar_t*> m_envMapList;
     uint32_t m_selectedEnvMapIdx = 0;
     bool m_envMapDirty = true;
+    bool m_recomputeEnvMapDirLight = false;
 
     RasterContext m_rasterContext;
     std::shared_ptr<Shader> m_shaderRaster;

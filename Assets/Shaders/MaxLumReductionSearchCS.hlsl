@@ -27,17 +27,6 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
     uint2 threadID = fmod(DTid.xy, WARP_SIZE_1D);
     uint threadIdx = threadID.y * WARP_SIZE_1D + threadID.x;
 
-    GroupMemoryBarrierWithGroupSync();
-    if (threadIdx != 0)
-        return;
-
-    // Temporary for testing
-    uint2 groupID = DTid.xy / WARP_SIZE_1D;
-    uint outputIdx = groupID.y * 29 + groupID.x;
-    MaxLumRedSearchStruct outputX = { 1, uint2(44, 46) };
-    gOutputBuffer[outputIdx] = outputX;
-    return;
-
     float maxLum = 0.f;
     uint2 maxUV = uint2(0.f, 0.f);
 
@@ -72,6 +61,9 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
             maxUV = localMaxUV[i];
         }
     }
+
+    uint2 groupID = DTid.xy / WARP_SIZE_1D;
+    uint outputIdx = groupID.y * 29 + groupID.x;
 
     MaxLumRedSearchStruct output = { maxLum, maxUV };
     gOutputBuffer[outputIdx] = output;

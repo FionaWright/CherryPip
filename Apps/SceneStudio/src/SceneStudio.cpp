@@ -44,6 +44,8 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
                       &m_heap);
         m_envMap.InitCubemap(d3d->GetDevice(), cmdList, &m_heap);
         m_skybox.Init(d3d->GetDevice(), cmdList, &m_heap, m_envMap.GetCubemap());
+        m_recomputeEnvMapDirLight = true;
+        m_envMapDirty = false;
     }
 
     if (m_sceneDirty)
@@ -93,10 +95,10 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 
 void SceneStudio::OnPostUpdate(D3D* d3d)
 {
-    if (m_envMapDirty)
+    if (m_recomputeEnvMapDirLight)
     {
-        m_envMap.GetDirectionOfHighestIntensity(d3d, &m_heap);
-        m_envMapDirty = false;
+        m_studioConfig.PT.DirLightDirection = m_envMap.GetDirectionOfHighestIntensity(d3d, &m_heap);
+        m_recomputeEnvMapDirLight = false;
     }
 }
 
@@ -205,7 +207,8 @@ void SceneStudio::loadAssets(D3D* d3d)
 
     m_envMapList = {
         L"Env Maps/autumn_field_puresky_4k.hdr",
-        L"Env Maps/shanghai_bund_4k.hdr"
+        L"Env Maps/shanghai_bund_4k.hdr",
+        L"Env Maps/sunny_rose_garden_4k.hdr",
     };
     m_selectedEnvMapIdx = 0;
 

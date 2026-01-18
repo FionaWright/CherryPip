@@ -15,7 +15,8 @@ SamplerState gSampler : register(s0);
 float3 ReconstructWorldPosition(float2 uv, float depth)
 {
     float4 ndc;
-    ndc.xy = uv * 2.0f - 1.0f;
+    //ndc.xy = uv * 2.0f - 1.0f;
+    ndc.xy = uv * float2(2, -2) + float2(-1, 1); // DX Y-flip
     ndc.z  = depth * 2.0f - 1.0f; // [0,1] -> [-1,1]
     ndc.w  = 1.0f;
 
@@ -58,7 +59,7 @@ float4 PSMain(VsOut input) : SV_Target
     float3 valN = SampleNormal(input.uv);
     float3 valP = SampleWorldPos(input.uv);
 
-	if (dot(valN, valN) < 1e-4)
+	if (all(abs(valN+1) < 1e-4))
 		return float4(valC, 1.0f); // Is Skybox pixel
 
     float cumW = 0.0f;
@@ -74,7 +75,7 @@ float4 PSMain(VsOut input) : SV_Target
         float2 uv = input.uv + offset;
 
 		float3 sampleN = SampleNormal(uv);
-		if (dot(sampleN, sampleN) < 1e-4)
+		if (all(abs(sampleN+1) < 1e-4))
 			continue; // Skybox pixels have zero weight
         float3 tN = valN - sampleN;
         float distN2 = dot(tN, tN);

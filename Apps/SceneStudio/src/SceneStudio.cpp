@@ -29,11 +29,6 @@ void SceneStudio::OnInit(D3D* d3d)
     m_AspectRatio = static_cast<float>(Config::GetSystem().RtvWidth) / static_cast<float>(Config::GetSystem().
         RtvHeight);
 
-    constexpr float fov = 60.0f;
-    constexpr float nearPlane = 0.1f;
-    constexpr float farPlane = 100.0f;
-    m_projMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), m_AspectRatio, nearPlane, farPlane);
-
     m_camera.Init(XMFLOAT3(0, 0, 5), 0, PI);
 
     m_studioConfig.Backend = d3d->GetRayTracingSupported() ? RenderBackend::ePathTracer : RenderBackend::eForward;
@@ -77,6 +72,8 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         compilePtShader(d3d);
         m_shaderDirty = false;
     }
+
+    m_projMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(Config::GetRender().FoV), m_AspectRatio, Config::GetRender().NearPlane, Config::GetRender().FarPlane);
 
     switch (m_studioConfig.Backend)
     {
@@ -216,10 +213,10 @@ void SceneStudio::loadAssets(D3D* d3d)
     m_ptContext.Init(device, cmdList.Get(), &m_heap);
 
     m_rtvPingPong1.Init(L"Ping Pong 1", device, &m_heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight,
-                        Config::GetSystem().RtvFormat);
+                        Config::GetRender().RtvFormat);
     m_rtvPingPong2.Init(L"Ping Pong 2", device, &m_heapRTV, Config::GetSystem().RtvWidth,
                         Config::GetSystem().RtvHeight,
-                        Config::GetSystem().RtvFormat);
+                        Config::GetRender().RtvFormat);
 
     m_deferredContext.Init(device, cmdList.Get(), &m_heapRTV); // TODO: Only init when needed
 

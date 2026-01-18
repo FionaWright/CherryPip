@@ -209,150 +209,156 @@ void SceneStudio::GuiRaster()
 
 void SceneStudio::guiMain()
 {
-    ImGui::Unindent(IM_GUI_INDENTATION);
-    ImGui::SeparatorText("Camera##xx");
-    ImGui::Indent(IM_GUI_INDENTATION);
-
     bool resetPT = false;
-    XMFLOAT3 pos = m_camera.GetCamera().GetPosition();
-    resetPT |= ImGui::InputFloat3("Camera Position##xx", reinterpret_cast<float*>(&pos));
-    m_camera.GetCamera().SetPosition(pos);
-
-    float pitch = m_camera.GetCamera().GetPitch();
-    float yaw = m_camera.GetCamera().GetYaw();
-    resetPT |= ImGui::DragFloat("Camera Pitch##xx", &pitch, 0.01f);
-    resetPT |= ImGui::DragFloat("Camera Yaw##xx", &yaw, 0.01f);
-    m_camera.GetCamera().SetPitchYaw(pitch, yaw);
-
-    if (ImGui::Button("Reset Camera to Scene Start##xx"))
-    {
-        const auto currScene = m_sceneConfigs.at(m_currentScene);
-        m_camera.GetCamera().SetPosition(currScene.InitialCamPos);
-        m_camera.GetCamera().SetPitchYaw(currScene.InitialCamPitchYaw.x, currScene.InitialCamPitchYaw.y);
-        resetPT = true;
-    }
-    if (ImGui::Button("Reset Camera to Origin##xx"))
-    {
-        m_camera.GetCamera().SetPosition({0, 0, 0});
-        m_camera.GetCamera().SetPitchYaw(0, 0);
-        resetPT = true;
-    }
 
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Scene##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
-
-    const char* curName = m_sceneConfigs.at(m_currentScene).Name.c_str();
-    if (ImGui::BeginCombo("Scene##xx", curName))
     {
-        for (size_t i = 0; i < m_sceneConfigs.size(); i++)
+        const char* curName = m_sceneConfigs.at(m_currentScene).Name.c_str();
+        if (ImGui::BeginCombo("Scene##xx", curName))
         {
-            const bool isSelected = m_currentScene == i;
-            if (ImGui::Selectable(m_sceneConfigs.at(i).Name.c_str(), isSelected))
+            for (size_t i = 0; i < m_sceneConfigs.size(); i++)
             {
-                m_currentScene = i;
-                m_sceneDirty = true;
+                const bool isSelected = m_currentScene == i;
+                if (ImGui::Selectable(m_sceneConfigs.at(i).Name.c_str(), isSelected))
+                {
+                    m_currentScene = i;
+                    m_sceneDirty = true;
+                }
+
+                if (isSelected)
+                    ImGui::SetItemDefaultFocus();
             }
 
-            if (isSelected)
-                ImGui::SetItemDefaultFocus();
+            ImGui::EndCombo();
         }
 
-        ImGui::EndCombo();
+        m_sceneDirty |= ImGui::Button("Reload Scene##xx");
     }
-
-    m_sceneDirty |= ImGui::Button("Reload Scene##xx");
 
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Render Backend##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
+    {
+        static int e = m_studioConfig.Backend;
+        ImGui::RadioButton("Forward", &e, 0); ImGui::SameLine();
+        ImGui::RadioButton("Path Tracer", &e, 1);
+        m_studioConfig.Backend = static_cast<RenderBackend>(e);
+    }
 
-    static int e = m_studioConfig.Backend;
-    ImGui::RadioButton("Forward", &e, 0); ImGui::SameLine();
-    ImGui::RadioButton("Path Tracer", &e, 1);
-    m_studioConfig.Backend = static_cast<RenderBackend>(e);
+    ImGui::Unindent(IM_GUI_INDENTATION);
+    ImGui::SeparatorText("Camera##xx");
+    ImGui::Indent(IM_GUI_INDENTATION);
+    {
+        XMFLOAT3 pos = m_camera.GetCamera().GetPosition();
+        resetPT |= ImGui::InputFloat3("Camera Position##xx", reinterpret_cast<float*>(&pos));
+        m_camera.GetCamera().SetPosition(pos);
+
+        float pitch = m_camera.GetCamera().GetPitch();
+        float yaw = m_camera.GetCamera().GetYaw();
+        resetPT |= ImGui::DragFloat("Camera Pitch##xx", &pitch, 0.01f);
+        resetPT |= ImGui::DragFloat("Camera Yaw##xx", &yaw, 0.01f);
+        m_camera.GetCamera().SetPitchYaw(pitch, yaw);
+
+        if (ImGui::Button("Reset Camera to Scene Start##xx"))
+        {
+            const auto currScene = m_sceneConfigs.at(m_currentScene);
+            m_camera.GetCamera().SetPosition(currScene.InitialCamPos);
+            m_camera.GetCamera().SetPitchYaw(currScene.InitialCamPitchYaw.x, currScene.InitialCamPitchYaw.y);
+            resetPT = true;
+        }
+        if (ImGui::Button("Reset Camera to Origin##xx"))
+        {
+            m_camera.GetCamera().SetPosition({0, 0, 0});
+            m_camera.GetCamera().SetPitchYaw(0, 0);
+            resetPT = true;
+        }
+    }
 
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Environment Map##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
-
-    m_shaderDirty |= ImGui::Checkbox("Enabled##xx", &m_studioConfig.EnvMapEnabled);
-    if (m_studioConfig.EnvMapEnabled)
     {
-        m_envMapDirty |= ImGui::InputFloat("Rotation##xx", &m_studioConfig.EnvMapRotation);
-
-        if (m_studioConfig.Backend == RenderBackend::ePathTracer)
+        m_shaderDirty |= ImGui::Checkbox("Enabled##xx", &m_studioConfig.EnvMapEnabled);
+        if (m_studioConfig.EnvMapEnabled)
         {
-            const bool envMapEAChanged = ImGui::Checkbox("Equal-Area Map##xx", &m_studioConfig.PT.EnvMapIsEqualArea);
-            m_sceneDirty |= envMapEAChanged;
-            m_shaderDirty |= envMapEAChanged;
-        }
+            m_envMapDirty |= ImGui::InputFloat("Rotation##xx", &m_studioConfig.EnvMapRotation);
 
-        const auto currMap = wstringToString(m_envMapList.at(m_selectedEnvMapIdx));
-        if (ImGui::BeginCombo("Map##xx", currMap.c_str()))
-        {
-            for (size_t i = 0; i < m_envMapList.size(); i++)
+            if (m_studioConfig.Backend == RenderBackend::ePathTracer)
             {
-                const bool isSelected = m_selectedEnvMapIdx == i;
-                if (ImGui::Selectable(wstringToString(m_envMapList.at(i)).c_str(), isSelected))
-                {
-                    m_selectedEnvMapIdx = i;
-                    m_envMapDirty = true;
-                }
-
-                if (isSelected)
-                    ImGui::SetItemDefaultFocus();
+                const bool envMapEAChanged = ImGui::Checkbox("Equal-Area Map##xx", &m_studioConfig.PT.EnvMapIsEqualArea);
+                m_sceneDirty |= envMapEAChanged;
+                m_shaderDirty |= envMapEAChanged;
             }
 
-            ImGui::EndCombo();
-        }
-    }
+            const auto currMap = wstringToString(m_envMapList.at(m_selectedEnvMapIdx));
+            if (ImGui::BeginCombo("Map##xx", currMap.c_str()))
+            {
+                for (size_t i = 0; i < m_envMapList.size(); i++)
+                {
+                    const bool isSelected = m_selectedEnvMapIdx == i;
+                    if (ImGui::Selectable(wstringToString(m_envMapList.at(i)).c_str(), isSelected))
+                    {
+                        m_selectedEnvMapIdx = i;
+                        m_envMapDirty = true;
+                    }
 
-    m_shaderDirty |= m_envMapDirty;
+                    if (isSelected)
+                        ImGui::SetItemDefaultFocus();
+                }
+
+                ImGui::EndCombo();
+            }
+        }
+
+        m_shaderDirty |= m_envMapDirty;
+    }
 
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Denoising##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
-
-    static const std::vector<const char*> denoisingTypeMap = {
-        "Box", "Gaussian", "Median(3x3)", "A-Trous", "NVIDIA NRD"
-    };
-
-    ImGui::Checkbox("Enabled##xxx", &m_studioConfig.Denoising.Enabled);
-    if (m_studioConfig.Denoising.Enabled)
     {
-        const auto currType = denoisingTypeMap.at(m_studioConfig.Denoising.Type);
-        if (ImGui::BeginCombo("Type##xx", currType))
+        static const std::vector<const char*> denoisingTypeMap = {
+            "Box", "Gaussian", "Median(3x3)", "A-Trous", "NVIDIA NRD"
+        };
+
+        ImGui::Checkbox("Enabled##xxx", &m_studioConfig.Denoising.Enabled);
+        if (m_studioConfig.Denoising.Enabled)
         {
-            for (size_t i = 0; i < denoisingTypeMap.size(); i++)
+            const auto currType = denoisingTypeMap.at(m_studioConfig.Denoising.Type);
+            if (ImGui::BeginCombo("Type##xx", currType))
             {
-                const bool isSelected = m_studioConfig.Denoising.Type == i;
-                if (ImGui::Selectable(denoisingTypeMap.at(i), isSelected))
+                for (size_t i = 0; i < denoisingTypeMap.size(); i++)
                 {
-                    m_studioConfig.Denoising.Type = static_cast<DenoisingType>(i);
+                    const bool isSelected = m_studioConfig.Denoising.Type == i;
+                    if (ImGui::Selectable(denoisingTypeMap.at(i), isSelected))
+                    {
+                        m_studioConfig.Denoising.Type = static_cast<DenoisingType>(i);
+                    }
+
+                    if (isSelected)
+                        ImGui::SetItemDefaultFocus();
                 }
 
-                if (isSelected)
-                    ImGui::SetItemDefaultFocus();
+                ImGui::EndCombo();
             }
 
-            ImGui::EndCombo();
-        }
+            if (m_studioConfig.Denoising.Type == eBox || m_studioConfig.Denoising.Type == eGaussian)
+            {
+                ImGui::InputInt("Radius##xx", &m_studioConfig.Denoising.BoxRadius);
+                m_studioConfig.Denoising.BoxRadius = std::max(0, m_studioConfig.Denoising.BoxRadius);
+            }
 
-        if (m_studioConfig.Denoising.Type == eBox || m_studioConfig.Denoising.Type == eGaussian)
-        {
-            ImGui::InputInt("Radius##xx", &m_studioConfig.Denoising.BoxRadius);
-            m_studioConfig.Denoising.BoxRadius = std::max(0, m_studioConfig.Denoising.BoxRadius);
-        }
-
-        if (m_studioConfig.Denoising.Type == eATrous)
-        {
-            ImGui::InputInt("Iterations##xx", &m_studioConfig.Denoising.ATrousIterations);
-            if (m_studioConfig.Denoising.ATrousIterations > MAX_ATROUS_ITERATIONS)
-                m_studioConfig.Denoising.ATrousIterations = MAX_ATROUS_ITERATIONS;
-            ImGui::InputFloat("Color Phi##xx", &m_studioConfig.Denoising.ATrousPhiC);
-            ImGui::InputFloat("Normals Phi##xx", &m_studioConfig.Denoising.ATrousPhiN);
-            ImGui::InputFloat("Position Phi##xx", &m_studioConfig.Denoising.ATrousPhiP);
+            if (m_studioConfig.Denoising.Type == eATrous)
+            {
+                ImGui::InputInt("Iterations##xx", &m_studioConfig.Denoising.ATrousIterations);
+                if (m_studioConfig.Denoising.ATrousIterations > MAX_ATROUS_ITERATIONS)
+                    m_studioConfig.Denoising.ATrousIterations = MAX_ATROUS_ITERATIONS;
+                ImGui::InputFloat("Color Phi##xx", &m_studioConfig.Denoising.ATrousPhiC);
+                ImGui::InputFloat("Normals Phi##xx", &m_studioConfig.Denoising.ATrousPhiN);
+                ImGui::InputFloat("Position Phi##xx", &m_studioConfig.Denoising.ATrousPhiP);
+            }
         }
     }
 

@@ -454,7 +454,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     material->SetName(mat.name.c_str());
 
     memcpy(&materialData.BaseColorFactor, &mat.pbrData.baseColorFactor, sizeof(float) * 3);
-    materialData.EmissiveStrength = mat.emissiveStrength;
+    materialData.EmissiveStrength = mat.emissiveFactor == fastgltf::math::nvec3(0,0,0) ? 0 : mat.emissiveStrength;
     materialData.Roughness = mat.pbrData.roughnessFactor;
     materialData.Metalness = mat.pbrData.metallicFactor;
     materialData.IoR = mat.ior;

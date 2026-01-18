@@ -61,7 +61,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Fix glass attenuation after, add attenuationDistance field
 - Add stanford dragon model to test with and perform glass ball test with it (Object behind should be vertically flipped depending on distance)
 - Mist (Randomly scatter rays depending on distance travelled, see SL video) (Rayleigh scattering! Requires spectral renderer?)
-- Is light from the env map being used as if it's a light source correctly? Should there be a separate dir light? 
+- Get dir light from env map
 - Get a big scene that isn't bistro 
 
 - Camera movement gets messed up sometimes

@@ -88,6 +88,8 @@ void Engine::Render()
     V(cmdList->Close());
     m_d3d->ExecuteCommandList(cmdList.Get());
     m_d3d->Present();
+
+    m_apps.at(m_selectedAppIdx)->OnPostUpdate(m_d3d.get());
 }
 
 void Engine::CalculateFPS(const double deltaTime)

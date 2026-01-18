@@ -78,6 +78,7 @@ class SceneStudio final : public App
 public:
     void OnInit(D3D* d3d) override;
     void OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList) override;
+    void OnPostUpdate(D3D* d3d) override;
     void RenderGUI() override;
 
     [[nodiscard]] const char* GetName() const override { return "Scene Studio"; }

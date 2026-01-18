@@ -18,6 +18,8 @@ public:
     void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const std::wstring& filePath, float rotation, Heap* heap);
     void InitCubemap(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap* heap);
 
+    XMFLOAT3 GetDirectionOfHighestIntensity(D3D* d3d, Heap* heap);
+
     D12Resource* GetPano() { return m_pano.GetD12Resource(); }
     D12Resource* GetEA() { return m_ea.GetD12Resource(); }
     D12Resource* GetCubemap() { return m_cubemap.GetD12Resource(); }
@@ -33,6 +35,12 @@ private:
     RootSig m_rootSigPanoToEA, m_rootSigPanoToCM;
     Shader m_shaderPanoToEA, m_shaderPanoToCM;
     Material m_matPanoToEA, m_matPanoToCM;
+
+    RootSig m_rootSigMaxLumRedSearch;
+    Shader m_shaderMaxLumRedSearch;
+    Material m_matMaxLumRedSearch;
+    D12Resource m_bufferMaxLumRedSearch;
+    D12Resource m_readbackBufferMaxLumRedSearch;
 };
 
 

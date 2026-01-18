@@ -106,4 +106,10 @@ struct CbvFilterATrous
     float4x4 InvVP;
 };
 
+struct CbvMaxLumRedSearch
+{
+    float2 TexelSize;
+    float2 p;
+};
+
 #endif

@@ -64,7 +64,6 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Is light from the env map being used as if it's a light source correctly? Should there be a separate dir light? 
 - Get a big scene that isn't bistro 
 
-- Hot reloading broken on PC only
 - Camera movement gets messed up sometimes
 - IMPORTANT: Material::AddTexBindless seems like it does something COMPELETELY DISJOINT FROM THE MATERIALS PURPOSE!!! ModelLoader should just use the heap to put it on
 

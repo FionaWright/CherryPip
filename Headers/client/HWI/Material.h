@@ -66,7 +66,6 @@ public:
                 const D3D12_SHADER_RESOURCE_VIEW_DESC& desc);
     void SetTex(ID3D12Device* device, UINT srvIdx, Heap* heap, std::shared_ptr<Texture> tex);
     void SetTex(ID3D12Device* device, UINT srvIdx, Heap* heap, D12Resource* d12Resource);
-    void AddTexBindless(ID3D12Device* device, Heap* heap, std::shared_ptr<Texture> tex, int* bindlessIdx);
     void SetBuffer(ID3D12Device* device, UINT srvIdx, Heap* heap, std::shared_ptr<D12Resource> resource,
                    UINT numElements,
                    size_t stride);
@@ -80,7 +79,6 @@ public:
 
     void UpdateCBV(UINT regIdx, const void* data) const;
     void SetDescriptorTables(ID3D12GraphicsCommandList* cmdList, bool isCompute = false) const;
-    void GetCbvGpuHandle(uint32_t idx) const;
 
 private:
     std::string m_name = "Unnamed Material";

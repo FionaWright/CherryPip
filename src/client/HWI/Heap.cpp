@@ -5,6 +5,7 @@
 #include "HWI/Heap.h"
 
 #include "../../../Headers/client/Helper.h"
+#include "HWI/Texture.h"
 
 void Heap::Init(ID3D12Device* device, const size_t numDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE type)
 {
@@ -43,6 +44,22 @@ UINT Heap::GetNextDescriptorBindlessTexture()
     const UINT idx = m_currentHeapIndexBindlessTex;
     m_currentHeapIndexBindlessTex++;
     return idx;
+}
+
+UINT Heap::AddBindlessTexture(ID3D12Device* device, std::shared_ptr<Texture> tex)
+{
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Format = tex->GetFormat();
+    srvDesc.Texture2D.MipLevels = tex->GetDesc().MipLevels;
+    srvDesc.Texture2D.MostDetailedMip = 0;
+    srvDesc.Texture2D.PlaneSlice = 0;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+    const UINT idx = GetNextDescriptorBindlessTexture();
+    InitSRV(device, tex->GetD12Resource()->GetResource(), srvDesc, idx);
+
+    return idx - GetBindlessTexBase();
 }
 
 void Heap::InitCBV(ID3D12Device* device, ID3D12Resource* resource, const size_t size, const UINT idx) const

@@ -97,30 +97,6 @@ void Material::SetTex(ID3D12Device* device, const UINT srvIdx, Heap* heap, D12Re
     SetSRV(device, srvIdx, heap, d12Resource, srvDesc);
 }
 
-// TODO: REMOVE?
-void Material::AddTexBindless(ID3D12Device* device, Heap* heap, std::shared_ptr<Texture> tex, int* bindlessIdx)
-{
-    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Format = tex->GetFormat();
-    srvDesc.Texture2D.MipLevels = tex->GetDesc().MipLevels;
-    srvDesc.Texture2D.MostDetailedMip = 0;
-    srvDesc.Texture2D.PlaneSlice = 0;
-    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-
-    m_tempTextureOwnership.push_back(tex);
-
-    const UINT idx = heap->GetNextDescriptorBindlessTexture();
-    heap->InitSRV(device, tex->GetD12Resource()->GetResource(), srvDesc, idx);
-
-    if (bindlessIdx)
-        *bindlessIdx = idx - heap->GetBindlessTexBase();
-
-    SRV srv = { idx };
-    srv.Resource = tex->GetD12Resource();
-    m_srvsTextures.push_back(srv);
-}
-
 void Material::SetBuffer(ID3D12Device* device, const UINT srvIdx, Heap* heap, std::shared_ptr<D12Resource> resource, const UINT numElements, const size_t stride)
 {
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};

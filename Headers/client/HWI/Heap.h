@@ -4,8 +4,11 @@
 
 #ifndef PT_HEAP_H
 #define PT_HEAP_H
+#include <complex.h>
 #include <d3d12.h>
 #include <wrl/client.h>
+
+class Texture;
 
 using Microsoft::WRL::ComPtr;
 
@@ -14,7 +17,9 @@ class Heap
 public:
     void Init(ID3D12Device* device, size_t numDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE type);
     UINT GetNextDescriptor();
+
     UINT GetNextDescriptorBindlessTexture();
+    UINT AddBindlessTexture(ID3D12Device* device, std::shared_ptr<Texture> tex);
     UINT GetBindlessTexBase() const { return m_baseBindlessTex; }
 
     void InitCBV(ID3D12Device* device, ID3D12Resource* resource, size_t size, UINT idx) const;

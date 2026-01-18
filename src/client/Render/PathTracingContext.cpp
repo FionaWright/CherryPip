@@ -208,6 +208,11 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
         cbv.WindowAppGuiWidth = Config::GetSystem().WindowAppGuiWidth;
         cbv.UpdateAccumulation = frameIncAllowed ? 1 : 0;
 
+        cbv.DirLight = config.DirLightDirection;
+        cbv.DirLightColor = config.DirLightColor;
+        cbv.DirLightCosAngularRadius = 1.0f - config.DirLightCosAngularRadius;
+        cbv.DirLightIntensity = config.DirLightIntensity;
+
         cbv.Jitter = XMFLOAT2(0, 0);
         if (config.JitterEnabled)
         {

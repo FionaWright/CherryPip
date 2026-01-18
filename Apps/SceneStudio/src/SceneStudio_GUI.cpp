@@ -38,8 +38,6 @@ void SceneStudio::RenderGUI()
         ImGui::EndTabBar();
     }
 
-
-
     Gui::EndWindow();
 }
 
@@ -79,6 +77,16 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
     int maxFrame = static_cast<int>(m_studioConfig.PT.MaxFrameNum);
     ptNeedsReset |= ImGui::InputInt("Max Frames##xx", &maxFrame);
     m_studioConfig.PT.MaxFrameNum = static_cast<uint32_t>(maxFrame);
+
+    ImGui::Unindent(IM_GUI_INDENTATION);
+    ImGui::SeparatorText("Dir Light##xx");
+    ImGui::Indent(IM_GUI_INDENTATION);
+
+    m_shaderDirty |= ImGui::Checkbox("Enabled##xx", &m_studioConfig.PT.DirLightEnabled);
+    ptNeedsReset |= ImGui::InputFloat3("Direction##xx", reinterpret_cast<float*>(&m_studioConfig.PT.DirLightDirection));
+    ptNeedsReset |= ImGui::ColorEdit3("Colour##xx", reinterpret_cast<float*>(&m_studioConfig.PT.DirLightColor));
+    ptNeedsReset |= ImGui::InputFloat("Radius (R)##xx", &m_studioConfig.PT.DirLightCosAngularRadius);
+    ptNeedsReset |= ImGui::InputFloat("Intensity##xx", &m_studioConfig.PT.DirLightIntensity);
 
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Tools##xx");
@@ -157,10 +165,9 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
         m_readbackManager.SetInReadbackProcess(true);
     else if (!m_studioConfig.PT.ReadbackEveryFrame)
         m_readbackManager.SetInReadbackProcess(false);
-
-    ImGui::Unindent(IM_GUI_INDENTATION);
 #endif
 
+    ImGui::Unindent(IM_GUI_INDENTATION);
     if (ptNeedsReset)
     {
         m_ptContext.Reset();

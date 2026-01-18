@@ -521,10 +521,12 @@ void SceneStudio::compilePtShader(const D3D* d3d)
         args.push_back(L"-DDEBUG_BUFFER");
         rootSig = m_rootSigDebug->Get();
     }
-    if (!m_studioConfig.EnvMapEnabled)
-        args.push_back(L"-DENV_MAP_OFF");
+    if (m_studioConfig.EnvMapEnabled)
+        args.push_back(L"-DENV_MAP_ENABLED");
     if (m_studioConfig.PT.EnvMapIsEqualArea)
         args.push_back(L"-DENV_MAP_EA");
+    if (m_studioConfig.PT.DirLightEnabled)
+        args.push_back(L"-DDIR_LIGHT_ENABLED");
     if (m_studioConfig.PT.RussianRouletteEnabled)
         args.push_back(L"-DRUSSIAN_ROULETTE_ENABLED");
 

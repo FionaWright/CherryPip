@@ -44,6 +44,12 @@ struct CbvPathTracing
     uint WindowAppGuiWidth;
     uint UpdateAccumulation;
     float2 Jitter;
+
+    float3 DirLight;
+    float DirLightCosAngularRadius;
+
+    float3 DirLightColor;
+    float DirLightIntensity;
 };
 
 enum DebugBuffer

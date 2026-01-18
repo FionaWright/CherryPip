@@ -24,7 +24,7 @@
 - [x] Scene Transforms/Materials GUI
 - [ ] CI/CD-like tests
 - [x] Specular/Reflections
-- [ ] Russian Roulette
+- [x] Russian Roulette
 - [ ] DoF
 - [x] Texture Sampling
 - [x] Allow for changing lighting models at runtime (Recompile shader with defines)
@@ -54,6 +54,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Consider dropping tangent/bitangent from attribute data (Needs CI test to see if it's faster)
 - Check for memory leaks, there's probably a lot
 - Make only a few scenes part of the repo, larger ones are not included by default 
+- Add support for root constants in Material and RootSig and apply to ATrous filter
 
 ## PT-TODO:
 
@@ -68,12 +69,11 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 - FPS has heavily dropped since I was away, possibly due to all the extra shaders/etc. Make sure they can be deleted properly when not in use
 
-## Laptop-TODO
+## Raster-TODO
 
 - Get proper BSDF for forward renderer
 - Add deferred render backend
 - GBuffer debug viewer
-- Add support for root constants in Material and RootSig and apply to ATrous filter
 
 ## Spectral Tracing
 

@@ -13,6 +13,7 @@
 #include "CBV.h"
 #include "Debug/Profiler.h"
 #include "HWI/BLAS.h"
+#include "HWI/Heap.h"
 #include "HWI/Material.h"
 #include "Render/Object.h"
 #include "System/FileHelper.h"
@@ -379,16 +380,14 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
         diffuseTex->Init(d3d->GetDevice(), cmdList, diffuseTexInput,
                          1);
 
-        MaterialData materialData = {};
-
         std::shared_ptr<Material> material = std::make_shared<Material>();
         material->Init(heap);
         material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices));
         material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterDebug));
         material->SetTex(d3d->GetDevice(), 0, heap, diffuseTex);
 
-        material->AddTexBindless(d3d->GetDevice(), heap, diffuseTex, &materialData.BindlessTexDiffuse); // TODO: REMOVE?
-
+        MaterialData materialData = {};
+        materialData.BindlessTexDiffuse = heap->AddBindlessTexture(d3d->GetDevice(), diffuseTex);
         material->SetData(materialData);
 
         auto obj = std::make_shared<Object>();
@@ -447,8 +446,6 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterDebug));
     material->SetTex(d3d->GetDevice(), 0, heap, diffuseTex);
 
-    material->AddTexBindless(d3d->GetDevice(), heap, diffuseTex, &materialData.BindlessTexDiffuse);
-
     bool isGlass = (mat.transmission && mat.transmission->transmissionFactor > 0.0) ||
         (mat.alphaMode == fastgltf::AlphaMode::Blend &&
          mat.pbrData.metallicFactor < 0.1 &&
@@ -461,6 +458,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     materialData.Roughness = mat.pbrData.roughnessFactor;
     materialData.Metalness = mat.pbrData.metallicFactor;
     materialData.IoR = mat.ior;
+    materialData.BindlessTexDiffuse = heap->AddBindlessTexture(d3d->GetDevice(), diffuseTex);
     if (isGlass)
         materialData.Flags = PtMaterialFlags::eIsGlass;
     material->SetData(materialData);

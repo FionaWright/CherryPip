@@ -33,11 +33,11 @@ void D12Resource::Fill(const ComPtr<ID3D12Resource>& resource, const D3D12_RESOU
 }
 
 void D12Resource::InitBuffer(const LPCWSTR name, ID3D12Device* device, const size_t size,
-                             const D3D12_RESOURCE_FLAGS flags)
+                             const D3D12_RESOURCE_FLAGS flags, const bool readbackHeap)
 {
     m_desc = CD3DX12_RESOURCE_DESC::Buffer(size, flags);
-    const auto defaultHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-    V(device->CreateCommittedResource(&defaultHeapProp, D3D12_HEAP_FLAG_NONE, &m_desc, D3D12_RESOURCE_STATE_COMMON, nullptr,
+    const auto heapProp = readbackHeap ? CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK) : CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+    V(device->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &m_desc, D3D12_RESOURCE_STATE_COMMON, nullptr,
                                       IID_PPV_ARGS(&m_resource)));
     V(m_resource->SetName(name));
     m_currentState = D3D12_RESOURCE_STATE_COMMON;

@@ -44,7 +44,6 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
                       &m_heap);
         m_envMap.InitCubemap(d3d->GetDevice(), cmdList, &m_heap);
         m_skybox.Init(d3d->GetDevice(), cmdList, &m_heap, m_envMap.GetCubemap());
-        m_envMapDirty = false;
     }
 
     if (m_sceneDirty)
@@ -90,6 +89,15 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     const bool moved = m_camera.UpdateCamera();
     if (moved)
         m_ptContext.Reset();
+}
+
+void SceneStudio::OnPostUpdate(D3D* d3d)
+{
+    if (m_envMapDirty)
+    {
+        m_envMap.GetDirectionOfHighestIntensity(d3d, &m_heap);
+        m_envMapDirty = false;
+    }
 }
 
 void SceneStudio::loadAssets(D3D* d3d)

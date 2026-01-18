@@ -55,6 +55,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Check for memory leaks, there's probably a lot
 - Make only a few scenes part of the repo, larger ones are not included by default 
 - Add support for root constants in Material and RootSig and apply to ATrous filter
+- Temporary heap which gets cleared at the end of each frame? Or maybe just clear all unused data from heaps every few frames
 
 ## PT-TODO:
 

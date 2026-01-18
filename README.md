@@ -29,6 +29,7 @@ Trying to work on it during my college semesters in my free time
 - Lambertian, Glossy and Glass lighting models
 - Environment maps with support for Panoramic and Octohedral Equal-Area (+Cubemap Skyboxes for the raster backends)
 - Denoising (Box, Gaussian, Median, Edge-Avoiding A-Trous) using deferred GBuffer pre-pass
+- Directional Lighting + GPU Max Reduction Search on the EA Environment Map to set direction to where luminance is highest
 
 ### Spectral Tracer
 - Work in Progress! 
@@ -49,6 +50,7 @@ Progress as of 10/01/26 (Took a long break):
 
 Progress as of 18/01/26:
 <img width="1696" height="603" alt="image" src="https://github.com/user-attachments/assets/6ae8b25d-a776-4016-bfc3-878b9b3a98fd" />
+
 
 
 

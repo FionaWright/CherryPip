@@ -88,14 +88,13 @@ void DenoisingManager::initATrous(ID3D12Device* device, Heap* heap, D12Resource*
     m_shaderATrous.InitVsPs(L"FullScreenTriangleVS.hlsl", L"Filters/ATrousPS.hlsl", m_ild, device,
                             m_rootSigATrous.Get());
 
+    m_matsATrous.resize(MAX_ATROUS_ITERATIONS);
     for (int i = 0; i < MAX_ATROUS_ITERATIONS; i++)
     {
-        Material mat;
-        mat.Init(heap);
-        mat.AddCBV(device, heap, sizeof(CbvFilterATrous));
-        mat.SetTex(device, 0, heap, i % 2 == 0 ? pp1 : pp2);
-        mat.SetTex(device, 1, heap, normalsDepth);
-        m_matsATrous.emplace_back(mat);
+        m_matsATrous[i].Init(heap);
+        m_matsATrous[i].AddCBV(device, heap, sizeof(CbvFilterATrous));
+        m_matsATrous[i].SetTex(device, 0, heap, i % 2 == 0 ? pp1 : pp2);
+        m_matsATrous[i].SetTex(device, 1, heap, normalsDepth);
     }
 }
 

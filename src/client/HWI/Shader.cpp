@@ -135,7 +135,7 @@ void Shader::InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D1
 #ifdef _DEBUG
     if (m_assignedToHotReload)
         return;
-    HotReloader::AssignShaderVsPs(vs, ps, this, ild, rootSig);
+    HotReloader::AssignShaderVsPs(vs, ps, this, ild, rootSig, dsvEnabled, args, numRTVs);
     m_assignedToHotReload = true;
 #endif
 }

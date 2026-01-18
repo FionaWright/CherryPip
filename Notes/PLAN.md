@@ -30,6 +30,7 @@
 - [x] Allow for changing lighting models at runtime (Recompile shader with defines)
 - [x] EA Mapping
 - [x] Raster skyboxes
+- [x] Directional Lighting
 - [ ] NEE 
 - [x] Glass model
 - [ ] Importance Sampling
@@ -63,12 +64,13 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Fix glass attenuation after, add attenuationDistance field
 - Add stanford dragon model to test with and perform glass ball test with it (Object behind should be vertically flipped depending on distance)
 - Mist (Randomly scatter rays depending on distance travelled, see SL video) (Rayleigh scattering! Requires spectral renderer?)
-- Get dir light from env map
 - Get a big scene that isn't bistro 
 
 - Camera movement gets messed up sometimes
+- Env map rotations not paritied between EA/pano
 
 - FPS has heavily dropped since I was away, possibly due to all the extra shaders/etc. Make sure they can be deleted properly when not in use
+- Test MaxLumRedSearch with env map rotations
 
 ## Raster-TODO
 

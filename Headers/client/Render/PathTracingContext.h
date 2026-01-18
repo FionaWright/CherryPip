@@ -47,6 +47,10 @@ struct PtConfig
     uint32_t RussianRouletteMinBounces = 4;
     PathTracerMode Mode = eGlass;
     DebugBuffer DebugBufferIdx = DebugBuffer::eNormalsShaded;
+    XMFLOAT3 DirLightDirection = XMFLOAT3(1, -1, 1);
+    XMFLOAT3 DirLightColor = XMFLOAT3(1, 1, 1);
+    float DirLightCosAngularRadius = 0.00465f;
+    float DirLightIntensity = 100.0f;
     alignas(4) bool DebugMode = false;
     alignas(4) bool AccumulationEnabled = true;
     alignas(4) bool JitterEnabled = true;
@@ -54,6 +58,7 @@ struct PtConfig
     alignas(4) bool ReadbackEveryFrame = false;
     alignas(4) bool EnvMapIsEqualArea = true;
     alignas(4) bool RussianRouletteEnabled = true;
+    alignas(4) bool DirLightEnabled = true;
 };
 
 class PathTracingContext

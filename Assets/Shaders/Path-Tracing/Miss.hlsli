@@ -45,7 +45,7 @@ float2 PanoSphereToSquare(float3 d)
     return float2(u, 1-v);
 }
 
-float3 Miss(float3 origin, float3 direction)
+float3 Miss(float3 origin, float3 direction, uint bounceIdx)
 {
 #if defined(FURNACE_TEST_HEMI_HEMI_EMIT)
     return float3(0, 0, 0);
@@ -53,17 +53,28 @@ float3 Miss(float3 origin, float3 direction)
     return float3(1, 1, 1);
 #endif
 
-#if defined(ENV_MAP_OFF)
-    return float3(0, 0, 0);
-#endif
+    float3 Li = float3(0, 0, 0);
 
-#if defined(ENV_MAP_EA)
+#ifdef ENV_MAP_ENABLED
+#    if defined(ENV_MAP_EA)
     float2 uv = EaSphereToSquare(direction);
-#else
+#    else
     float2 uv = PanoSphereToSquare(direction);
+#    endif
+
+    Li += saturate(gEnvMap.Sample(c_sampler, uv).rgb);
 #endif
 
-    return saturate(gEnvMap.Sample(c_sampler, uv).rgb);
+#ifdef DIR_LIGHT_ENABLED
+    if (bounceIdx >= 1)
+    {
+        float sunCos = dot(direction, -normalize(c_pathTracing.DirLight));
+        if (sunCos > c_pathTracing.DirLightCosAngularRadius)
+            Li += c_pathTracing.DirLightColor * c_pathTracing.DirLightIntensity;
+    }
+#endif
+
+    return Li;
 }
 
 #endif

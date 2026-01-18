@@ -44,7 +44,7 @@ struct PtConfig
     uint32_t SPP = 1;
     uint32_t NumBounces = 8;
     uint32_t MaxFrameNum = 0;
-    uint32_t RussianRouletteMinBounces = 2;
+    uint32_t RussianRouletteMinBounces = 4;
     PathTracerMode Mode = eGlass;
     DebugBuffer DebugBufferIdx = DebugBuffer::eNormalsShaded;
     alignas(4) bool DebugMode = false;

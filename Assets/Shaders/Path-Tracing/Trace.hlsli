@@ -27,7 +27,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 #include "Debug/DebugBuffersOnMiss.hlsli"
 #endif
             float3 Li = Miss(ray.Origin, ray.Direction);
-            Lo += Li;
+            Lo += throughput * Li;
             break;
         }
 

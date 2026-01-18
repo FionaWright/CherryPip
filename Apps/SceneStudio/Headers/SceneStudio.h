@@ -45,7 +45,7 @@ struct DenoisingConfig
     int BoxRadius = 1;
     int ATrousIterations = 5;
     DenoisingType Type = eATrous;
-    float ATrousPhiC = 4.0f; // Tune this third
+    float ATrousPhiC = 1.0f; // Tune this third
     float ATrousPhiN = 0.1f; // Tune this first
     float ATrousPhiP = 1.0f; // Tune this second
 };

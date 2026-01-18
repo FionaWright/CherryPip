@@ -71,8 +71,6 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - FPS has heavily dropped since I was away, possibly due to all the extra shaders/etc. Make sure they can be deleted properly when not in use
 - Materials being destroyed a lot at startup!
 - Russian roulette causing lost energy somewhere
-- A-Trous seam (near/far plane imprecision or smth?)
-- A-Trous overblurring (Are you SURE it's not meant to diminish with each iteration??)
 
 ## Laptop-TODO
 

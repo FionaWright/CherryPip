@@ -12,7 +12,7 @@
 class HotReloader
 {
 public:
-    static void AssignShaderVsPs(const std::wstring& vs, const std::wstring& ps, Shader* shader, const D3D12_INPUT_LAYOUT_DESC& ild, ID3D12RootSignature* rootSig);
+    static void AssignShaderVsPs(const std::wstring& vs, const std::wstring& ps, Shader* shader, const D3D12_INPUT_LAYOUT_DESC& ild, ID3D12RootSignature* rootSig, bool dsvEnabled, const std::vector<const WCHAR*>& args, uint32_t numRTVs);
     static void AssignShaderCs(const std::wstring& cs, Shader* shader, ID3D12RootSignature* rootSig);
     static void CheckFiles(D3D* d3d);
     static void PendFullReload() { m_pendingFullReload = true; }
@@ -27,6 +27,9 @@ private:
         std::vector<D3D12_INPUT_ELEMENT_DESC> ild;
 
         ID3D12RootSignature* RootSig;
+        bool DsvEnabled;
+        std::vector<const WCHAR*> Args;
+        uint32_t NumRTVs;
 
         std::time_t TimeStampVS;
         std::time_t TimeStampPS;

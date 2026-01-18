@@ -92,6 +92,9 @@ void Engine::RenderGUI()
     ImGui::Checkbox("VSync##xx", &Config::GetSystem().VSyncEnabled);
     ImGui::Checkbox("Sync GPU##xx", &Config::GetSystem().ForceSyncCpuGpu);
     ImGui::Checkbox("App Gui Enabled##xx", &Config::GetSystem().AppGuiEnabled);
+    ImGui::InputFloat("Field of View##xx", &Config::GetRender().FoV);
+    ImGui::InputFloat("Near Plane##xx", &Config::GetRender().NearPlane);
+    ImGui::InputFloat("Far Plane##xx", &Config::GetRender().FarPlane);
 
     ImGui::Spacing();
     ImGui::Unindent(IM_GUI_INDENTATION);

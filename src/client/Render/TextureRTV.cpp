@@ -29,7 +29,7 @@ void TextureRTV::Init(const LPCWSTR name, ID3D12Device* device, Heap* heap, cons
     resourceDesc.SampleDesc.Quality = 0;
 
     D3D12_CLEAR_VALUE clearVal = {};
-    memcpy(clearVal.Color, Config::GetSystem().RtvClearColor, sizeof(float) * 4);
+    memcpy(clearVal.Color, Config::GetRender().RtvClearColor, sizeof(float) * 4);
     clearVal.Format = resourceDesc.Format;
 
     m_d12Resource.Init(name, device, resourceDesc, D3D12_RESOURCE_STATE_RENDER_TARGET, &clearVal);

@@ -128,7 +128,7 @@ void Shader::InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D1
     psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
     psoDesc.NumRenderTargets = numRTVs;
     for (int i = 0; i < numRTVs; i++)
-        psoDesc.RTVFormats[i] = Config::GetSystem().RtvFormat;
+        psoDesc.RTVFormats[i] = Config::GetRender().RtvFormat;
     psoDesc.SampleDesc.Count = 1;
     V(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pso)));
 

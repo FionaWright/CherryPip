@@ -9,6 +9,7 @@
 #include <unordered_map>
 
 SettingsSystem Config::ms_settingsSystem;
+SettingsRender Config::ms_settingsRender;
 
 template <typename Out>
 void split(const std::string &s, const char delim, Out result) {

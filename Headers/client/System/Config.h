@@ -27,9 +27,16 @@ struct SettingsSystem
     bool AppGuiEnabled = true;
 
     bool ProfilingEnabled = true;
+};
 
+struct SettingsRender
+{
     DXGI_FORMAT RtvFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
     FLOAT RtvClearColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+
+    float FoV = 60.0f;
+    float NearPlane = 0.1f;
+    float FarPlane = 100.0f;
 };
 
 class Config
@@ -37,9 +44,11 @@ class Config
 public:
     static void ParseCommandLineArgs(LPSTR args);
     static SettingsSystem& GetSystem() { return ms_settingsSystem; }
+    static SettingsRender& GetRender() { return ms_settingsRender; }
 
 private:
     static SettingsSystem ms_settingsSystem;
+    static SettingsRender ms_settingsRender;
 };
 
 

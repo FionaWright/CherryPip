@@ -55,7 +55,7 @@ struct StudioConfig
     RenderBackend Backend = ePathTracer;
     PtConfig PT = {};
     RasterConfig Raster = {};
-    DenoisingConfig Denoising = {}; // TODO: Move to PTConfig
+    DenoisingConfig Denoising = {};
 
     bool EnvMapEnabled = true;
     float EnvMapRotation = 180.0f;

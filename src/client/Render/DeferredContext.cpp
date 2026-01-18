@@ -86,7 +86,7 @@ void DeferredContext::Render(const D3D* d3d, ID3D12GraphicsCommandList* cmdList,
     cmdList->OMSetRenderTargets(m_rtvHandles.size(), m_rtvHandles.data(), FALSE, &dsvHandle);
 
     for (const auto rtvHandle : m_rtvHandles)
-        cmdList->ClearRenderTargetView(rtvHandle, Config::GetSystem().RtvClearColor, 1, &scissorRect);
+        cmdList->ClearRenderTargetView(rtvHandle, Config::GetRender().RtvClearColor, 1, &scissorRect);
     cmdList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
     CbvMatrices matrices = {};

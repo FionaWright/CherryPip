@@ -30,7 +30,7 @@ void RasterContext::Render(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, c
     const CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(d3d->GetDsvHeapStart(), d3d->GetFrameIndex(), d3d->GetDsvDescriptorSize());
     cmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 
-    cmdList->ClearRenderTargetView(rtvHandle, Config::GetSystem().RtvClearColor, 1, &scissorRect);
+    cmdList->ClearRenderTargetView(rtvHandle, Config::GetRender().RtvClearColor, 1, &scissorRect);
     cmdList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
     CbvMatrices matrices = {};

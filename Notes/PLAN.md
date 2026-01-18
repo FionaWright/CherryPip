@@ -36,13 +36,14 @@
 - [ ] Importance Sampling
 - [ ] MIS
 - [ ] Ray pipelines
-- [ ] Spectral Path-Tracing (Hero, make separate from RGB PT)
+- [ ] Spectral Path-Tracing 
 - [ ] Rayleigh scattering
 - [x] GBuffer pre-pass
 - [x] Denoising (Box/Gauss/A-Trous)
 - [x] Denoising Median
 - [ ] Denoising NRD
 - [ ] ReSTIR
+- [ ] GPU Memory Profiler (Track memory usage, find leaks/waste)
 
 https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d12-raytracing-samples-win32/
 

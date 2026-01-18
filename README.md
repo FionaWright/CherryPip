@@ -23,7 +23,8 @@ Trying to work on it during my college semesters in my free time
 ### Path Tracer
 - Using RayQuery through a pixel shader
 - See a specific pixels value using readback system
-- Two furnace tests 
+- Two furnace tests
+- Russian Roulette
 - See different parts of the path tracer using Debug Buffer system (Normals, Albedo, HitDist, RNG, FirstBounceDirection, etc)
 - Lambertian, Glossy and Glass lighting models
 - Environment maps with support for Panoramic and Octohedral Equal-Area (+Cubemap Skyboxes for the raster backends)
@@ -45,6 +46,10 @@ Progress as of 09/11/25:
 
 Progress as of 10/01/26 (Took a long break):
 <img width="1020" height="573" alt="image" src="https://github.com/user-attachments/assets/f13adf28-8360-4225-a2ab-e718a83e969b" />
+
+Progress as of 18/01/26:
+<img width="1696" height="603" alt="image" src="https://github.com/user-attachments/assets/6ae8b25d-a776-4016-bfc3-878b9b3a98fd" />
+
 
 
 

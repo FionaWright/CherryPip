@@ -127,6 +127,7 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
     m_shaderDirty |= ImGui::RadioButton("Lambert", &e, idx++);
     m_shaderDirty |= ImGui::RadioButton("Glossy", &e, idx++);
     m_shaderDirty |= ImGui::RadioButton("Glass", &e, idx++);
+    m_shaderDirty |= ImGui::RadioButton("GGX/Smith-Schlick Microfacet", &e, idx++);
     m_shaderDirty |= ImGui::RadioButton("Furnace Test (HDR)", &e, idx++);
     m_shaderDirty |= ImGui::RadioButton("Furnace Test (HHE)", &e, idx++);
     ImGui::Unindent(IM_GUI_INDENTATION);

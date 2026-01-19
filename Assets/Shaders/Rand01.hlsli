@@ -102,6 +102,7 @@ float3 any_perpendicular(float3 n)
     return abs(n.z) < 0.999 ? normalize(cross(n, float3(0,0,1))) : normalize(cross(n, float3(0,1,0)));
 }
 
+// Optimization to get tangent/bitangent from Hit
 float3 RandHemisphereCosine(inout uint state, float3 normal)
 {
     float u1 = PcgRand01(state);

@@ -553,6 +553,7 @@ void SceneStudio::compilePtShader(const D3D* d3d)
         L"Path-Tracing/Entry/LambDiffPS.hlsl",
         L"Path-Tracing/Entry/GlossyPS.hlsl",
         L"Path-Tracing/Entry/GlassPS.hlsl",
+        L"Path-Tracing/Entry/GgxSmithMicrofacetPS.hlsl",
         L"Path-Tracing/Entry/FurnaceHdReflectPS.hlsl",
         L"Path-Tracing/Entry/FurnaceHhEmitPS.hlsl"
     };

@@ -30,6 +30,7 @@ enum PathTracerMode : uint32_t
     eLambertDiff,
     eGlossy,
     eGlass,
+    eGgxSmithMicrofacet,
     eFurnaceTestClassic,
     eFurnaceTestEmissive
 };
@@ -40,7 +41,7 @@ struct PtConfig
     uint32_t NumBounces = 8;
     uint32_t MaxFrameNum = 0;
     uint32_t RussianRouletteMinBounces = 4;
-    PathTracerMode Mode = eGlass;
+    PathTracerMode Mode = eGgxSmithMicrofacet;
     DebugBuffer DebugBufferIdx = DebugBuffer::eNormalsShaded;
     float DirLightCosAngularRadius = 0.00465f;
     alignas(4) bool DebugMode = false;

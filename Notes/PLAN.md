@@ -65,7 +65,6 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Add stanford dragon model to test with and perform glass ball test with it (Object behind should be vertically flipped depending on distance)
 - Mist (Randomly scatter rays depending on distance travelled, see SL video) (Rayleigh scattering! Requires spectral renderer?)
 - Get a big scene that isn't bistro (Junkyard?)
-- Normal/RoughMet/Emissive maps in PT (with macro!)
 - PT only build mode that doesn't initialize any raster resources? 
 
 - Camera movement gets messed up sometimes

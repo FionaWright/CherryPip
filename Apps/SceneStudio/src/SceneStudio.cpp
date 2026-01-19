@@ -97,7 +97,7 @@ void SceneStudio::OnPostUpdate(D3D* d3d)
 {
     if (m_recomputeEnvMapDirLight)
     {
-        m_studioConfig.PT.DirLightDirection = m_envMap.GetDirectionOfHighestIntensity(d3d, &m_heap);
+        m_studioConfig.DirLightDirection = m_envMap.GetDirectionOfHighestIntensity(d3d, &m_heap);
         m_recomputeEnvMapDirLight = false;
     }
 }
@@ -440,7 +440,7 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         const int debugBufferIdx = m_studioConfig.PT.DebugMode ? static_cast<uint32_t>(m_studioConfig.PT.DebugBufferIdx) : -1;
 
         m_ptContext.Render(cmdList, rootSig, m_shader->GetPSO(), &m_camera.GetCamera(), &m_heap, m_projMatrix,
-                           m_studioConfig.PT, debugBufferIdx);
+                           m_studioConfig.PT, m_studioConfig.DirLightIntensity, m_studioConfig.DirLightColor, m_studioConfig.DirLightDirection, debugBufferIdx);
     }
 
 #ifdef _DEBUG
@@ -505,7 +505,7 @@ void SceneStudio::renderRaster(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     {
         CbvRasterDebug rasterDebug{};
         rasterDebug.Mode = m_studioConfig.Raster.Mode;
-        rasterDebug.DirLighting = m_studioConfig.Raster.DirLighting;
+        rasterDebug.DirLightDir = m_studioConfig.DirLightDirection;
 
         const int sceneIdx = m_sceneConfigs.at(m_currentScene).SceneIdx;
 

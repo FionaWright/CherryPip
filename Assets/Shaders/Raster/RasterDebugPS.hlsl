@@ -29,7 +29,7 @@ float4 PSMain(VsOut input) : SV_TARGET
     float3 N = normalize(input.normal);
     float3 N_w = normalize(bumpSample.x * T + bumpSample.y * B + bumpSample.z * N);
 
-    float NdL = dot(N_w, normalize(c_rasterDebug.DirLighting));
+    float NdL = dot(N_w, -normalize(c_rasterDebug.DirLightDir));
 
     switch (c_rasterDebug.Mode)
     {

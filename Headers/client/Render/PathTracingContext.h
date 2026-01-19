@@ -47,10 +47,7 @@ struct PtConfig
     uint32_t RussianRouletteMinBounces = 4;
     PathTracerMode Mode = eGlass;
     DebugBuffer DebugBufferIdx = DebugBuffer::eNormalsShaded;
-    XMFLOAT3 DirLightDirection = XMFLOAT3(1, -1, 1);
-    XMFLOAT3 DirLightColor = XMFLOAT3(1, 1, 1);
     float DirLightCosAngularRadius = 0.00465f;
-    float DirLightIntensity = 100.0f;
     alignas(4) bool DebugMode = false;
     alignas(4) bool AccumulationEnabled = true;
     alignas(4) bool JitterEnabled = true;
@@ -68,7 +65,7 @@ public:
     void BuildScene(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const Scene* scene, Heap* heap, D12Resource* envMap);
     void Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSig,
                 ID3D12PipelineState* pso,
-                const Camera* camera, Heap* heap, const XMMATRIX& projMatrix, const PtConfig& config,
+                const Camera* camera, Heap* heap, const XMMATRIX& projMatrix, const PtConfig& config, float dirLightIntensity, XMFLOAT3 dirLightColor, XMFLOAT3 dirLightDir,
                 int debugModeIdx = -1);
     void Reset();
 

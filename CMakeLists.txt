@@ -23,6 +23,7 @@ add_library(client STATIC
 include_directories(
         Headers
         Headers/client
+        Assets/Shaders
         Assets/Shaders/DualIncludes
         Assets/Resources
 )

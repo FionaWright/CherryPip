@@ -70,12 +70,12 @@ enum class DebugBuffer
     eRNG,
     eSelfIntersection,
     eNaN,
+    eRoughness,
+    eMetalness,
 
     // Unimplemented for now:
     eDirectLighting,
     eIndirectLighting,
-    eMetalness,
-    eRoughness
 };
 
 struct CbvPathTracingDebug

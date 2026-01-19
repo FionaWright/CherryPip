@@ -31,26 +31,31 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             break;
         }
 
-        float3 brdf = 0, outNg = 0, outNs = 0, Li = 0;
         PtMaterialData mat;
-        Hit(rngState, brdf, outNg, outNs, Li, mat, q);
+        float3 brdf = 0, Ng = 0, Ns = 0, Li = 0;
+        float2 uv = 0;
+        Hit(rngState, q, brdf, Ng, Ns, Li, mat, uv);
+
+        float2 roughMet = gTextures[mat.TexIdxRoughMet].Sample(c_sampler, uv).gb;
+        float roughness = mat.Roughness * roughMet.r;
+        // Why isn't metalness used yet?
 
         float3 hitPos = ray.Origin + ray.Direction * q.CommittedRayT();
 
         float3 wo = ray.Direction;
 
 #if defined(LIGHTING_LAMB_DIFF)
-        Model_LambertionDiffuse(rngState, Lo, throughput, outNs, Li, brdf, ray.Direction);
+        Model_LambertionDiffuse(rngState, Lo, throughput, Ns, Li, brdf, ray.Direction);
 #elif defined(LIGHTING_GLOSSY)
-        Model_Glossy(rngState, Lo, throughput, mat.DiffuseProbability, mat.Roughness, outNs, Li, brdf, wo, ray.Direction);
+        Model_Glossy(rngState, Lo, throughput, mat.DiffuseProbability, roughness, Ns, Li, brdf, wo, ray.Direction);
 #elif defined(LIGHTING_GLASS)
         if (mat.Flags & PtMaterialFlags::eIsGlass)
         {
             bool entering = q.CommittedTriangleFrontFace()!=0;
-            Model_Glass(rngState, Lo, throughput, mat, entering, q.CommittedRayT(), outNs, Li, brdf, wo, ray.Direction);
+            Model_Glass(rngState, Lo, throughput, mat.DiffuseProbability, roughness, entering, q.CommittedRayT(), mat.IoR, Ns, Li, brdf, wo, ray.Direction);
         }
         else
-            Model_Glossy(rngState, Lo, throughput, mat.DiffuseProbability, mat.Roughness, outNs, Li, brdf, wo, ray.Direction);
+            Model_Glossy(rngState, Lo, throughput, mat.DiffuseProbability, roughness, Ns, Li, brdf, wo, ray.Direction);
 #endif
 
 #if defined(RUSSIAN_ROULETTE_ENABLED)
@@ -66,7 +71,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         }
 #endif
 
-        ray.Origin = hitPos + outNg * EPSILON * sign(dot(outNg, ray.Direction));
+        ray.Origin = hitPos + Ng * EPSILON * sign(dot(Ng, ray.Direction));
 
 #ifdef DEBUG_BUFFER
 #include "Debug/DebugBuffersOnHit.hlsli"

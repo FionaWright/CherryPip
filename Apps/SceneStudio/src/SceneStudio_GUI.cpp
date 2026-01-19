@@ -104,8 +104,8 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
     }
 
     static const std::vector<const char*> c_debugBufferStrMap = {
-        "Normals (Ns)",
-        "Normals (Ng)",
+        "Normals (Shaded)",
+        "Normals (Geometric)",
         "Base Color",
         "HitPos",
         "First Bounce Direction",
@@ -116,6 +116,8 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
         "RNG",
         "Self-Intersection",
         "NaN",
+        "Roughness",
+        "Metalness",
     };
 
     static int e = m_studioConfig.PT.Mode;

@@ -1,7 +1,7 @@
 if (c_debug.DebugIdx == DebugBuffer::eNormalsShaded)
-    return outNs;
+    return Ns;
 else if (c_debug.DebugIdx == DebugBuffer::eNormalsGeo)
-    return outNg;
+    return Ng;
 else if (c_debug.DebugIdx == DebugBuffer::eFirstBounceDirection)
     return ray.Direction;
 else if (c_debug.DebugIdx == DebugBuffer::eHitPos)
@@ -25,3 +25,7 @@ else if (c_debug.DebugIdx == DebugBuffer::eSelfIntersection)
     prevPrimID = primID;
     prevInstanceID = instanceID;
 }
+else if (c_debug.DebugIdx == DebugBuffer::eRoughness)
+    return float3(roughness.rrr);
+else if (c_debug.DebugIdx == DebugBuffer::eMetalness)
+    return float3(roughMet.ggg);

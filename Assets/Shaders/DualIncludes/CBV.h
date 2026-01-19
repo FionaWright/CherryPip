@@ -23,6 +23,7 @@ enum RasterDebugMode
     eDirLightingTex,
     eRoughness,
     eMetalness,
+    eEmission,
 };
 
 struct CbvRasterDebug

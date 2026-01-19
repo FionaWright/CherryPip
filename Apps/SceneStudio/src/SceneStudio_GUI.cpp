@@ -193,6 +193,7 @@ void SceneStudio::GuiRaster()
         "Texture Lighting",
         "Roughness",
         "Metalness",
+        "Emission",
     };
 
     const char* curSelection = c_rasterDebugModes.at(m_studioConfig.Raster.Mode);

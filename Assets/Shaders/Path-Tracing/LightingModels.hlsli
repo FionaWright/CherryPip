@@ -201,6 +201,20 @@ float3 NormalizeSafe(float3 N, float3 fallback)
     return length(N) == 0 ? fallback : normalize(N);
 }
 
+// Next:
+// Read this: https://medium.com/@Ksatese/advanced-ray-tracer-part-6-f7978842081f
+// And this: https://henryzxu.github.io/pathtracing-p2/
+// Then read PBRTs chapter on microfacet materials
+// Then this whitepaper: https://dl.acm.org/doi/epdf/10.1145/3130800.3130806
+// Finally find a repo with code I can look at and compare
+// If still not working then park it and do importance sampling first maybe
+
+// Move to HlslMaths.h
+float Luminance(float3 color)
+{
+    return dot(color, float3(0.2126,0.7152,0.0722));
+}
+
 void Model_GgxSmithSchlick(
     inout uint rngState,
     inout float3 Lo,
@@ -216,10 +230,11 @@ void Model_GgxSmithSchlick(
     float3 F0 = lerp(float3(0.04, 0.04, 0.04), albedo, metalness);
     float3 diffuseColor = albedo * (1.0 - metalness);
 
-    float specProb = saturate(max(F0.r, max(F0.g, F0.b)));
+    float specProb = saturate(max(F0.r, max(F0.g, F0.b))); // This seems wrong
+    specProb = saturate(Luminance(F0) + 0.5 * roughness);
     bool sampleSpecular = PcgRand01(rngState) < specProb;
 
-    Lo += throughput * Li;
+    Lo += throughput * Li; // What do I do with you?
 
     if (sampleSpecular)
     {

@@ -33,6 +33,7 @@ set(PROJECT_SOURCES
         src/client/System/HighResolutionClock.cpp
         src/client/System/Input.cpp
         src/client/System/ModelLoaderGLTF.cpp
+        src/client/System/ResourceSharer.cpp
         src/client/System/TextureLoader.cpp
         src/client/System/Win32App.cpp
 )
@@ -71,6 +72,7 @@ set(PROJECT_HEADERS
         Headers/client/System/HighResolutionClock.h
         Headers/client/System/Input.h
         Headers/client/System/Keycodes.h
+        Headers/client/System/ResourceSharer.h
         Headers/client/System/TextureLoader.h
         Headers/client/System/Win32App.h
 )

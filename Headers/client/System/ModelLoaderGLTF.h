@@ -13,6 +13,7 @@
 
 #include "fastgltf/core.hpp"
 #include "fastgltf/types.hpp"
+class Texture;
 using Asset = std::shared_ptr<fastgltf::Expected<fastgltf::Asset>>;
 
 class RootSig;
@@ -73,6 +74,9 @@ private:
 	static Transform toTransform(fastgltf::TRS& trs);
 	static void loadGLTFIndices(const std::string& directory, std::vector<uint32_t>& iBuffer, Asset& asset, const fastgltf::Primitive& primitive, bool convertRhToLh);
 	static void loadModel(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, const std::string& directory, Asset& asset, const fastgltf::Primitive& primitive, Model* model, bool convertRhToLh);
+
+	template<typename T>
+	static std::shared_ptr<Texture> loadTextureResource(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, const Asset& asset, const fastgltf::Optional<T>& gltfTex, const std::string& localDir, const char* backupPath);
 	static std::variant<std::string, const std::byte*> loadTexture(const Asset& asset, size_t textureIndex, size_t& outDataSize);
 	static void loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, Asset& asset, const fastgltf::Primitive& primitive, const std::string& modelNameExtensionless, fastgltf::Node& node, GLTFLoadArgs& args, Transform transform, std::string id, size_t meshIndex, size_t primitiveIndex);
 	static void loadNode(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, Asset& asset, const std::string& modelNameExtensionless, fastgltf::Node& node, GLTFLoadArgs& args, Transform parentTransform);

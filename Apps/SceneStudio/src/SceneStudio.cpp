@@ -221,8 +221,8 @@ void SceneStudio::loadAssets(D3D* d3d)
         "Sponza",
         L"GitIgnored/Sponza/sponza.gltf",
         t,
-        XMFLOAT3(0.967f, 11.963f, 50.213f),
-        XMFLOAT2(0, PI),
+        XMFLOAT3(1.753f, 1.274f, -0.23f),
+        XMFLOAT2(0.105f, 4.747f),
         true
     };
     m_sceneConfigs.emplace_back(sceneSponza);

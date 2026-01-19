@@ -9,21 +9,30 @@ struct VsOut
 
 #include "DualIncludes/Cbv.h"
 
-ConstantBuffer<CbvRasterDebug> c_rasterDebug : register(b1);
 Texture2D<float4> gDiffuse : register(t0);
+Texture2D<float4> gNormal : register(t1);
 SamplerState gSampler : register(s0);
+
+ConstantBuffer<CbvRasterDebug> c_rasterDebug : register(b1);
 
 float4 PSMain(VsOut input) : SV_TARGET
 {
-    float NdL = dot(input.normal, normalize(c_rasterDebug.DirLighting));
     float4 albedo = gDiffuse.Sample(gSampler, input.uv).rgba;
+    float3 bumpSample = gNormal.Sample(gSampler, input.uv).rgb * 2.0f - 1.0f;
+
+    float3 T = normalize(input.tangent);
+    float3 B = normalize(input.binormal);
+    float3 N = normalize(input.normal);
+    float3 N_w = normalize(bumpSample.x * T + bumpSample.y * B + bumpSample.z * N);
+
+    float NdL = dot(N_w, normalize(c_rasterDebug.DirLighting));
 
     switch (c_rasterDebug.Mode)
     {
     case ePosition:
         return float4(input.position.xyz / input.position.w, 1);
     case eNormals:
-        return float4(input.normal, 1);
+        return float4(N_w, 1);
     case eTangent:
         return float4(input.tangent, 1);
     case eBinormal:

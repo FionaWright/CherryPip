@@ -65,7 +65,8 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Fix glass attenuation after, add attenuationDistance field
 - Add stanford dragon model to test with and perform glass ball test with it (Object behind should be vertically flipped depending on distance)
 - Mist (Randomly scatter rays depending on distance travelled, see SL video) (Rayleigh scattering! Requires spectral renderer?)
-- Get a big scene that isn't bistro 
+- Get a big scene that isn't bistro (Junkyard?)
+- Emissive Maps
 
 - Camera movement gets messed up sometimes
 - Env map rotations not paritied between EA/pano
@@ -79,6 +80,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Add deferred render backend
 - GBuffer debug viewer
 - Normal + PBR maps
+- Match directional lighting 
 
 ## Spectral Tracing
 

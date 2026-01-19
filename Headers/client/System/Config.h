@@ -5,10 +5,6 @@
 #ifndef PT_CONFIG_H
 #define PT_CONFIG_H
 
-#include <cstdint>
-#include <dxgiformat.h>
-#include <windows.h>
-
 #define NUM_FRAMES_IN_FLIGHT 3
 
 struct SettingsSystem

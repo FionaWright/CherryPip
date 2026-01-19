@@ -1,5 +1,5 @@
 
-
+#include "System/pch.h"
 #include "Apps/SceneStudio/Headers/SceneStudio.h"
 #include "System/CherryPip.h"
 

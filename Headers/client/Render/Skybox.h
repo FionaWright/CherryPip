@@ -4,7 +4,6 @@
 
 #ifndef CHERRYPIP_SKYBOX_H
 #define CHERRYPIP_SKYBOX_H
-#include <d3d12.h>
 
 #include "HWI/Material.h"
 #include "HWI/Model.h"

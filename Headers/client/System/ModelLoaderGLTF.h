@@ -1,14 +1,5 @@
 #pragma once
 
-#include <d3d12.h>
-#include <DirectXMath.h>
-#include <string>
-
-#include <memory>
-#include <mutex>
-#include <variant>
-#include <vector>
-
 #include "Render/Transform.h"
 
 #include "fastgltf/core.hpp"

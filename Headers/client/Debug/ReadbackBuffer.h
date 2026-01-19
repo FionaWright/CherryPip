@@ -4,9 +4,6 @@
 
 #ifndef CHERRYPIP_READBACKBUFFER_H
 #define CHERRYPIP_READBACKBUFFER_H
-#include <functional>
-#include <vector>
-
 #include "HWI/D3D.h"
 #include "HWI/Texture.h"
 

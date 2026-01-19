@@ -4,11 +4,6 @@
 
 #ifndef PT_D12RESOURCE_H
 #define PT_D12RESOURCE_H
-#include <cstdint>
-#include <d3d12.h>
-#include <wrl/client.h>
-
-using Microsoft::WRL::ComPtr;
 
 class D12Resource
 {

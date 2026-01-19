@@ -2,11 +2,8 @@
 // Created by fiona on 24/09/2025.
 //
 
+#include "System/pch.h"
 #include "System/FileHelper.h"
-
-#include <windows.h>
-#include <fstream>
-#include <vector>
 #include <wrl/wrappers/corewrappers.h>
 
 std::wstring FileHelper::m_assetsPath, FileHelper::m_shadersPath;

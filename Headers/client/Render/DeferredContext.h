@@ -4,7 +4,7 @@
 
 #ifndef CHERRYPIP_DEFERREDCONTEXT_H
 #define CHERRYPIP_DEFERREDCONTEXT_H
-#include <d3d12.h>
+
 
 #include "Scene.h"
 #include "TextureRTV.h"

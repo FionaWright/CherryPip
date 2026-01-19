@@ -5,9 +5,6 @@
 #ifndef PT_TEXTURE_H
 #define PT_TEXTURE_H
 
-#include <d3d12.h>
-#include <string>
-
 #include "D12Resource.h"
 
 class Texture

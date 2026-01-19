@@ -5,11 +5,6 @@
 #ifndef PT_ROOTSIG_H
 #define PT_ROOTSIG_H
 
-#include <windows.h>
-#include <d3dx12.h>
-
-using Microsoft::WRL::ComPtr;
-
 class RootSig
 {
 public:

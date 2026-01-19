@@ -4,8 +4,6 @@
 
 #ifndef PT_TLAS_H
 #define PT_TLAS_H
-#include <memory>
-#include <vector>
 
 #include "D12Resource.h"
 

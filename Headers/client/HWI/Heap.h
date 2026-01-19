@@ -4,9 +4,6 @@
 
 #ifndef PT_HEAP_H
 #define PT_HEAP_H
-#include <complex.h>
-#include <d3d12.h>
-#include <wrl/client.h>
 
 class Texture;
 

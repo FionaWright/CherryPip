@@ -2,9 +2,8 @@
 // Created by fionaw on 28/10/2025.
 //
 
+#include "System/pch.h"
 #include "Render/PathTracingContext.h"
-
-#include <d3dx12_core.h>
 
 #include "CBV.h"
 #include "Helper.h"

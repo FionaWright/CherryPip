@@ -2,8 +2,8 @@
 // Created by fionaw on 09/11/2025.
 //
 
+#include "System/pch.h"
 #include "Render/Scene.h"
-
 #include "HWI/Material.h"
 #include "Render/Object.h"
 

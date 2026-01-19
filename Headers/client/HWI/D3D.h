@@ -5,30 +5,8 @@
 #ifndef PT_D3D_H
 #define PT_D3D_H
 
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-
-// Windows Runtime Library. Needed for ComPtr<> template class.
-#include <wrl.h>
-
-// DirectX 12 specific headers.
-#include <d3d12.h>
-#include <dxgi1_5.h>
-#include <dxgi1_6.h>
-#include <d3dcompiler.h>
-#include <DirectXMath.h>
-#include <fstream>
-#include <queue>
-
 #include "D12Resource.h"
 #include "System/Config.h"
-
-using namespace DirectX;
-
-// D3D12 extension library.
-#include "d3dx12.h"
-
-using Microsoft::WRL::ComPtr;
 
 class D3D
 {

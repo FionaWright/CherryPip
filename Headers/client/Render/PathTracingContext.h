@@ -4,11 +4,6 @@
 
 #ifndef CHERRYPIP_PATHTRACINGCONTEXT_H
 #define CHERRYPIP_PATHTRACINGCONTEXT_H
-#include <d3d12.h>
-#include <memory>
-#include <random>
-#include <vector>
-#include <wrl/client.h>
 
 #include "Camera.h"
 #include "CBV.h"

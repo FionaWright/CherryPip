@@ -24,7 +24,6 @@
 #endif
 
 class BLAS;
-using Microsoft::WRL::ComPtr;
 
 struct RasterConfig
 {

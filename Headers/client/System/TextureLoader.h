@@ -4,12 +4,6 @@
 
 #ifndef PT_TEXTURELOADER_H
 #define PT_TEXTURELOADER_H
-#include <cstdint>
-#include <d3d12.h>
-#include <string>
-#include <vector>
-
-#include <wrl/client.h>
 
 #include "HWI/Shader.h"
 using Microsoft::WRL::ComPtr;

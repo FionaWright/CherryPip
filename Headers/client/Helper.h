@@ -1,19 +1,6 @@
 #ifndef H_HELPER_H
 #define H_HELPER_H
 
-#include <string>
-#include <iostream>
-#include <windows.h>
-#include <locale>
-#include <codecvt>
-
-// D3D12 extension library.
-#include "d3dx12.h"
-#include "System/FileHelper.h"
-
-using Microsoft::WRL::ComPtr;
-#include <dxcapi.h>
-#include <fstream>
 
 #ifdef _DEBUG
 #define CherryPrint(str) std::cout << str << std::endl

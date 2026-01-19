@@ -20,6 +20,10 @@ add_library(client STATIC
         ${PROJECT_HEADERS}
 )
 
+target_precompile_headers(client PRIVATE
+        "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_SOURCE_DIR}/Headers/client/System/pch.h>"
+)
+
 include_directories(
         Headers
         Headers/client

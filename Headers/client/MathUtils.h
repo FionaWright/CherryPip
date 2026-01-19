@@ -1,9 +1,4 @@
 #pragma once
-#include <string>
-
-#include <DirectXMath.h>
-
-using namespace DirectX;
 
 #define PI 3.1415926535
 

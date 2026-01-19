@@ -2,9 +2,8 @@
 // Created by fiona on 30/09/2025.
 //
 
+#include "System/pch.h"
 #include "HWI/Texture.h"
-
-#include <cmath>
 
 #include "Helper.h"
 #include "Debug/Profiler.h"

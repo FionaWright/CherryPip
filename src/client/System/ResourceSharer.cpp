@@ -2,6 +2,7 @@
 // Created by fiona on 19/01/2026.
 //
 
+#include "System/pch.h"
 #include "System/ResourceSharer.h"
 
 std::unordered_map<std::string, std::shared_ptr<Texture>> ResourceSharer::s_databaseTex;

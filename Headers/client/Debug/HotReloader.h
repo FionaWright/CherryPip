@@ -4,8 +4,6 @@
 
 #ifndef PT_HOTRELOADER_H
 #define PT_HOTRELOADER_H
-#include <string>
-#include <unordered_map>
 
 #include "HWI/Shader.h"
 

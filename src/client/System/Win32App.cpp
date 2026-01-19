@@ -2,9 +2,9 @@
 // Created by fiona on 22/09/2025.
 //
 
+#include "System/pch.h"
 #include "System/Win32App.h"
 #include "../../../Headers/client/System/App.h"
-
 #include "HWI/D3D.h"
 #include "System/FileHelper.h"
 #include "System/Input.h"
@@ -12,6 +12,7 @@
 #include "imgui/backends/imgui_impl_win32.h"
 #include "System/Config.h"
 #include "System/TextureLoader.h"
+#include "System/Engine.h"
 
 #ifdef _DEBUG
 #include "../../../Headers/client/Debug/HotReloader.h"

@@ -2,8 +2,8 @@
 // Created by fiona on 14/01/2026.
 //
 
+#include "System/pch.h"
 #include "Render/Skybox.h"
-
 #include "CBV.h"
 
 void Skybox::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap* heap, D12Resource* cubemap)

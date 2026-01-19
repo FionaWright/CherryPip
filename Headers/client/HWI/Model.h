@@ -4,11 +4,6 @@
 
 #ifndef PT_MODEL_H
 #define PT_MODEL_H
-#include <d3d12.h>
-#include <DirectXMath.h>
-#include <memory>
-#include <string>
-#include <wrl/client.h>
 
 #include "D12Resource.h"
 

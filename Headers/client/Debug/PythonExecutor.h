@@ -4,7 +4,6 @@
 
 #ifndef CHERRYPIP_PYTHONEXECUTOR_H
 #define CHERRYPIP_PYTHONEXECUTOR_H
-#include <vector>
 
 class PythonExecutor
 {

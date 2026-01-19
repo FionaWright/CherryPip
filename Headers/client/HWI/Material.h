@@ -4,9 +4,6 @@
 
 #ifndef PT_MATERIAL_H
 #define PT_MATERIAL_H
-#include <DirectXMath.h>
-#include <memory>
-#include <vector>
 
 #include "PTBuffers.h"
 #include "HWI/D12Resource.h"

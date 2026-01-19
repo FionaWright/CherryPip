@@ -13,6 +13,8 @@
 #include "HWI/Heap.h"
 #include "System/FileHelper.h"
 
+#include "DualIncludes/HlslMath.h"
+
 struct CBV_PanoToEA
 {
     uint32_t OutputWidth;
@@ -141,34 +143,6 @@ void EnvMap::initResources(ID3D12Device* device)
     m_shaderPanoToCM.InitCs(L"PanoToCubemapCS.hlsl", device, m_rootSigPanoToCM.Get());
 
     m_resourcesInitialized = true;
-}
-
-float CopySign(const float mag, const float sign)
-{
-    return sign < 0.0f ? -abs(mag) : abs(mag);
-}
-
-float SafeSqrt(const float x) { return sqrt(std::max(0.0f, x)); }
-
-XMFLOAT3 EaSquareToSphere(const XMFLOAT2 uv)
-{
-    // Transform to [-1, 1]^2
-    const float ax = 2.0f * uv.x - 1.0f;
-    const float ay = 2.0f * uv.y - 1.0f;
-    const float absax = abs(ax);
-    const float absay = abs(ay);
-
-    // Compute radius and angle
-    const float signedDist = 1 - (absax + absay); // Signed distance to the u + v = 1 diagonal diamond
-    const float d = abs(signedDist);
-    const float r = 1 - d;
-    const float phi = (r == 0 ? 1 : (absay - absax) / r + 1) * PI / 4;
-
-    // Compute vector
-    const float y = CopySign(1 - r * r, signedDist);
-    const float cosPhi = CopySign(cos(phi), ax);
-    const float sinPhi = CopySign(sin(phi), ay);
-    return XMFLOAT3(cosPhi * r * SafeSqrt(2 - r * r), y, sinPhi * r * SafeSqrt(2 - r * r));
 }
 
 XMFLOAT3 EnvMap::GetDirectionOfHighestIntensity(D3D* d3d, Heap* heap)

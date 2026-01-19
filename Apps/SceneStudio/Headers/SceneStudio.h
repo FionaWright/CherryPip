@@ -29,7 +29,6 @@ using Microsoft::WRL::ComPtr;
 struct RasterConfig
 {
     RasterDebugMode Mode = eDirLightingTex;
-    XMFLOAT3 DirLighting = XMFLOAT3(1, 0, 1);
 };
 
 enum RenderBackend : uint32_t
@@ -59,6 +58,9 @@ struct StudioConfig
 
     bool EnvMapEnabled = true;
     float EnvMapRotation = 0.0f;
+    float DirLightIntensity = 100.0f;
+    XMFLOAT3 DirLightDirection = XMFLOAT3(1, -1, 1);
+    XMFLOAT3 DirLightColor = XMFLOAT3(1, 1, 1);
 };
 
 struct SceneConfig

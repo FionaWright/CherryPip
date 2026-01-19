@@ -29,7 +29,7 @@ enum RasterDebugMode
 struct CbvRasterDebug
 {
     RasterDebugMode Mode;
-    float3 DirLighting;
+    float3 DirLightDir;
 };
 
 struct CbvPathTracing

@@ -160,7 +160,7 @@ void PathTracingContext::BuildScene(ID3D12Device* device, ID3D12GraphicsCommandL
 
 void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSig,
                                 ID3D12PipelineState* pso, const Camera* camera, Heap* heap,
-                                const XMMATRIX& projMatrix, const PtConfig& config, int debugModeIdx)
+                                const XMMATRIX& projMatrix, const PtConfig& config, float dirLightIntensity, XMFLOAT3 dirLightColor, XMFLOAT3 dirLightDir, int debugModeIdx)
 {
     GPU_SCOPE(cmdList, L"Path Tracing Backend");
 
@@ -208,10 +208,10 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
         cbv.WindowAppGuiWidth = Config::GetSystem().WindowAppGuiWidth;
         cbv.UpdateAccumulation = frameIncAllowed ? 1 : 0;
 
-        cbv.DirLight = config.DirLightDirection;
-        cbv.DirLightColor = config.DirLightColor;
+        cbv.DirLight = dirLightDir;
+        cbv.DirLightColor = dirLightColor;
         cbv.DirLightCosAngularRadius = 1.0f - config.DirLightCosAngularRadius;
-        cbv.DirLightIntensity = config.DirLightIntensity;
+        cbv.DirLightIntensity = dirLightIntensity;
 
         cbv.Jitter = XMFLOAT2(0, 0);
         if (config.JitterEnabled)

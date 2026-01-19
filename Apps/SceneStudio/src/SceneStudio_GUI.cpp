@@ -78,15 +78,8 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
     ptNeedsReset |= ImGui::InputInt("Max Frames##xx", &maxFrame);
     m_studioConfig.PT.MaxFrameNum = static_cast<uint32_t>(maxFrame);
 
-    ImGui::Unindent(IM_GUI_INDENTATION);
-    ImGui::SeparatorText("Dir Light##xx");
-    ImGui::Indent(IM_GUI_INDENTATION);
-
-    m_shaderDirty |= ImGui::Checkbox("Enabled##DirLight", &m_studioConfig.PT.DirLightEnabled);
-    ptNeedsReset |= ImGui::InputFloat3("Direction##xx", reinterpret_cast<float*>(&m_studioConfig.PT.DirLightDirection));
-    ptNeedsReset |= ImGui::ColorEdit3("Colour##xx", reinterpret_cast<float*>(&m_studioConfig.PT.DirLightColor));
-    ptNeedsReset |= ImGui::InputFloat("Radius (R)##xx", &m_studioConfig.PT.DirLightCosAngularRadius);
-    ptNeedsReset |= ImGui::InputFloat("Intensity##xx", &m_studioConfig.PT.DirLightIntensity);
+    m_shaderDirty |= ImGui::Checkbox("Dir Light Enabled##xx", &m_studioConfig.PT.DirLightEnabled);
+    ptNeedsReset |= ImGui::InputFloat("Dir Light Radius (R)##xx", &m_studioConfig.PT.DirLightCosAngularRadius);
 
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Tools##xx");
@@ -213,8 +206,6 @@ void SceneStudio::GuiRaster()
 
         ImGui::EndCombo();
     }
-
-    ImGui::InputFloat3("Directional Lighting##xx", reinterpret_cast<float*>(&m_studioConfig.Raster.DirLighting));
 }
 
 void SceneStudio::guiMain()
@@ -284,6 +275,15 @@ void SceneStudio::guiMain()
             m_camera.GetCamera().SetPitchYaw(0, 0);
             resetPT = true;
         }
+    }
+
+    ImGui::Unindent(IM_GUI_INDENTATION);
+    ImGui::SeparatorText("Directional Light##xx");
+    ImGui::Indent(IM_GUI_INDENTATION);
+    {
+        resetPT |= ImGui::InputFloat3("Direction##xx", reinterpret_cast<float*>(&m_studioConfig.DirLightDirection));
+        resetPT |= ImGui::ColorEdit3("Colour##xx", reinterpret_cast<float*>(&m_studioConfig.DirLightColor));
+        resetPT |= ImGui::InputFloat("Intensity##xx", &m_studioConfig.DirLightIntensity);
     }
 
     ImGui::Unindent(IM_GUI_INDENTATION);

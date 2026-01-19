@@ -262,9 +262,19 @@ XMFLOAT3 EnvMap::GetDirectionOfHighestIntensity(D3D* d3d, Heap* heap)
     }
 
     const auto [x, y] = readbackData[maxIdx].UV;
-    XMFLOAT2 fUv = XMFLOAT2(x, y);
+    auto fUv = XMFLOAT2(x, y);
     fUv.x /= fWidth;
     fUv.y /= fHeight;
     const XMFLOAT3 dir = EaSquareToSphere(fUv);
-    return dir;
+
+    float yawRad = XMConvertToRadians(m_rotation);
+    XMMATRIX rotY = XMMatrixRotationY(yawRad);
+
+    XMVECTOR d = XMLoadFloat3(&dir);
+    d = XMVector3TransformNormal(d, rotY);
+
+    XMFLOAT3 rotatedDir;
+    XMStoreFloat3(&rotatedDir, d);
+
+    return rotatedDir;
 }

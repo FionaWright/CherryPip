@@ -482,6 +482,33 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
                             DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
     }
 
+    std::variant<std::string, const std::byte*> emissiveTexInput = "";
+    if (mat.emissiveTexture.has_value())
+    {
+        emissiveTexInput = loadTexture(asset, mat.emissiveTexture.value().textureIndex, dataSize);
+        if (std::holds_alternative<std::string>(emissiveTexInput))
+            emissiveTexInput = localDirectory + get<std::string>(emissiveTexInput);
+    }
+    else
+        emissiveTexInput = "Assets/Textures/Black.dds";
+
+    std::shared_ptr<Texture> emissiveTex = std::make_shared<Texture>();
+    if (std::holds_alternative<std::string>(emissiveTexInput))
+    {
+        auto texPath = get<std::string>(emissiveTexInput);
+        const auto pngIdx = texPath.find("png");
+        if (pngIdx != std::string::npos)
+            texPath = texPath.replace(pngIdx, 3, "dds");
+        emissiveTex->Init(d3d->GetDevice(), cmdList, texPath,
+                         1);
+    }
+    else
+    {
+        auto pData = get<const std::byte*>(emissiveTexInput);
+        emissiveTex->InitPNG(d3d->GetDevice(), cmdList, reinterpret_cast<const uint8_t*>(pData), dataSize,
+                            DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    }
+
     MaterialData materialData = {};
 
     std::shared_ptr<Material> material = std::make_shared<Material>();
@@ -491,6 +518,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     material->SetTex(d3d->GetDevice(), 0, heap, diffuseTex);
     material->SetTex(d3d->GetDevice(), 1, heap, normalTex);
     material->SetTex(d3d->GetDevice(), 2, heap, roughMetTex);
+    material->SetTex(d3d->GetDevice(), 3, heap, emissiveTex);
 
     bool isGlass = (mat.transmission && mat.transmission->transmissionFactor > 0.0) ||
         (mat.alphaMode == fastgltf::AlphaMode::Blend &&
@@ -499,8 +527,10 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
 
     material->SetName(mat.name.c_str());
 
+    const bool noEmission = mat.emissiveFactor == fastgltf::math::nvec3(0,0,0) & !emissiveTex;
+
     memcpy(&materialData.BaseColorFactor, &mat.pbrData.baseColorFactor, sizeof(float) * 3);
-    materialData.EmissiveStrength = mat.emissiveFactor == fastgltf::math::nvec3(0,0,0) ? 0 : mat.emissiveStrength;
+    materialData.EmissiveStrength = noEmission ? 0 : mat.emissiveStrength;
     materialData.Roughness = mat.pbrData.roughnessFactor;
     materialData.Metalness = mat.pbrData.metallicFactor;
     materialData.IoR = mat.ior;

@@ -4,8 +4,7 @@ by Fiona Wright
 
 ## Info
 
-My new DX12 engine with both path-tracing and raster backends. My focus is on path-tracing this time  
-Some code was taken from my previous DX12 engine Alkali Engine but most was redesigned due to me being old and wise now   
+My new DX12 engine with both path-tracing and raster backends. My focus is on path-tracing this time     
 Trying to work on it during my college semesters in my free time  
 
 ## Features

@@ -32,30 +32,34 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         }
 
         PtMaterialData mat;
-        float3 brdf = 0, Ng = 0, Ns = 0, Li = 0;
+        float3 albedo = 0, Ng = 0, Ns = 0, Li = 0;
         float2 uv = 0;
-        Hit(rngState, q, brdf, Ng, Ns, Li, mat, uv);
+        Hit(rngState, q, albedo, Ng, Ns, Li, mat, uv);
 
         float2 roughMet = gTextures[mat.TexIdxRoughMet].Sample(c_sampler, uv).gb;
         float roughness = mat.Roughness * roughMet.r;
-        // Why isn't metalness used yet?
+        float metalness = mat.Metalness * roughMet.g;
 
         float3 hitPos = ray.Origin + ray.Direction * q.CommittedRayT();
 
         float3 wo = ray.Direction;
 
 #if defined(LIGHTING_LAMB_DIFF)
-        Model_LambertionDiffuse(rngState, Lo, throughput, Ns, Li, brdf, ray.Direction);
+        Model_LambertionDiffuse(rngState, Lo, throughput, Ns, Li, albedo, ray.Direction);
 #elif defined(LIGHTING_GLOSSY)
-        Model_Glossy(rngState, Lo, throughput, mat.DiffuseProbability, roughness, Ns, Li, brdf, wo, ray.Direction);
+        Model_Glossy(rngState, Lo, throughput, mat.DiffuseProbability, roughness, Ns, Li, albedo, wo, ray.Direction);
 #elif defined(LIGHTING_GLASS)
         if (mat.Flags & PtMaterialFlags::eIsGlass)
         {
             bool entering = q.CommittedTriangleFrontFace()!=0;
-            Model_Glass(rngState, Lo, throughput, mat.DiffuseProbability, roughness, entering, q.CommittedRayT(), mat.IoR, Ns, Li, brdf, wo, ray.Direction);
+            Model_Glass(rngState, Lo, throughput, mat.DiffuseProbability, roughness, entering, q.CommittedRayT(), mat.IoR, Ns, Li, albedo, wo, ray.Direction);
         }
         else
-            Model_Glossy(rngState, Lo, throughput, mat.DiffuseProbability, roughness, Ns, Li, brdf, wo, ray.Direction);
+            Model_Glossy(rngState, Lo, throughput, mat.DiffuseProbability, roughness, Ns, Li, albedo, wo, ray.Direction);
+#elif defined(LIGHTING_GGX_SMITH_MICROFACET)
+        //if (dot(Ns, wo) <= 0) break;
+        Model_GgxSmithSchlick(rngState, Lo, throughput, roughness, metalness, Ns, Li, albedo, wo, ray.Direction);
+        //if (dot(Ns, ray.Direction) <= 0) break;
 #endif
 
 #if defined(RUSSIAN_ROULETTE_ENABLED)

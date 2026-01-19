@@ -89,6 +89,7 @@ void HotReloader::CheckFiles(D3D* d3d)
         std::cout << "Hot reloading shader" << std::endl;
 
         d3d->Flush();
+        Sleep(100);
 
         assert(s_shadersVsPs[i].ShaderPtr);
 

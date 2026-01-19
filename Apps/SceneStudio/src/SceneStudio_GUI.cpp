@@ -177,7 +177,8 @@ void SceneStudio::GuiRaster()
 
     static const std::vector<const char*> c_rasterDebugModes = {
         "Position",
-        "Normals",
+        "Normals (Vertex)",
+        "Normals (Bumped)",
         "Tangents",
         "Binormals",
         "UV",

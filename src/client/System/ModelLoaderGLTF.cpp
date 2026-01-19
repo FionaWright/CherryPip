@@ -418,6 +418,9 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
         const auto pngIdx = texPath.find("png");
         if (pngIdx != std::string::npos)
             texPath = texPath.replace(pngIdx, 3, "dds");
+        const auto jpgIdx = texPath.find("jpg");
+        if (jpgIdx != std::string::npos)
+            texPath = texPath.replace(jpgIdx, 3, "dds");
         diffuseTex->Init(d3d->GetDevice(), cmdList, texPath,
                          1);
     }
@@ -436,7 +439,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
             normalTexInput = localDirectory + get<std::string>(normalTexInput);
     }
     else
-        normalTexInput = "Assets/Textures/DefaultNormal.dds";
+        normalTexInput = assetDirectory + "Textures/DefaultNormal.dds";
 
     std::shared_ptr<Texture> normalTex = std::make_shared<Texture>();
     if (std::holds_alternative<std::string>(normalTexInput))
@@ -445,6 +448,9 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
         const auto pngIdx = texPath.find("png");
         if (pngIdx != std::string::npos)
             texPath = texPath.replace(pngIdx, 3, "dds");
+        const auto jpgIdx = texPath.find("jpg");
+        if (jpgIdx != std::string::npos)
+            texPath = texPath.replace(jpgIdx, 3, "dds");
         normalTex->Init(d3d->GetDevice(), cmdList, texPath,
                          1);
     }
@@ -463,7 +469,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
             roughMetTexInput = localDirectory + get<std::string>(roughMetTexInput);
     }
     else
-        roughMetTexInput = "Assets/Textures/WhitePOT.dds";
+        roughMetTexInput = assetDirectory + "Textures/WhitePOT.dds";
 
     std::shared_ptr<Texture> roughMetTex = std::make_shared<Texture>();
     if (std::holds_alternative<std::string>(roughMetTexInput))
@@ -472,6 +478,9 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
         const auto pngIdx = texPath.find("png");
         if (pngIdx != std::string::npos)
             texPath = texPath.replace(pngIdx, 3, "dds");
+        const auto jpgIdx = texPath.find("jpg");
+        if (jpgIdx != std::string::npos)
+            texPath = texPath.replace(jpgIdx, 3, "dds");
         roughMetTex->Init(d3d->GetDevice(), cmdList, texPath,
                          1);
     }
@@ -489,25 +498,31 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
         if (std::holds_alternative<std::string>(emissiveTexInput))
             emissiveTexInput = localDirectory + get<std::string>(emissiveTexInput);
     }
-    else
-        emissiveTexInput = "Assets/Textures/Black.dds";
 
     std::shared_ptr<Texture> emissiveTex = std::make_shared<Texture>();
-    if (std::holds_alternative<std::string>(emissiveTexInput))
+    if (mat.emissiveTexture.has_value())
     {
-        auto texPath = get<std::string>(emissiveTexInput);
-        const auto pngIdx = texPath.find("png");
-        if (pngIdx != std::string::npos)
-            texPath = texPath.replace(pngIdx, 3, "dds");
-        emissiveTex->Init(d3d->GetDevice(), cmdList, texPath,
-                         1);
+        if (std::holds_alternative<std::string>(emissiveTexInput))
+        {
+            auto texPath = get<std::string>(emissiveTexInput);
+            const auto pngIdx = texPath.find("png");
+            if (pngIdx != std::string::npos)
+                texPath = texPath.replace(pngIdx, 3, "dds");
+            const auto jpgIdx = texPath.find("jpg");
+            if (jpgIdx != std::string::npos)
+                texPath = texPath.replace(jpgIdx, 3, "dds");
+            emissiveTex->Init(d3d->GetDevice(), cmdList, texPath,
+                             1);
+        }
+        else
+        {
+            auto pData = get<const std::byte*>(emissiveTexInput);
+            emissiveTex->InitPNG(d3d->GetDevice(), cmdList, reinterpret_cast<const uint8_t*>(pData), dataSize,
+                                DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+        }
     }
     else
-    {
-        auto pData = get<const std::byte*>(emissiveTexInput);
-        emissiveTex->InitPNG(d3d->GetDevice(), cmdList, reinterpret_cast<const uint8_t*>(pData), dataSize,
-                            DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-    }
+        emissiveTex->InitEmpty(d3d->GetDevice(), DXGI_FORMAT_R8G8B8A8_UNORM, 1, 1);
 
     MaterialData materialData = {};
 

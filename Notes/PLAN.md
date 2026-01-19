@@ -49,13 +49,13 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 ## Optimizations-TODO:
 
-- Frustum Culling
 - Texture/Model reuse
+- PCH Compilation
+
+- Frustum Culling
 - Descriptor heap sharing (Wait to see if it's worth it)
-- PCH Compilation? 
 - Consider dropping tangent/bitangent from attribute data (Needs CI test to see if it's faster)
-- Check for memory leaks, there's probably a lot
-- Make only a few scenes part of the repo, larger ones are not included by default 
+- Check for memory leaks, there's probably a lot 
 - Add support for root constants in Material and RootSig and apply to ATrous filter
 - Temporary heap which gets cleared at the end of each frame? Or maybe just clear all unused data from heaps every few frames
 
@@ -72,14 +72,13 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Env map rotations not paritied between EA/pano
 
 - FPS has heavily dropped since I was away, possibly due to all the extra shaders/etc. Make sure they can be deleted properly when not in use
-- Test MaxLumRedSearch with env map rotations
 
 ## Raster-TODO
 
 - Get proper BSDF for forward renderer
 - Add deferred render backend
 - GBuffer debug viewer
-- Match directional lighting 
+- Clean up ModelLoaderGLTF.cpp
 
 ## Spectral Tracing
 

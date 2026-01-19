@@ -14,7 +14,8 @@ struct CbvMatrices
 enum RasterDebugMode
 {
     ePosition,
-    eNormals,
+    eNormalsVertex,
+    eNormalsBumped,
     eTangent,
     eBinormal,
     eUV,

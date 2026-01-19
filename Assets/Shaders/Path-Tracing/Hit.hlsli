@@ -17,19 +17,29 @@ void Hit(inout uint rngState, out float3 brdf, out float3 Ng, out float3 Ns, out
     float2 barycentrics = q.CommittedTriangleBarycentrics();
     precise float3 bary = float3(1 - barycentrics.x - barycentrics.y, barycentrics.x, barycentrics.y);
 
+    float2 uv = v0.uv * bary.x + v1.uv * bary.y + v2.uv * bary.z;
+
 	float3 p0 = mul(instance.M, float4(v0.position,1)).xyz;
 	float3 p1 = mul(instance.M, float4(v1.position,1)).xyz;
 	float3 p2 = mul(instance.M, float4(v2.position,1)).xyz;
 	Ng = normalize( cross(p1 - p0, p2 - p0) );
-
-    Ns = v0.normal * bary.x + v1.normal * bary.y + v2.normal * bary.z;
-    Ns = mul((float3x3)instance.MTI, Ns);
-    Ns = normalize(Ns);
-
     Ng = q.CommittedTriangleFrontFace() == 0 ? -Ng : Ng;
+
+    float3 N = v0.normal * bary.x + v1.normal * bary.y + v2.normal * bary.z;
+    N = normalize(mul((float3x3)instance.MTI, N));
+#ifdef NORMAL_MAPS_ENABLED
+    float3 T = v0.tangent * bary.x + v1.tangent * bary.y + v2.tangent * bary.z;
+    T = normalize(T - N * dot(T, N)); // Recompute T and B as they may be invalid after interpolation
+    float3 B = normalize(cross(N, T));
+
+    float3 bumpSample = gTextures[mat.NormalMapIdx].Sample(c_sampler, uv).rgb * 2.0f - 1.0f;
+    bumpSample.y = -bumpSample.y; // DX-convention
+    Ns = normalize(bumpSample.x * T + bumpSample.y * B + bumpSample.z * N);
+#else
+    Ns = N;
+#endif
     Ns = q.CommittedTriangleFrontFace() == 0 ? -Ns : Ns;
 
-    float2 uv = v0.uv * bary.x + v1.uv * bary.y + v2.uv * bary.z;
     float3 albedo = gTextures[mat.TextureIdx].Sample(c_sampler, uv).rgb;
 
 #if defined(FURNACE_TEST_HEMI_DIR_REFLECT)

@@ -44,7 +44,7 @@ void SceneStudio::RenderGUI()
 
 void SceneStudio::GuiPathTracer(const bool resetPT)
 {
-    ImGui::SeparatorText("Stats##xx");
+    ImGui::SeparatorText("Path-Tracer Stats##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
 
     ImGui::Text("%s%i", "Frame Index: ", m_ptContext.GetFrameNum());
@@ -53,7 +53,7 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
     bool ptNeedsReset = resetPT;
 
     ImGui::Unindent(IM_GUI_INDENTATION);
-    ImGui::SeparatorText("Settings##xx");
+    ImGui::SeparatorText("Path-Tracer Settings##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
 
     ptNeedsReset |= ImGui::Checkbox("Accumulation Enabled##xx", &m_studioConfig.PT.AccumulationEnabled);
@@ -82,15 +82,17 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
     m_shaderDirty |= ImGui::Checkbox("Dir Light Enabled##xx", &m_studioConfig.PT.DirLightEnabled);
     ptNeedsReset |= ImGui::InputFloat("Dir Light Radius (R)##xx", &m_studioConfig.PT.DirLightCosAngularRadius);
 
+    m_shaderDirty |= ImGui::Checkbox("Normal Maps Enabled##xx", &m_studioConfig.PT.NormalMapsEnabled);
+
     ImGui::Unindent(IM_GUI_INDENTATION);
-    ImGui::SeparatorText("Tools##xx");
+    ImGui::SeparatorText("Path-Tracer Tools##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
 
     ptNeedsReset |= ImGui::Button("Reset PathTracer##xx");
 
 #ifdef _DEBUG
     ImGui::Unindent(IM_GUI_INDENTATION);
-    ImGui::SeparatorText("Debug##xx");
+    ImGui::SeparatorText("Path-Tracer Debug##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
 
     const bool prevReadbackEnabled = m_studioConfig.PT.ReadbackEnabled;
@@ -173,7 +175,7 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
 
 void SceneStudio::GuiRaster()
 {
-    ImGui::SeparatorText("Settings##xx");
+    ImGui::SeparatorText("Raster Settings##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
 
     static const std::vector<const char*> c_rasterDebugModes = {

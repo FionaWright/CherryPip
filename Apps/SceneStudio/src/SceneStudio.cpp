@@ -572,6 +572,8 @@ void SceneStudio::compilePtShader(const D3D* d3d)
         args.push_back(L"-DENV_MAP_EA");
     if (m_studioConfig.PT.DirLightEnabled)
         args.push_back(L"-DDIR_LIGHT_ENABLED");
+    if (m_studioConfig.PT.NormalMapsEnabled)
+        args.push_back(L"-DNORMAL_MAPS_ENABLED");
     if (m_studioConfig.PT.RussianRouletteEnabled)
         args.push_back(L"-DRUSSIAN_ROULETTE_ENABLED");
 

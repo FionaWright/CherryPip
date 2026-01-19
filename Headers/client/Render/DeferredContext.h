@@ -19,6 +19,8 @@ public:
     void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap* heap);
     void SetScene(Scene* scene);
 
+    bool IsInitialized() const { return m_initialized; }
+
     void Render(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vMatrix, const XMMATRIX& pMatrix, const Skybox* skybox);
 
     D12Resource* GetAlbedo() { return m_rtvAlbedo.GetD12Resource(); }
@@ -28,6 +30,7 @@ private:
     TextureRTV m_rtvAlbedo, m_rtvNormalsDepth;
     std::vector<CD3DX12_CPU_DESCRIPTOR_HANDLE> m_rtvHandles;
     Scene* m_scene = nullptr;
+    bool m_initialized = false;
 
     RootSig m_rootSigGBuffer;
     Shader m_shaderGBuffer; // Bad system, requires matching root sig between forward/deferred

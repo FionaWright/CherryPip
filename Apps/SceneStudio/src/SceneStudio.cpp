@@ -251,8 +251,6 @@ void SceneStudio::loadAssets(D3D* d3d)
                         Config::GetSystem().RtvHeight,
                         Config::GetRender().RtvFormat);
 
-    m_deferredContext.Init(device, cmdList.Get(), &m_heapRTV); // TODO: Only init when needed
-
 #ifdef _DEBUG
     m_readbackManager.Init(d3d, &m_heap, &m_rtvPingPong1);
 #endif
@@ -410,6 +408,9 @@ void SceneStudio::denoisingPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     // GBuffer Pass
     if (m_studioConfig.Denoising.Type == eATrous)
     {
+        if (!m_deferredContext.IsInitialized())
+            m_deferredContext.Init(d3d->GetDevice(), cmdList, &m_heapRTV);
+
         const Skybox* skybox = m_studioConfig.EnvMapEnabled ? &m_skybox : nullptr;
         m_deferredContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, skybox);
     }

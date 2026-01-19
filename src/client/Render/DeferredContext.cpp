@@ -57,6 +57,8 @@ void DeferredContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdL
         },
     };
     m_shaderGBuffer.InitVsPs(L"Raster/Deferred/GBufferVS.hlsl", L"Raster/Deferred/GBufferPS.hlsl", {ildDesc, _countof(ildDesc)}, device, m_rootSigGBuffer.Get(), true, {}, m_rtvHandles.size());
+
+    m_initialized = true;
 }
 
 void DeferredContext::SetScene(Scene* scene)

@@ -414,7 +414,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     std::shared_ptr<Texture> diffuseTex = std::make_shared<Texture>();
     if (std::holds_alternative<std::string>(diffuseTexInput))
     {
-        std::string texPath = get<std::string>(diffuseTexInput);
+        auto texPath = get<std::string>(diffuseTexInput);
         const auto pngIdx = texPath.find("png");
         if (pngIdx != std::string::npos)
             texPath = texPath.replace(pngIdx, 3, "dds");
@@ -438,6 +438,23 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     else
         normalTexInput = "Assets/Textures/DefaultNormal.tga";
 
+    std::shared_ptr<Texture> normalTex = std::make_shared<Texture>();
+    if (std::holds_alternative<std::string>(normalTexInput))
+    {
+        auto texPath = get<std::string>(normalTexInput);
+        const auto pngIdx = texPath.find("png");
+        if (pngIdx != std::string::npos)
+            texPath = texPath.replace(pngIdx, 3, "dds");
+        normalTex->Init(d3d->GetDevice(), cmdList, texPath,
+                         1);
+    }
+    else
+    {
+        auto pData = get<const std::byte*>(normalTexInput);
+        normalTex->InitPNG(d3d->GetDevice(), cmdList, reinterpret_cast<const uint8_t*>(pData), dataSize,
+                            DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    }
+
     MaterialData materialData = {};
 
     std::shared_ptr<Material> material = std::make_shared<Material>();
@@ -445,6 +462,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices));
     material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterDebug));
     material->SetTex(d3d->GetDevice(), 0, heap, diffuseTex);
+    material->SetTex(d3d->GetDevice(), 1, heap, normalTex);
 
     bool isGlass = (mat.transmission && mat.transmission->transmissionFactor > 0.0) ||
         (mat.alphaMode == fastgltf::AlphaMode::Blend &&

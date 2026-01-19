@@ -11,6 +11,7 @@ struct VsOut
 
 Texture2D<float4> gDiffuse : register(t0);
 Texture2D<float4> gNormal : register(t1);
+Texture2D<float4> gRoughnessMetallic : register(t2);
 SamplerState gSampler : register(s0);
 
 ConstantBuffer<CbvRasterDebug> c_rasterDebug : register(b1);
@@ -19,6 +20,7 @@ float4 PSMain(VsOut input) : SV_TARGET
 {
     float4 albedo = gDiffuse.Sample(gSampler, input.uv).rgba;
     float3 bumpSample = gNormal.Sample(gSampler, input.uv).rgb * 2.0f - 1.0f;
+    float2 roughMet = gRoughnessMetallic.Sample(gSampler, input.uv).gb;
 
     float3 T = normalize(input.tangent);
     float3 B = normalize(input.binormal);
@@ -45,6 +47,10 @@ float4 PSMain(VsOut input) : SV_TARGET
         return albedo;
     case eDirLightingTex:
         return albedo * float4(NdL.xxx, 1);
+    case eRoughness:
+        return float4(roughMet.rrr, 1);
+    case eMetalness:
+        return float4(roughMet.ggg, 1);
     }
     return float4(0, 1, 1, 1);
 }

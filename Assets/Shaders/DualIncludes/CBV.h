@@ -21,6 +21,8 @@ enum RasterDebugMode
     eDirLighting,
     eTex,
     eDirLightingTex,
+    eRoughness,
+    eMetalness,
 };
 
 struct CbvRasterDebug
@@ -52,7 +54,7 @@ struct CbvPathTracing
     float DirLightIntensity;
 };
 
-enum DebugBuffer
+enum class DebugBuffer
 {
     eNormalsShaded,
     eNormalsGeo,

@@ -436,7 +436,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
             normalTexInput = localDirectory + get<std::string>(normalTexInput);
     }
     else
-        normalTexInput = "Assets/Textures/DefaultNormal.tga";
+        normalTexInput = "Assets/Textures/DefaultNormal.dds";
 
     std::shared_ptr<Texture> normalTex = std::make_shared<Texture>();
     if (std::holds_alternative<std::string>(normalTexInput))
@@ -455,6 +455,33 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
                             DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
     }
 
+    std::variant<std::string, const std::byte*> roughMetTexInput = "";
+    if (mat.pbrData.metallicRoughnessTexture.has_value())
+    {
+        roughMetTexInput = loadTexture(asset, mat.pbrData.metallicRoughnessTexture.value().textureIndex, dataSize);
+        if (std::holds_alternative<std::string>(roughMetTexInput))
+            roughMetTexInput = localDirectory + get<std::string>(roughMetTexInput);
+    }
+    else
+        roughMetTexInput = "Assets/Textures/WhitePOT.dds";
+
+    std::shared_ptr<Texture> roughMetTex = std::make_shared<Texture>();
+    if (std::holds_alternative<std::string>(roughMetTexInput))
+    {
+        auto texPath = get<std::string>(roughMetTexInput);
+        const auto pngIdx = texPath.find("png");
+        if (pngIdx != std::string::npos)
+            texPath = texPath.replace(pngIdx, 3, "dds");
+        roughMetTex->Init(d3d->GetDevice(), cmdList, texPath,
+                         1);
+    }
+    else
+    {
+        auto pData = get<const std::byte*>(roughMetTexInput);
+        roughMetTex->InitPNG(d3d->GetDevice(), cmdList, reinterpret_cast<const uint8_t*>(pData), dataSize,
+                            DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    }
+
     MaterialData materialData = {};
 
     std::shared_ptr<Material> material = std::make_shared<Material>();
@@ -463,6 +490,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterDebug));
     material->SetTex(d3d->GetDevice(), 0, heap, diffuseTex);
     material->SetTex(d3d->GetDevice(), 1, heap, normalTex);
+    material->SetTex(d3d->GetDevice(), 2, heap, roughMetTex);
 
     bool isGlass = (mat.transmission && mat.transmission->transmissionFactor > 0.0) ||
         (mat.alphaMode == fastgltf::AlphaMode::Blend &&

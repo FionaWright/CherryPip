@@ -138,12 +138,12 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
     if (m_studioConfig.PT.DebugMode)
     {
         ImGui::Indent(IM_GUI_INDENTATION);
-        const char* curSelection = c_debugBufferStrMap.at(m_studioConfig.PT.DebugBufferIdx);
+        const char* curSelection = c_debugBufferStrMap.at(static_cast<uint32_t>(m_studioConfig.PT.DebugBufferIdx));
         if (ImGui::BeginCombo("Debug Buffer##xx", curSelection))
         {
             for (size_t i = 0; i < c_debugBufferStrMap.size(); i++)
             {
-                const bool isSelected = m_studioConfig.PT.DebugBufferIdx == i;
+                const bool isSelected = static_cast<uint32_t>(m_studioConfig.PT.DebugBufferIdx) == i;
                 if (ImGui::Selectable(c_debugBufferStrMap.at(i), isSelected))
                 {
                     m_studioConfig.PT.DebugBufferIdx = static_cast<DebugBuffer>(i);
@@ -190,7 +190,9 @@ void SceneStudio::GuiRaster()
         "UV",
         "Directional Lighting",
         "Textures",
-        "Texture Lighting"
+        "Texture Lighting",
+        "Roughness",
+        "Metalness",
     };
 
     const char* curSelection = c_rasterDebugModes.at(m_studioConfig.Raster.Mode);

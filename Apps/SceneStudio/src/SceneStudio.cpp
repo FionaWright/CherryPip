@@ -278,7 +278,7 @@ void SceneStudio::loadRasterAssets(const D3D* d3d)
     samplers[0].ShaderRegister = 0;
 
     m_rootSigRaster = std::make_shared<RootSig>();
-    m_rootSigRaster->SmartInit(d3d->GetDevice(), 2, 2, 0, false, samplers, _countof(samplers));
+    m_rootSigRaster->SmartInit(d3d->GetDevice(), 2, 3, 0, false, samplers, _countof(samplers));
 
     D3D12_INPUT_ELEMENT_DESC rasterILD[] =
     {
@@ -437,7 +437,7 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         cmdList->OMSetRenderTargets(1, &handle, FALSE, nullptr);
 
         ID3D12RootSignature* rootSig = m_studioConfig.PT.DebugMode ? m_rootSigDebug->Get() : m_rootSig->Get();
-        const int debugBufferIdx = m_studioConfig.PT.DebugMode ? m_studioConfig.PT.DebugBufferIdx : -1;
+        const int debugBufferIdx = m_studioConfig.PT.DebugMode ? static_cast<uint32_t>(m_studioConfig.PT.DebugBufferIdx) : -1;
 
         m_ptContext.Render(cmdList, rootSig, m_shader->GetPSO(), &m_camera.GetCamera(), &m_heap, m_projMatrix,
                            m_studioConfig.PT, debugBufferIdx);

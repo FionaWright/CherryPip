@@ -182,7 +182,7 @@ void SceneStudio::loadAssets(D3D* d3d)
     m_sceneConfigs.emplace_back(sceneTeapot);
 
     t = {};
-    t.SetScale(2.0f);
+    t.SetScale(5.0f);
     SceneConfig sceneChess = {
         "Chess",
         L"Chess/Chess.gltf",
@@ -204,6 +204,28 @@ void SceneStudio::loadAssets(D3D* d3d)
         true
     };
     m_sceneConfigs.emplace_back(sceneLantern);
+
+    t = {};
+    SceneConfig sceneBistro = {
+        "Bistro",
+        L"GitIgnored/Bistro/bistro.gltf",
+        t,
+        XMFLOAT3(0.967f, 11.963f, 50.213f),
+        XMFLOAT2(0, PI),
+        true
+    };
+    m_sceneConfigs.emplace_back(sceneBistro);
+
+    t = {};
+    SceneConfig sceneSponza = {
+        "Sponza",
+        L"GitIgnored/Sponza/sponza.gltf",
+        t,
+        XMFLOAT3(0.967f, 11.963f, 50.213f),
+        XMFLOAT2(0, PI),
+        true
+    };
+    m_sceneConfigs.emplace_back(sceneSponza);
 
     m_envMapList = {
         L"Env Maps/autumn_field_puresky_4k.hdr",

@@ -11,12 +11,14 @@
 #include "HWI/Texture.h"
 
 #include "CBV.h"
+#include "zutil.h"
 #include "Debug/Profiler.h"
 #include "HWI/BLAS.h"
 #include "HWI/Heap.h"
 #include "HWI/Material.h"
 #include "Render/Object.h"
 #include "System/FileHelper.h"
+#include "System/ResourceSharer.h"
 #include "System/TextureLoader.h"
 
 namespace filesystem = std::filesystem;
@@ -331,6 +333,58 @@ std::variant<std::string, const std::byte*> ModelLoaderGLTF::loadTexture(
     return "";
 }
 
+template<typename T>
+std::shared_ptr<Texture> ModelLoaderGLTF::loadTextureResource(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, const Asset& asset,
+    const fastgltf::Optional<T>& gltfTex, const std::string& localDir, const char* backupPath)
+{
+    static_assert(std::is_base_of_v<fastgltf::TextureInfo, T>);
+
+    std::variant<std::string, const std::byte*> texInput = "";
+    size_t dataSize = 0;
+    if (gltfTex.has_value())
+    {
+        texInput = loadTexture(asset, gltfTex.value().textureIndex, dataSize);
+        if (std::holds_alternative<std::string>(texInput))
+            texInput = localDir + get<std::string>(texInput);
+    }
+    else if (backupPath)
+        texInput = backupPath;
+
+    std::shared_ptr<Texture> pTex = std::make_shared<Texture>();
+    if (!gltfTex.has_value() && !backupPath)
+    {
+        pTex->InitEmpty(d3d->GetDevice(), DXGI_FORMAT_R8G8B8A8_UNORM, 1, 1);
+        return pTex;
+    }
+
+    if (std::holds_alternative<std::string>(texInput))
+    {
+        auto texPath = get<std::string>(texInput);
+
+        if (ResourceSharer::TryGetFromDatabase(texPath, pTex))
+            return pTex;
+
+        const auto pngIdx = texPath.find("png");
+        if (pngIdx != std::string::npos)
+            texPath = texPath.replace(pngIdx, 3, "dds");
+        const auto jpgIdx = texPath.find("jpg");
+        if (jpgIdx != std::string::npos)
+            texPath = texPath.replace(jpgIdx, 3, "dds");
+
+        pTex->Init(d3d->GetDevice(), cmdList, texPath, 1);
+
+        ResourceSharer::AddToDatabase(texPath, pTex);
+    }
+    else
+    {
+        auto pData = get<const std::byte*>(texInput);
+        pTex->InitPNG(d3d->GetDevice(), cmdList, reinterpret_cast<const uint8_t*>(pData), dataSize,
+                            DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    }
+
+    return pTex;
+}
+
 void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, Asset& asset,
                                     const fastgltf::Primitive& primitive, const std::string& modelNameExtensionless,
                                     fastgltf::Node& node, GLTFLoadArgs& args, Transform transform, std::string id, size_t meshIndex,
@@ -382,8 +436,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     {
         std::string diffuseTexInput = assetDirectory + "Textures/TestTex.dds";
         std::shared_ptr<Texture> diffuseTex = std::make_shared<Texture>();
-        diffuseTex->Init(d3d->GetDevice(), cmdList, diffuseTexInput,
-                         1);
+        diffuseTex->Init(d3d->GetDevice(), cmdList, diffuseTexInput, 1);
 
         std::shared_ptr<Material> material = std::make_shared<Material>();
         material->Init(heap);
@@ -403,133 +456,18 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
 
     fastgltf::Material& mat = (*asset)->materials[primitive.materialIndex.value_or(0)];
 
-    std::variant<std::string, const std::byte*> diffuseTexInput = "";
-    size_t dataSize = 0;
-    if (mat.pbrData.baseColorTexture.has_value())
-    {
-        diffuseTexInput = loadTexture(asset, mat.pbrData.baseColorTexture.value().textureIndex, dataSize);
-        if (std::holds_alternative<std::string>(diffuseTexInput))
-            diffuseTexInput = localDirectory + get<std::string>(diffuseTexInput);
-    }
-    else if (mat.iridescence)
-        diffuseTexInput = assetDirectory + "Textures/Transparent.dds";
-    else
-        diffuseTexInput = assetDirectory + "Textures/WhitePOT.dds";
+    std::string backupPath;
 
-    std::shared_ptr<Texture> diffuseTex = std::make_shared<Texture>();
-    if (std::holds_alternative<std::string>(diffuseTexInput))
-    {
-        auto texPath = get<std::string>(diffuseTexInput);
-        const auto pngIdx = texPath.find("png");
-        if (pngIdx != std::string::npos)
-            texPath = texPath.replace(pngIdx, 3, "dds");
-        const auto jpgIdx = texPath.find("jpg");
-        if (jpgIdx != std::string::npos)
-            texPath = texPath.replace(jpgIdx, 3, "dds");
-        diffuseTex->Init(d3d->GetDevice(), cmdList, texPath,
-                         1);
-    }
-    else
-    {
-        auto pData = get<const std::byte*>(diffuseTexInput);
-        diffuseTex->InitPNG(d3d->GetDevice(), cmdList, reinterpret_cast<const uint8_t*>(pData), dataSize,
-                            DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-    }
+    backupPath = assetDirectory + (mat.iridescence ?  "Textures/Transparent.dds" : "Textures/WhitePOT.dds");
+    std::shared_ptr<Texture> diffuseTex = loadTextureResource<fastgltf::TextureInfo>(d3d, cmdList, asset, mat.pbrData.baseColorTexture, localDirectory, backupPath.c_str());
 
-    std::variant<std::string, const std::byte*> normalTexInput = "";
-    if (mat.normalTexture.has_value())
-    {
-        normalTexInput = loadTexture(asset, mat.normalTexture.value().textureIndex, dataSize);
-        if (std::holds_alternative<std::string>(normalTexInput))
-            normalTexInput = localDirectory + get<std::string>(normalTexInput);
-    }
-    else
-        normalTexInput = assetDirectory + "Textures/DefaultNormal.dds";
+    backupPath = assetDirectory + "Textures/DefaultNormal.dds";
+    std::shared_ptr<Texture> normalTex = loadTextureResource<fastgltf::NormalTextureInfo>(d3d, cmdList, asset, mat.normalTexture, localDirectory, backupPath.c_str());
 
-    std::shared_ptr<Texture> normalTex = std::make_shared<Texture>();
-    if (std::holds_alternative<std::string>(normalTexInput))
-    {
-        auto texPath = get<std::string>(normalTexInput);
-        const auto pngIdx = texPath.find("png");
-        if (pngIdx != std::string::npos)
-            texPath = texPath.replace(pngIdx, 3, "dds");
-        const auto jpgIdx = texPath.find("jpg");
-        if (jpgIdx != std::string::npos)
-            texPath = texPath.replace(jpgIdx, 3, "dds");
-        normalTex->Init(d3d->GetDevice(), cmdList, texPath,
-                         1);
-    }
-    else
-    {
-        auto pData = get<const std::byte*>(normalTexInput);
-        normalTex->InitPNG(d3d->GetDevice(), cmdList, reinterpret_cast<const uint8_t*>(pData), dataSize,
-                            DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-    }
+    backupPath = assetDirectory + "Textures/WhitePOT.dds";
+    std::shared_ptr<Texture> roughMetTex = loadTextureResource<fastgltf::TextureInfo>(d3d, cmdList, asset, mat.pbrData.metallicRoughnessTexture, localDirectory, backupPath.c_str());
 
-    std::variant<std::string, const std::byte*> roughMetTexInput = "";
-    if (mat.pbrData.metallicRoughnessTexture.has_value())
-    {
-        roughMetTexInput = loadTexture(asset, mat.pbrData.metallicRoughnessTexture.value().textureIndex, dataSize);
-        if (std::holds_alternative<std::string>(roughMetTexInput))
-            roughMetTexInput = localDirectory + get<std::string>(roughMetTexInput);
-    }
-    else
-        roughMetTexInput = assetDirectory + "Textures/WhitePOT.dds";
-
-    std::shared_ptr<Texture> roughMetTex = std::make_shared<Texture>();
-    if (std::holds_alternative<std::string>(roughMetTexInput))
-    {
-        auto texPath = get<std::string>(roughMetTexInput);
-        const auto pngIdx = texPath.find("png");
-        if (pngIdx != std::string::npos)
-            texPath = texPath.replace(pngIdx, 3, "dds");
-        const auto jpgIdx = texPath.find("jpg");
-        if (jpgIdx != std::string::npos)
-            texPath = texPath.replace(jpgIdx, 3, "dds");
-        roughMetTex->Init(d3d->GetDevice(), cmdList, texPath,
-                         1);
-    }
-    else
-    {
-        auto pData = get<const std::byte*>(roughMetTexInput);
-        roughMetTex->InitPNG(d3d->GetDevice(), cmdList, reinterpret_cast<const uint8_t*>(pData), dataSize,
-                            DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-    }
-
-    std::variant<std::string, const std::byte*> emissiveTexInput = "";
-    if (mat.emissiveTexture.has_value())
-    {
-        emissiveTexInput = loadTexture(asset, mat.emissiveTexture.value().textureIndex, dataSize);
-        if (std::holds_alternative<std::string>(emissiveTexInput))
-            emissiveTexInput = localDirectory + get<std::string>(emissiveTexInput);
-    }
-
-    std::shared_ptr<Texture> emissiveTex = std::make_shared<Texture>();
-    if (mat.emissiveTexture.has_value())
-    {
-        if (std::holds_alternative<std::string>(emissiveTexInput))
-        {
-            auto texPath = get<std::string>(emissiveTexInput);
-            const auto pngIdx = texPath.find("png");
-            if (pngIdx != std::string::npos)
-                texPath = texPath.replace(pngIdx, 3, "dds");
-            const auto jpgIdx = texPath.find("jpg");
-            if (jpgIdx != std::string::npos)
-                texPath = texPath.replace(jpgIdx, 3, "dds");
-            emissiveTex->Init(d3d->GetDevice(), cmdList, texPath,
-                             1);
-        }
-        else
-        {
-            auto pData = get<const std::byte*>(emissiveTexInput);
-            emissiveTex->InitPNG(d3d->GetDevice(), cmdList, reinterpret_cast<const uint8_t*>(pData), dataSize,
-                                DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-        }
-    }
-    else
-        emissiveTex->InitEmpty(d3d->GetDevice(), DXGI_FORMAT_R8G8B8A8_UNORM, 1, 1);
-
-    MaterialData materialData = {};
+    std::shared_ptr<Texture> emissiveTex = loadTextureResource<fastgltf::TextureInfo>(d3d, cmdList, asset, mat.emissiveTexture, localDirectory, nullptr);
 
     std::shared_ptr<Material> material = std::make_shared<Material>();
     material->Init(heap);
@@ -549,6 +487,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
 
     const bool noEmission = mat.emissiveFactor == fastgltf::math::nvec3(0,0,0) & !emissiveTex;
 
+    MaterialData materialData = {};
     memcpy(&materialData.BaseColorFactor, &mat.pbrData.baseColorFactor, sizeof(float) * 3);
     materialData.EmissiveStrength = noEmission ? 0 : mat.emissiveStrength;
     materialData.Roughness = mat.pbrData.roughnessFactor;

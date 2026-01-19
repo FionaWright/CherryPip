@@ -482,7 +482,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
 
     material->SetName(mat.name.c_str());
 
-    const bool noEmission = mat.emissiveFactor == fastgltf::math::nvec3(0,0,0) & !emissiveTex;
+    const bool noEmission = mat.emissiveFactor == fastgltf::math::nvec3(0,0,0);
 
     MaterialData materialData = {};
     memcpy(&materialData.BaseColorFactor, &mat.pbrData.baseColorFactor, sizeof(float) * 3);
@@ -491,6 +491,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     materialData.Metalness = mat.pbrData.metallicFactor;
     materialData.IoR = mat.ior;
     materialData.BindlessTexDiffuse = heap->AddBindlessTexture(d3d->GetDevice(), diffuseTex);
+    materialData.BindlessTexNormal = heap->AddBindlessTexture(d3d->GetDevice(), normalTex);
     if (isGlass)
         materialData.Flags = PtMaterialFlags::eIsGlass;
     material->SetData(materialData);

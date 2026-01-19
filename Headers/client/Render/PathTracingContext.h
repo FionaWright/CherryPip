@@ -51,6 +51,7 @@ struct PtConfig
     alignas(4) bool EnvMapIsEqualArea = true;
     alignas(4) bool RussianRouletteEnabled = true;
     alignas(4) bool DirLightEnabled = true;
+    alignas(4) bool NormalMapsEnabled = true;
 };
 
 class PathTracingContext

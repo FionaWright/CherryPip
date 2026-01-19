@@ -21,6 +21,7 @@ float4 PSMain(VsOut input) : SV_TARGET
 {
     float4 albedo = gDiffuse.Sample(gSampler, input.uv).rgba;
     float3 bumpSample = gNormal.Sample(gSampler, input.uv).rgb * 2.0f - 1.0f;
+    bumpSample.y = -bumpSample.y; // DX convention
     float2 roughMet = gRoughnessMetallic.Sample(gSampler, input.uv).gb;
     float3 emission = gEmissive.Sample(gSampler, input.uv).rgb;
 

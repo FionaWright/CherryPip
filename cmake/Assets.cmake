@@ -10,12 +10,17 @@ set(TEXTURE_DIRS
 set(GENERATED_DDS_FILES "")
 
 foreach(DIR ${TEXTURE_DIRS})
-    file(GLOB_RECURSE PNG_FILES "${DIR}/*.png")
+    file(GLOB_RECURSE IMG_FILES
+            "${DIR}/*.png"
+            "${DIR}/*.jpg"
+            "${DIR}/*.tga")
 
-    foreach(PNG ${PNG_FILES})
+    foreach(IMG ${IMG_FILES})
         # Compute output path in the build directory
-        file(RELATIVE_PATH REL_PATH "${CMAKE_SOURCE_DIR}" "${PNG}")
-        string(REPLACE ".png" ".dds" DDS_REL "${REL_PATH}")
+        file(RELATIVE_PATH REL_PATH "${CMAKE_SOURCE_DIR}" "${IMG}")
+        get_filename_component(DDS_NAME "${REL_PATH}" NAME_WE)
+        get_filename_component(DDS_DIR_REL "${REL_PATH}" DIRECTORY)
+        set(DDS_REL "${DDS_DIR_REL}/${DDS_NAME}.dds")
         set(DDS_OUT "${CMAKE_BINARY_DIR}/${DDS_REL}")
 
         # Ensure output directory exists
@@ -24,9 +29,9 @@ foreach(DIR ${TEXTURE_DIRS})
 
         add_custom_command(
                 OUTPUT "${DDS_OUT}"
-                COMMAND "${TEXCONV_EXE}" -ft dds -f BC7_UNORM -o "${DDS_DIR}" "${PNG}"
-                DEPENDS "${PNG}"
-                COMMENT "Converting ${PNG} → ${DDS_OUT}"
+                COMMAND "${TEXCONV_EXE}" -ft dds -f BC7_UNORM -o "${DDS_DIR}" "${IMG}"
+                DEPENDS "${IMG}"
+                COMMENT "Converting ${IMG} → ${DDS_OUT}"
                 VERBATIM
         )
 
@@ -51,6 +56,9 @@ set(FILES_TO_COPY "")
 foreach(f ${MODEL_FILES})
     # Skip PNGs
     if(f MATCHES "\\.png$")
+        continue()
+    endif()
+    if(f MATCHES "\\.jpg$")
         continue()
     endif()
 

@@ -35,7 +35,9 @@ float4 PSMain(VsOut input) : SV_TARGET
     {
     case ePosition:
         return float4(input.position.xyz / input.position.w, 1);
-    case eNormals:
+	case eNormalsVertex:
+		return float4(input.normal, 1);
+    case eNormalsBumped:
         return float4(N_w, 1);
     case eTangent:
         return float4(input.tangent, 1);

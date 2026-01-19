@@ -1,10 +1,9 @@
 //
 // Created by fiona on 06/10/2025.
 //
+#include "System/pch.h"
 
 #include "Render/Object.h"
-
-#include <iostream>
 
 #include "CBV.h"
 

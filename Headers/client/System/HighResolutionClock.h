@@ -5,8 +5,6 @@
 #ifndef PT_HIGHRESOLUTIONCLOCK_H
 #define PT_HIGHRESOLUTIONCLOCK_H
 
-#include <chrono>
-
 using std::chrono::high_resolution_clock;
 
 struct TimeArgs

@@ -1,8 +1,5 @@
+#include "System/pch.h"
 #include "System/ModelLoaderGLTF.h"
-#include <direct.h>
-#include <filesystem>
-#include <iostream>
-#include <ostream>
 
 #include "Helper.h"
 #include "HWI/Model.h"

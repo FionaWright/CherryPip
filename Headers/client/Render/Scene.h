@@ -4,12 +4,10 @@
 
 #ifndef CHERRYPIP_SCENE_H
 #define CHERRYPIP_SCENE_H
-#include <memory>
-#include <vector>
+
 
 #include "HWI/Material.h"
 #include "HWI/Model.h"
-
 
 class Object;
 

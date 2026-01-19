@@ -4,8 +4,6 @@
 
 #ifndef PT_GUI_H
 #define PT_GUI_H
-#include <d3d12.h>
-#include <wrl/client.h>
 
 struct ImVec2;
 

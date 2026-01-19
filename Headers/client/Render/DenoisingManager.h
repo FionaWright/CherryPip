@@ -4,7 +4,6 @@
 
 #ifndef CHERRYPIP_DENOISINGMANAGER_H
 #define CHERRYPIP_DENOISINGMANAGER_H
-#include <d3d12.h>
 
 #include "TextureRTV.h"
 #include "HWI/D12Resource.h"

@@ -4,7 +4,6 @@
 
 #ifndef PT_BLAS_H
 #define PT_BLAS_H
-#include <memory>
 
 #include "D12Resource.h"
 #include "Render/Transform.h"

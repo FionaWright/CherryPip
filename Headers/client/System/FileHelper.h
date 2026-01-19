@@ -5,9 +5,6 @@
 #ifndef PT_FILEHELPER_H
 #define PT_FILEHELPER_H
 
-#include <string>
-#include <vector>
-#include <windows.h>
 
 class FileHelper
 {

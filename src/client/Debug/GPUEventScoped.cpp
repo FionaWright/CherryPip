@@ -2,6 +2,8 @@
 // Created by fionaw on 27/10/2025.
 //
 
+#include "System/pch.h"
+
 #include "Debug/GPUEventScoped.h"
 
 #ifdef _DEBUG

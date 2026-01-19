@@ -4,8 +4,6 @@
 
 #ifndef CHERRYPIP_ENVMAP_H
 #define CHERRYPIP_ENVMAP_H
-#include <string>
-
 #include "HWI/Material.h"
 #include "HWI/RootSig.h"
 #include "HWI/Shader.h"

@@ -2,23 +2,14 @@
 // Created by fiona on 30/09/2025.
 //
 
+#include "System/pch.h"
 #include "System/TextureLoader.h"
-#include "MathUtils.h"
-
-#include <d3d12.h>
-#include <DirectXMath.h>
-
+#include "../../../Headers/client/MathUtils.h"
 #include "../../../Headers/client/Helper.h"
 #include "HWI/D12Resource.h"
 
-using namespace DirectX;
-
 #include "spng.h"
 #include "tinyddsloader.h"
-
-#include <string>
-#include <filesystem>
-#include <fstream>
 
 using std::wstring;
 using std::ofstream;

@@ -4,7 +4,7 @@
 
 #ifndef PT_OBJECT_H
 #define PT_OBJECT_H
-#include <memory>
+
 
 #include "HWI/Material.h"
 #include "HWI/Model.h"

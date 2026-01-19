@@ -4,8 +4,6 @@
 
 #ifndef CHERRYPIP_TEXTURERTV_H
 #define CHERRYPIP_TEXTURERTV_H
-#include <cstdint>
-#include <d3d12.h>
 
 #include "HWI/D12Resource.h"
 #include "HWI/RootSig.h"

@@ -2,6 +2,7 @@
 // Created by fionaw on 09/11/2025.
 //
 
+#include "System/pch.h"
 #include "Apps/SceneStudio/Headers/ReadbackManager.h"
 
 #include "CBV.h"

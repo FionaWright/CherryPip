@@ -5,10 +5,6 @@
 #ifndef CHERRYPIP_CHERRYPIP_H
 #define CHERRYPIP_CHERRYPIP_H
 
-#include <windows.h>
-#include <iostream>
-#include <span>
-
 #include "App.h"
 
 class CherryPip

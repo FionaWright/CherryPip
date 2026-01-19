@@ -2,12 +2,8 @@
 // Created by fiona on 30/09/2025.
 //
 
+#include "System/pch.h"
 #include "HWI/D12Resource.h"
-
-#include <cassert>
-#include <d3dx12_barriers.h>
-#include <d3dx12_core.h>
-#include <d3dx12_resource_helpers.h>
 
 #include "../../../Headers/client/Helper.h"
 

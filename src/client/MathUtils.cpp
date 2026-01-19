@@ -1,8 +1,5 @@
+#include "System/pch.h"
 #include "../../Headers/client/MathUtils.h"
-
-#include <algorithm>
-#include <iostream>
-#include <fstream>
 
 float Clamp(float val, float min, float max)
 {

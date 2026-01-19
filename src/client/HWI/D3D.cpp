@@ -2,6 +2,7 @@
 // Created by fionaw on 22/09/2025.
 //
 
+#include "System/pch.h"
 #include "HWI/D3D.h"
 
 #include "HlslGlue.h"

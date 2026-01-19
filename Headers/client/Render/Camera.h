@@ -4,9 +4,6 @@
 
 #ifndef PT_CAMERA_H
 #define PT_CAMERA_H
-#include <DirectXMath.h>
-
-using namespace DirectX;
 
 class Camera
 {

@@ -2,12 +2,9 @@
 // Created by fionaw on 27/10/2025.
 //
 
+#include "System/pch.h"
 #include "HWI/BLAS.h"
 
-#include <d3d12.h>
-#include <d3dx12_core.h>
-
-#include "../../../Headers/client/Helper.h"
 #include "HWI/Model.h"
 
 void BLAS::Init(ID3D12Device5* device, ID3D12GraphicsCommandList4* cmdList, const std::shared_ptr<Model>& model, const Transform& transform)

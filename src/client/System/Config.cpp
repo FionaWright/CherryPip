@@ -2,11 +2,8 @@
 // Created by fionaw on 28/09/2025.
 //
 
+#include "System/pch.h"
 #include "System/Config.h"
-
-#include <iostream>
-#include <sstream>
-#include <unordered_map>
 
 SettingsSystem Config::ms_settingsSystem;
 SettingsRender Config::ms_settingsRender;

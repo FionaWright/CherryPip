@@ -1,10 +1,8 @@
 //
 // Created by fionaw on 03/11/2025.
 //
-
+#include "System/pch.h"
 #include "Debug/ReadbackBuffer.h"
-
-#include <functional>
 
 #include "../../../Headers/client/Helper.h"
 #include "HWI/D3D.h"

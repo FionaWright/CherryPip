@@ -6,9 +6,7 @@
 #define PT_INPUT_H
 
 #include "Keycodes.h"
-#include "DirectXMath.h"
 
-#include <unordered_map>
 using std::unordered_map;
 
 using namespace DirectX;

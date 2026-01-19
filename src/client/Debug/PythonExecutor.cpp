@@ -2,9 +2,8 @@
 // Created by fionaw on 06/11/2025.
 //
 
+#include "System/pch.h"
 #include "Debug/PythonExecutor.h"
-
-#include <string>
 
 void PythonExecutor::ExecutePython(const char* pythonFile, const std::vector<const char*>& args)
 {

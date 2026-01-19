@@ -2,8 +2,8 @@
 // Created by fiona on 25/09/2025.
 //
 
+#include "System/pch.h"
 #include "Render/Camera.h"
-
 #include "MathUtils.h"
 
 void Camera::Init(const XMFLOAT3 pos, const float pitch, const float yaw)

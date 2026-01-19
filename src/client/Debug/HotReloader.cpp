@@ -2,10 +2,9 @@
 // Created by fionaw on 26/10/2025.
 //
 
-#include "../../../Headers/client/Debug/HotReloader.h"
+#include "System/pch.h"
 
-#include <filesystem>
-#include <iostream>
+#include "../../../Headers/client/Debug/HotReloader.h"
 
 #include "System/FileHelper.h"
 

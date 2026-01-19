@@ -2,9 +2,8 @@
 // Created by fionaw on 28/09/2025.
 //
 
+#include "System/pch.h"
 #include "HWI/Model.h"
-
-#include "../../../Headers/client/Helper.h"
 
 void Model::Init(ID3D12Device* device, const size_t vertexCount, const size_t indexCount, const size_t vertexInputSize, const float boundingRadius, const XMFLOAT3 centroid)
 {

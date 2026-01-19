@@ -2,6 +2,7 @@
 // Created by fionaw on 26/10/2025.
 //
 
+#include "System/pch.h"
 #include "System/HighResolutionClock.h"
 
 HighResolutionClock::HighResolutionClock()

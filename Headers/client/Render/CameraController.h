@@ -6,7 +6,6 @@
 #define PT_CAMERACONTROLLER_H
 #include "Camera.h"
 
-
 class CameraController
 {
 public:

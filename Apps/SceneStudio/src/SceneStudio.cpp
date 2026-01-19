@@ -1,6 +1,6 @@
+#include "System/pch.h"
 #include "Apps/SceneStudio/Headers/SceneStudio.h"
 #include "System/Win32App.h"
-#include <dxcapi.h>
 
 #include "ThirdParty/imgui/imgui.h"
 #include "Debug/GPUEventScoped.h"

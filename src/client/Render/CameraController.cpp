@@ -2,8 +2,8 @@
 // Created by fionaw on 25/09/2025.
 //
 
+#include "System/pch.h"
 #include "Render/CameraController.h"
-
 #include "System/Config.h"
 #include "System/Input.h"
 

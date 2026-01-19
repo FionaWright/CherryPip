@@ -4,9 +4,6 @@
 
 #ifndef PT_TRANSFORM_H
 #define PT_TRANSFORM_H
-#include <DirectXMath.h>
-
-using namespace DirectX;
 
 class Transform
 {

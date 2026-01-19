@@ -4,10 +4,6 @@
 
 #ifndef CHERRYPIP_RESOURCESHARER_H
 #define CHERRYPIP_RESOURCESHARER_H
-#include <memory>
-#include <string>
-#include <unordered_map>
-
 
 class Texture;
 

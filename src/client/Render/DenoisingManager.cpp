@@ -2,8 +2,8 @@
 // Created by fiona on 15/01/2026.
 //
 
+#include "System/pch.h"
 #include "Render/DenoisingManager.h"
-
 #include "CBV.h"
 #include "Debug/GPUEventScoped.h"
 

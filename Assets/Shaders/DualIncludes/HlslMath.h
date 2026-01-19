@@ -6,7 +6,9 @@
 // Only for functions that are required by both C++ and HLSL
 // Keep HLSL-only functions local to the shader file
 
+#ifndef PI
 #define PI 3.141592653589793
+#endif
 
 float CopySign(float mag, float sign)
 {

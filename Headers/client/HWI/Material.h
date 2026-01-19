@@ -37,11 +37,14 @@ struct MaterialData
 {
     DirectX::XMFLOAT3 BaseColorFactor = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
     float EmissiveStrength = 0.0f;
+    DirectX::XMFLOAT3 EmissiveColor = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
     float Roughness = 1.0f;
     float Metalness = 0.0f;
 
     int BindlessTexDiffuse = -1;
     int BindlessTexNormal = -1;
+    int BindlessTexRoughMet = -1;
+    int BindlessTexEmissive = -1;
     PtMaterialFlags Flags = PtMaterialFlags::eNone;
     float IoR = 1.5f;
 

@@ -97,9 +97,11 @@ void Model_Glass(
     inout uint rngState,
     inout float3 Lo,
     inout float3 throughput,
-    PtMaterialData mat,
+    float diffuseProbability,
+    float roughness,
     bool entering,
     float hitDist,
+    float ior,
     float3 Ns,
     float3 Li,
     float3 brdf,
@@ -109,18 +111,18 @@ void Model_Glass(
     if (!entering)
     {
         float attenuationDistance = 1.0f; // TODO: Unhardcode and fix issues
-        float3 sigma_a = -log(mat.BaseColorFactor) / attenuationDistance;
+        float3 sigma_a = -log(brdf) / attenuationDistance;
         sigma_a = 0;
         throughput *= exp(-sigma_a * hitDist);
     }
 
-    float iorCurrent = entering ? IOR_AIR : mat.IoR;
-    float iorNext = entering ? mat.IoR : IOR_AIR;
+    float iorCurrent = entering ? IOR_AIR : ior;
+    float iorNext = entering ? ior : IOR_AIR;
     GlassResponse res = CalcReflectRefract(wo, Ns, iorCurrent, iorNext);
 
     float3 diffuseDir = normalize(Ns + RandDirectionSphere(rngState));
-    res.reflectDir = normalize(lerp(res.reflectDir, diffuseDir, mat.DiffuseProbability)); // Why diffuseprobability and not roughness?
-    res.refractDir = normalize(lerp(res.refractDir, -diffuseDir, mat.Roughness));
+    res.reflectDir = normalize(lerp(res.reflectDir, diffuseDir, diffuseProbability)); // Why diffuseprobability and not roughness?
+    res.refractDir = normalize(lerp(res.refractDir, -diffuseDir, roughness));
 
     bool reflect = PcgRand01(rngState) <= res.reflectWeight;
     wi = reflect ? res.reflectDir : res.refractDir;

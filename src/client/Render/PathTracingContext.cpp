@@ -69,10 +69,13 @@ void PathTracingContext::BuildScene(ID3D12Device* device, ID3D12GraphicsCommandL
         ptMaterialData.Roughness = objectMaterialData->Roughness;
         ptMaterialData.Metalness = objectMaterialData->Metalness;
         ptMaterialData.DiffuseProbability = objectMaterialData->DiffuseProbability;
-        ptMaterialData.TextureIdx = objectMaterialData->BindlessTexDiffuse;
-        ptMaterialData.NormalMapIdx = objectMaterialData->BindlessTexNormal;
+        ptMaterialData.TexIdxAlbedo = objectMaterialData->BindlessTexDiffuse;
+        ptMaterialData.TexIdxNormal = objectMaterialData->BindlessTexNormal;
+        ptMaterialData.TexIdxRoughMet = objectMaterialData->BindlessTexRoughMet;
+        ptMaterialData.TexIdxEmissive = objectMaterialData->BindlessTexEmissive;
         ptMaterialData.IoR = objectMaterialData->IoR;
         ptMaterialData.Flags = objectMaterialData->Flags;
+        ptMaterialData.EmissiveColor = objectMaterialData->EmissiveColor;
         materialData.emplace_back(ptMaterialData);
     }
 

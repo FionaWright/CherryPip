@@ -45,6 +45,7 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         m_envMap.InitCubemap(d3d->GetDevice(), cmdList, &m_heap);
         m_skybox.Init(d3d->GetDevice(), cmdList, &m_heap, m_envMap.GetCubemap());
         m_recomputeEnvMapDirLight = true;
+        m_sceneDirty = true;
         m_envMapDirty = false;
     }
 

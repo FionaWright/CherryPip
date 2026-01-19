@@ -29,6 +29,7 @@ class DenoisingManager
 public:
     void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap* heap, D12Resource* pp1, D12Resource* pp2,
               D12Resource* normalsDepth);
+    bool IsInitialized() const { return m_initialized; }
 
     TextureRTV* DenoiseBox(ID3D12GraphicsCommandList* cmdList, TextureRTV* pp1, TextureRTV* pp2, uint32_t radius) const;
     TextureRTV* DenoiseGauss(ID3D12GraphicsCommandList* cmdList, TextureRTV* pp1, TextureRTV* pp2,
@@ -49,6 +50,7 @@ private:
     D3D12_INPUT_LAYOUT_DESC m_ild = {};
     D3D12_STATIC_SAMPLER_DESC m_sampler = {};
     std::vector<D3D12_INPUT_ELEMENT_DESC> m_ildDesc = {};
+    bool m_initialized = false;
 
     RootSig m_rootSigBox;
     Shader m_shaderBox;

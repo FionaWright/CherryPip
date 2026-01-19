@@ -49,7 +49,6 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 ## Optimizations-TODO:
 
-- Texture/Model reuse
 - PCH Compilation
 
 - Frustum Culling
@@ -78,7 +77,6 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Get proper BSDF for forward renderer
 - Add deferred render backend
 - GBuffer debug viewer
-- Clean up ModelLoaderGLTF.cpp
 
 ## Spectral Tracing
 

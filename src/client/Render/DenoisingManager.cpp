@@ -37,6 +37,8 @@ void DenoisingManager::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmd
     initGauss(device, heap, pp1, pp2);
     initMedian(device, heap, pp1, pp2);
     initATrous(device, heap, pp1, pp2, normalsDepth);
+
+    m_initialized = true;
 }
 
 void DenoisingManager::initBox(ID3D12Device* device, Heap* heap, D12Resource* tex)

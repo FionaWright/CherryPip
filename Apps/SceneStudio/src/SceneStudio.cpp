@@ -253,10 +253,6 @@ void SceneStudio::loadAssets(D3D* d3d)
 
     m_deferredContext.Init(device, cmdList.Get(), &m_heapRTV); // TODO: Only init when needed
 
-    m_denoisingManager.Init(device, cmdList.Get(), &m_heap, m_rtvPingPong1.GetD12Resource(),
-                            m_rtvPingPong2.GetD12Resource(),
-                            m_deferredContext.GetNormalsDepth()); // TODO: Only init when needed
-
 #ifdef _DEBUG
     m_readbackManager.Init(d3d, &m_heap, &m_rtvPingPong1);
 #endif
@@ -409,6 +405,49 @@ void copyRtvTex(ID3D12GraphicsCommandList* cmdList, D12Resource* d3dRTV, D12Reso
     rtvTex->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
 }
 
+void SceneStudio::denoisingPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
+{
+    // GBuffer Pass
+    if (m_studioConfig.Denoising.Type == eATrous)
+    {
+        const Skybox* skybox = m_studioConfig.EnvMapEnabled ? &m_skybox : nullptr;
+        m_deferredContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, skybox);
+    }
+
+    if (!m_denoisingManager.IsInitialized())
+        m_denoisingManager.Init(d3d->GetDevice(), cmdList, &m_heap, m_rtvPingPong1.GetD12Resource(),
+                    m_rtvPingPong2.GetD12Resource(),
+                    m_deferredContext.GetNormalsDepth());
+
+    TextureRTV* outputRTV = nullptr;
+    switch (m_studioConfig.Denoising.Type)
+    {
+    case eBox:
+        outputRTV = m_denoisingManager.DenoiseBox(cmdList, &m_rtvPingPong1, &m_rtvPingPong2,
+                                                  m_studioConfig.Denoising.BoxRadius);
+        break;
+    case eGaussian:
+        outputRTV = m_denoisingManager.DenoiseGauss(cmdList, &m_rtvPingPong1, &m_rtvPingPong2,
+                                                    m_studioConfig.Denoising.BoxRadius);
+        break;
+    case eMedian:
+        outputRTV = m_denoisingManager.DenoiseMedian(cmdList, &m_rtvPingPong1, &m_rtvPingPong2);
+        break;
+    case eATrous:
+        outputRTV = m_denoisingManager.DenoiseATrous(cmdList, m_camera.GetViewMatrix(), m_projMatrix,
+                                                     &m_rtvPingPong1, &m_rtvPingPong2,
+                                                     m_studioConfig.Denoising.ATrousIterations,
+                                                     m_studioConfig.Denoising.ATrousPhiC,
+                                                     m_studioConfig.Denoising.ATrousPhiN,
+                                                     m_studioConfig.Denoising.ATrousPhiP);
+        break;
+    default:
+        throw std::exception("Unsupported Denoiser");
+    }
+
+    copyRtvTex(cmdList, d3d->GetRtv(), outputRTV->GetD12Resource());
+}
+
 void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 {
     if (!d3d->GetRayTracingSupported())
@@ -453,43 +492,9 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     }
 #endif
 
-    // GBuffer Pass
-    if (m_studioConfig.Denoising.Enabled && m_studioConfig.Denoising.Type == eATrous)
-    {
-        const Skybox* skybox = m_studioConfig.EnvMapEnabled ? &m_skybox : nullptr;
-        m_deferredContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, skybox);
-    }
-
-    // Denoising Pass (PP1 to ? to RTV)
     if (m_studioConfig.Denoising.Enabled)
     {
-        TextureRTV* outputRTV = nullptr;
-        switch (m_studioConfig.Denoising.Type)
-        {
-        case eBox:
-            outputRTV = m_denoisingManager.DenoiseBox(cmdList, &m_rtvPingPong1, &m_rtvPingPong2,
-                                                      m_studioConfig.Denoising.BoxRadius);
-            break;
-        case eGaussian:
-            outputRTV = m_denoisingManager.DenoiseGauss(cmdList, &m_rtvPingPong1, &m_rtvPingPong2,
-                                                        m_studioConfig.Denoising.BoxRadius);
-            break;
-        case eMedian:
-            outputRTV = m_denoisingManager.DenoiseMedian(cmdList, &m_rtvPingPong1, &m_rtvPingPong2);
-            break;
-        case eATrous:
-            outputRTV = m_denoisingManager.DenoiseATrous(cmdList, m_camera.GetViewMatrix(), m_projMatrix,
-                                                         &m_rtvPingPong1, &m_rtvPingPong2,
-                                                         m_studioConfig.Denoising.ATrousIterations,
-                                                         m_studioConfig.Denoising.ATrousPhiC,
-                                                         m_studioConfig.Denoising.ATrousPhiN,
-                                                         m_studioConfig.Denoising.ATrousPhiP);
-            break;
-        default:
-            throw std::exception("Unsupported Denoiser");
-        }
-
-        copyRtvTex(cmdList, d3d->GetRtv(), outputRTV->GetD12Resource());
+        denoisingPass(d3d, cmdList);
         return;
     }
 
@@ -526,6 +531,12 @@ void SceneStudio::renderRaster(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 
         const Skybox* skybox = m_studioConfig.EnvMapEnabled ? &m_skybox : nullptr;
         m_rasterContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, handle, skybox);
+    }
+
+    if (m_studioConfig.Denoising.Enabled)
+    {
+        denoisingPass(d3d, cmdList);
+        return;
     }
 
     copyRtvTex(cmdList, d3d->GetRtv(), m_rtvPingPong1.GetD12Resource());

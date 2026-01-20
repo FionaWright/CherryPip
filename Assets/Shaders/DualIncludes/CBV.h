@@ -25,12 +25,22 @@ enum RasterDebugMode
     eRoughness,
     eMetalness,
     eEmission,
+    eViewDir,
+    eMicrofacetSpecular,
+    eMicrofacetDiffuse,
+    eMicrofacetLo,
 };
 
 struct CbvRasterDebug
 {
     RasterDebugMode Mode;
     float3 DirLightDir;
+};
+
+struct CbvRasterVS
+{
+    float3 CameraPos;
+    float p;
 };
 
 struct CbvPathTracing

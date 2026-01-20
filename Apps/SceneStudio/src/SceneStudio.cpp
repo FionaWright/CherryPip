@@ -273,7 +273,7 @@ void SceneStudio::loadRasterAssets(const D3D* d3d)
     samplers[0].ShaderRegister = 0;
 
     m_rootSigRaster = std::make_shared<RootSig>();
-    m_rootSigRaster->SmartInit(d3d->GetDevice(), 2, 4, 0, false, samplers, _countof(samplers));
+    m_rootSigRaster->SmartInit(d3d->GetDevice(), 3, 4, 0, false, samplers, _countof(samplers));
 
     D3D12_INPUT_ELEMENT_DESC rasterILD[] =
     {
@@ -514,13 +514,17 @@ void SceneStudio::renderRaster(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         rasterDebug.Mode = m_studioConfig.Raster.Mode;
         rasterDebug.DirLightDir = m_studioConfig.DirLightDirection;
 
+        CbvRasterVS cbvRasterVs{};
+        cbvRasterVs.CameraPos = m_camera.GetCamera().GetPosition();
+
         const int sceneIdx = m_sceneConfigs.at(m_currentScene).SceneIdx;
 
         const auto& currScene = m_scenes.at(sceneIdx);
         auto& objects = currScene->GetObjects();
         for (int i = 0; i < objects.size(); ++i)
         {
-            objects[i]->GetMaterial()->UpdateCBV(1, &rasterDebug);
+            objects[i]->GetMaterial()->UpdateCBV(1, &cbvRasterVs);
+            objects[i]->GetMaterial()->UpdateCBV(2, &rasterDebug);
         }
     }
 

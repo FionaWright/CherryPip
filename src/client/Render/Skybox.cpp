@@ -58,7 +58,7 @@ void Skybox::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap
     // Init Generate Irradiance
     {
         m_rootSigGenIrr.SmartInit(device, 0, 1, 1, false, samplers, _countof(samplers));
-        m_shaderGenIrr.InitCs(L"GenIrradianceIblCS.hlsl", device, m_rootSigGenIrr.Get());
+        m_shaderGenIrr.InitCs(L"Compute/GenIrradianceIblCS.hlsl", device, m_rootSigGenIrr.Get());
     }
 }
 

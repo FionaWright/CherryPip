@@ -138,12 +138,12 @@ void EnvMap::initResources(ID3D12Device* device)
     samplers[0].ShaderRegister = 0;
 
     m_rootSigPanoToEA.SmartInit(device, 1, 1, 1, false, samplers, _countof(samplers));
-    m_shaderPanoToEA.InitCs(L"PanoToEaCS.hlsl", device, m_rootSigPanoToEA.Get());
+    m_shaderPanoToEA.InitCs(L"Compute/PanoToEaCS.hlsl", device, m_rootSigPanoToEA.Get());
 
     m_ea.InitEmpty(device, DXGI_FORMAT_R16G16B16A16_FLOAT, 4096, 4096, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 
     m_rootSigPanoToCM.SmartInit(device, 1, 1, 1, false, samplers, _countof(samplers));
-    m_shaderPanoToCM.InitCs(L"PanoToCubemapCS.hlsl", device, m_rootSigPanoToCM.Get());
+    m_shaderPanoToCM.InitCs(L"Compute/PanoToCubemapCS.hlsl", device, m_rootSigPanoToCM.Get());
 
     m_resourcesInitialized = true;
 }
@@ -175,7 +175,7 @@ XMFLOAT3 EnvMap::GetDirectionOfHighestIntensity(D3D* d3d, Heap* heap)
 
         m_rootSigMaxLumRedSearch.SmartInit(d3d->GetDevice(), 1, 1, 1, false, samplers, _countof(samplers));
 
-        m_shaderMaxLumRedSearch.InitCs(L"MaxLumReductionSearchCS.hlsl", d3d->GetDevice(), m_rootSigMaxLumRedSearch.Get());
+        m_shaderMaxLumRedSearch.InitCs(L"Compute/MaxLumReductionSearchCS.hlsl", d3d->GetDevice(), m_rootSigMaxLumRedSearch.Get());
 
         m_bufferMaxLumRedSearch.InitBuffer(L"MaxLumRedSearch StructuredBuffer", d3d->GetDevice(), bufferSize, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
         m_readbackBufferMaxLumRedSearch.InitBuffer(L"MaxLumRedSearch ReadbackBuffer", d3d->GetDevice(), bufferSize, D3D12_RESOURCE_FLAG_NONE, true);

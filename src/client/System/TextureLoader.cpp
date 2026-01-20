@@ -574,8 +574,8 @@ void TextureLoader::Init(const D3D* d3d, const std::wstring& shadersPath)
         V(device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&ms_rootSigMipMapCubemap)));
     }
 
-    ms_shaderMipMap.InitCs(L"CreateMipMapsCS.hlsl", device, ms_rootSigMipMap.Get());
-    ms_shaderMipMapCubemap.InitCs(L"CreateCubemapMipMapCS.hlsl", device, ms_rootSigMipMapCubemap.Get());
+    ms_shaderMipMap.InitCs(L"Compute/CreateMipMapsCS.hlsl", device, ms_rootSigMipMap.Get());
+    ms_shaderMipMapCubemap.InitCs(L"Compute/CreateCubemapMipMapCS.hlsl", device, ms_rootSigMipMapCubemap.Get());
 }
 
 bool TextureLoader::manuallyDetermineHasAlpha(size_t bytes, int channels, uint8_t* pData)

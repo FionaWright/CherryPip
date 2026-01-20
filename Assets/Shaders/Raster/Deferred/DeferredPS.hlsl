@@ -17,6 +17,11 @@ float4 PSMain(VsOut input) : SV_Target
 {
     float4 albedoSample = gRgbaAlbedo.Sample(gSampler, input.uv);
     float3 normalSample = gRgbNormal_ADepth.Sample(gSampler, input.uv).rgb * 2.0f - 1.0f;
+
+    bool isSkybox = all(abs(normalSample+1) < 1e-4);
+    if (isSkybox)
+        return float4(albedoSample.rgb, 1.0f);
+
     normalSample = normalize(normalSample);
 
     float3 L = -cbv.DirLightDir;

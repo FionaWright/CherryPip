@@ -259,7 +259,7 @@ void SceneStudio::guiMain()
     ImGui::Indent(IM_GUI_INDENTATION);
     {
         static int e = m_studioConfig.Backend;
-        ImGui::RadioButton("Forward", &e, 0); ImGui::SameLine();
+        m_envMapDirty |= ImGui::RadioButton("Forward", &e, 0); ImGui::SameLine();
         ImGui::RadioButton("Path Tracer", &e, 1);
         m_studioConfig.Backend = static_cast<RenderBackend>(e);
     }

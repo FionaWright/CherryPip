@@ -1,6 +1,6 @@
 #include "DualIncludes/HlslMath.h"
 
-#define SAMPLE_COUNT 1024u
+#define SAMPLE_COUNT 512u
 
 TextureCube<float4> SrcTexture : register(t0);
 RWTexture2DArray<float4> DstTexture : register(u0);

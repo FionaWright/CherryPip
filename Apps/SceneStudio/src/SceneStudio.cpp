@@ -42,9 +42,12 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     {
         m_envMap.Init(d3d->GetDevice(), cmdList, m_envMapList.at(m_selectedEnvMapIdx), m_studioConfig.EnvMapRotation,
                       &m_heap);
-        m_envMap.InitCubemap(d3d->GetDevice(), cmdList, &m_heap);
-        m_skybox.UpdateCubemap(d3d->GetDevice(), m_envMap.GetCubemap());
-        m_skybox.GenerateIrradianceMap(cmdList, &m_heap);
+        if (m_studioConfig.Backend == RenderBackend::eForward)
+        {
+            m_envMap.InitCubemap(d3d->GetDevice(), cmdList, &m_heap);
+            m_skybox.UpdateCubemap(d3d->GetDevice(), m_envMap.GetCubemap());
+            m_skybox.GenerateIrradianceMap(cmdList, &m_heap);
+        }
         m_recomputeEnvMapDirLight = true;
         m_sceneDirty = true;
         m_envMapDirty = false;

@@ -21,7 +21,7 @@ Trying to work on it when I have free time from college.
 - Set up scene configs and switch between them at runtime seamlessly
 - Scene viewer GUI tab where you can check each objects transform, material, etc
 
-### Forward Render Backend
+### Forward + Deferred Render Backends
 - Microfacet lighting model + Irradiance IBL
 - Many different debug view modes (WorldPos, Normals, Tangents, Roughness, UV, Lambert, Albedo, etc)
 - Rotatable cubemap skybox that has parity with path tracer backend
@@ -56,6 +56,7 @@ Progress as of 10/01/26 (Took a long break):
 
 Progress as of 18/01/26:
 <img width="1696" height="603" alt="image" src="https://github.com/user-attachments/assets/6ae8b25d-a776-4016-bfc3-878b9b3a98fd" />
+
 
 
 

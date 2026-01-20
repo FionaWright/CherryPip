@@ -145,6 +145,11 @@ void Texture::InitEmpty(ID3D12Device* device, const DXGI_FORMAT format, const UI
     desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 
     m_resource.Init(L"Empty Texture", device, desc, D3D12_RESOURCE_STATE_COPY_DEST);
+
+    if (arraySize == 6 && desc.MipLevels > 1 && false)
+    {
+        //m_resource.Transition(device, cmdList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+    }
 }
 
 void Texture::InitPNG(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const uint8_t* inData,

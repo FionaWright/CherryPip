@@ -39,6 +39,9 @@ struct CbvRasterDebug
 {
     RasterDebugMode Mode;
     float3 DirLightDir;
+
+    uint MaxCubemapMipMaps;
+    float3 p;
 };
 
 struct CbvRasterVS

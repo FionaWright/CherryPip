@@ -80,7 +80,7 @@ float4 PSMain(VsOut input) : SV_TARGET
     float3 Lo = pow(combinedBrdf, 1.0f / 2.2f);
 
     float3 R = reflect(-input.viewDir, N_w);
-    float3 envSample = gEnvMap.SampleLevel(gSampler, R, 0).rgb; // TODO: Env map mip level = roughness * MAX_MIPS
+    float3 envSample = gEnvMap.SampleLevel(gSampler, R, roughness).rgb; // TODO: Env map mip level = roughness * MAX_MIPS
     envSample = pow(envSample, 2.2f);
 
     float2 brdfIntSample = gBrdfInt.SampleLevel(gSampler, saturate(float2(max(NdV, 0), roughness)), 0).rg;

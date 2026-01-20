@@ -99,10 +99,16 @@ void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, con
     desc.SampleDesc.Quality = 1;
     desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 
-    m_resource.Init(filePath.c_str(), device, desc, D3D12_RESOURCE_STATE_COPY_DEST);
-
     bool isBC = false;
     const uint32_t bpp = BitsPerPixel(format, isBC); // Note: For BC it's not really "Bits Per Pixel" but Block Size
+
+    // No textures that are non-BC need mip maps
+    constexpr bool MIP_MAPS_ENABLED = false;
+
+    if (!isBC && MIP_MAPS_ENABLED)
+        desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+    m_resource.Init(filePath.c_str(), device, desc, D3D12_RESOURCE_STATE_COPY_DEST);
 
     if (isBC)
     {
@@ -118,7 +124,8 @@ void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, con
     }
     delete pData;
 
-    if (desc.MipLevels > 1 && false)
+    // Block-Compressed textures are incompatible with UAVs
+    if (desc.MipLevels > 1 && !isBC && MIP_MAPS_ENABLED)
     {
         m_resource.Transition(cmdList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
         TextureLoader::CreateMipMaps(device, cmdList, &m_resource);
@@ -132,12 +139,13 @@ void Texture::InitEmpty(ID3D12Device* device, const DXGI_FORMAT format, const UI
 {
     m_width = width;
     m_height = height;
+    const int maxDim = std::max<int>(m_width, m_height);
 
     D3D12_RESOURCE_DESC desc = {};
     desc.Width = m_width;
     desc.Height = m_height;
     desc.Format = format;
-    desc.MipLevels = 1;
+    desc.MipLevels = static_cast<UINT16>(std::log2(maxDim) + 1.0);;
     desc.DepthOrArraySize = arraySize;
     desc.Flags = flags;
     desc.SampleDesc.Count = 1;
@@ -145,11 +153,6 @@ void Texture::InitEmpty(ID3D12Device* device, const DXGI_FORMAT format, const UI
     desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 
     m_resource.Init(L"Empty Texture", device, desc, D3D12_RESOURCE_STATE_COPY_DEST);
-
-    if (arraySize == 6 && desc.MipLevels > 1 && false)
-    {
-        //m_resource.Transition(device, cmdList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-    }
 }
 
 void Texture::InitPNG(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const uint8_t* inData,

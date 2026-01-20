@@ -20,6 +20,9 @@ float3 ImportanceSampleGGX(float2 Xi, float3 N, float roughness);
 [numthreads(8, 8, 6)]
 void CSMain(uint3 DTid : SV_DispatchThreadID)
 {
+    if (DTid.x >= FaceReso.x || DTid.y >= FaceReso.y)
+        return;
+
     uint face = DTid.z;
 
     float2 uv = (float2(DTid.xy) / float2(FaceReso - 1)) * 2.0f - 1.0f;

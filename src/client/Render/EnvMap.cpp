@@ -14,6 +14,7 @@
 #include "System/FileHelper.h"
 
 #include "DualIncludes/HlslMath.h"
+#include "System/TextureLoader.h"
 
 struct CBV_PanoToEA
 {
@@ -119,6 +120,8 @@ void EnvMap::InitCubemap(ID3D12Device* device, ID3D12GraphicsCommandList* cmdLis
 
     cmdList->SetPipelineState(m_shaderPanoToCM.GetPSO());
     cmdList->Dispatch(groupSizeXY, groupSizeXY, 6);
+
+    TextureLoader::CreateMipMapsCubemap(device, cmdList, m_cubemap.GetD12Resource());
 
     m_cubemap.Transition(cmdList, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
 }

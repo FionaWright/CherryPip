@@ -80,7 +80,8 @@ float4 PSMain(VsOut input) : SV_TARGET
     float3 Lo = pow(combinedBrdf, 1.0f / 2.2f);
 
     float3 R = reflect(-input.viewDir, N_w);
-    float3 envSample = gEnvMap.SampleLevel(gSampler, R, roughness).rgb; // TODO: Env map mip level = roughness * MAX_MIPS
+    //float3 envSample = gEnvMap.SampleLevel(gSampler, R, (int)(roughness * (float)c_rasterDebug.MaxCubemapMipMaps)).rgb;
+    float3 envSample = gEnvMap.SampleLevel(gSampler, R, 7).rgb;
     envSample = pow(envSample, 2.2f);
 
     float2 brdfIntSample = gBrdfInt.SampleLevel(gSampler, saturate(float2(max(NdV, 0), roughness)), 0).rg;
@@ -110,9 +111,9 @@ float4 PSMain(VsOut input) : SV_TARGET
     case eDirLightingTex:
         return albedo * float4(NdL.xxx, 1);
     case eRoughness:
-        return float4(roughMet.rrr, 1);
+        return float4(roughness.xxx, 1);
     case eMetalness:
-        return float4(roughMet.ggg, 1);
+        return float4(metalness.xxx, 1);
     case eEmission:
         return float4(emission, 1);
     case eViewDir:

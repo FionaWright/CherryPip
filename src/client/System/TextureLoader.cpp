@@ -435,7 +435,7 @@ void TextureLoader::CreateMipMapsCubemap(ID3D12Device* device, ID3D12GraphicsCom
 {
     const auto desc = resource->GetDesc();
 
-    if (desc.MipLevels <= 1 || desc.DepthOrArraySize != 1)
+    if (desc.MipLevels <= 1)
         return;
 
     if (!ms_rootSigMipMapCubemap)
@@ -444,11 +444,13 @@ void TextureLoader::CreateMipMapsCubemap(ID3D12Device* device, ID3D12GraphicsCom
     D3D12_SHADER_RESOURCE_VIEW_DESC srcSRVDesc = {};
     srcSRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     srcSRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
-    srcSRVDesc.Format = desc.Format;
     srcSRVDesc.TextureCube.MipLevels = 1;
+    srcSRVDesc.Format = desc.Format;
 
     D3D12_UNORDERED_ACCESS_VIEW_DESC dstUAVDesc = {};
     dstUAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+    dstUAVDesc.Texture2DArray.ArraySize = 6;
+    dstUAVDesc.Texture2DArray.FirstArraySlice = 0;
     dstUAVDesc.Format = desc.Format;
 
     D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
@@ -488,13 +490,11 @@ void TextureLoader::CreateMipMapsCubemap(ID3D12Device* device, ID3D12GraphicsCom
 
         cbv.FaceReso[0] = static_cast<uint32_t>(dstWidth);
         cbv.FaceReso[1] = static_cast<uint32_t>(dstHeight);
-        cbv.Roughness = mip / (desc.MipLevels - 2);
+        cbv.Roughness = static_cast<float>(mip) / static_cast<float>(desc.MipLevels - 2);
         cmdList->SetComputeRoot32BitConstants(0, sizeof(cbv) / 4, &cbv, 0);
 
-        srcSRVDesc.Texture2D.MipLevels = 1;
-        srcSRVDesc.Texture2D.MostDetailedMip = mip;
-
-        dstUAVDesc.Texture2D.MipSlice = mip + 1;
+        srcSRVDesc.TextureCube.MostDetailedMip = mip;
+        dstUAVDesc.Texture2DArray.MipSlice = mip + 1;
 
         CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandleSrc(cpuHandle, mip * 2, descIncSize);
         CD3DX12_GPU_DESCRIPTOR_HANDLE gpuHandleSrc(gpuHandle, mip * 2, descIncSize);
@@ -517,17 +517,7 @@ void TextureLoader::CreateMipMapsCubemap(ID3D12Device* device, ID3D12GraphicsCom
 
 void TextureLoader::Init(const D3D* d3d, const std::wstring& shadersPath)
 {
-    //The compute shader expects 2 floats, the source texture and the destination texture
-    CD3DX12_DESCRIPTOR_RANGE srvCbvRanges[2];
-    CD3DX12_ROOT_PARAMETER rootParameters[3];
-    srvCbvRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0);
-    srvCbvRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, 0);
-
-    //int constantsCount = SettingsManager::ms_Dynamic.MipMapDebugMode ? 3 : 2;
-    constexpr int constantsCount = 2;
-    rootParameters[0].InitAsConstants(constantsCount, 0);
-    rootParameters[1].InitAsDescriptorTable(1, &srvCbvRanges[0]);
-    rootParameters[2].InitAsDescriptorTable(1, &srvCbvRanges[1]);
+    ID3D12Device* device = d3d->GetDevice();
 
     D3D12_STATIC_SAMPLER_DESC samplerDesc = {};
     samplerDesc.Filter = D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
@@ -546,14 +536,43 @@ void TextureLoader::Init(const D3D* d3d, const std::wstring& shadersPath)
 
     ID3DBlob* signature;
     ID3DBlob* error;
-    CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-    rootSignatureDesc.Init(_countof(rootParameters), rootParameters, 1, &samplerDesc, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-    V(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
 
-    ID3D12Device* device = d3d->GetDevice();
+    {
+        // The compute shader expects 2 floats, the source texture and the destination texture
+        CD3DX12_DESCRIPTOR_RANGE srvCbvRanges[2];
+        CD3DX12_ROOT_PARAMETER rootParameters[3];
+        srvCbvRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0);
+        srvCbvRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, 0);
 
-    V(device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&ms_rootSigMipMap)));
-    V(device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&ms_rootSigMipMapCubemap)));
+        constexpr int constantsCount = 2;
+        rootParameters[0].InitAsConstants(constantsCount, 0);
+        rootParameters[1].InitAsDescriptorTable(1, &srvCbvRanges[0]);
+        rootParameters[2].InitAsDescriptorTable(1, &srvCbvRanges[1]);
+
+        CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+        rootSignatureDesc.Init(_countof(rootParameters), rootParameters, 1, &samplerDesc, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+        V(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
+
+        V(device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&ms_rootSigMipMap)));
+    }
+
+    {
+        CD3DX12_DESCRIPTOR_RANGE srvCbvRanges[2];
+        CD3DX12_ROOT_PARAMETER rootParameters[3];
+        srvCbvRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0);
+        srvCbvRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, 0);
+
+        constexpr int constantsCount = 4;
+        rootParameters[0].InitAsConstants(constantsCount, 0);
+        rootParameters[1].InitAsDescriptorTable(1, &srvCbvRanges[0]);
+        rootParameters[2].InitAsDescriptorTable(1, &srvCbvRanges[1]);
+
+        CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+        rootSignatureDesc.Init(_countof(rootParameters), rootParameters, 1, &samplerDesc, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+        V(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
+
+        V(device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&ms_rootSigMipMapCubemap)));
+    }
 
     ms_shaderMipMap.InitCs(L"CreateMipMapsCS.hlsl", device, ms_rootSigMipMap.Get());
     ms_shaderMipMapCubemap.InitCs(L"CreateCubemapMipMapCS.hlsl", device, ms_rootSigMipMapCubemap.Get());

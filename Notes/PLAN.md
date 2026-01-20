@@ -80,6 +80,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Get proper BSDF for forward renderer
 - Add deferred render backend
 - GBuffer debug viewer
+- Mip maps aren't currently working. Need alternate solution for BC7 textures
 
 ## Spectral Tracing
 

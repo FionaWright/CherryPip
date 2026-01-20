@@ -196,6 +196,7 @@ void SceneStudio::GuiRaster()
         "Emission",
         "View Direction",
         "Fresnel Term",
+        "IBL Irradiance",
         "Microfacet Specular",
         "Microfacet Diffuse",
         "Microfacet Final",

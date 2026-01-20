@@ -477,6 +477,13 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     material->SetTex(d3d->GetDevice(), 2, heap, roughMetTex);
     material->SetTex(d3d->GetDevice(), 3, heap, emissiveTex);
 
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+    srvDesc.Format = args.IrradianceMap->GetDesc().Format;
+    srvDesc.TextureCube.MipLevels = 1;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    material->SetSRV(d3d->GetDevice(), 4, heap, args.IrradianceMap, srvDesc);
+
     bool isGlass = (mat.transmission && mat.transmission->transmissionFactor > 0.0) ||
         (mat.alphaMode == fastgltf::AlphaMode::Blend &&
          mat.pbrData.metallicFactor < 0.1 &&

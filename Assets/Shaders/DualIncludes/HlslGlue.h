@@ -25,6 +25,11 @@ typedef struct uint4 { uint32_t x; uint32_t y; uint32_t z; uint32_t w; } uint4;
 
 inline float glueClamp(const float x, const float xmin, const float xmax) { return std::max(xmin, std::min(xmax, x)); }
 inline float glueFrac(const float x) { return std::fmod(x, 1.0f); }
+inline float3 glueNormalize(const float3 v)
+{
+    const float mag = std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+    return {v.x / mag, v.y / mag, v.z / mag};
+}
 
 #else
 
@@ -37,6 +42,7 @@ inline float glueFrac(const float x) { return std::fmod(x, 1.0f); }
 #define glueAsin asin
 #define glueClamp clamp
 #define glueFrac frac
+#define glueNormalize normalize
 
 #define const
 

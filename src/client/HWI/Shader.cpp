@@ -153,7 +153,7 @@ void Shader::InitCs(const LPCWSTR cs, ID3D12Device* device, ID3D12RootSignature*
 #endif
 
     std::wstring csPath = FileHelper::GetAssetShaderFullPath(cs);
-    ComPtr<IDxcBlob> computeShader = CompileShaderDXC(csPath.c_str(), L"CSMain", L"cs_6_6", compileFlags, args);
+    ComPtr<IDxcBlob> computeShader = CompileShaderDXC(csPath, L"CSMain", L"cs_6_6", compileFlags, args);
 
     D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
     psoDesc.pRootSignature = rootSig;

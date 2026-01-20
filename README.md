@@ -18,6 +18,7 @@ Trying to work on it during my college semesters in my free time
 - Can render GLTF scenes in either the rasterizer or path-tracer
 - Dear ImGui for the GUI
 - Different debug view modes for the forward render backend (WorldPos, Normals, Tangents, Binormals, UV, Lambert, Albedo)
+- Microfacet Lighting Model + Irradiance IBL for forward render backend
 
 ### Path Tracer
 - Using RayQuery through a pixel shader
@@ -49,6 +50,7 @@ Progress as of 10/01/26 (Took a long break):
 
 Progress as of 18/01/26:
 <img width="1696" height="603" alt="image" src="https://github.com/user-attachments/assets/6ae8b25d-a776-4016-bfc3-878b9b3a98fd" />
+
 
 
 

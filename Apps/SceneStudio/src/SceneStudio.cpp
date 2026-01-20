@@ -228,6 +228,17 @@ void SceneStudio::loadAssets(D3D* d3d)
     };
     m_sceneConfigs.emplace_back(sceneSponza);
 
+    t = {};
+    SceneConfig sceneMrSpheres = {
+        "MetalRough Spheres",
+        L"MetalRoughSpheres/MetalRoughSpheres.gltf",
+        t,
+        XMFLOAT3(-0.5f, -0.25f, 8.5f),
+        XMFLOAT2(0, PI),
+        true
+    };
+    m_sceneConfigs.emplace_back(sceneMrSpheres);
+
     m_envMapList = {
         L"Env Maps/autumn_field_puresky_4k.hdr",
         L"Env Maps/shanghai_bund_4k.hdr",

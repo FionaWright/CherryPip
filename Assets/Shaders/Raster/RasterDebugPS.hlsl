@@ -67,7 +67,7 @@ float4 PSMain(VsOut input) : SV_TARGET
     specularBrdf = max(0.0f, specularBrdf);
 
     float3 diffuseBrdf = kD * albedoGamma.rgb * NdL;
-	diffuseBrdf /= PI; // ?
+	// diffuseBrdf /= PI; // ?
     // diffuseBrdf *= dirLightColor;
     // diffuseBrdf *= irradianceIbl;
     diffuseBrdf *= 1.0f - metalness;

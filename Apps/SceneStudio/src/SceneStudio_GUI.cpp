@@ -195,6 +195,7 @@ void SceneStudio::GuiRaster()
         "Metalness",
         "Emission",
         "View Direction",
+        "Fresnel Term",
         "Microfacet Specular",
         "Microfacet Diffuse",
         "Microfacet Final",

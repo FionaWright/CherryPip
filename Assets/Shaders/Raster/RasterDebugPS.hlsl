@@ -29,8 +29,11 @@ ConstantBuffer<CbvRasterDebug> c_rasterDebug : register(b2);
 float4 PSMain(VsOut input) : SV_TARGET
 {
     float4 albedo = gDiffuse.Sample(gSampler, input.uv).rgba;
+	float4 albedoGamma = float4(pow(albedo.rgb, 2.2f), albedo.a);
+
     float3 bumpSample = gNormal.Sample(gSampler, input.uv).rgb * 2.0f - 1.0f;
     bumpSample.y = -bumpSample.y; // DX convention
+
     float2 roughMet = gRoughnessMetallic.Sample(gSampler, input.uv).gb;
     float3 emission = gEmissive.Sample(gSampler, input.uv).rgb;
 
@@ -39,39 +42,37 @@ float4 PSMain(VsOut input) : SV_TARGET
     float3 N = normalize(input.normal);
     float3 N_w = normalize(bumpSample.x * T + bumpSample.y * B + bumpSample.z * N);
 
-    float3 L = -normalize(c_rasterDebug.DirLightDir);
+    float3 L = normalize(-c_rasterDebug.DirLightDir); // Surface to Light Vector
     float3 H = normalize(L + input.viewDir);
 
-    float NdL = dot(N_w, L);
-    float NdV = dot(N_w, input.viewDir);
-    float NdH = dot(N_w, H);
-    float HdV = dot(H, input.viewDir);
+    float NdL = saturate(dot(N_w, L));
+    float NdV = saturate(dot(N_w, input.viewDir));
+    float NdH = saturate(dot(N_w, H));
+    float HdV = saturate(dot(H, input.viewDir));
 
     float roughness = roughMet.r; // TODO: MaterialData CBV
     float metalness = roughMet.g;
-    float3 F0 = lerp(0.04f, albedo, metalness);
+    float3 F0 = lerp(0.04f, albedoGamma.rgb, metalness);
 
     float D = D_GGX(NdH, roughness);
     float3 F = F_Schlick(HdV, F0);
     float G = G_SmithFast(NdL, NdV, roughness);
 
-    float kS = max(0.0f, F);
-    float kD = 1.0f - kS;
+    float3 kS = max(0.0f, F);
+    float3 kD = 1.0f - kS;
 
     float3 specularBrdf = (D * F * G) / max(0.001f, 4.0f * NdV);
     // specularBrdf *= dirLightColor;
     // specularBrdf *= irradianceIbl;
     specularBrdf = max(0.0f, specularBrdf);
 
-    float3 diffuseBrdf = kD * albedo * NdL;
+    float3 diffuseBrdf = kD * albedoGamma.rgb * NdL;
+	diffuseBrdf /= PI; // ?
     // diffuseBrdf *= dirLightColor;
     // diffuseBrdf *= irradianceIbl;
     diffuseBrdf *= 1.0f - metalness;
 
-    float ambientStrength = 0.1f; // TODO: GUI
-    float3 ambient = kD * albedo * ambientStrength;
-
-    float3 Lo = diffuseBrdf + specularBrdf + ambient;
+    float3 Lo = diffuseBrdf + specularBrdf;
     Lo = pow(Lo, 1.0f / 2.2f);
 
     switch (c_rasterDebug.Mode)
@@ -102,10 +103,12 @@ float4 PSMain(VsOut input) : SV_TARGET
         return float4(emission, 1);
     case eViewDir:
         return float4(input.viewDir, 1);
+	case eFresnel:
+		return float4(F, 1);
     case eMicrofacetSpecular:
-        return float4(specularBrdf, 1);
+        return float4(pow(specularBrdf, 1.0f / 2.2f), 1);
     case eMicrofacetDiffuse:
-        return float4(diffuseBrdf, 1);
+        return float4(pow(diffuseBrdf, 1.0f / 2.2f), 1);
     case eMicrofacetLo:
         return float4(Lo, 1);
     }

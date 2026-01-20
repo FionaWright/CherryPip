@@ -30,7 +30,9 @@ enum RasterDebugMode
     eIrradianceIBL,
     eMicrofacetSpecular,
     eMicrofacetDiffuse,
+    eMicrofacetIndirect,
     eMicrofacetLo,
+    eMicrofacetLoWithIndirect,
 };
 
 struct CbvRasterDebug

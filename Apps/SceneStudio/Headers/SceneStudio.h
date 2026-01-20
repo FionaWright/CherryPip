@@ -131,6 +131,7 @@ private:
 
     RasterContext m_rasterContext;
     std::shared_ptr<Shader> m_shaderRaster;
+    Texture m_texBrdfIntegrationMap;
 
     XMMATRIX m_projMatrix = {};
 

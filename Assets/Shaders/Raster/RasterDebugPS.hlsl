@@ -15,13 +15,15 @@ Texture2D<float4> gDiffuse : register(t0);
 Texture2D<float4> gNormal : register(t1);
 Texture2D<float4> gRoughnessMetallic : register(t2);
 Texture2D<float4> gEmissive : register(t3);
-TextureCube gIrradiance : register(t4);
+Texture2D<float2> gBrdfInt : register(t4);
+TextureCube gEnvMap : register(t5);
+TextureCube gIrradiance : register(t6);
+
 SamplerState gSampler : register(s0);
 
 ConstantBuffer<CbvRasterDebug> c_rasterDebug : register(b2);
 
 // Missing from Alkali:
-// Indirect env map reflections
 // Thin film interference
 // Shadows
 // Alpha Test
@@ -74,8 +76,18 @@ float4 PSMain(VsOut input) : SV_TARGET
     diffuseBrdf *= irradianceIblSample;
     diffuseBrdf *= 1.0f - metalness;
 
-    float3 Lo = diffuseBrdf + specularBrdf;
-    Lo = pow(Lo, 1.0f / 2.2f);
+    float3 combinedBrdf = diffuseBrdf + specularBrdf;
+    float3 Lo = pow(combinedBrdf, 1.0f / 2.2f);
+
+    float3 R = reflect(-input.viewDir, N_w);
+    float3 envSample = gEnvMap.SampleLevel(gSampler, R, 0).rgb; // TODO: Env map mip level = roughness * MAX_MIPS
+    envSample = pow(envSample, 2.2f);
+
+    float2 brdfIntSample = gBrdfInt.SampleLevel(gSampler, saturate(float2(max(NdV, 0), roughness)), 0).rg;
+    float3 indirectSpecular = envSample * (F * brdfIntSample.r + brdfIntSample.g) * kS;
+    indirectSpecular = max(0, indirectSpecular);
+    float3 combinedBrdfWithIndirect = combinedBrdf + indirectSpecular;
+    float3 LoWithIndirect = pow(combinedBrdfWithIndirect, 1.0f / 2.2f);
 
     switch (c_rasterDebug.Mode)
     {
@@ -113,8 +125,12 @@ float4 PSMain(VsOut input) : SV_TARGET
         return float4(pow(specularBrdf, 1.0f / 2.2f), 1);
     case eMicrofacetDiffuse:
         return float4(pow(diffuseBrdf, 1.0f / 2.2f), 1);
+    case eMicrofacetIndirect:
+        return float4(pow(indirectSpecular, 1.0f / 2.2f), 1);
     case eMicrofacetLo:
         return float4(Lo, 1);
+    case eMicrofacetLoWithIndirect:
+        return float4(LoWithIndirect, 1);
     }
     return float4(0, 1, 1, 1);
 }

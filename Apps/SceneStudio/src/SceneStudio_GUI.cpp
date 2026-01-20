@@ -199,7 +199,9 @@ void SceneStudio::GuiRaster()
         "IBL Irradiance",
         "Microfacet Specular",
         "Microfacet Diffuse",
-        "Microfacet Final",
+        "Microfacet Indirect Specular",
+        "Microfacet D+S",
+        "Microfacet D+S+I",
     };
 
     const char* curSelection = c_rasterDebugModes.at(m_studioConfig.Raster.Mode);

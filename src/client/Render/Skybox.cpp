@@ -94,7 +94,7 @@ void Skybox::UpdateCubemap(ID3D12Device* device, D12Resource* cubemap)
 
         m_matForwardRender.Init(m_pHeap, false);
         m_matForwardRender.AddCBV(device, m_pHeap, sizeof(CbvMatrices));
-        m_matForwardRender.SetTex(device, 0, m_pHeap, cubemap);
+        m_matForwardRender.SetSRV(device, 0, m_pHeap, cubemap, srvDesc);
     }
 
     // Generate Irradiance Material

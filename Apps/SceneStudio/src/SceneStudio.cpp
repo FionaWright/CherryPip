@@ -277,12 +277,14 @@ void SceneStudio::loadRasterAssets(const D3D* d3d, ID3D12GraphicsCommandList* cm
 {
     D3D12_STATIC_SAMPLER_DESC samplers[1];
     samplers[0] = {};
-    samplers[0].Filter = D3D12_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
+    samplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
     samplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
     samplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
     samplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
     samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     samplers[0].ShaderRegister = 0;
+    samplers[0].MinLOD = 0;
+    samplers[0].MaxLOD = D3D12_FLOAT32_MAX;
 
     m_rootSigRaster = std::make_shared<RootSig>();
     m_rootSigRaster->SmartInit(d3d->GetDevice(), 3, 7, 0, false, samplers, _countof(samplers));

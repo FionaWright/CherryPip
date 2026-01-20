@@ -99,7 +99,8 @@ void Skybox::UpdateCubemap(ID3D12Device* device, D12Resource* cubemap)
 
     // Generate Irradiance Material
     {
-        m_texIrradianceIBL.InitEmpty(device, DXGI_FORMAT_R8G8B8A8_UNORM, cubemap->GetDesc().Width, cubemap->GetDesc().Height, 6, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+        if (!m_texIrradianceIBL.IsInitialized())
+            m_texIrradianceIBL.InitEmpty(device, DXGI_FORMAT_R8G8B8A8_UNORM, cubemap->GetDesc().Width, cubemap->GetDesc().Height, 6, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 
         D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
         uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;

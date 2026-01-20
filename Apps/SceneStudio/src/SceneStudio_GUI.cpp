@@ -8,6 +8,7 @@
 #include "Helper.h"
 #include "ThirdParty/imgui/imgui.h"
 #include "Apps/SceneStudio/Headers/SceneStudio.h"
+#include "Render/Object.h"
 #include "Render/Scene.h"
 #include "System/Gui.h"
 
@@ -259,8 +260,10 @@ void SceneStudio::guiMain()
     ImGui::Indent(IM_GUI_INDENTATION);
     {
         static int e = m_studioConfig.Backend;
-        m_envMapDirty |= ImGui::RadioButton("Forward", &e, 0); ImGui::SameLine();
-        ImGui::RadioButton("Path Tracer", &e, 1);
+        int c = 0;
+        m_envMapDirty |= ImGui::RadioButton("Forward", &e, c++); ImGui::SameLine();
+        m_envMapDirty |= ImGui::RadioButton("Deferred", &e, c++); ImGui::SameLine();
+        ImGui::RadioButton("Path Tracer", &e, c++);
         m_studioConfig.Backend = static_cast<RenderBackend>(e);
     }
 

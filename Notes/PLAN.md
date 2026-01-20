@@ -49,8 +49,6 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 ## Optimizations-TODO:
 
-- PCH Compilation
-
 - Frustum Culling
 - Descriptor heap sharing (Wait to see if it's worth it)
 - Consider dropping tangent/bitangent from attribute data (Needs CI test to see if it's faster)
@@ -71,7 +69,6 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Env map rotations not paritied between EA/pano
 - Hot reloading broke again...
 - Fix emissives not working in both Cornell and Lantern at the same time (Lantern = Strength=1,Factor=(1,1,1),Tex=Masking. Cornell = Strength=15,Factor=(1,1,1),Tex=(0,0,0)). Set default WhitePOT?
-- Texture sharing not working ?
 
 - FPS has heavily dropped since I was away, possibly due to all the extra shaders/etc. Make sure they can be deleted properly when not in use
 
@@ -81,6 +78,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Add deferred render backend
 - GBuffer debug viewer
 - Mip maps aren't currently working. Need alternate solution for BC7 textures
+- Fix ImGui off-screen thing
 
 ## Spectral Tracing
 

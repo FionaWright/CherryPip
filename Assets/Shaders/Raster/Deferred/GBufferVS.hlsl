@@ -1,3 +1,5 @@
+#include "DualIncludes/Cbv.h"
+
 struct VsIn
 {
     float3 position : POSITION;
@@ -16,13 +18,6 @@ struct VsOut
     float3 binormal : TEXCOORD3;
 };
 
-struct CbvMatrices
-{
-    float4x4 M; // Model
-    float4x4 MTI; // Model Transpose Inverse (For Normals)
-    float4x4 V; // View
-    float4x4 P; // Projection
-};
 ConstantBuffer<CbvMatrices> c_matrices : register(b0);
 
 VsOut VSMain(VsIn input)

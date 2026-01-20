@@ -13,6 +13,7 @@
 #include "MathUtils.h"
 #include "HWI/BLAS.h"
 #include "HWI/Material.h"
+#include "Render/Object.h"
 #include "Render/Scene.h"
 #include "System/Input.h"
 #include "System/ModelLoaderGLTF.h"
@@ -84,7 +85,10 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     switch (m_studioConfig.Backend)
     {
     case eForward:
-        renderRaster(d3d, cmdList);
+        renderForward(d3d, cmdList);
+        break;
+    case eDeferred:
+        renderDeferred(d3d, cmdList);
         break;
     case ePathTracer:
         renderPathTracer(d3d, cmdList);
@@ -435,10 +439,10 @@ void SceneStudio::denoisingPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     if (m_studioConfig.Denoising.Type == eATrous)
     {
         if (!m_deferredContext.IsInitialized())
-            m_deferredContext.Init(d3d->GetDevice(), cmdList, &m_heapRTV);
+            m_deferredContext.Init(d3d->GetDevice(), cmdList, &m_heapRTV, &m_heap);
 
         const Skybox* skybox = m_studioConfig.EnvMapEnabled ? &m_skybox : nullptr;
-        m_deferredContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, skybox);
+        m_deferredContext.RenderGBuffer(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, skybox);
     }
 
     if (!m_denoisingManager.IsInitialized())
@@ -529,7 +533,7 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     copyRtvTex(cmdList, d3d->GetRtv(), m_rtvPingPong1.GetD12Resource());
 }
 
-void SceneStudio::renderRaster(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
+void SceneStudio::renderForward(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 {
     m_heap.SetHeap(cmdList);
 
@@ -569,6 +573,27 @@ void SceneStudio::renderRaster(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     {
         denoisingPass(d3d, cmdList);
         return;
+    }
+
+    copyRtvTex(cmdList, d3d->GetRtv(), m_rtvPingPong1.GetD12Resource());
+}
+
+void SceneStudio::renderDeferred(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
+{
+    m_heap.SetHeap(cmdList);
+
+    // GBuffer Pass
+    {
+        if (!m_deferredContext.IsInitialized())
+            m_deferredContext.Init(d3d->GetDevice(), cmdList, &m_heapRTV, &m_heap);
+
+        const Skybox* skybox = m_studioConfig.EnvMapEnabled ? &m_skybox : nullptr;
+        m_deferredContext.RenderGBuffer(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, skybox);
+    }
+
+    // Lighting Pass
+    {
+        m_deferredContext.RenderLighting(d3d, cmdList, &m_heap, &m_rtvPingPong1, m_studioConfig.DirLightDirection);
     }
 
     copyRtvTex(cmdList, d3d->GetRtv(), m_rtvPingPong1.GetD12Resource());

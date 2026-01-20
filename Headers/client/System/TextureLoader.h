@@ -21,14 +21,15 @@ class TextureLoader
     static void LoadHDR(std::string filePath, int& width, int& height, uint8_t** pData, DXGI_FORMAT& format);
 
 	static void CreateMipMaps(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, D12Resource* resource);
+	static void CreateMipMapsCubemap(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, D12Resource* resource);
 
-	static void Init(D3D* d3d, const std::wstring& shadersPath);
+	static void Init(const D3D* d3d, const std::wstring& shadersPath);
 
 private:
 	static bool manuallyDetermineHasAlpha(size_t bytes, int channels, uint8_t* pData);
 
-	static ComPtr<ID3D12RootSignature> ms_mipMapRootSig;
-	static Shader ms_mipMapShader;
+	static ComPtr<ID3D12RootSignature> ms_rootSigMipMap, ms_rootSigMipMapCubemap;
+	static Shader ms_shaderMipMap, ms_shaderMipMapCubemap;
 
 	static std::vector<ComPtr<ID3D12DescriptorHeap>> ms_trackedDescHeaps;
 };

@@ -20,8 +20,8 @@ using std::ofstream;
 #define BLOCK_SIZE 8
 constexpr int NUM_CHANNELS = 4;
 
-ComPtr<ID3D12RootSignature> TextureLoader::ms_mipMapRootSig;
-Shader TextureLoader::ms_mipMapShader;
+ComPtr<ID3D12RootSignature> TextureLoader::ms_rootSigMipMap, TextureLoader::ms_rootSigMipMapCubemap;
+Shader TextureLoader::ms_shaderMipMap, TextureLoader::ms_shaderMipMapCubemap;
 std::vector<ComPtr<ID3D12DescriptorHeap>> TextureLoader::ms_trackedDescHeaps;
 
 void TextureLoader::LoadTex(const std::string& filePath, int& width, int& height, uint8_t** pData, DXGI_FORMAT& format)
@@ -355,7 +355,7 @@ void TextureLoader::CreateMipMaps(ID3D12Device* device, ID3D12GraphicsCommandLis
     if (desc.MipLevels <= 1 || desc.DepthOrArraySize != 1)
         return;
 
-    if (!ms_mipMapRootSig)
+    if (!ms_rootSigMipMap)
         throw std::exception();
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srcSRVDesc = {};
@@ -377,9 +377,9 @@ void TextureLoader::CreateMipMaps(ID3D12Device* device, ID3D12GraphicsCommandLis
     ms_trackedDescHeaps.push_back(heapForCS);
 
     ID3D12DescriptorHeap* heaps = heapForCS.Get();
-    cmdList->SetComputeRootSignature(ms_mipMapRootSig.Get());
+    cmdList->SetComputeRootSignature(ms_rootSigMipMap.Get());
     cmdList->SetDescriptorHeaps(1, &heaps);
-    cmdList->SetPipelineState(ms_mipMapShader.GetPSO());
+    cmdList->SetPipelineState(ms_shaderMipMap.GetPSO());
 
     auto cpuHandle = heapForCS->GetCPUDescriptorHandleForHeapStart();
     auto gpuHandle = heapForCS->GetGPUDescriptorHandleForHeapStart();
@@ -430,7 +430,92 @@ void TextureLoader::CreateMipMaps(ID3D12Device* device, ID3D12GraphicsCommandLis
     }
 }
 
-void TextureLoader::Init(D3D* d3d, const std::wstring& shadersPath)
+void TextureLoader::CreateMipMapsCubemap(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
+    D12Resource* resource)
+{
+    const auto desc = resource->GetDesc();
+
+    if (desc.MipLevels <= 1 || desc.DepthOrArraySize != 1)
+        return;
+
+    if (!ms_rootSigMipMapCubemap)
+        throw std::exception();
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC srcSRVDesc = {};
+    srcSRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srcSRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+    srcSRVDesc.Format = desc.Format;
+    srcSRVDesc.TextureCube.MipLevels = 1;
+
+    D3D12_UNORDERED_ACCESS_VIEW_DESC dstUAVDesc = {};
+    dstUAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+    dstUAVDesc.Format = desc.Format;
+
+    D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+    heapDesc.NumDescriptors = 2 * (desc.MipLevels - 1) * 6;
+    heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+    ComPtr<ID3D12DescriptorHeap> heapForCS;
+    V(device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heapForCS)));
+    ms_trackedDescHeaps.push_back(heapForCS);
+
+    ID3D12DescriptorHeap* heaps = heapForCS.Get();
+    cmdList->SetComputeRootSignature(ms_rootSigMipMapCubemap.Get());
+    cmdList->SetDescriptorHeaps(1, &heaps);
+    cmdList->SetPipelineState(ms_shaderMipMapCubemap.GetPSO());
+
+    auto cpuHandle = heapForCS->GetCPUDescriptorHandleForHeapStart();
+    auto gpuHandle = heapForCS->GetGPUDescriptorHandleForHeapStart();
+
+    int width = static_cast<int>(desc.Width);
+    int height = static_cast<int>(desc.Height);
+
+    ID3D12Resource* pResource = resource->GetResource();
+    const uint32_t descIncSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+    struct CBV
+    {
+        uint32_t FaceReso[2];
+        float Roughness;
+        float p;
+    } cbv;
+
+    for (int mip = 0; mip < desc.MipLevels - 1; mip++)
+    {
+        int dstWidth = std::max<int>(width >> (mip + 1), 1);
+        int dstHeight = std::max<int>(height >> (mip + 1), 1);
+
+        cbv.FaceReso[0] = static_cast<uint32_t>(dstWidth);
+        cbv.FaceReso[1] = static_cast<uint32_t>(dstHeight);
+        cbv.Roughness = mip / (desc.MipLevels - 2);
+        cmdList->SetComputeRoot32BitConstants(0, sizeof(cbv) / 4, &cbv, 0);
+
+        srcSRVDesc.Texture2D.MipLevels = 1;
+        srcSRVDesc.Texture2D.MostDetailedMip = mip;
+
+        dstUAVDesc.Texture2D.MipSlice = mip + 1;
+
+        CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandleSrc(cpuHandle, mip * 2, descIncSize);
+        CD3DX12_GPU_DESCRIPTOR_HANDLE gpuHandleSrc(gpuHandle, mip * 2, descIncSize);
+
+        CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandleDst(cpuHandle, mip * 2 + 1, descIncSize);
+        CD3DX12_GPU_DESCRIPTOR_HANDLE gpuHandleDst(gpuHandle, mip * 2 + 1, descIncSize);
+
+        device->CreateShaderResourceView(pResource, &srcSRVDesc, cpuHandleSrc);
+        device->CreateUnorderedAccessView(pResource, nullptr, &dstUAVDesc, cpuHandleDst);
+
+        cmdList->SetComputeRootDescriptorTable(1, gpuHandleSrc);
+        cmdList->SetComputeRootDescriptorTable(2, gpuHandleDst);
+
+        cmdList->Dispatch(std::max<int>(dstWidth / 8, 1), std::max<int>(dstHeight / 8, 1), 1);
+
+        auto uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(pResource);
+        cmdList->ResourceBarrier(1, &uavBarrier);
+    }
+}
+
+void TextureLoader::Init(const D3D* d3d, const std::wstring& shadersPath)
 {
     //The compute shader expects 2 floats, the source texture and the destination texture
     CD3DX12_DESCRIPTOR_RANGE srvCbvRanges[2];
@@ -467,9 +552,11 @@ void TextureLoader::Init(D3D* d3d, const std::wstring& shadersPath)
 
     ID3D12Device* device = d3d->GetDevice();
 
-    V(device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&ms_mipMapRootSig)));
+    V(device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&ms_rootSigMipMap)));
+    V(device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&ms_rootSigMipMapCubemap)));
 
-    ms_mipMapShader.InitCs(L"CreateMipMapsCS.hlsl", device, ms_mipMapRootSig.Get());
+    ms_shaderMipMap.InitCs(L"CreateMipMapsCS.hlsl", device, ms_rootSigMipMap.Get());
+    ms_shaderMipMapCubemap.InitCs(L"CreateCubemapMipMapCS.hlsl", device, ms_rootSigMipMapCubemap.Get());
 }
 
 bool TextureLoader::manuallyDetermineHasAlpha(size_t bytes, int channels, uint8_t* pData)

@@ -533,6 +533,7 @@ void SceneStudio::renderRaster(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         CbvRasterDebug rasterDebug{};
         rasterDebug.Mode = m_studioConfig.Raster.Mode;
         rasterDebug.DirLightDir = m_studioConfig.DirLightDirection;
+        rasterDebug.MaxCubemapMipMaps = m_envMap.GetCubemap()->GetDesc().MipLevels;
 
         CbvRasterVS cbvRasterVs{};
         cbvRasterVs.CameraPos = m_camera.GetCamera().GetPosition();

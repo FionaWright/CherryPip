@@ -194,6 +194,10 @@ void SceneStudio::GuiRaster()
         "Roughness",
         "Metalness",
         "Emission",
+        "View Direction",
+        "Microfacet Specular",
+        "Microfacet Diffuse",
+        "Microfacet Final",
     };
 
     const char* curSelection = c_rasterDebugModes.at(m_studioConfig.Raster.Mode);

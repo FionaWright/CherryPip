@@ -1,3 +1,6 @@
+#include "DualIncludes/Cbv.h"
+#include "Microfacet.hlsli"
+
 struct VsOut
 {
     float4 position : SV_POSITION;
@@ -5,9 +8,8 @@ struct VsOut
     float3 normal : TEXCOORD1;
     float3 tangent : TEXCOORD2;
     float3 binormal : TEXCOORD3;
+    float3 viewDir : TEXCOORD4;
 };
-
-#include "DualIncludes/Cbv.h"
 
 Texture2D<float4> gDiffuse : register(t0);
 Texture2D<float4> gNormal : register(t1);
@@ -15,7 +17,14 @@ Texture2D<float4> gRoughnessMetallic : register(t2);
 Texture2D<float4> gEmissive : register(t3);
 SamplerState gSampler : register(s0);
 
-ConstantBuffer<CbvRasterDebug> c_rasterDebug : register(b1);
+ConstantBuffer<CbvRasterDebug> c_rasterDebug : register(b2);
+
+// Missing from Alkali:
+// Irradiance IBL
+// Indirect env map reflections
+// Thin film interference
+// Shadows
+// Alpha Test
 
 float4 PSMain(VsOut input) : SV_TARGET
 {
@@ -30,7 +39,40 @@ float4 PSMain(VsOut input) : SV_TARGET
     float3 N = normalize(input.normal);
     float3 N_w = normalize(bumpSample.x * T + bumpSample.y * B + bumpSample.z * N);
 
-    float NdL = dot(N_w, -normalize(c_rasterDebug.DirLightDir));
+    float3 L = -normalize(c_rasterDebug.DirLightDir);
+    float3 H = normalize(L + input.viewDir);
+
+    float NdL = dot(N_w, L);
+    float NdV = dot(N_w, input.viewDir);
+    float NdH = dot(N_w, H);
+    float HdV = dot(H, input.viewDir);
+
+    float roughness = roughMet.r; // TODO: MaterialData CBV
+    float metalness = roughMet.g;
+    float3 F0 = lerp(0.04f, albedo, metalness);
+
+    float D = D_GGX(NdH, roughness);
+    float3 F = F_Schlick(HdV, F0);
+    float G = G_SmithFast(NdL, NdV, roughness);
+
+    float kS = max(0.0f, F);
+    float kD = 1.0f - kS;
+
+    float3 specularBrdf = (D * F * G) / max(0.001f, 4.0f * NdV);
+    // specularBrdf *= dirLightColor;
+    // specularBrdf *= irradianceIbl;
+    specularBrdf = max(0.0f, specularBrdf);
+
+    float3 diffuseBrdf = kD * albedo * NdL;
+    // diffuseBrdf *= dirLightColor;
+    // diffuseBrdf *= irradianceIbl;
+    diffuseBrdf *= 1.0f - metalness;
+
+    float ambientStrength = 0.1f; // TODO: GUI
+    float3 ambient = kD * albedo * ambientStrength;
+
+    float3 Lo = diffuseBrdf + specularBrdf + ambient;
+    Lo = pow(Lo, 1.0f / 2.2f);
 
     switch (c_rasterDebug.Mode)
     {
@@ -58,6 +100,14 @@ float4 PSMain(VsOut input) : SV_TARGET
         return float4(roughMet.ggg, 1);
     case eEmission:
         return float4(emission, 1);
+    case eViewDir:
+        return float4(input.viewDir, 1);
+    case eMicrofacetSpecular:
+        return float4(specularBrdf, 1);
+    case eMicrofacetDiffuse:
+        return float4(diffuseBrdf, 1);
+    case eMicrofacetLo:
+        return float4(Lo, 1);
     }
     return float4(0, 1, 1, 1);
 }

@@ -4,34 +4,40 @@ by Fiona Wright
 
 ## Info
 
-My new DX12 engine with both path-tracing and raster backends. My focus is on path-tracing this time     
-Trying to work on it during my college semesters in my free time  
+D3D12 Graphics Engine with a focus on Path-Tracing.  
+Built for fun and to further my skills in the graphics programming field.  
+Trying to work on it when I have free time from college.  
 
 ## Features
 
 ### Engine
 - Better project structure, engine split between HWI, Core Engine and Apps
 - Uses CMAKE for an improved build system
-- Easy to use readback buffer system for debugging and analysis 
-- Python Execution at runtime for data analysis
-- Hot reloading for shaders
-- Can render GLTF scenes in either the rasterizer or path-tracer
 - Dear ImGui for the GUI
-- Different debug view modes for the forward render backend (WorldPos, Normals, Tangents, Binormals, UV, Lambert, Albedo)
-- Microfacet Lighting Model + Irradiance IBL for forward render backend
+- Easy to use readback buffer system for debugging and analysis 
+- Python Execution at runtime for data analysis on GPU frame data
+- Hot reloading for shaders
+- Can render GLTF scenes in both backends
+- Set up scene configs and switch between them at runtime seamlessly
+- Scene viewer GUI tab where you can check each objects transform, material, etc
 
-### Path Tracer
+### Forward Render Backend
+- Microfacet lighting model + Irradiance IBL
+- Many different debug view modes (WorldPos, Normals, Tangents, Roughness, UV, Lambert, Albedo, etc)
+- Rotatable cubemap skybox that has parity with path tracer backend
+
+### Path Tracer Render Backend
 - Using RayQuery through a pixel shader
-- See a specific pixels value using readback system
+- Readback debug system that allows you to find selected pixel value or collect data every frame
 - Two furnace tests
 - Russian Roulette
 - See different parts of the path tracer using Debug Buffer system (Normals, Albedo, HitDist, RNG, FirstBounceDirection, etc)
-- Lambertian, Glossy and Glass lighting models
-- Environment maps with support for Panoramic and Octohedral Equal-Area (+Cubemap Skyboxes for the raster backends)
+- Lambertian, Glossy, Glass and Microfacet lighting models
+- Environment maps with support for Panoramic and Octohedral Equal-Area (Rotatable at runtime!)
+- Directional lighting + GPU max parallel search on the EA Environment Map to set automatically direction to where luminance is highest
 - Denoising (Box, Gaussian, Median, Edge-Avoiding A-Trous) using deferred GBuffer pre-pass
-- Directional Lighting + GPU Max Reduction Search on the EA Environment Map to set direction to where luminance is highest
 
-### Spectral Tracer
+### Spectral Tracer Render Backend
 - Work in Progress! 
 
 ## History 
@@ -50,6 +56,7 @@ Progress as of 10/01/26 (Took a long break):
 
 Progress as of 18/01/26:
 <img width="1696" height="603" alt="image" src="https://github.com/user-attachments/assets/6ae8b25d-a776-4016-bfc3-878b9b3a98fd" />
+
 
 
 

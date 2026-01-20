@@ -45,6 +45,14 @@ struct CbvRasterDebug
     float3 p;
 };
 
+struct CbvDeferredLighting
+{
+    float4x4 InvP;
+
+    float3 DirLightDir;
+    float p;
+};
+
 struct CbvRasterVS
 {
     float3 CameraPos;

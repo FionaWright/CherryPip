@@ -22,7 +22,7 @@ public:
     bool IsInitialized() const { return m_initialized; }
 
     void RenderGBuffer(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vMatrix, const XMMATRIX& pMatrix, const Skybox* skybox);
-    void RenderLighting(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, TextureRTV* output, const XMFLOAT3& dirLightDir);
+    void RenderLighting(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, const XMMATRIX& pMatrix, TextureRTV* output, const XMFLOAT3& dirLightDir);
 
     D12Resource* GetAlbedo() { return m_rtvAlbedo.GetD12Resource(); }
     D12Resource* GetNormalsDepth() { return m_rtvNormalsDepth.GetD12Resource(); }

@@ -15,7 +15,6 @@ SamplerState gSampler : register(s0);
 float3 ReconstructWorldPosition(float2 uv, float depth)
 {
     float4 ndc;
-    //ndc.xy = uv * 2.0f - 1.0f;
     ndc.xy = uv * float2(2, -2) + float2(-1, 1); // DX Y-flip
     ndc.z  = depth * 2.0f - 1.0f; // [0,1] -> [-1,1]
     ndc.w  = 1.0f;

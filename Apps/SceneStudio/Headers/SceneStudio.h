@@ -88,7 +88,7 @@ public:
 
 private:
     void loadAssets(D3D* d3d);
-    void loadRasterAssets(const D3D* d3d);
+    void loadRasterAssets(const D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void initScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList, uint32_t configIdx);
     void initCustomScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void denoisingPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList);

@@ -48,4 +48,34 @@ float2 PanoSphereToSquare(float3 d)
     return float2(u, v);
 }
 
+float3 CubemapCubeToSphere(uint face, float2 uv)
+{
+    float3 d;
+    switch (face)
+    {
+    case 0: // +X
+        d = float3(1.0, -uv.y, -uv.x);
+        break;
+    case 1: // -X
+        d = float3(-1.0, -uv.y, uv.x);
+        break;
+    case 2: // +Y
+        d = float3(uv.x, 1.0, uv.y);
+        break;
+    case 3: // -Y
+        d = float3(uv.x, -1.0, -uv.y);
+        break;
+    case 4: // +Z
+        d = float3(uv.x, -uv.y, 1.0);
+        break;
+    case 5: // -Z
+        d = float3(-uv.x, -uv.y, -1.0);
+        break;
+    default:
+        return float3(0,0,0);
+    }
+
+    return glueNormalize(d);
+}
+
 #endif

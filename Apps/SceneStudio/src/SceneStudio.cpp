@@ -43,7 +43,8 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         m_envMap.Init(d3d->GetDevice(), cmdList, m_envMapList.at(m_selectedEnvMapIdx), m_studioConfig.EnvMapRotation,
                       &m_heap);
         m_envMap.InitCubemap(d3d->GetDevice(), cmdList, &m_heap);
-        m_skybox.Init(d3d->GetDevice(), cmdList, &m_heap, m_envMap.GetCubemap());
+        m_skybox.UpdateCubemap(d3d->GetDevice(), m_envMap.GetCubemap());
+        //m_skybox.GenerateIrradianceMap(cmdList, &m_heap);
         m_recomputeEnvMapDirLight = true;
         m_sceneDirty = true;
         m_envMapDirty = false;
@@ -111,7 +112,7 @@ void SceneStudio::loadAssets(D3D* d3d)
     m_heap.Init(device, 10000, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     m_heapRTV.Init(device, 20, D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
-    loadRasterAssets(d3d);
+    loadRasterAssets(d3d, cmdList.Get());
 
     D3D12_STATIC_SAMPLER_DESC samplers[1];
     samplers[0] = {};
@@ -272,7 +273,7 @@ void SceneStudio::loadAssets(D3D* d3d)
     d3d->Flush();
 }
 
-void SceneStudio::loadRasterAssets(const D3D* d3d)
+void SceneStudio::loadRasterAssets(const D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 {
     D3D12_STATIC_SAMPLER_DESC samplers[1];
     samplers[0] = {};
@@ -312,6 +313,8 @@ void SceneStudio::loadRasterAssets(const D3D* d3d)
     m_shaderRaster = std::make_shared<Shader>();
     m_shaderRaster->InitVsPs(L"Raster/RasterDebugVS.hlsl", L"Raster/RasterDebugPS.hlsl",
                              {rasterILD, _countof(rasterILD)}, d3d->GetDevice(), m_rootSigRaster->Get(), true);
+
+    m_skybox.Init(d3d->GetDevice(), cmdList, &m_heap, m_envMap.GetCubemap());
 }
 
 void SceneStudio::initScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList, const uint32_t configIdx)

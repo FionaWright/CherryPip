@@ -7,12 +7,10 @@
 #include "HWI/RootSig.h"
 #include "HWI/Shader.h"
 #include "HWI/Texture.h"
-#include "HWI/TLAS.h"
 #include "Render/CameraController.h"
 #include "Render/DeferredContext.h"
 #include "Render/DenoisingManager.h"
 #include "Render/EnvMap.h"
-#include "Render/Object.h"
 #include "Render/PathTracingContext.h"
 #include "Render/RasterContext.h"
 #include "Render/Skybox.h"
@@ -27,12 +25,13 @@ class BLAS;
 
 struct RasterConfig
 {
-    RasterDebugMode Mode = eMicrofacetIndirect;
+    RasterDebugMode Mode = eMicrofacetLoWithIndirect;
 };
 
 enum RenderBackend : uint32_t
 {
     eForward,
+    eDeferred,
     ePathTracer,
     MAX_COUNT,
 };
@@ -93,7 +92,8 @@ private:
     void initCustomScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void denoisingPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
-    void renderRaster(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
+    void renderForward(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
+    void renderDeferred(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void compilePtShader(const D3D* d3d);
     void GuiPathTracer(bool resetPT);
     void GuiRaster();

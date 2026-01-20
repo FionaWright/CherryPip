@@ -358,9 +358,6 @@ std::shared_ptr<Texture> ModelLoaderGLTF::loadTextureResource(const D3D* d3d, ID
     {
         auto texPath = get<std::string>(texInput);
 
-        if (ResourceSharer::TryGetFromDatabase(texPath, pTex))
-            return pTex;
-
         const auto pngIdx = texPath.find("png");
         if (pngIdx != std::string::npos)
             texPath = texPath.replace(pngIdx, 3, "dds");
@@ -368,8 +365,10 @@ std::shared_ptr<Texture> ModelLoaderGLTF::loadTextureResource(const D3D* d3d, ID
         if (jpgIdx != std::string::npos)
             texPath = texPath.replace(jpgIdx, 3, "dds");
 
-        pTex->Init(d3d->GetDevice(), cmdList, texPath, 1);
+        if (ResourceSharer::TryGetFromDatabase(texPath, pTex))
+            return pTex;
 
+        pTex->Init(d3d->GetDevice(), cmdList, texPath, 1);
         ResourceSharer::AddToDatabase(texPath, pTex);
     }
     else

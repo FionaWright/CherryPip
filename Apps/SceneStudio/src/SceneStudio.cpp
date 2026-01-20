@@ -593,7 +593,7 @@ void SceneStudio::renderDeferred(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 
     // Lighting Pass
     {
-        m_deferredContext.RenderLighting(d3d, cmdList, &m_heap, &m_rtvPingPong1, m_studioConfig.DirLightDirection);
+        m_deferredContext.RenderLighting(d3d, cmdList, &m_heap, m_projMatrix, &m_rtvPingPong1, m_studioConfig.DirLightDirection);
     }
 
     copyRtvTex(cmdList, d3d->GetRtv(), m_rtvPingPong1.GetD12Resource());

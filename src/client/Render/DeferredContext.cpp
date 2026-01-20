@@ -161,7 +161,7 @@ void DeferredContext::RenderGBuffer(const D3D* d3d, ID3D12GraphicsCommandList* c
     }
 }
 
-void DeferredContext::RenderLighting(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, TextureRTV* output, const XMFLOAT3& dirLightDir)
+void DeferredContext::RenderLighting(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, const XMMATRIX& pMatrix, TextureRTV* output, const XMFLOAT3& dirLightDir)
 {
     GPU_SCOPE(cmdList, "Deferred Lighting Pass");
 
@@ -172,8 +172,9 @@ void DeferredContext::RenderLighting(const D3D* d3d, ID3D12GraphicsCommandList* 
     cmdList->SetGraphicsRootSignature(m_rootSigLighting.Get());
     cmdList->SetPipelineState(m_shaderLighting.GetPSO());
 
-    CbvRasterDebug cbv;
+    CbvDeferredLighting cbv;
     cbv.DirLightDir = dirLightDir;
+    cbv.InvP = XMMatrixInverse(nullptr, pMatrix); // Change HlslGlue and use XMStoreFloat4x4 from now on
     m_matLighting.UpdateCBV(0, &cbv);
 
     m_rtvAlbedo.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);

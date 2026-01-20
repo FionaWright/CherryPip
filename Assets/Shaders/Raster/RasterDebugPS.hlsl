@@ -15,12 +15,12 @@ Texture2D<float4> gDiffuse : register(t0);
 Texture2D<float4> gNormal : register(t1);
 Texture2D<float4> gRoughnessMetallic : register(t2);
 Texture2D<float4> gEmissive : register(t3);
+TextureCube gIrradiance : register(t4);
 SamplerState gSampler : register(s0);
 
 ConstantBuffer<CbvRasterDebug> c_rasterDebug : register(b2);
 
 // Missing from Alkali:
-// Irradiance IBL
 // Indirect env map reflections
 // Thin film interference
 // Shadows
@@ -41,6 +41,8 @@ float4 PSMain(VsOut input) : SV_TARGET
     float3 B = normalize(input.binormal);
     float3 N = normalize(input.normal);
     float3 N_w = normalize(bumpSample.x * T + bumpSample.y * B + bumpSample.z * N);
+
+    float3 irradianceIblSample = gIrradiance.Sample(gSampler, N_w).rgb;
 
     float3 L = normalize(-c_rasterDebug.DirLightDir); // Surface to Light Vector
     float3 H = normalize(L + input.viewDir);
@@ -63,13 +65,13 @@ float4 PSMain(VsOut input) : SV_TARGET
 
     float3 specularBrdf = (D * F * G) / max(0.001f, 4.0f * NdV);
     // specularBrdf *= dirLightColor;
-    // specularBrdf *= irradianceIbl;
+    specularBrdf *= irradianceIblSample;
     specularBrdf = max(0.0f, specularBrdf);
 
     float3 diffuseBrdf = kD * albedoGamma.rgb * NdL;
 	// diffuseBrdf /= PI; // ?
     // diffuseBrdf *= dirLightColor;
-    // diffuseBrdf *= irradianceIbl;
+    diffuseBrdf *= irradianceIblSample;
     diffuseBrdf *= 1.0f - metalness;
 
     float3 Lo = diffuseBrdf + specularBrdf;
@@ -105,6 +107,8 @@ float4 PSMain(VsOut input) : SV_TARGET
         return float4(input.viewDir, 1);
 	case eFresnel:
 		return float4(F, 1);
+    case eIrradianceIBL:
+        return float4(irradianceIblSample, 1);
     case eMicrofacetSpecular:
         return float4(pow(specularBrdf, 1.0f / 2.2f), 1);
     case eMicrofacetDiffuse:

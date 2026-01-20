@@ -4,6 +4,7 @@
 
 #include "fastgltf/core.hpp"
 #include "fastgltf/types.hpp"
+class D12Resource;
 class Texture;
 using Asset = std::shared_ptr<fastgltf::Expected<fastgltf::Asset>>;
 
@@ -42,8 +43,8 @@ struct GLTFLoadOverride
 struct GLTFLoadArgs
 {
 	std::shared_ptr<RootSig> Root;
-
 	std::vector<std::shared_ptr<Shader>> Shaders;
+	D12Resource* IrradianceMap;
 
 	int DefaultShaderIndex = -1;
 	int DefaultShaderATIndex = -1;

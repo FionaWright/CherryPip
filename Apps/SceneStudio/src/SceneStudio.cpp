@@ -44,7 +44,7 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
                       &m_heap);
         m_envMap.InitCubemap(d3d->GetDevice(), cmdList, &m_heap);
         m_skybox.UpdateCubemap(d3d->GetDevice(), m_envMap.GetCubemap());
-        //m_skybox.GenerateIrradianceMap(cmdList, &m_heap);
+        m_skybox.GenerateIrradianceMap(cmdList, &m_heap);
         m_recomputeEnvMapDirLight = true;
         m_sceneDirty = true;
         m_envMapDirty = false;
@@ -285,7 +285,7 @@ void SceneStudio::loadRasterAssets(const D3D* d3d, ID3D12GraphicsCommandList* cm
     samplers[0].ShaderRegister = 0;
 
     m_rootSigRaster = std::make_shared<RootSig>();
-    m_rootSigRaster->SmartInit(d3d->GetDevice(), 3, 4, 0, false, samplers, _countof(samplers));
+    m_rootSigRaster->SmartInit(d3d->GetDevice(), 3, 5, 0, false, samplers, _countof(samplers));
 
     D3D12_INPUT_ELEMENT_DESC rasterILD[] =
     {
@@ -337,6 +337,7 @@ void SceneStudio::initScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList, const 
     args.DefaultShaderIndex = 0;
     args.Shaders = {m_shaderRaster};
     args.ConvertRhToLh = config.ConvertRhToLh;
+    args.IrradianceMap = m_skybox.GetIrradianceMap();
 
     ModelLoaderGLTF::LoadSplitModel(d3d, cmdList, &m_heap, config.GltfPath, args, config.Transform);
 

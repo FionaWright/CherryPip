@@ -33,7 +33,7 @@ float4 PSMain(VsOut input) : SV_TARGET
     float4 albedo = gDiffuse.Sample(gSampler, input.uv).rgba;
 	float4 albedoGamma = float4(pow(albedo.rgb, 2.2f), albedo.a);
 
-    float3 bumpSample = gNormal.Sample(gSampler, input.uv).rgb * 2.0f - 1.0f;
+    float3 bumpSample = gNormal.SampleLevel(gSampler, input.uv, 0).rgb * 2.0f - 1.0f;
     bumpSample.y = -bumpSample.y; // DX convention
 
     float2 roughMet = gRoughnessMetallic.Sample(gSampler, input.uv).gb;
@@ -44,15 +44,16 @@ float4 PSMain(VsOut input) : SV_TARGET
     float3 N = normalize(input.normal);
     float3 N_w = normalize(bumpSample.x * T + bumpSample.y * B + bumpSample.z * N);
 
-    float3 irradianceIblSample = gIrradiance.Sample(gSampler, N_w).rgb;
+    float3 irradianceIblSample = gIrradiance.SampleLevel(gSampler, N_w, 0).rgb;
 
+    float3 V = normalize(input.viewDir);
     float3 L = normalize(-c_rasterDebug.DirLightDir); // Surface to Light Vector
-    float3 H = normalize(L + input.viewDir);
+    float3 H = normalize(L + V);
 
     float NdL = saturate(dot(N_w, L));
-    float NdV = saturate(dot(N_w, input.viewDir));
+    float NdV = saturate(dot(N_w, V));
     float NdH = saturate(dot(N_w, H));
-    float HdV = saturate(dot(H, input.viewDir));
+    float HdV = saturate(dot(H, V));
 
     float roughness = roughMet.r; // TODO: MaterialData CBV
     float metalness = roughMet.g;
@@ -79,10 +80,10 @@ float4 PSMain(VsOut input) : SV_TARGET
     float3 combinedBrdf = diffuseBrdf + specularBrdf;
     float3 Lo = pow(combinedBrdf, 1.0f / 2.2f);
 
-    float3 R = reflect(-input.viewDir, N_w);
-    //float3 envSample = gEnvMap.SampleLevel(gSampler, R, (int)(roughness * (float)c_rasterDebug.MaxCubemapMipMaps)).rgb;
-    float3 envSample = gEnvMap.SampleLevel(gSampler, R, 7).rgb;
-    envSample = pow(envSample, 2.2f);
+    float3 R = reflect(-V, N_w);
+    float lod = roughness * (c_rasterDebug.MaxCubemapMipMaps - 1);
+    float3 envSample = gEnvMap.SampleLevel(gSampler, R, lod).rgb;
+    //envSample = pow(envSample, 2.2f);
 
     float2 brdfIntSample = gBrdfInt.SampleLevel(gSampler, saturate(float2(max(NdV, 0), roughness)), 0).rg;
     float3 indirectSpecular = envSample * (F * brdfIntSample.r + brdfIntSample.g) * kS;
@@ -117,9 +118,11 @@ float4 PSMain(VsOut input) : SV_TARGET
     case eEmission:
         return float4(emission, 1);
     case eViewDir:
-        return float4(input.viewDir, 1);
+        return float4(V, 1);
 	case eFresnel:
 		return float4(F, 1);
+    case eReflection:
+        return float4(envSample, 1);
     case eIrradianceIBL:
         return float4(irradianceIblSample, 1);
     case eMicrofacetSpecular:

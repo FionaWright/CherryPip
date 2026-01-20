@@ -480,10 +480,18 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
-    srvDesc.Format = args.IrradianceMap->GetDesc().Format;
-    srvDesc.TextureCube.MipLevels = 1;
+    srvDesc.Format = args.Skybox->GetDesc().Format;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.TextureCube.MipLevels = args.Skybox->GetDesc().MipLevels;
+    srvDesc.TextureCube.MostDetailedMip = 0;
     material->SetSRV(d3d->GetDevice(), 5, heap, args.Skybox, srvDesc);
+
+    srvDesc = {};
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+    srvDesc.Format = args.IrradianceMap->GetDesc().Format;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.TextureCube.MipLevels = 1;
+    srvDesc.TextureCube.MostDetailedMip = 0;
     material->SetSRV(d3d->GetDevice(), 6, heap, args.IrradianceMap, srvDesc);
 
     bool isGlass = (mat.transmission && mat.transmission->transmissionFactor > 0.0) ||

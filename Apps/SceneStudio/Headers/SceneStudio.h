@@ -27,7 +27,7 @@ class BLAS;
 
 struct RasterConfig
 {
-    RasterDebugMode Mode = eDirLightingTex;
+    RasterDebugMode Mode = eMicrofacetIndirect;
 };
 
 enum RenderBackend : uint32_t

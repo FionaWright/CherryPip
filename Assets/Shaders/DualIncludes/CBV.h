@@ -27,6 +27,7 @@ enum RasterDebugMode
     eEmission,
     eViewDir,
     eFresnel,
+    eReflection,
     eIrradianceIBL,
     eMicrofacetSpecular,
     eMicrofacetDiffuse,

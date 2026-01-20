@@ -92,7 +92,8 @@ void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, con
     desc.Width = m_width;
     desc.Height = m_height;
     desc.Format = format;
-    desc.MipLevels = static_cast<UINT16>(std::log2(maxDim) + 1.0);
+    //desc.MipLevels = static_cast<UINT16>(std::log2(maxDim) + 1.0);
+    desc.MipLevels = 1;
     desc.DepthOrArraySize = arraySize;
     desc.Flags = flags;
     desc.SampleDesc.Count = 1;

@@ -285,7 +285,7 @@ void SceneStudio::loadRasterAssets(const D3D* d3d, ID3D12GraphicsCommandList* cm
     samplers[0].ShaderRegister = 0;
 
     m_rootSigRaster = std::make_shared<RootSig>();
-    m_rootSigRaster->SmartInit(d3d->GetDevice(), 3, 5, 0, false, samplers, _countof(samplers));
+    m_rootSigRaster->SmartInit(d3d->GetDevice(), 3, 7, 0, false, samplers, _countof(samplers));
 
     D3D12_INPUT_ELEMENT_DESC rasterILD[] =
     {
@@ -315,6 +315,9 @@ void SceneStudio::loadRasterAssets(const D3D* d3d, ID3D12GraphicsCommandList* cm
                              {rasterILD, _countof(rasterILD)}, d3d->GetDevice(), m_rootSigRaster->Get(), true);
 
     m_skybox.Init(d3d->GetDevice(), cmdList, &m_heap, m_envMap.GetCubemap());
+
+    const std::string assetDirectory = wstringToString(FileHelper::GetAssetsPath());
+    m_texBrdfIntegrationMap.Init(d3d->GetDevice(), cmdList, assetDirectory + "Textures/BRDF Integration Map.dds");
 }
 
 void SceneStudio::initScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList, const uint32_t configIdx)
@@ -337,6 +340,8 @@ void SceneStudio::initScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList, const 
     args.DefaultShaderIndex = 0;
     args.Shaders = {m_shaderRaster};
     args.ConvertRhToLh = config.ConvertRhToLh;
+    args.BrdfIntegrationMap = m_texBrdfIntegrationMap.GetD12Resource();
+    args.Skybox = m_envMap.GetCubemap();
     args.IrradianceMap = m_skybox.GetIrradianceMap();
 
     ModelLoaderGLTF::LoadSplitModel(d3d, cmdList, &m_heap, config.GltfPath, args, config.Transform);

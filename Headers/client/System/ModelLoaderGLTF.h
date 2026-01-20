@@ -44,6 +44,8 @@ struct GLTFLoadArgs
 {
 	std::shared_ptr<RootSig> Root;
 	std::vector<std::shared_ptr<Shader>> Shaders;
+	D12Resource* BrdfIntegrationMap;
+	D12Resource* Skybox;
 	D12Resource* IrradianceMap;
 
 	int DefaultShaderIndex = -1;

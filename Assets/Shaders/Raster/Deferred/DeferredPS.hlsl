@@ -27,6 +27,7 @@ float3 ReconstructViewDir(float2 uv)
     clip.w  = 1.0f;
 
     float4 view = mul(c_deferredLighting.InvP, clip);
+	view.y = -view.y;
     return normalize(view.xyz / view.w);
 }
 
@@ -86,7 +87,7 @@ float4 PSMain(VsOut input) : SV_Target
     float3 R = reflect(-V, N);
     float lod = roughness * (c_deferredLighting.MaxCubemapMipMaps - 1);
     float3 envSample = gEnvMap.SampleLevel(gSampler, R, lod).rgb;
-    //envSample = pow(envSample, 2.2f);
+    //float3 envSample = gEnvMap.SampleLevel(gSampler, R, 8).rgb;
 
     float2 brdfIntSample = gBrdfInt.SampleLevel(gSampler, saturate(float2(max(NdV, 0), roughness)), 0).rg;
     float3 indirectSpecular = envSample * (F * brdfIntSample.r + brdfIntSample.g) * kS;

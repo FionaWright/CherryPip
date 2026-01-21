@@ -26,12 +26,14 @@ void DeferredContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdL
 
     D3D12_STATIC_SAMPLER_DESC samplers[1];
     samplers[0] = {};
-    samplers[0].Filter = D3D12_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
+    samplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
     samplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
     samplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
     samplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-    samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     samplers[0].ShaderRegister = 0;
+    samplers[0].MinLOD = 0;
+    samplers[0].MaxLOD = D3D12_FLOAT32_MAX;
 
     m_rootSigGBuffer.SmartInit(device, 1, 3, 0, false, samplers, _countof(samplers));
     m_rootSigLighting.SmartInit(device, 2, 6, 0, false, samplers, _countof(samplers));
@@ -187,9 +189,6 @@ void DeferredContext::RenderLighting(const D3D* d3d, ID3D12GraphicsCommandList* 
     cbvDebug.Mode = debugMode;
     m_matLighting.UpdateCBV(1, &cbvDebug);
 
-    m_rtvAlbedo.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
-    m_rtvNormalsDepth.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
-    m_rtvRoughMet.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
     m_matLighting.SetTex(d3d->GetDevice(), 0, heap, m_rtvAlbedo.GetD12Resource());
     m_matLighting.SetTex(d3d->GetDevice(), 1, heap, m_rtvNormalsDepth.GetD12Resource());
     m_matLighting.SetTex(d3d->GetDevice(), 2, heap, m_rtvRoughMet.GetD12Resource());

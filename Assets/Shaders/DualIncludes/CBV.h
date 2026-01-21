@@ -39,10 +39,13 @@ enum RasterDebugMode
 struct CbvRasterDebug
 {
     RasterDebugMode Mode;
-    float3 DirLightDir;
-
-    uint MaxCubemapMipMaps;
     float3 p;
+};
+
+struct CbvForwardLighting
+{
+    float3 DirLightDir;
+    uint MaxCubemapMipMaps;
 };
 
 struct CbvDeferredLighting
@@ -50,7 +53,7 @@ struct CbvDeferredLighting
     float4x4 InvP;
 
     float3 DirLightDir;
-    float p;
+    uint MaxCubemapMipMaps;
 };
 
 struct CbvRasterVS

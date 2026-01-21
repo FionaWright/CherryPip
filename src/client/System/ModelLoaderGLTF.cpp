@@ -470,6 +470,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     material->Init(heap);
     material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices));
     material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterVS));
+    material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvForwardLighting));
     material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterDebug));
     material->SetTex(d3d->GetDevice(), 0, heap, diffuseTex);
     material->SetTex(d3d->GetDevice(), 1, heap, normalTex);

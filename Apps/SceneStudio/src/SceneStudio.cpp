@@ -80,7 +80,8 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         m_shaderDirty = false;
     }
 
-    m_projMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(Config::GetRender().FoV), m_AspectRatio, Config::GetRender().NearPlane, Config::GetRender().FarPlane);
+    m_projMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(Config::GetRender().FoV), m_AspectRatio,
+                                            Config::GetRender().NearPlane, Config::GetRender().FarPlane);
 
     switch (m_studioConfig.Backend)
     {
@@ -294,7 +295,7 @@ void SceneStudio::loadRasterAssets(const D3D* d3d, ID3D12GraphicsCommandList* cm
     samplers[0].MaxLOD = D3D12_FLOAT32_MAX;
 
     m_rootSigRaster = std::make_shared<RootSig>();
-    m_rootSigRaster->SmartInit(d3d->GetDevice(), 3, 7, 0, false, samplers, _countof(samplers));
+    m_rootSigRaster->SmartInit(d3d->GetDevice(), 4, 7, 0, false, samplers, _countof(samplers));
 
     D3D12_INPUT_ELEMENT_DESC rasterILD[] =
     {
@@ -447,8 +448,8 @@ void SceneStudio::denoisingPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 
     if (!m_denoisingManager.IsInitialized())
         m_denoisingManager.Init(d3d->GetDevice(), cmdList, &m_heap, m_rtvPingPong1.GetD12Resource(),
-                    m_rtvPingPong2.GetD12Resource(),
-                    m_deferredContext.GetNormalsDepth());
+                                m_rtvPingPong2.GetD12Resource(),
+                                m_deferredContext.GetNormalsDepth());
 
     TextureRTV* outputRTV = nullptr;
     switch (m_studioConfig.Denoising.Type)
@@ -507,10 +508,13 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         cmdList->OMSetRenderTargets(1, &handle, FALSE, nullptr);
 
         ID3D12RootSignature* rootSig = m_studioConfig.PT.DebugMode ? m_rootSigDebug->Get() : m_rootSig->Get();
-        const int debugBufferIdx = m_studioConfig.PT.DebugMode ? static_cast<uint32_t>(m_studioConfig.PT.DebugBufferIdx) : -1;
+        const int debugBufferIdx = m_studioConfig.PT.DebugMode
+                                       ? static_cast<uint32_t>(m_studioConfig.PT.DebugBufferIdx)
+                                       : -1;
 
         m_ptContext.Render(cmdList, rootSig, m_shader->GetPSO(), &m_camera.GetCamera(), &m_heap, m_projMatrix,
-                           m_studioConfig.PT, m_studioConfig.DirLightIntensity, m_studioConfig.DirLightColor, m_studioConfig.DirLightDirection, debugBufferIdx);
+                           m_studioConfig.PT, m_studioConfig.DirLightIntensity, m_studioConfig.DirLightColor,
+                           m_studioConfig.DirLightDirection, debugBufferIdx);
     }
 
 #ifdef _DEBUG
@@ -539,13 +543,15 @@ void SceneStudio::renderForward(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 
     // Update CBVs
     {
-        CbvRasterDebug rasterDebug{};
-        rasterDebug.Mode = m_studioConfig.Raster.Mode;
-        rasterDebug.DirLightDir = m_studioConfig.DirLightDirection;
-        rasterDebug.MaxCubemapMipMaps = m_envMap.GetCubemap()->GetDesc().MipLevels;
-
         CbvRasterVS cbvRasterVs{};
         cbvRasterVs.CameraPos = m_camera.GetCamera().GetPosition();
+
+        CbvRasterDebug cbvRasterDebug{};
+        cbvRasterDebug.Mode = m_studioConfig.Raster.Mode;
+
+        CbvForwardLighting cbvForwardLighting{};
+        cbvForwardLighting.DirLightDir = m_studioConfig.DirLightDirection;
+        cbvForwardLighting.MaxCubemapMipMaps = m_envMap.GetCubemap()->GetDesc().MipLevels;
 
         const int sceneIdx = m_sceneConfigs.at(m_currentScene).SceneIdx;
 
@@ -554,7 +560,8 @@ void SceneStudio::renderForward(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         for (int i = 0; i < objects.size(); ++i)
         {
             objects[i]->GetMaterial()->UpdateCBV(1, &cbvRasterVs);
-            objects[i]->GetMaterial()->UpdateCBV(2, &rasterDebug);
+            objects[i]->GetMaterial()->UpdateCBV(2, &cbvForwardLighting);
+            objects[i]->GetMaterial()->UpdateCBV(3, &cbvRasterDebug);
         }
     }
 
@@ -593,7 +600,10 @@ void SceneStudio::renderDeferred(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 
     // Lighting Pass
     {
-        m_deferredContext.RenderLighting(d3d, cmdList, &m_heap, m_projMatrix, &m_rtvPingPong1, m_studioConfig.DirLightDirection);
+        m_deferredContext.RenderLighting(d3d, cmdList, &m_heap, m_projMatrix, &m_rtvPingPong1,
+                                         m_studioConfig.DirLightDirection, m_envMap.GetCubemap(),
+                                         m_skybox.GetIrradianceMap(), m_texBrdfIntegrationMap.GetD12Resource(),
+                                         m_studioConfig.Raster.Mode);
     }
 
     copyRtvTex(cmdList, d3d->GetRtv(), m_rtvPingPong1.GetD12Resource());

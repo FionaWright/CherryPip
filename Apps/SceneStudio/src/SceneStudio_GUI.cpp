@@ -395,6 +395,7 @@ void SceneStudio::guiMain()
     switch (m_studioConfig.Backend)
     {
     case eForward:
+    case eDeferred:
         GuiRaster();
         break;
     case ePathTracer:

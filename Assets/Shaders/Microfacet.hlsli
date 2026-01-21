@@ -17,7 +17,7 @@ float3 F_Schlick(float VdH, float3 F0)
 float G_GGX(float NdX, float a2)
 {
     float denom = NdX + sqrt(a2 + (1-a2) * NdX * NdX);
-    return 2 * NdX / denom;
+    return 2 * NdX / max(0.001f, denom);
 }
 
 float G_Smith(float NdL, float NdV, float a2)

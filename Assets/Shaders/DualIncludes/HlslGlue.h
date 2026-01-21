@@ -30,6 +30,7 @@ inline float3 glueNormalize(const float3 v)
     const float mag = std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
     return {v.x / mag, v.y / mag, v.z / mag};
 }
+inline float glueDot(const float3 a, const float3 b) { return a.x*b.x + a.y*b.y + a.z*b.z; }
 
 #else
 
@@ -43,6 +44,7 @@ inline float3 glueNormalize(const float3 v)
 #define glueClamp clamp
 #define glueFrac frac
 #define glueNormalize normalize
+#define glueDot dot
 
 #define const
 

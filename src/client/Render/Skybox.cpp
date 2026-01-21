@@ -59,6 +59,9 @@ void Skybox::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap
     {
         m_rootSigGenIrr.SmartInit(device, 0, 1, 1, false, samplers, _countof(samplers));
         m_shaderGenIrr.InitCs(L"Compute/GenIrradianceIblCS.hlsl", device, m_rootSigGenIrr.Get());
+
+        if (!m_texIrradianceIBL.IsInitialized())
+            m_texIrradianceIBL.InitEmpty(device, DXGI_FORMAT_R8G8B8A8_UNORM, cubemap->GetDesc().Width, cubemap->GetDesc().Height, 6, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
     }
 }
 
@@ -99,9 +102,6 @@ void Skybox::UpdateCubemap(ID3D12Device* device, D12Resource* cubemap)
 
     // Generate Irradiance Material
     {
-        if (!m_texIrradianceIBL.IsInitialized())
-            m_texIrradianceIBL.InitEmpty(device, DXGI_FORMAT_R8G8B8A8_UNORM, cubemap->GetDesc().Width, cubemap->GetDesc().Height, 6, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-
         D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
         uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
         uavDesc.Format = m_texIrradianceIBL.GetFormat();

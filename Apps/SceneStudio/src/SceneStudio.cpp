@@ -33,6 +33,7 @@ void SceneStudio::OnInit(D3D* d3d)
     m_camera.Init(XMFLOAT3(0, 0, 5), 0, PI);
 
     m_studioConfig.Backend = d3d->GetRayTracingSupported() ? RenderBackend::ePathTracer : RenderBackend::eForward;
+    Config::SetUIntFromArg(reinterpret_cast<uint32_t*>(&m_studioConfig.Backend), "--backend");
 
     loadAssets(d3d);
 }

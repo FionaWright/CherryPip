@@ -38,6 +38,9 @@ struct SettingsRender
 class Config
 {
 public:
+    static void SetBoolFromArg(bool* variable, const char* key);
+    static void SetUIntFromArg(uint32_t* variable, const char* key);
+
     static void ParseCommandLineArgs(LPSTR args);
     static SettingsSystem& GetSystem() { return ms_settingsSystem; }
     static SettingsRender& GetRender() { return ms_settingsRender; }
@@ -45,6 +48,7 @@ public:
 private:
     static SettingsSystem ms_settingsSystem;
     static SettingsRender ms_settingsRender;
+    static std::unordered_map<std::string, std::string> ms_argsMap;
 };
 
 

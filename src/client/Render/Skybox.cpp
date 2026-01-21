@@ -14,7 +14,7 @@ void Skybox::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap
 
     D3D12_STATIC_SAMPLER_DESC samplers[1];
     samplers[0] = {};
-    samplers[0].Filter = D3D12_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
+    samplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
     samplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
     samplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
     samplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
@@ -87,14 +87,14 @@ void Skybox::RenderForward(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, c
 
 void Skybox::UpdateCubemap(ID3D12Device* device, D12Resource* cubemap)
 {
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+    srvDesc.Format = cubemap->GetDesc().Format;
+    srvDesc.TextureCube.MipLevels = 1;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
     // Forward Render Material
     {
-        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
-        srvDesc.Format = cubemap->GetDesc().Format;
-        srvDesc.TextureCube.MipLevels = 1;
-        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-
         m_matForwardRender.Init(m_pHeap, false);
         m_matForwardRender.AddCBV(device, m_pHeap, sizeof(CbvMatrices));
         m_matForwardRender.SetSRV(device, 0, m_pHeap, cubemap, srvDesc);
@@ -111,7 +111,7 @@ void Skybox::UpdateCubemap(ID3D12Device* device, D12Resource* cubemap)
 
         m_matGenIrr.Init(m_pHeap);
         m_matGenIrr.AddUAV(device, m_pHeap, m_texIrradianceIBL.GetD12Resource()->GetResource(), uavDesc);
-        m_matGenIrr.SetTex(device, 0, m_pHeap, cubemap);
+        m_matGenIrr.SetSRV(device, 0, m_pHeap, cubemap, srvDesc);
     }
 }
 

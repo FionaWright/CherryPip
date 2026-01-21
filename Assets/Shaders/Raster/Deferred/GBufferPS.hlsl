@@ -17,7 +17,7 @@ struct GBufferOut
 {
     float4 RgbaAlbedo : SV_Target0;
     float4 RgbNormal_ADepth : SV_Target1;
-	float2 RgRoughMet : SV_Target2;
+	float4 RgRoughMet : SV_Target2;
 };
 
 GBufferOut PSMain(VsOut input)
@@ -28,6 +28,7 @@ GBufferOut PSMain(VsOut input)
     output.RgbNormal_ADepth.rgb = normalize(input.normal) * 0.5f + 0.5f; // [-1,1] -> [0,1]
     output.RgbNormal_ADepth.a = input.position.z / input.position.w;
 	output.RgRoughMet.rg = gRoughMet.Sample(gSampler, input.uv).gb;
+	output.RgRoughMet.ba = 0;
 
     return output;
 }

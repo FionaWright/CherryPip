@@ -13,6 +13,7 @@
 class EnvMap
 {
 public:
+    void CreateCubemapResource(ID3D12Device* device);
     void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const std::wstring& filePath, float rotation, Heap* heap);
     void InitCubemap(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap* heap);
 

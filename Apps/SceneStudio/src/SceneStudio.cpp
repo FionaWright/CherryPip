@@ -43,14 +43,13 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     {
         m_envMap.Init(d3d->GetDevice(), cmdList, m_envMapList.at(m_selectedEnvMapIdx), m_studioConfig.EnvMapRotation,
                       &m_heap);
-        if (m_studioConfig.Backend == RenderBackend::eForward)
+        if (m_studioConfig.Backend != ePathTracer)
         {
             m_envMap.InitCubemap(d3d->GetDevice(), cmdList, &m_heap);
             m_skybox.UpdateCubemap(d3d->GetDevice(), m_envMap.GetCubemap());
             m_skybox.GenerateIrradianceMap(cmdList, &m_heap);
         }
         m_recomputeEnvMapDirLight = true;
-        m_sceneDirty = true;
         m_envMapDirty = false;
     }
 
@@ -324,6 +323,7 @@ void SceneStudio::loadRasterAssets(const D3D* d3d, ID3D12GraphicsCommandList* cm
     m_shaderRaster->InitVsPs(L"Raster/RasterDebugVS.hlsl", L"Raster/RasterDebugPS.hlsl",
                              {rasterILD, _countof(rasterILD)}, d3d->GetDevice(), m_rootSigRaster->Get(), true);
 
+    m_envMap.CreateCubemapResource(d3d->GetDevice());
     m_skybox.Init(d3d->GetDevice(), cmdList, &m_heap, m_envMap.GetCubemap());
 
     const std::string assetDirectory = wstringToString(FileHelper::GetAssetsPath());
@@ -345,7 +345,7 @@ void SceneStudio::initScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList, const 
 
     const SceneConfig config = m_sceneConfigs.at(configIdx);
 
-    GLTFLoadArgs args;
+    GLTFLoadArgs args = {};
     args.Root = m_rootSigRaster;
     args.DefaultShaderIndex = 0;
     args.Shaders = {m_shaderRaster};

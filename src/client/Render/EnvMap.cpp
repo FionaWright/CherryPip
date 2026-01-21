@@ -35,6 +35,12 @@ struct CBV_PanoToCM
     float Rotation;
 };
 
+void EnvMap::CreateCubemapResource(ID3D12Device* device)
+{
+    if (!m_cubemap.IsInitialized())
+        m_cubemap.InitEmpty(device, DXGI_FORMAT_R8G8B8A8_UNORM, 1024, 1024, 6, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+}
+
 void EnvMap::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const std::wstring& filePath, const float rotation, Heap* heap)
 {
     GPU_SCOPE(cmdList, "Init Pano/EA Map");

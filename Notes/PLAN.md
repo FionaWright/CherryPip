@@ -72,13 +72,10 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 - FPS has heavily dropped since I was away, possibly due to all the extra shaders/etc. Make sure they can be deleted properly when not in use
 
-## Raster-TODO
+## Raster/Laptop-TODO
 
-- Get proper BSDF for forward renderer
-- Add deferred render backend
-- GBuffer debug viewer
 - Mip maps aren't currently working. Need alternate solution for BC7 textures
-- Fix ImGui off-screen thing
+- Fix bistro
 
 ## Spectral Tracing
 

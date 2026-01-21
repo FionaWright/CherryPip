@@ -10,11 +10,12 @@ struct VsOut
 ConstantBuffer<CbvDeferredLighting> c_deferredLighting : register(b0);
 ConstantBuffer<CbvRasterDebug> c_rasterDebug : register(b1);
 
-Texture2D    gRgbaAlbedo  : register(t0);
-Texture2D    gRgbNormal_ADepth  : register(t1);
-Texture2D<float2> gBrdfInt : register(t2);
-TextureCube gEnvMap : register(t3);
-TextureCube gIrradiance : register(t4);
+Texture2D<float4>    gRgbaAlbedo  : register(t0);
+Texture2D<float4>    gRgbNormal_ADepth  : register(t1);
+Texture2D<float4> gRoughMet : register(t2);
+Texture2D<float2> gBrdfInt : register(t3);
+TextureCube gEnvMap : register(t4);
+TextureCube gIrradiance : register(t5);
 
 SamplerState gSampler : register(s0);
 
@@ -42,7 +43,7 @@ float4 PSMain(VsOut input) : SV_Target
     if (isSkybox)
         return float4(albedoSample.rgb, 1.0f);
 
-	float2 roughMet = float2(1, 0); // TODO
+	float2 roughMet = gRoughMet.Sample(gSampler, input.uv).rg;
 	float3 emission = float3(0,0,0); // TODO?
 
     float3 N = normalize(normalSample);
@@ -57,7 +58,7 @@ float4 PSMain(VsOut input) : SV_Target
 
 	float3 irradianceIblSample = gIrradiance.SampleLevel(gSampler, N, 0).rgb;
 
-	float roughness = roughMet.r; // TODO: MaterialData c_deferredLighting
+	float roughness = roughMet.r;
     float metalness = roughMet.g;
     float3 F0 = lerp(0.04f, albedoGamma.rgb, metalness);
 

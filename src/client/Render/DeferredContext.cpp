@@ -16,10 +16,12 @@ void DeferredContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdL
     // Could improve precision here for increased bandwidth
     m_rtvAlbedo.Init(L"Albedo GBuffer", device, heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
     m_rtvNormalsDepth.Init(L"Normals GBuffer", device, heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
+    m_rtvRoughMet.Init(L"Roughness Metallic Buffer", device, heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
 
     m_rtvHandles = {
         m_rtvAlbedo.GetCpuHandle(),
-        m_rtvNormalsDepth.GetCpuHandle()
+        m_rtvNormalsDepth.GetCpuHandle(),
+        m_rtvRoughMet.GetCpuHandle(),
     };
 
     D3D12_STATIC_SAMPLER_DESC samplers[1];
@@ -31,8 +33,8 @@ void DeferredContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdL
     samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
     samplers[0].ShaderRegister = 0;
 
-    m_rootSigGBuffer.SmartInit(device, 1, 1, 0, false, samplers, _countof(samplers));
-    m_rootSigLighting.SmartInit(device, 2, 5, 0, false, samplers, _countof(samplers));
+    m_rootSigGBuffer.SmartInit(device, 1, 3, 0, false, samplers, _countof(samplers));
+    m_rootSigLighting.SmartInit(device, 2, 6, 0, false, samplers, _countof(samplers));
 
     {
         D3D12_INPUT_ELEMENT_DESC ildDesc[] =
@@ -99,6 +101,7 @@ void DeferredContext::RenderGBuffer(const D3D* d3d, ID3D12GraphicsCommandList* c
 
     m_rtvAlbedo.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
     m_rtvNormalsDepth.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    m_rtvRoughMet.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     // Set RTVs
     {
@@ -176,6 +179,7 @@ void DeferredContext::RenderLighting(const D3D* d3d, ID3D12GraphicsCommandList* 
 
     CbvDeferredLighting cbv;
     cbv.DirLightDir = dirLightDir;
+    cbv.MaxCubemapMipMaps = skybox->GetDesc().MipLevels;
     XMStoreFloat4x4(&cbv.InvP, XMMatrixInverse(nullptr, pMatrix));
     m_matLighting.UpdateCBV(0, &cbv);
 
@@ -185,10 +189,12 @@ void DeferredContext::RenderLighting(const D3D* d3d, ID3D12GraphicsCommandList* 
 
     m_rtvAlbedo.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
     m_rtvNormalsDepth.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
+    m_rtvRoughMet.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
     m_matLighting.SetTex(d3d->GetDevice(), 0, heap, m_rtvAlbedo.GetD12Resource());
     m_matLighting.SetTex(d3d->GetDevice(), 1, heap, m_rtvNormalsDepth.GetD12Resource());
+    m_matLighting.SetTex(d3d->GetDevice(), 2, heap, m_rtvRoughMet.GetD12Resource());
 
-    m_matLighting.SetTex(d3d->GetDevice(), 2, heap, brdfIntegrationMap);
+    m_matLighting.SetTex(d3d->GetDevice(), 3, heap, brdfIntegrationMap);
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
@@ -196,7 +202,7 @@ void DeferredContext::RenderLighting(const D3D* d3d, ID3D12GraphicsCommandList* 
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     srvDesc.TextureCube.MipLevels = skybox->GetDesc().MipLevels;
     srvDesc.TextureCube.MostDetailedMip = 0;
-    m_matLighting.SetSRV(d3d->GetDevice(), 3, heap, skybox, srvDesc);
+    m_matLighting.SetSRV(d3d->GetDevice(), 4, heap, skybox, srvDesc);
 
     srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
@@ -204,7 +210,7 @@ void DeferredContext::RenderLighting(const D3D* d3d, ID3D12GraphicsCommandList* 
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     srvDesc.TextureCube.MipLevels = 1;
     srvDesc.TextureCube.MostDetailedMip = 0;
-    m_matLighting.SetSRV(d3d->GetDevice(), 4, heap, irradianceMap, srvDesc);
+    m_matLighting.SetSRV(d3d->GetDevice(), 5, heap, irradianceMap, srvDesc);
 
     m_matLighting.TransitionSrvsToPS(cmdList);
     m_matLighting.SetDescriptorTables(cmdList);

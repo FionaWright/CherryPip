@@ -92,8 +92,10 @@ void PathTracingContext::BuildScene(ID3D12Device* device, ID3D12GraphicsCommandL
         instanceData.VertexBufferOffset = curVertexBufferOffset;
         instanceData.IndexBufferOffset = curIndexBufferOffset;
         instanceData.MaterialIdx = i;
-        instanceData.M = m_blasList[i]->GetTransform().GetModelMatrix();
-        instanceData.MTI = XMMatrixTranspose(XMMatrixInverse(nullptr, m_blasList[i]->GetTransform().GetModelMatrix()));
+
+        XMMATRIX M = m_blasList[i]->GetTransform().GetModelMatrix();
+        XMStoreFloat4x4(&instanceData.M, M);
+        XMStoreFloat4x4(&instanceData.MTI, XMMatrixTranspose(XMMatrixInverse(nullptr, M)));
         m_instanceDataList.emplace_back(instanceData);
 
         curVertexBufferOffset += model->GetVertexCount();
@@ -201,8 +203,8 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
 
         CbvPathTracing cbv;
         cbv.CameraPositionWorld = camera->GetPosition();
-        cbv.InvP = XMMatrixInverse(nullptr, projMatrix);
-        cbv.InvV = XMMatrixInverse(nullptr, camera->GetViewMatrix());
+        XMStoreFloat4x4(&cbv.InvP, XMMatrixInverse(nullptr, projMatrix));
+        XMStoreFloat4x4(&cbv.InvV, XMMatrixInverse(nullptr, camera->GetViewMatrix()));
         cbv.NumBounces = config.NumBounces;
         cbv.RussianRouletteMinBounces = config.RussianRouletteMinBounces;
         cbv.SPP = config.SPP;

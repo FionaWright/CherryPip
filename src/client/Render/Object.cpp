@@ -34,8 +34,9 @@ void Object::Render(ID3D12GraphicsCommandList* cmdList, CbvMatrices& matrices) c
     cmdList->SetGraphicsRootSignature(m_rootSig->Get());
     cmdList->SetPipelineState(m_shader->GetPSO());
 
-    matrices.M = m_transform->GetModelMatrix();
-    matrices.MTI = XMMatrixInverse(nullptr, XMMatrixTranspose(matrices.M));
+    const XMMATRIX M = m_transform->GetModelMatrix();
+    XMStoreFloat4x4(&matrices.M, M);
+    XMStoreFloat4x4(&matrices.MTI, XMMatrixInverse(nullptr, XMMatrixTranspose(M)));
     m_material->UpdateCBV(0, &matrices);
 
     m_material->TransitionSrvsToPS(cmdList);

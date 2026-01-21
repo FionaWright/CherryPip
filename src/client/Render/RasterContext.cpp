@@ -34,8 +34,8 @@ void RasterContext::Render(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, c
     cmdList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
     CbvMatrices matrices = {};
-    matrices.V = vMatrix;
-    matrices.P = pMatrix;
+    XMStoreFloat4x4(&matrices.V, vMatrix);
+    XMStoreFloat4x4(&matrices.P, pMatrix);
 
     {
         GPU_SCOPE(cmdList, "Skybox Pass");

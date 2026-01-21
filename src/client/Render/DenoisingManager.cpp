@@ -222,7 +222,7 @@ TextureRTV* DenoisingManager::DenoiseATrous(ID3D12GraphicsCommandList* cmdList, 
     cbv.phiC = phiC;
     cbv.phiN = phiN;
     cbv.phiP = phiP;
-    cbv.InvVP = XMMatrixInverse(nullptr, pMatrix * vMatrix);
+    XMStoreFloat4x4(&cbv.InvVP, XMMatrixInverse(nullptr, pMatrix * vMatrix));
 
     for (int i = 0; i < iterations; i++)
     {

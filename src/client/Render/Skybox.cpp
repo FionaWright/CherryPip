@@ -65,8 +65,8 @@ void Skybox::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap
 void Skybox::RenderForward(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vMatrix, const XMMATRIX& pMatrix) const
 {
     CbvMatrices matrices = {};
-    matrices.V = vMatrix;
-    matrices.P = pMatrix;
+    XMStoreFloat4x4(&matrices.V, vMatrix);
+    XMStoreFloat4x4(&matrices.P, pMatrix);
 
     cmdList->SetGraphicsRootSignature(m_rootSig.Get());
     cmdList->SetPipelineState(m_shaderForward.GetPSO());

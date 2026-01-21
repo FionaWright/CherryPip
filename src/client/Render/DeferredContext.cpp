@@ -78,7 +78,7 @@ void DeferredContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdL
     }
 
     m_matLighting.Init(heap);
-    m_matLighting.AddCBV(device, heap, sizeof(CbvRasterDebug));
+    m_matLighting.AddCBV(device, heap, sizeof(CbvDeferredLighting));
 
     m_fullScreenTriangle.InitFullScreenTriangle(device, cmdList);
 
@@ -119,8 +119,8 @@ void DeferredContext::RenderGBuffer(const D3D* d3d, ID3D12GraphicsCommandList* c
     }
 
     CbvMatrices matrices = {};
-    matrices.V = vMatrix;
-    matrices.P = pMatrix;
+    XMStoreFloat4x4(&matrices.V, vMatrix);
+    XMStoreFloat4x4(&matrices.P, pMatrix);
 
     cmdList->SetGraphicsRootSignature(m_rootSigGBuffer.Get());
     cmdList->SetPipelineState(m_shaderGBuffer.GetPSO());
@@ -135,8 +135,9 @@ void DeferredContext::RenderGBuffer(const D3D* d3d, ID3D12GraphicsCommandList* c
         const auto model = object->GetModel();
         const auto mat = object->GetMaterial();
 
-        matrices.M = transform->GetModelMatrix();
-        matrices.MTI = XMMatrixInverse(nullptr, XMMatrixTranspose(matrices.M));
+        XMMATRIX M = transform->GetModelMatrix();
+        XMStoreFloat4x4(&matrices.M, M);
+        XMStoreFloat4x4(&matrices.MTI, XMMatrixInverse(nullptr, XMMatrixTranspose(M)));
         mat->UpdateCBV(0, &matrices);
 
         mat->TransitionSrvsToPS(cmdList);
@@ -174,7 +175,7 @@ void DeferredContext::RenderLighting(const D3D* d3d, ID3D12GraphicsCommandList* 
 
     CbvDeferredLighting cbv;
     cbv.DirLightDir = dirLightDir;
-    cbv.InvP = XMMatrixInverse(nullptr, pMatrix); // Change HlslGlue and use XMStoreFloat4x4 from now on
+    XMStoreFloat4x4(&cbv.InvP, XMMatrixInverse(nullptr, pMatrix));
     m_matLighting.UpdateCBV(0, &cbv);
 
     m_rtvAlbedo.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);

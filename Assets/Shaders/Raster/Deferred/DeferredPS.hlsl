@@ -38,8 +38,6 @@ float4 PSMain(VsOut input) : SV_Target
     float3 L = -cbv.DirLightDir;
     float3 V = ReconstructViewDir(input.uv);
 
-    return float4(V, 1);
-
     float NdL = saturate(dot(N, L));
 
     float3 diffuse = albedoSample.rgb * NdL;

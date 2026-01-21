@@ -145,11 +145,12 @@ float3 NormalizeSafe(float3 N, float3 fallback)
 // Finally find a repo with code I can look at and compare
 // If still not working then park it and do importance sampling first maybe
 
-// Move to HlslMaths.h
-float Luminance(float3 color)
-{
-    return dot(color, float3(0.2126,0.7152,0.0722));
-}
+// G_Smith is def broken. Check equation. Not sure if G_SmithFast is correct either but maybe
+// Still unsure what specProb should be
+// Fix hot reloading and add debug buffer inside specular for faster debugging
+// Fresnel term doesn't quite match raster either but could be just more physically accurate (different wi)
+
+// CHALLENGE: Fix it without GPT or help
 
 void Model_GgxSmithSchlick(
     inout uint rngState,
@@ -164,13 +165,11 @@ void Model_GgxSmithSchlick(
     out float3 wi)    // L
 {
     float3 F0 = lerp(float3(0.04, 0.04, 0.04), albedo, metalness);
-    float3 diffuseColor = albedo * (1.0 - metalness);
 
-    float specProb = saturate(max(F0.r, max(F0.g, F0.b))); // This seems wrong
-    specProb = saturate(Luminance(F0) + 0.5 * roughness);
+    float specProb = 1.00f; // TODO once specular is fixed
     bool sampleSpecular = PcgRand01(rngState) < specProb;
 
-    Lo += throughput * Li; // What do I do with you?
+    Lo += throughput * Li; // Wrong?
 
     if (sampleSpecular)
     {
@@ -180,26 +179,31 @@ void Model_GgxSmithSchlick(
         wi = SampleGGX_Classic(Ns, wo, a2, rngState);
         float3 H = NormalizeSafe(wo + wi, Ns);
 
-        float NdL = dot(wi, Ns);
-        float NdV = dot(wo, Ns);
+        float NdL = dot(Ns, wi);
+        float NdV = dot(Ns, wo);
         float NdH = dot(Ns, H);
         float VdH = dot(H, wo);
 
         float D = D_GGX(NdH, a2);
         float3 F = F_Schlick(VdH, F0);
-        float G = G_Smith(NdL, NdV, a2);
+        float G = G_Smith(NdL, NdV, a2); // Wrong
+        //float G = G_SmithFast(NdL, NdV, roughness);
 
-        float pdf = PdfGGX_Classic(NdH, VdH, a2); // Must match D_GGX
-        float3 brdf = (D * G * F) / (4 * NdV * NdL);
+        float pdf = PdfGGX_Classic(NdH, VdH, a2);
+        float3 specularBrdf = (D * G * F) / max(0.001f, 4 * NdV * NdL);
+        throughput *= specularBrdf * NdL / max(0.001f, pdf) / max(0.001f, specProb);
 
-        throughput *= brdf * NdL / pdf / specProb;
+        //wi = float3(F);
     }
-    else
+    else // The diffuse is correct! Issue is in specular
     {
         wi = RandHemisphereCosine(rngState, Ns);
-        //float NdL = dot(wi, Ns);
-        //float pdf = NdL / PI;
-        //float3 brdf = diffuseColor / PI;
-        throughput *= diffuseColor / max(0.001f, 1.0 - specProb); // brdf and pdf cancel to leave diffuseColor
+
+        float NdL = dot(wi, Ns);
+
+        float pdf = NdL / PI;
+        float3 diffuseBrdf = albedo * (1.0 - metalness);
+        diffuseBrdf /= PI;
+        throughput *= diffuseBrdf * NdL / pdf / max(0.001f, 1.0 - specProb);
     }
 }

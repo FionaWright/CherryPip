@@ -78,4 +78,9 @@ float3 CubemapCubeToSphere(uint face, float2 uv)
     return glueNormalize(d);
 }
 
+float Luminance(float3 color)
+{
+    return glueDot(color, float3(0.2126,0.7152,0.0722));
+}
+
 #endif

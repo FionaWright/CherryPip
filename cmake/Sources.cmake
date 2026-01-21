@@ -31,6 +31,7 @@ set(PROJECT_SOURCES
         src/client/System/FileHelper.cpp
         src/client/System/Gui.cpp
         src/client/System/HighResolutionClock.cpp
+        src/client/System/ImGuiUtils.cpp
         src/client/System/Input.cpp
         src/client/System/ModelLoaderGLTF.cpp
         src/client/System/ResourceSharer.cpp
@@ -70,6 +71,7 @@ set(PROJECT_HEADERS
         Headers/client/System/FileHelper.h
         Headers/client/System/Gui.h
         Headers/client/System/HighResolutionClock.h
+        Headers/client/System/ImGuiUtils.h
         Headers/client/System/Input.h
         Headers/client/System/Keycodes.h
         Headers/client/System/ResourceSharer.h

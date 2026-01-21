@@ -12,6 +12,8 @@
 #include "Render/Scene.h"
 #include "System/Gui.h"
 
+#include "System/ImGuiUtils.h"
+
 #ifdef _DEBUG
 #include "Debug/PythonExecutor.h"
 #endif
@@ -64,24 +66,24 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
     if (m_studioConfig.PT.RussianRouletteEnabled)
     {
         int rrmb = static_cast<int>(m_studioConfig.PT.RussianRouletteMinBounces);
-        ptNeedsReset |= ImGui::InputInt("Russian Roulette Min Bounces##xx", &rrmb);
+        ptNeedsReset |= ImGuiUtils::FwInputInt("Russian Roulette Min Bounces##xx", &rrmb);
         m_studioConfig.PT.RussianRouletteMinBounces = static_cast<uint32_t>(rrmb);
     }
 
     int spp = static_cast<int>(m_studioConfig.PT.SPP);
-    ptNeedsReset |= ImGui::DragInt("SPP##xx", &spp, 1, 1, 256);
+    ptNeedsReset |= ImGuiUtils::FwDragInt("SPP##xx", &spp, 1, 1, 256);
     m_studioConfig.PT.SPP = static_cast<uint32_t>(spp);
 
     int bounces = static_cast<int>(m_studioConfig.PT.NumBounces);
-    ptNeedsReset |= ImGui::DragInt("Ray Bounces##xx", &bounces, 1, 0, 256);
+    ptNeedsReset |= ImGuiUtils::FwDragInt("Ray Bounces##xx", &bounces, 1, 0, 256);
     m_studioConfig.PT.NumBounces = static_cast<uint32_t>(bounces);
 
     int maxFrame = static_cast<int>(m_studioConfig.PT.MaxFrameNum);
-    ptNeedsReset |= ImGui::InputInt("Max Frames##xx", &maxFrame);
+    ptNeedsReset |= ImGuiUtils::FwInputInt("Max Frames##xx", &maxFrame);
     m_studioConfig.PT.MaxFrameNum = static_cast<uint32_t>(maxFrame);
 
     m_shaderDirty |= ImGui::Checkbox("Dir Light Enabled##xx", &m_studioConfig.PT.DirLightEnabled);
-    ptNeedsReset |= ImGui::InputFloat("Dir Light Radius (R)##xx", &m_studioConfig.PT.DirLightCosAngularRadius);
+    ptNeedsReset |= ImGuiUtils::FwInputFloat("Dir Light Radius (R)##xx", &m_studioConfig.PT.DirLightCosAngularRadius);
 
     m_shaderDirty |= ImGui::Checkbox("Normal Maps Enabled##xx", &m_studioConfig.PT.NormalMapsEnabled);
 
@@ -139,7 +141,7 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
     {
         ImGui::Indent(IM_GUI_INDENTATION);
         const char* curSelection = c_debugBufferStrMap.at(static_cast<uint32_t>(m_studioConfig.PT.DebugBufferIdx));
-        if (ImGui::BeginCombo("Debug Buffer##xx", curSelection))
+        if (ImGuiUtils::BeginComboWithTooltip("Debug Buffer##xx", curSelection))
         {
             for (size_t i = 0; i < c_debugBufferStrMap.size(); i++)
             {
@@ -207,7 +209,7 @@ void SceneStudio::GuiRaster()
     };
 
     const char* curSelection = c_rasterDebugModes.at(m_studioConfig.Raster.Mode);
-    if (ImGui::BeginCombo("Debug Mode##xx", curSelection))
+    if (ImGuiUtils::BeginComboWithTooltip("Debug Mode##xx", curSelection))
     {
         for (size_t i = 0; i < c_rasterDebugModes.size(); i++)
         {
@@ -234,7 +236,7 @@ void SceneStudio::guiMain()
     ImGui::Indent(IM_GUI_INDENTATION);
     {
         const char* curName = m_sceneConfigs.at(m_currentScene).Name.c_str();
-        if (ImGui::BeginCombo("Scene##xx", curName))
+        if (ImGuiUtils::BeginComboWithTooltip("Scene##xx", curName))
         {
             for (size_t i = 0; i < m_sceneConfigs.size(); i++)
             {
@@ -272,13 +274,13 @@ void SceneStudio::guiMain()
     ImGui::Indent(IM_GUI_INDENTATION);
     {
         XMFLOAT3 pos = m_camera.GetCamera().GetPosition();
-        resetPT |= ImGui::InputFloat3("Camera Position##xx", reinterpret_cast<float*>(&pos));
+        resetPT |= ImGuiUtils::FwInputFloat3("Camera Position##xx", reinterpret_cast<float*>(&pos));
         m_camera.GetCamera().SetPosition(pos);
 
         float pitch = m_camera.GetCamera().GetPitch();
         float yaw = m_camera.GetCamera().GetYaw();
-        resetPT |= ImGui::DragFloat("Camera Pitch##xx", &pitch, 0.01f);
-        resetPT |= ImGui::DragFloat("Camera Yaw##xx", &yaw, 0.01f);
+        resetPT |= ImGuiUtils::FwDragFloat("Camera Pitch##xx", &pitch, 0.01f);
+        resetPT |= ImGuiUtils::FwDragFloat("Camera Yaw##xx", &yaw, 0.01f);
         m_camera.GetCamera().SetPitchYaw(pitch, yaw);
 
         if (ImGui::Button("Reset Camera to Scene Start##xx"))
@@ -300,9 +302,9 @@ void SceneStudio::guiMain()
     ImGui::SeparatorText("Directional Light##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
     {
-        resetPT |= ImGui::InputFloat3("Direction##xx", reinterpret_cast<float*>(&m_studioConfig.DirLightDirection));
-        resetPT |= ImGui::ColorEdit3("Colour##xx", reinterpret_cast<float*>(&m_studioConfig.DirLightColor));
-        resetPT |= ImGui::InputFloat("Intensity##xx", &m_studioConfig.DirLightIntensity);
+        resetPT |= ImGuiUtils::FwInputFloat3("Direction##xx", reinterpret_cast<float*>(&m_studioConfig.DirLightDirection));
+        resetPT |= ImGuiUtils::FwColorEdit3("Colour##xx", reinterpret_cast<float*>(&m_studioConfig.DirLightColor));
+        resetPT |= ImGuiUtils::FwInputFloat("Intensity##xx", &m_studioConfig.DirLightIntensity);
     }
 
     ImGui::Unindent(IM_GUI_INDENTATION);
@@ -312,7 +314,7 @@ void SceneStudio::guiMain()
         m_shaderDirty |= ImGui::Checkbox("Enabled##xx", &m_studioConfig.EnvMapEnabled);
         if (m_studioConfig.EnvMapEnabled)
         {
-            m_envMapDirty |= ImGui::InputFloat("Rotation##xx", &m_studioConfig.EnvMapRotation);
+            m_envMapDirty |= ImGuiUtils::FwInputFloat("Rotation##xx", &m_studioConfig.EnvMapRotation);
 
             if (m_studioConfig.Backend == RenderBackend::ePathTracer)
             {
@@ -322,7 +324,7 @@ void SceneStudio::guiMain()
             }
 
             const auto currMap = wstringToString(m_envMapList.at(m_selectedEnvMapIdx));
-            if (ImGui::BeginCombo("Map##xx", currMap.c_str()))
+            if (ImGuiUtils::BeginComboWithTooltip("Map##xx", currMap.c_str()))
             {
                 for (size_t i = 0; i < m_envMapList.size(); i++)
                 {
@@ -356,7 +358,7 @@ void SceneStudio::guiMain()
         if (m_studioConfig.Denoising.Enabled)
         {
             const auto currType = denoisingTypeMap.at(m_studioConfig.Denoising.Type);
-            if (ImGui::BeginCombo("Type##xx", currType))
+            if (ImGuiUtils::BeginComboWithTooltip("Type##xx", currType))
             {
                 for (size_t i = 0; i < denoisingTypeMap.size(); i++)
                 {
@@ -375,7 +377,7 @@ void SceneStudio::guiMain()
 
             if (m_studioConfig.Denoising.Type == eBox || m_studioConfig.Denoising.Type == eGaussian)
             {
-                ImGui::InputInt("Radius##xx", &m_studioConfig.Denoising.BoxRadius);
+                ImGuiUtils::FwInputInt("Radius##xx", &m_studioConfig.Denoising.BoxRadius);
                 m_studioConfig.Denoising.BoxRadius = std::max(0, m_studioConfig.Denoising.BoxRadius);
             }
 
@@ -384,9 +386,9 @@ void SceneStudio::guiMain()
                 ImGui::InputInt("Iterations##xx", &m_studioConfig.Denoising.ATrousIterations);
                 if (m_studioConfig.Denoising.ATrousIterations > MAX_ATROUS_ITERATIONS)
                     m_studioConfig.Denoising.ATrousIterations = MAX_ATROUS_ITERATIONS;
-                ImGui::InputFloat("Color Phi##xx", &m_studioConfig.Denoising.ATrousPhiC);
-                ImGui::InputFloat("Normals Phi##xx", &m_studioConfig.Denoising.ATrousPhiN);
-                ImGui::InputFloat("Position Phi##xx", &m_studioConfig.Denoising.ATrousPhiP);
+                ImGuiUtils::FwInputFloat("Color Phi##xx", &m_studioConfig.Denoising.ATrousPhiC);
+                ImGuiUtils::FwInputFloat("Normals Phi##xx", &m_studioConfig.Denoising.ATrousPhiN);
+                ImGuiUtils::FwInputFloat("Position Phi##xx", &m_studioConfig.Denoising.ATrousPhiP);
             }
         }
     }
@@ -419,51 +421,52 @@ void SceneStudio::guiScene()
     for (int i = 0; i < objects.size(); i++)
     {
         const std::string name = std::string(objects[i]->GetName()) + " (" + objects[i]->GetMaterial()->GetName() + ")";
-        if (ImGui::TreeNode(name.c_str()))
+        const std::string tempID = "##" + std::to_string(i);
+        if (ImGui::TreeNode((name + tempID).c_str()))
         {
             ImGui::Indent(IM_GUI_INDENTATION);
 
             const auto transform = objects[i]->GetTransform();
 
             XMFLOAT3 pos = transform->GetPosition();
-            ImGui::InputFloat3("Position##xx", reinterpret_cast<float*>(&pos));
+            ImGuiUtils::FwInputFloat3(("Position" + tempID).c_str(), reinterpret_cast<float*>(&pos));
             transform->SetPosition(pos);
 
             XMFLOAT3 rot = transform->GetRotationE();
-            ImGui::InputFloat3("Rotation##xx", reinterpret_cast<float*>(&rot));
+            ImGuiUtils::FwInputFloat3(("Rotation" + tempID).c_str(), reinterpret_cast<float*>(&rot));
             transform->SetRotationE(rot);
 
             XMFLOAT3 scale = transform->GetScale();
-            ImGui::InputFloat3("Scale##xx", reinterpret_cast<float*>(&scale));
+            ImGuiUtils::FwInputFloat3(("Scale" + tempID).c_str(), reinterpret_cast<float*>(&scale));
             transform->SetScale(scale);
 
             const XMFLOAT3 centroid = objects[i]->GetModel()->GetCentroid();
-            ImGui::Text("Centroid: (%f, %f, %f)", centroid.x, centroid.y, centroid.z);
+            ImGui::Text(("Centroid: (%f, %f, %f)" + tempID).c_str(), centroid.x, centroid.y, centroid.z);
 
             ImGui::Spacing();
 
-            ImGui::Text("Vertex Count: %lld", objects[i]->GetModel()->GetVertexCount());
-            ImGui::Text("Index Count: %lld", objects[i]->GetModel()->GetIndexCount());
+            ImGui::Text(("Vertex Count: %lld" + tempID).c_str(), objects[i]->GetModel()->GetVertexCount());
+            ImGui::Text(("Index Count: %lld" + tempID).c_str(), objects[i]->GetModel()->GetIndexCount());
 
             ImGui::Spacing();
-            ImGui::SeparatorText("Material##xx");
+            ImGui::SeparatorText(("Material" + tempID).c_str());
 
             Material* mat = objects[i]->GetMaterial();
             MaterialData* matData = mat->GetData();
 
-            m_sceneDirty |= ImGui::ColorEdit3("Base Color Factor##xx", std::bit_cast<float*>(&matData->BaseColorFactor));
+            m_sceneDirty |= ImGui::ColorEdit3(("Base Color Factor##xx" + tempID).c_str(), std::bit_cast<float*>(&matData->BaseColorFactor));
 
-            m_sceneDirty |= ImGui::InputFloat("Emissive Strength##xx", &matData->EmissiveStrength);
-            m_sceneDirty |= ImGui::InputFloat("Diffuse Probability##xx", &matData->DiffuseProbability);
-            m_sceneDirty |= ImGui::InputFloat("Roughness##xx", &matData->Roughness);
-            m_sceneDirty |= ImGui::InputFloat("Metalness##xx", &matData->Metalness);
-            m_sceneDirty |= ImGui::InputFloat("IoR##xx", &matData->IoR);
+            m_sceneDirty |= ImGuiUtils::FwInputFloat(("Emissive Strength##xx" + tempID).c_str(), &matData->EmissiveStrength);
+            m_sceneDirty |= ImGuiUtils::FwInputFloat(("Diffuse Probability##xx" + tempID).c_str(), &matData->DiffuseProbability);
+            m_sceneDirty |= ImGuiUtils::FwInputFloat(("Roughness##xx" + tempID).c_str(), &matData->Roughness);
+            m_sceneDirty |= ImGuiUtils::FwInputFloat(("Metalness##xx" + tempID).c_str(), &matData->Metalness);
+            m_sceneDirty |= ImGuiUtils::FwInputFloat(("IoR##xx" + tempID).c_str(), &matData->IoR);
 
-            m_sceneDirty |= ImGui::InputInt("Diffuse Tex Idx##xx", &matData->BindlessTexDiffuse);
-            m_sceneDirty |= ImGui::InputInt("Normal Tex Idx##xx", &matData->BindlessTexNormal);
+            m_sceneDirty |= ImGuiUtils::FwInputInt(("Diffuse Tex Idx##xx" + tempID).c_str(), &matData->BindlessTexDiffuse);
+            m_sceneDirty |= ImGuiUtils::FwInputInt(("Normal Tex Idx##xx" + tempID).c_str(), &matData->BindlessTexNormal);
 
             bool isGlass = matData->Flags & PtMaterialFlags::eIsGlass;
-            m_sceneDirty |= ImGui::Checkbox("Is Glass##xx", &isGlass);
+            m_sceneDirty |= ImGui::Checkbox(("Is Glass##xx" + tempID).c_str(), &isGlass);
             matData->Flags = isGlass ? PtMaterialFlags::eIsGlass : PtMaterialFlags::eNone;
 
             ImGui::Unindent(IM_GUI_INDENTATION);

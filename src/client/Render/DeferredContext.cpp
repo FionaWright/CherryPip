@@ -32,7 +32,7 @@ void DeferredContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdL
     samplers[0].ShaderRegister = 0;
 
     m_rootSigGBuffer.SmartInit(device, 1, 1, 0, false, samplers, _countof(samplers));
-    m_rootSigLighting.SmartInit(device, 1, 2, 0, false, samplers, _countof(samplers));
+    m_rootSigLighting.SmartInit(device, 2, 5, 0, false, samplers, _countof(samplers));
 
     {
         D3D12_INPUT_ELEMENT_DESC ildDesc[] =
@@ -79,6 +79,7 @@ void DeferredContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdL
 
     m_matLighting.Init(heap);
     m_matLighting.AddCBV(device, heap, sizeof(CbvDeferredLighting));
+    m_matLighting.AddCBV(device, heap, sizeof(CbvRasterDebug));
 
     m_fullScreenTriangle.InitFullScreenTriangle(device, cmdList);
 
@@ -162,7 +163,7 @@ void DeferredContext::RenderGBuffer(const D3D* d3d, ID3D12GraphicsCommandList* c
     }
 }
 
-void DeferredContext::RenderLighting(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, const XMMATRIX& pMatrix, TextureRTV* output, const XMFLOAT3& dirLightDir)
+void DeferredContext::RenderLighting(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, const XMMATRIX& pMatrix, TextureRTV* output, const XMFLOAT3& dirLightDir, D12Resource* skybox, D12Resource* irradianceMap, D12Resource* brdfIntegrationMap, const RasterDebugMode debugMode)
 {
     GPU_SCOPE(cmdList, "Deferred Lighting Pass");
 
@@ -178,10 +179,32 @@ void DeferredContext::RenderLighting(const D3D* d3d, ID3D12GraphicsCommandList* 
     XMStoreFloat4x4(&cbv.InvP, XMMatrixInverse(nullptr, pMatrix));
     m_matLighting.UpdateCBV(0, &cbv);
 
+    CbvRasterDebug cbvDebug;
+    cbvDebug.Mode = debugMode;
+    m_matLighting.UpdateCBV(1, &cbvDebug);
+
     m_rtvAlbedo.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
     m_rtvNormalsDepth.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
     m_matLighting.SetTex(d3d->GetDevice(), 0, heap, m_rtvAlbedo.GetD12Resource());
     m_matLighting.SetTex(d3d->GetDevice(), 1, heap, m_rtvNormalsDepth.GetD12Resource());
+
+    m_matLighting.SetTex(d3d->GetDevice(), 2, heap, brdfIntegrationMap);
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+    srvDesc.Format = skybox->GetDesc().Format;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.TextureCube.MipLevels = skybox->GetDesc().MipLevels;
+    srvDesc.TextureCube.MostDetailedMip = 0;
+    m_matLighting.SetSRV(d3d->GetDevice(), 3, heap, skybox, srvDesc);
+
+    srvDesc = {};
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+    srvDesc.Format = irradianceMap->GetDesc().Format;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.TextureCube.MipLevels = 1;
+    srvDesc.TextureCube.MostDetailedMip = 0;
+    m_matLighting.SetSRV(d3d->GetDevice(), 4, heap, irradianceMap, srvDesc);
 
     m_matLighting.TransitionSrvsToPS(cmdList);
     m_matLighting.SetDescriptorTables(cmdList);

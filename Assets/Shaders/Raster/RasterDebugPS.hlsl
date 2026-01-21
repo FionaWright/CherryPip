@@ -21,7 +21,8 @@ TextureCube gIrradiance : register(t6);
 
 SamplerState gSampler : register(s0);
 
-ConstantBuffer<CbvRasterDebug> c_rasterDebug : register(b2);
+ConstantBuffer<CbvForwardLighting> c_forward : register(b2);
+ConstantBuffer<CbvRasterDebug> c_rasterDebug : register(b3);
 
 // Missing from Alkali:
 // Thin film interference
@@ -47,7 +48,7 @@ float4 PSMain(VsOut input) : SV_TARGET
     float3 irradianceIblSample = gIrradiance.SampleLevel(gSampler, N_w, 0).rgb;
 
     float3 V = normalize(input.viewDir);
-    float3 L = normalize(-c_rasterDebug.DirLightDir); // Surface to Light Vector
+    float3 L = normalize(-c_forward.DirLightDir); // Surface to Light Vector
     float3 H = normalize(L + V);
 
     float NdL = saturate(dot(N_w, L));
@@ -81,7 +82,7 @@ float4 PSMain(VsOut input) : SV_TARGET
     float3 Lo = pow(combinedBrdf, 1.0f / 2.2f);
 
     float3 R = reflect(-V, N_w);
-    float lod = roughness * (c_rasterDebug.MaxCubemapMipMaps - 1);
+    float lod = roughness * (c_forward.MaxCubemapMipMaps - 1);
     float3 envSample = gEnvMap.SampleLevel(gSampler, R, lod).rgb;
     //envSample = pow(envSample, 2.2f);
 

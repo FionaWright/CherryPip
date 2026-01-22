@@ -12,6 +12,6 @@ else if (c_debug.DebugIdx == DebugBuffer::eMicrofacetSpecProb)
 else if (c_debug.DebugIdx == DebugBuffer::eMicrofacetPdfSpec)
     debug = pdf.xxx;
 else if (c_debug.DebugIdx == DebugBuffer::eMicrofacetHalfVec)
-    debug = H;
+    debug = H_s;
 else
     hasDebugOutput = false;

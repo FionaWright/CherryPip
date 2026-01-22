@@ -3,6 +3,41 @@
 
 #include "Rand01.hlsli"
 
+float3 WorldToShadingSpace(float3 X, float3 T, float3 B, float3 N)
+{
+    return normalize(float3(dot(X, T), dot(X, B), dot(N, T)));
+}
+
+float3 ShadingToWorldSpace(float3 X, float3 T, float3 B, float3 N)
+{
+    return normalize(X.x * T + X.y * B + X.z * N);
+}
+
+float SSpaceCosTheta(float3 X) { return X.z; }
+float SSpaceCos2Theta(float3 X) { return X.z * X.z; }
+float SSpaceSin2Theta(float3 X) { return max(0.0f, 1.0f - SSpaceCos2Theta(X)); }
+float SSpaceSinTheta(float3 X) { return X.z; }
+float SSpaceTanTheta(float3 X) { return SSpaceSinTheta(X) / SSpaceCosTheta(X); }
+float SSpaceTan2Theta(float3 X) { return SSpaceSin2Theta(X) / SSpaceCos2Theta(X); }
+
+float SSpaceCosPhi(float3 X)
+{
+    float sinT = SSpaceSinTheta(X);
+    return sinT == 0 ? 1 : clamp(X.x / sinT, -1, 1);
+}
+float SSpaceSinPhi(float3 X)
+{
+    float sinT = SSpaceSinTheta(X);
+    return sinT == 0 ? 1 : clamp(X.y / sinT, -1, 1);
+}
+float SSpaceCosDeltaPhi(float3 A, float3 B)
+{
+    return clamp((A.x * B.x + A.y * B.y) /
+                 sqrt((A.x * A.x + A.y * A.y) *
+                    (B.x * B.x + B.y * B.y)), -1, 1);
+}
+
+
 float D_GGX(float NdH, float a2)
 {
     float denominator = (NdH * NdH * (a2 - 1.0f) + 1.0f);
@@ -37,12 +72,8 @@ float G_SmithFast(float NdL, float NdV, float roughness)
     return ggxL * ggxV;
 }
 
-float3 SampleGGX_Classic(float3 N, float3 V, float a2, inout uint rngState)
+float3 SampleGGX_Classic(float a2, inout uint rngState)
 {
-    float3 T, B;
-    T = any_perpendicular(N);
-    B = cross(N, T);
-
     float r1 = PcgRand01(rngState);
     float r2 = PcgRand01(rngState);
 
@@ -50,10 +81,8 @@ float3 SampleGGX_Classic(float3 N, float3 V, float a2, inout uint rngState)
     float cosTheta = sqrt((1.0 - r2) / (1.0 + (a2 - 1.0) * r2));
     float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
 
-    float3 Ht = normalize(float3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta));
-
-    float3 H = normalize(Ht.x * T + Ht.y * B + Ht.z * N);
-    return H;
+    float3 L_s = normalize(float3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta));
+    return L_s;
 }
 
 float PdfGGX_Classic(float NdH, float VdH, float a2)

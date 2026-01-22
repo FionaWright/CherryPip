@@ -123,8 +123,14 @@ float4 PSMain(VsOut input) : SV_Target
         return float4(emission, 1);
     case eViewDir:
         return float4(V, 1);
-	case eFresnel:
-		return float4(F, 1);
+    case eHalfVec:
+        return float4(H, 1);
+    case eNDF:
+        return float4(D.xxx, 1);
+    case eFresnel:
+        return float4(F, 1);
+    case eGeometricMasking:
+        return float4(G.xxx, 1);
     case eReflection:
         return float4(envSample, 1);
     case eIrradianceIBL:

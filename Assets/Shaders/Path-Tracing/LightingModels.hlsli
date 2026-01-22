@@ -147,8 +147,8 @@ float3 NormalizeSafe(float3 N, float3 fallback)
 
 // G_Smith is def broken. Check equation. Not sure if G_SmithFast is correct either but maybe
 // Still unsure what specProb should be
-// Fix hot reloading and add debug buffer inside specular for faster debugging
 // Fresnel term doesn't quite match raster either but could be just more physically accurate (different wi)
+// Do wi/wo need to be transformed between world space and "shading space"?
 
 // CHALLENGE: Fix it without GPT or help
 
@@ -174,6 +174,14 @@ void Model_GgxSmithSchlick(
     float specProb = 1.00f; // TODO once specular is fixed
     bool sampleSpecular = PcgRand01(rngState) < specProb;
 
+    float3 T = any_perpendicular(Ns);
+    float3 B = cross(T, Ns);
+
+    // Convert world to shading space
+    // NdX or cos(theta) where theta is the angle between N and X is X.z
+    float3 N_s = float3(0, 0, 1);
+    float3 V_s = WorldToShadingSpace(wo, T, B, Ns);
+
     Lo += throughput * Li; // Wrong?
 
     if (sampleSpecular)
@@ -181,18 +189,20 @@ void Model_GgxSmithSchlick(
         float alpha = roughness * roughness;
         float a2 = alpha * alpha;
 
-        wi = SampleGGX_Classic(Ns, wo, a2, rngState);
-        float3 H = NormalizeSafe(wo + wi, Ns);
+        float3 L_s = SampleGGX_Classic(a2, rngState);
+        wi = ShadingToWorldSpace(L_s, T, B, Ns);
 
-        float NdL = dot(Ns, wi);
-        float NdV = dot(Ns, wo);
-        float NdH = dot(Ns, H);
-        float VdH = dot(H, wo);
+        float3 H_s = normalize(V_s + L_s);
+
+        float NdL = SSpaceCosTheta(L_s);
+        float NdV = SSpaceCosTheta(V_s);
+        float NdH = SSpaceCosTheta(H_s);
+        float VdH = dot(H_s, V_s);
 
         float D = D_GGX(NdH, a2);
         float3 F = F_Schlick(VdH, F0);
-        //float G = G_Smith(NdL, NdV, a2); // Wrong
-        float G = G_SmithFast(NdL, NdV, roughness);
+        float G = G_Smith(NdL, NdV, a2); // Wrong
+        //float G = G_SmithFast(NdL, NdV, roughness);
 
         float pdf = PdfGGX_Classic(NdH, VdH, a2);
         float3 specularBrdf = (D * G * F) / max(0.001f, 4 * NdV * NdL);
@@ -201,12 +211,16 @@ void Model_GgxSmithSchlick(
 #ifdef DEBUG_BUFFER
 #     include "Debug/DebugBuffersMicrofacet.hlsli"
 #endif
+
+        //debug = ShadingToWorldSpace(N_s, T, B, Ns);
+        //hasDebugOutput = true;
     }
     else // The diffuse is correct! Issue is in specular
     {
-        wi = RandHemisphereCosine(rngState, Ns);
+        float3 L_s = RandHemisphereCosine(rngState, N_s);
+        wi = ShadingToWorldSpace(L_s, T, B, Ns);
 
-        float NdL = dot(wi, Ns);
+        float NdL = L_s.z;
 
         float pdf = NdL / PI;
         float3 diffuseBrdf = albedo * (1.0 - metalness);

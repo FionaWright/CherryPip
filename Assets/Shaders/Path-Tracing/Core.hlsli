@@ -14,8 +14,8 @@ struct VsOut
 ConstantBuffer<CbvPathTracing> c_pathTracing : register(b0);
 #ifdef DEBUG_BUFFER
     ConstantBuffer<CbvPathTracingDebug> c_debug : register(b1);
-    #include "Debug/DebugUtils.hlsli"
 	#include "DebugPalette.hlsli"
+    #include "Path-Tracing/MathUtils.hlsli"
 #endif
 RaytracingAccelerationStructure gTLAS : register(t0);
 StructuredBuffer<PtInstanceData> gInstances : register(t1);

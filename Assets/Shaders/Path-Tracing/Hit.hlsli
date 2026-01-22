@@ -48,6 +48,7 @@ void Hit(inout uint rngState,
     Ns = q.CommittedTriangleFrontFace() == 0 ? -Ns : Ns;
 
     float3 albedoSample = gTextures[mat.TexIdxAlbedo].Sample(c_sampler, uv).rgb;
+    // Does albedo sample need gamma correction?
     float3 emissionSample = gTextures[mat.TexIdxEmissive].Sample(c_sampler, uv).rgb;
 
 #if defined(FURNACE_TEST_HEMI_DIR_REFLECT)

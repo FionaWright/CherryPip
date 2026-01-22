@@ -105,7 +105,6 @@ void Shader::InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D1
 
     if (m_pso)
     {
-        m_pso->Release();
         m_pso = nullptr;
     }
 
@@ -138,7 +137,10 @@ void Shader::InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D1
 
 #ifdef _DEBUG
     if (m_assignedToHotReload)
+    {
+        HotReloader::UpdateShaderVsPs(vs, ps, this, ild, rootSig, dsvEnabled, args, numRTVs);
         return;
+    }
     HotReloader::AssignShaderVsPs(vs, ps, this, ild, rootSig, dsvEnabled, args, numRTVs);
     m_assignedToHotReload = true;
 #endif
@@ -162,7 +164,10 @@ void Shader::InitCs(const LPCWSTR cs, ID3D12Device* device, ID3D12RootSignature*
 
 #ifdef _DEBUG
     if (m_assignedToHotReload)
+    {
+        HotReloader::UpdateShaderCs(cs, this, rootSig);
         return;
+    }
     HotReloader::AssignShaderCs(cs, this, rootSig);
     m_assignedToHotReload = true;
 #endif

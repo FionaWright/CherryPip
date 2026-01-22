@@ -13,7 +13,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
     float3 throughput = float3(1, 1, 1);
 
 #ifdef DEBUG_BUFFER
-#include "Debug/DebugBuffersPreTrace.hlsli"
+#    include "Debug/DebugBuffersPreTrace.hlsli"
 #endif
 
     for (uint i = 0; i <= c_pathTracing.NumBounces; i++)
@@ -24,7 +24,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         if (q.CommittedStatus() != COMMITTED_TRIANGLE_HIT)
         {
 #ifdef DEBUG_BUFFER
-#include "Debug/DebugBuffersOnMiss.hlsli"
+#    include "Debug/DebugBuffersOnMiss.hlsli"
 #endif
             float3 Li = Miss(ray.Origin, ray.Direction, i);
             Lo += throughput * Li;
@@ -58,7 +58,21 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             Model_Glossy(rngState, Lo, throughput, mat.DiffuseProbability, roughness, Ns, Li, albedo, wo, ray.Direction);
 #elif defined(LIGHTING_GGX_SMITH_MICROFACET)
         //if (dot(Ns, wo) <= 0) break;
-        Model_GgxSmithSchlick(rngState, Lo, throughput, roughness, metalness, Ns, Li, albedo, wo, ray.Direction);
+        float3 debug; bool hasDebugOutput;
+        Model_GgxSmithSchlick(rngState,
+            Lo, throughput, roughness,
+            metalness, Ns, Li, albedo,
+            wo, ray.Direction
+#    ifdef DEBUG_BUFFER
+            , debug
+            , hasDebugOutput
+#    endif
+        );
+
+#    ifdef DEBUG_BUFFER
+        if (hasDebugOutput)
+            return debug;
+#    endif
         //if (dot(Ns, ray.Direction) <= 0) break;
 #endif
 
@@ -78,12 +92,12 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         ray.Origin = hitPos + Ng * EPSILON * sign(dot(Ng, ray.Direction));
 
 #ifdef DEBUG_BUFFER
-#include "Debug/DebugBuffersOnHit.hlsli"
+#    include "Debug/DebugBuffersOnHit.hlsli"
 #endif
     }
 
 #ifdef DEBUG_BUFFER
-#include "Debug/DebugBuffersPostTrace.hlsli"
+#    include "Debug/DebugBuffersPostTrace.hlsli"
 #endif
 
     return Lo;

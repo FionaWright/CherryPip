@@ -343,6 +343,15 @@ ComPtr<ID3D12GraphicsCommandList> D3D::GetAvailableCmdList(const D3D12_COMMAND_L
     return cmdList;
 }
 
+void D3D::DestroyAllCmdListsAndAllocators()
+{
+    std::queue<CommandAllocatorEntry> emptyAlloc;
+    std::swap( m_commandAllocatorQueue, emptyAlloc );
+
+    std::queue<ComPtr<ID3D12GraphicsCommandList>> emptyList;
+    std::swap( m_commandListQueue, emptyList );
+}
+
 void D3D::ExecuteCommandList(ID3D12GraphicsCommandList* cmdList)
 {
     ID3D12CommandAllocator* commandAllocator;

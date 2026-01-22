@@ -121,6 +121,15 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
         "NaN",
         "Roughness",
         "Metalness",
+        "Microfacet: Specular Probability",
+        "Microfacet: D",
+        "Microfacet: F",
+        "Microfacet: G",
+        "Microfacet: BRDF Diffuse",
+        "Microfacet: BRDF Specular",
+        "Microfacet: PDF Diffuse",
+        "Microfacet: PDF Specular",
+        "Microfacet: Half Vector",
     };
 
     static int e = m_studioConfig.PT.Mode;

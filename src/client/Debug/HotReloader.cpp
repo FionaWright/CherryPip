@@ -61,6 +61,67 @@ void HotReloader::AssignShaderCs(const std::wstring& cs, Shader* shader,
     s_shadersCs.emplace_back(info);
 }
 
+void HotReloader::UpdateShaderVsPs(const std::wstring& vs, const std::wstring& ps, Shader* shader,
+                                   const D3D12_INPUT_LAYOUT_DESC& ild, ID3D12RootSignature* rootSig, bool dsvEnabled,
+                                   const std::vector<const WCHAR*>& args, uint32_t numRTVs)
+{
+    const std::wstring vsPath = FileHelper::GetAssetShaderFullPath(vs.c_str());
+    const std::wstring psPath = FileHelper::GetAssetShaderFullPath(ps.c_str());
+
+    if (!std::filesystem::exists(vsPath) || !std::filesystem::exists(psPath))
+        throw std::exception("Path Invalid");
+
+    int idx = -1;
+    for (int i = 0; i < s_shadersVsPs.size(); i++)
+    {
+        if (s_shadersVsPs[i].ShaderPtr == shader)
+        {
+            idx = i;
+            break;
+        }
+    }
+    if (idx == -1)
+        throw std::exception("Shader not found");
+
+    std::vector<D3D12_INPUT_ELEMENT_DESC> ildElements;
+    for (int i = 0; i < ild.NumElements; i++)
+        ildElements.emplace_back(ild.pInputElementDescs[i]);
+
+    const std::time_t timeStampVS = getTimestamp(vsPath);
+    const std::time_t timeStampPS = getTimestamp(psPath);
+
+    const HotInfoVsPs info = {
+        vs, vsPath, ps, psPath, shader, ildElements, rootSig, dsvEnabled, args, numRTVs, timeStampVS, timeStampPS
+    };
+    s_shadersVsPs[idx] = info;
+}
+
+void HotReloader::UpdateShaderCs(const std::wstring& cs, Shader* shader,
+                                 ID3D12RootSignature* rootSig)
+{
+    const std::wstring csPath = FileHelper::GetAssetShaderFullPath(cs.c_str());
+
+    if (!std::filesystem::exists(csPath))
+        throw std::exception("Path Invalid");
+
+    int idx = -1;
+    for (int i = 0; i < s_shadersCs.size(); i++)
+    {
+        if (s_shadersCs[i].ShaderPtr == shader)
+        {
+            idx = i;
+            break;
+        }
+    }
+    if (idx == -1)
+        throw std::exception("Shader not found");
+
+    const std::time_t timeStampCS = getTimestamp(csPath);
+
+    const HotInfoCs info = {cs, csPath, shader, rootSig, timeStampCS};
+    s_shadersCs[idx] = info;
+}
+
 void HotReloader::CheckFiles(D3D* d3d)
 {
 #ifndef _DEBUG
@@ -89,7 +150,7 @@ void HotReloader::CheckFiles(D3D* d3d)
         std::cout << "Hot reloading shader" << std::endl;
 
         d3d->Flush();
-        Sleep(100);
+        d3d->DestroyAllCmdListsAndAllocators();
 
         assert(s_shadersVsPs[i].ShaderPtr);
 
@@ -122,6 +183,7 @@ void HotReloader::CheckFiles(D3D* d3d)
         std::cout << "Hot reloading shader" << std::endl;
 
         d3d->Flush();
+        d3d->DestroyAllCmdListsAndAllocators();
 
         s_shadersCs[i].ShaderPtr->InitCs(s_shadersCs[i].CS.c_str(), d3d->GetDevice(), s_shadersCs[i].RootSig);
         s_shadersCs[i].TimeStampCS = timeStampCS;

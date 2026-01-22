@@ -35,6 +35,8 @@ void SceneStudio::OnInit(D3D* d3d)
     m_studioConfig.Backend = d3d->GetRayTracingSupported() ? RenderBackend::ePathTracer : RenderBackend::eForward;
     Config::SetUIntFromArg(reinterpret_cast<uint32_t*>(&m_studioConfig.Backend), "--backend");
 
+    m_shader = std::make_shared<Shader>();
+
     loadAssets(d3d);
 }
 
@@ -658,6 +660,5 @@ void SceneStudio::compilePtShader(const D3D* d3d)
     };
     const D3D12_INPUT_LAYOUT_DESC ild = {m_shaderILD.data(), static_cast<UINT>(m_shaderILD.size())};
 
-    m_shader = std::make_shared<Shader>();
     m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", shaderPath, ild, d3d->GetDevice(), rootSig, false, args);
 }

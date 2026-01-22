@@ -35,6 +35,9 @@
 - [x] Glass model
 - [ ] Importance Sampling
 - [ ] MIS
+- [ ] Oren-Nayers Lighting Model
+- [ ] Microfacet Beckmann (PBRT)
+- [ ] Microfacet Trowbridge-Reitz (PBRT)
 - [ ] Ray pipelines
 - [ ] Spectral Path-Tracing 
 - [ ] Rayleigh scattering
@@ -67,7 +70,6 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 - Camera movement gets messed up sometimes
 - Env map rotations not paritied between EA/pano
-- Hot reloading broke again...
 - Fix emissives not working in both Cornell and Lantern at the same time (Lantern = Strength=1,Factor=(1,1,1),Tex=Masking. Cornell = Strength=15,Factor=(1,1,1),Tex=(0,0,0)). Set default WhitePOT?
 
 - FPS has heavily dropped since I was away, possibly due to all the extra shaders/etc. Make sure they can be deleted properly when not in use

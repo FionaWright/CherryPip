@@ -184,27 +184,42 @@ void Model_GgxSmithSchlick(
 
     Lo += throughput * Li; // Wrong?
 
+#define MICROFACET_MODEL_BECKMANN
+
     if (sampleSpecular)
     {
-        float alpha = roughness * roughness;
+#if defined(MICROFACET_MODEL_GGX)
+        float alpha = RoughnessToAlpha_GGX(roughness);
         float a2 = alpha * alpha;
-
         float3 L_s = SampleGGX_Classic(a2, rngState);
+#elif defined(MICROFACET_MODEL_BECKMANN)
+        float alpha = RoughnessToAlpha_Beckmann(roughness);
+        float a2 = alpha * alpha;
+        float3 L_s = SampleGGX_Classic(a2, rngState);
+#endif
+
         wi = ShadingToWorldSpace(L_s, T, B, Ns);
 
-        float3 H_s = normalize(V_s + L_s);
+        float3 H_s = NormalizeSafe(V_s + L_s, N_s);
 
         float NdL = SSpaceCosTheta(L_s);
         float NdV = SSpaceCosTheta(V_s);
         float NdH = SSpaceCosTheta(H_s);
         float VdH = dot(H_s, V_s);
 
+#if defined(MICROFACET_MODEL_GGX)
         float D = D_GGX(NdH, a2);
         float3 F = F_Schlick(VdH, F0);
-        float G = G_Smith(NdL, NdV, a2); // Wrong
-        //float G = G_SmithFast(NdL, NdV, roughness);
-
+        float G = G_SmithGGX(NdL, NdV, a2);
         float pdf = PdfGGX_Classic(NdH, VdH, a2);
+#elif defined(MICROFACET_MODEL_BECKMANN)
+        float D = D_Beckmann(H_s, a2);
+        float3 F = F_Schlick(VdH, F0);
+        float G = G_Beckmann(V_s, L_s, alpha);
+        float pdf = Pdf_General(D, V_s, H_s, alpha, true);
+#endif
+
+        // Torrence-Sparrow BRDF
         float3 specularBrdf = (D * G * F) / max(0.001f, 4 * NdV * NdL);
         throughput *= specularBrdf * NdL / max(0.001f, pdf) / max(0.001f, specProb);
 

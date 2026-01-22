@@ -1,3 +1,6 @@
+#ifndef H_MATH_UTILS_H
+#define H_MATH_UTILS_H
+
 // https://sakibsaikia.github.io/graphics/2022/01/04/Nan-Checks-In-HLSL.html
 bool IsNaN(float x)
 {
@@ -8,3 +11,5 @@ bool IsNaN(float3 x)
 {
     return IsNaN(x.x) || IsNaN(x.y) || IsNaN(x.z);
 }
+
+#endif

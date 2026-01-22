@@ -2,6 +2,13 @@
 #define H_MICROFACET_H
 
 #include "Rand01.hlsli"
+#include "Path-Tracing/MathUtils.hlsli"
+
+// https://www.pbr-book.org/3ed-2018/Reflection_Models/Microfacet_Models
+
+// ================================
+//  Shading Space Math Utils
+// ================================
 
 float3 WorldToShadingSpace(float3 X, float3 T, float3 B, float3 N)
 {
@@ -30,6 +37,9 @@ float SSpaceSinPhi(float3 X)
     float sinT = SSpaceSinTheta(X);
     return sinT == 0 ? 1 : clamp(X.y / sinT, -1, 1);
 }
+float SSpaceCos2Phi(float3 X) { return SSpaceCosPhi(X) * SSpaceCosPhi(X); }
+float SSpaceSin2Phi(float3 X) { return SSpaceSinPhi(X) * SSpaceSinPhi(X); }
+
 float SSpaceCosDeltaPhi(float3 A, float3 B)
 {
     return clamp((A.x * B.x + A.y * B.y) /
@@ -37,6 +47,26 @@ float SSpaceCosDeltaPhi(float3 A, float3 B)
                     (B.x * B.x + B.y * B.y)), -1, 1);
 }
 
+// ================================
+//  Roughness To Alpha
+// ================================
+
+float RoughnessToAlpha_GGX(float roughness)
+{
+    return roughness * roughness;
+}
+
+float RoughnessToAlpha_Beckmann(float roughness)
+{
+    roughness = max(1e-3f, roughness);
+    float x = log(roughness);
+    return 1.62142f + 0.819955f * x + 0.1734f * x * x +
+           0.0171201f * x * x * x + 0.000640711f * x * x * x * x;
+}
+
+// ================================
+//  Normal Distribution Functions
+// ================================
 
 float D_GGX(float NdH, float a2)
 {
@@ -44,20 +74,60 @@ float D_GGX(float NdH, float a2)
     return a2 / max(0.001f, PI * denominator * denominator);
 }
 
+float D_Beckmann(float3 H, float a2)
+{
+    float tan2T = SSpaceTan2Theta(H);
+    if (IsNaN(1/tan2T)) return 0; // Is infinite
+
+    float cos4T = SSpaceCos2Theta(H) * SSpaceCos2Theta(H);
+    float k3 = PI * a2 * cos4T;
+    return exp(-tan2T / a2) / k3;
+}
+
+float D_BeckmannAniso(float3 H, float alphaX, float alphaY)
+{
+    float tan2T = SSpaceTan2Theta(H);
+    if (IsNaN(1/tan2T)) return 0; // Is infinite
+
+    float cos4T = SSpaceCos2Theta(H) * SSpaceCos2Theta(H);
+    float k1 = SSpaceCos2Phi(H) / (alphaX * alphaX);
+    float k2 = SSpaceSin2Phi(H) / (alphaY * alphaY);
+    float k3 = PI * alphaX * alphaY * cos4T;
+    return exp(-tan2T * (k1 + k2)) / k3;
+}
+
+// ================================
+//  Fresnel Functions
+// ================================
+
 float3 F_Schlick(float VdH, float3 F0)
 {
     return F0 + (1.0f - F0) * pow(1.0f - VdH, 5);
 }
 
-float G_GGX(float NdX, float a2)
+// ================================
+//  Geometry Masking Functions
+// ================================
+
+// Used for anisotropic microfacet models
+// Compute alpha from alphaX and alphaY and use it in below functions
+float AnisoAlphaXyToMaskingAlpha(float3 dirOfInterest, float alphaX, float alphaY)
 {
-    float denom = NdX + sqrt(a2 + (1-a2) * NdX * NdX);
-    return 2 * NdX / max(0.001f, denom);
+    float k1 = SSpaceCos2Phi(dirOfInterest) * alphaX * alphaX;
+    float k2 = SSpaceSin2Phi(dirOfInterest) * alphaY * alphaY;
+    return sqrt(k1 + k2);
 }
 
-float G_Smith(float NdL, float NdV, float a2)
+// Incorrect?
+float G1_GGX(float NdX, float a2)
 {
-    return G_GGX(NdL, a2) * G_GGX(NdV, a2);
+    float denom = NdX + sqrt(a2 + (1-a2) * NdX * NdX);
+    return saturate(2 * NdX / max(0.001f, denom));
+}
+
+float G_SmithGGX(float NdL, float NdV, float a2)
+{
+    return G1_GGX(NdL, a2) * G1_GGX(NdV, a2);
 }
 
 // Schlick-GGX Approximation. Faster but less accurate
@@ -72,6 +142,51 @@ float G_SmithFast(float NdL, float NdV, float roughness)
     return ggxL * ggxV;
 }
 
+float Lambda_Beckmann(float3 W, float alpha)
+{
+    float absTanT = abs(SSpaceTanTheta(W));
+    if (IsNaN(1/absTanT)) return 0; // Is infinite
+
+    float a = 1 / (alpha * absTanT);
+    if (a >= 1.6f) return 0;
+
+    return (1 - 1.259f * a + 0.396f * a * a) /
+           (3.535f * a + 2.181f * a * a);
+}
+
+float G1_Beckmann(float3 W, float alpha)
+{
+    return 1.0f / (1.0f + Lambda_Beckmann(W, alpha));
+}
+
+float G_Beckmann(float3 V, float3 L, float alpha)
+{
+    return 1.0f / (1.0f + Lambda_Beckmann(V, alpha) + Lambda_Beckmann(L, alpha));
+}
+
+float Lambda_TrowbridgeReitz(float3 W, float alpha)
+{
+    float absTanT = abs(SSpaceTanTheta(W));
+    if (IsNaN(1/absTanT)) return 0; // Is infinite
+
+    float alpha2Tan2T = (alpha * absTanT) * (alpha * absTanT);
+    return (-1 + sqrt(1.f + alpha2Tan2T)) / 2.0f;
+}
+
+float G1_TrowbridgeReitz(float3 W, float alpha)
+{
+    return 1.0f / (1.0f + Lambda_TrowbridgeReitz(W, alpha));
+}
+
+float G_TrowbridgeReitz(float3 V, float3 L, float alpha)
+{
+    return 1.0f / (1.0f + Lambda_TrowbridgeReitz(V, alpha) + Lambda_TrowbridgeReitz(L, alpha));
+}
+
+// ================================
+//  Direction Sampling Functions
+// ================================
+
 float3 SampleGGX_Classic(float a2, inout uint rngState)
 {
     float r1 = PcgRand01(rngState);
@@ -85,17 +200,24 @@ float3 SampleGGX_Classic(float a2, inout uint rngState)
     return L_s;
 }
 
+// ================================
+//  Probability Density Functions
+// ================================
+
 float PdfGGX_Classic(float NdH, float VdH, float a2)
 {
     float D = D_GGX(NdH, a2);
     return D * NdH / (4.0f * max(0.001f, VdH));
 }
 
-float PdfGGX_VNDF(float NdH, float VdH, float NdV, float a2)
+// Used for beckmann and trowbridge at least
+float Pdf_General(float D, float3 V, float3 H, float alpha, bool sampleVisibleArea)
 {
-    float D = D_GGX(NdH, a2);
-    float G = G_GGX(NdV, a2);
-    return G * D * VdH / max(0.001f, NdV);
+    float a2 = alpha * alpha;
+    if (!sampleVisibleArea)
+        return D * abs(SSpaceCosTheta(H));
+
+    return D * G1_Beckmann(V, alpha) * abs(dot(V, H)) / abs(SSpaceCosTheta(V));
 }
 
 #endif

@@ -29,6 +29,7 @@ public:
 
     ComPtr<ID3D12CommandAllocator> CreateAllocator(D3D12_COMMAND_LIST_TYPE type) const;
     ComPtr<ID3D12GraphicsCommandList> GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE type);
+    void DestroyAllCmdListsAndAllocators();
     void ExecuteCommandList(ID3D12GraphicsCommandList* cmdList);
     void Present();
     void Flush();

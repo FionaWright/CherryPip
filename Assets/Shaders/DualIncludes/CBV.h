@@ -101,10 +101,15 @@ enum class DebugBuffer
     eNaN,
     eRoughness,
     eMetalness,
-
-    // Unimplemented for now:
-    eDirectLighting,
-    eIndirectLighting,
+    eMicrofacetSpecProb,
+    eMicrofacetD,
+    eMicrofacetF,
+    eMicrofacetG,
+    eMicrofacetBrdfDiff,
+    eMicrofacetBrdfSpec,
+    eMicrofacetPdfDiff,
+    eMicrofacetPdfSpec,
+    eMicrofacetHalfVec,
 };
 
 struct CbvPathTracingDebug

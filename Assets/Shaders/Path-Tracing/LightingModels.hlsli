@@ -162,7 +162,12 @@ void Model_GgxSmithSchlick(
     float3 Li,
     float3 albedo,
     float3 wo,        // V
-    out float3 wi)    // L
+    out float3 wi     // L
+#ifdef DEBUG_BUFFER
+    , out float3 debug
+    , out bool hasDebugOutput
+#endif
+)
 {
     float3 F0 = lerp(float3(0.04, 0.04, 0.04), albedo, metalness);
 
@@ -186,14 +191,16 @@ void Model_GgxSmithSchlick(
 
         float D = D_GGX(NdH, a2);
         float3 F = F_Schlick(VdH, F0);
-        float G = G_Smith(NdL, NdV, a2); // Wrong
-        //float G = G_SmithFast(NdL, NdV, roughness);
+        //float G = G_Smith(NdL, NdV, a2); // Wrong
+        float G = G_SmithFast(NdL, NdV, roughness);
 
         float pdf = PdfGGX_Classic(NdH, VdH, a2);
         float3 specularBrdf = (D * G * F) / max(0.001f, 4 * NdV * NdL);
         throughput *= specularBrdf * NdL / max(0.001f, pdf) / max(0.001f, specProb);
 
-        //wi = float3(F);
+#ifdef DEBUG_BUFFER
+#     include "Debug/DebugBuffersMicrofacet.hlsli"
+#endif
     }
     else // The diffuse is correct! Issue is in specular
     {

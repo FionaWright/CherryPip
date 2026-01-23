@@ -19,7 +19,6 @@ void DeferredContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdL
     m_rtvNormalsDepth.Init(L"Normals GBuffer", device, heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
     m_rtvRoughMet.Init(L"Roughness Metallic GBuffer", device, heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
     m_rtvEmissive.Init(L"Emissive GBuffer", device, heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
-    m_rtvScratch.Init(L"Deferred Scratch Buffer", device, heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
 
     m_rtvHandles = {
         m_rtvAlbedo.GetCpuHandle(),
@@ -40,7 +39,7 @@ void DeferredContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdL
     samplers[0].MaxLOD = D3D12_FLOAT32_MAX;
 
     m_rootSigGBuffer.SmartInit(device, 1, 4, 0, false, samplers, _countof(samplers));
-    m_rootSigLighting.SmartInit(device, 2, 7, 0, false, samplers, _countof(samplers));
+    m_rootSigLighting.SmartInit(device, 2, 6, 0, false, samplers, _countof(samplers));
 
     {
         D3D12_INPUT_ELEMENT_DESC ildDesc[] =
@@ -177,10 +176,6 @@ void DeferredContext::RenderLighting(const D3D* d3d, ID3D12GraphicsCommandList* 
 {
     GPU_SCOPE(cmdList, "Deferred Lighting Pass");
 
-    // Blur emissive to get bloom
-    TextureRTV* bloomOutRtv = nullptr;
-    bloomOutRtv = denoisingManager->DenoiseGauss(d3d->GetDevice(), cmdList, heap, &m_rtvEmissive, &m_rtvScratch, 7);
-
     output->GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
     const auto handle = output->GetCpuHandle();
     cmdList->OMSetRenderTargets(1, &handle, FALSE, nullptr);
@@ -219,8 +214,6 @@ void DeferredContext::RenderLighting(const D3D* d3d, ID3D12GraphicsCommandList* 
     srvDesc.TextureCube.MipLevels = 1;
     srvDesc.TextureCube.MostDetailedMip = 0;
     m_matLighting.SetSRV(d3d->GetDevice(), 5, heap, irradianceMap, srvDesc);
-
-    m_matLighting.SetTex(d3d->GetDevice(), 6, heap, bloomOutRtv->GetD12Resource());
 
     m_matLighting.TransitionSrvsToPS(cmdList);
     m_matLighting.SetDescriptorTables(cmdList);

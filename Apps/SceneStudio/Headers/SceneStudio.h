@@ -26,6 +26,7 @@ class BLAS;
 struct RasterConfig
 {
     RasterDebugMode Mode = eMicrofacetLoWithIndirect;
+    bool BloomEnabled = true;
 };
 
 enum RenderBackend : uint32_t

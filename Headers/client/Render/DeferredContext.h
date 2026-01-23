@@ -35,7 +35,7 @@ public:
     D12Resource* GetNormalsDepth() { return m_rtvNormalsDepth.GetD12Resource(); }
 
 private:
-    TextureRTV m_rtvAlbedo, m_rtvNormalsDepth, m_rtvRoughMet;
+    TextureRTV m_rtvAlbedo, m_rtvNormalsDepth, m_rtvRoughMetEmissive;
     std::vector<CD3DX12_CPU_DESCRIPTOR_HANDLE> m_rtvHandles;
     Scene* m_scene = nullptr;
     bool m_initialized = false;

@@ -79,6 +79,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Mip maps aren't currently working. Need alternate solution for BC7 textures
 - Fix bistro
 - Stop irradiance cubemap making mip maps
+- Bloom why not lol (Deferred first is easier)
 
 ## Spectral Tracing
 

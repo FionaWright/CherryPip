@@ -16,12 +16,12 @@ void DeferredContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdL
     // Could improve precision here for increased bandwidth
     m_rtvAlbedo.Init(L"Albedo GBuffer", device, heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
     m_rtvNormalsDepth.Init(L"Normals GBuffer", device, heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
-    m_rtvRoughMet.Init(L"Roughness Metallic Buffer", device, heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
+    m_rtvRoughMetEmissive.Init(L"Roughness Metallic Emissive Buffer", device, heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
 
     m_rtvHandles = {
         m_rtvAlbedo.GetCpuHandle(),
         m_rtvNormalsDepth.GetCpuHandle(),
-        m_rtvRoughMet.GetCpuHandle(),
+        m_rtvRoughMetEmissive.GetCpuHandle(),
     };
 
     D3D12_STATIC_SAMPLER_DESC samplers[1];
@@ -35,7 +35,7 @@ void DeferredContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdL
     samplers[0].MinLOD = 0;
     samplers[0].MaxLOD = D3D12_FLOAT32_MAX;
 
-    m_rootSigGBuffer.SmartInit(device, 1, 3, 0, false, samplers, _countof(samplers));
+    m_rootSigGBuffer.SmartInit(device, 1, 4, 0, false, samplers, _countof(samplers));
     m_rootSigLighting.SmartInit(device, 2, 6, 0, false, samplers, _countof(samplers));
 
     {
@@ -103,7 +103,7 @@ void DeferredContext::RenderGBuffer(const D3D* d3d, ID3D12GraphicsCommandList* c
 
     m_rtvAlbedo.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
     m_rtvNormalsDepth.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    m_rtvRoughMet.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    m_rtvRoughMetEmissive.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     // Set RTVs
     {
@@ -191,7 +191,7 @@ void DeferredContext::RenderLighting(const D3D* d3d, ID3D12GraphicsCommandList* 
 
     m_matLighting.SetTex(d3d->GetDevice(), 0, heap, m_rtvAlbedo.GetD12Resource());
     m_matLighting.SetTex(d3d->GetDevice(), 1, heap, m_rtvNormalsDepth.GetD12Resource());
-    m_matLighting.SetTex(d3d->GetDevice(), 2, heap, m_rtvRoughMet.GetD12Resource());
+    m_matLighting.SetTex(d3d->GetDevice(), 2, heap, m_rtvRoughMetEmissive.GetD12Resource());
 
     m_matLighting.SetTex(d3d->GetDevice(), 3, heap, brdfIntegrationMap);
 

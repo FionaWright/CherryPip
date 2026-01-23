@@ -111,7 +111,7 @@ void Skybox::UpdateCubemap(ID3D12Device* device, D12Resource* cubemap)
 
         m_matGenIrr.Init(m_pHeap);
         m_matGenIrr.AddUAV(device, m_pHeap, m_texIrradianceIBL.GetD12Resource()->GetResource(), uavDesc);
-        m_matGenIrr.SetSRV(device, 0, m_pHeap, cubemap, srvDesc);
+        m_matGenIrr.SetTex(device, 0, m_pHeap, cubemap);
     }
 }
 

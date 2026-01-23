@@ -34,7 +34,7 @@ void DenoisingManager::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmd
 
     // TODO: Don't initialize unused filters
     initBox(device, heap, pp1);
-    initGauss(device, heap, pp1, pp2);
+    initGauss(device, heap);
     initMedian(device, heap, pp1, pp2);
     initATrous(device, heap, pp1, pp2, normalsDepth);
 
@@ -52,7 +52,7 @@ void DenoisingManager::initBox(ID3D12Device* device, Heap* heap, D12Resource* te
     m_matBox.SetTex(device, 0, heap, tex);
 }
 
-void DenoisingManager::initGauss(ID3D12Device* device, Heap* heap, D12Resource* pp1, D12Resource* pp2)
+void DenoisingManager::initGauss(ID3D12Device* device, Heap* heap)
 {
     m_rootSigGauss.SmartInit(device, 1, 1, 0, false, &m_sampler, 1);
 
@@ -63,11 +63,9 @@ void DenoisingManager::initGauss(ID3D12Device* device, Heap* heap, D12Resource* 
 
     m_matGaussH.Init(heap);
     m_matGaussH.AddCBV(device, heap, sizeof(CbvFilterBoxAndGauss));
-    m_matGaussH.SetTex(device, 0, heap, pp1);
 
     m_matGaussV.Init(heap);
     m_matGaussV.AddCBV(device, heap, sizeof(CbvFilterBoxAndGauss));
-    m_matGaussV.SetTex(device, 0, heap, pp2);
 }
 
 void DenoisingManager::initMedian(ID3D12Device* device, Heap* heap, D12Resource* pp1, D12Resource* pp2)
@@ -115,7 +113,7 @@ TextureRTV* DenoisingManager::DenoiseBox(ID3D12GraphicsCommandList* cmdList, Tex
     CbvFilterBoxAndGauss cbv = {};
     cbv.TexelSize.x = 1.0f / static_cast<float>(pp1->GetD12Resource()->GetDesc().Width);
     cbv.TexelSize.y = 1.0f / static_cast<float>(pp1->GetD12Resource()->GetDesc().Height);
-    cbv.Radius = radius;
+    cbv.Radius = static_cast<int>(radius);
     m_matBox.UpdateCBV(0, &cbv);
 
     m_matBox.TransitionSrvsToPS(cmdList);
@@ -129,17 +127,20 @@ TextureRTV* DenoisingManager::DenoiseBox(ID3D12GraphicsCommandList* cmdList, Tex
     return pp2;
 }
 
-TextureRTV* DenoisingManager::DenoiseGauss(ID3D12GraphicsCommandList* cmdList, TextureRTV* pp1, TextureRTV* pp2,
-                                           const uint32_t radius) const
+TextureRTV* DenoisingManager::DenoiseGauss(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap* heap, TextureRTV* pp1, TextureRTV* pp2,
+                                           const uint32_t radius)
 {
     GPU_SCOPE(cmdList, "Denoising (Gaussian)");
 
     cmdList->SetGraphicsRootSignature(m_rootSigGauss.Get());
 
+    m_matGaussH.SetTex(device, 0, heap, pp1->GetD12Resource());
+    m_matGaussV.SetTex(device, 0, heap, pp2->GetD12Resource());
+
     CbvFilterBoxAndGauss cbv = {};
     cbv.TexelSize.x = 1.0f / static_cast<float>(pp1->GetD12Resource()->GetDesc().Width);
     cbv.TexelSize.y = 1.0f / static_cast<float>(pp1->GetD12Resource()->GetDesc().Height);
-    cbv.Radius = radius;
+    cbv.Radius = static_cast<int>(radius);
     m_matGaussH.UpdateCBV(0, &cbv);
     m_matGaussV.UpdateCBV(0, &cbv);
 

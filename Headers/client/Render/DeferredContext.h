@@ -12,6 +12,7 @@
 #include "HWI/Shader.h"
 
 
+class DenoisingManager;
 class Skybox;
 
 class DeferredContext
@@ -28,14 +29,14 @@ public:
     void RenderLighting(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, const XMMATRIX& pMatrix,
                         TextureRTV* output, const XMFLOAT3& dirLightDir, D12Resource* skybox,
                         D12Resource* irradianceMap, D12Resource* brdfIntegrationMap,
-                        RasterDebugMode debugMode);
+                        RasterDebugMode debugMode, DenoisingManager* denoisingManager);
 
     D12Resource* GetAlbedo() { return m_rtvAlbedo.GetD12Resource(); }
 
     D12Resource* GetNormalsDepth() { return m_rtvNormalsDepth.GetD12Resource(); }
 
 private:
-    TextureRTV m_rtvAlbedo, m_rtvNormalsDepth, m_rtvRoughMetEmissive;
+    TextureRTV m_rtvAlbedo, m_rtvNormalsDepth, m_rtvRoughMet, m_rtvEmissive, m_rtvScratch;
     std::vector<CD3DX12_CPU_DESCRIPTOR_HANDLE> m_rtvHandles;
     Scene* m_scene = nullptr;
     bool m_initialized = false;

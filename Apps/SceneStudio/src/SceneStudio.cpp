@@ -462,7 +462,7 @@ void SceneStudio::denoisingPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
                                                   m_studioConfig.Denoising.BoxRadius);
         break;
     case eGaussian:
-        outputRTV = m_denoisingManager.DenoiseGauss(cmdList, &m_rtvPingPong1, &m_rtvPingPong2,
+        outputRTV = m_denoisingManager.DenoiseGauss(d3d->GetDevice(), cmdList, &m_heap, &m_rtvPingPong1, &m_rtvPingPong2,
                                                     m_studioConfig.Denoising.BoxRadius);
         break;
     case eMedian:
@@ -603,10 +603,15 @@ void SceneStudio::renderDeferred(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 
     // Lighting Pass
     {
+        if (!m_denoisingManager.IsInitialized())
+            m_denoisingManager.Init(d3d->GetDevice(), cmdList, &m_heap, m_rtvPingPong1.GetD12Resource(),
+                                    m_rtvPingPong2.GetD12Resource(),
+                                    m_deferredContext.GetNormalsDepth());
+
         m_deferredContext.RenderLighting(d3d, cmdList, &m_heap, m_projMatrix, &m_rtvPingPong1,
                                          m_studioConfig.DirLightDirection, m_envMap.GetCubemap(),
                                          m_skybox.GetIrradianceMap(), m_texBrdfIntegrationMap.GetD12Resource(),
-                                         m_studioConfig.Raster.Mode);
+                                         m_studioConfig.Raster.Mode, &m_denoisingManager);
     }
 
     copyRtvTex(cmdList, d3d->GetRtv(), m_rtvPingPong1.GetD12Resource());

@@ -26,23 +26,22 @@ enum DenoisingType : uint32_t
 class DenoisingManager
 {
 public:
-    void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap* heap, D12Resource* pp1, D12Resource* pp2,
-              D12Resource* normalsDepth);
+    void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap* heap);
     [[nodiscard]] bool IsInitialized() const { return m_initialized; }
 
-    TextureRTV* DenoiseBox(ID3D12GraphicsCommandList* cmdList, TextureRTV* pp1, TextureRTV* pp2, uint32_t radius) const;
+    TextureRTV* DenoiseBox(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap* heap, TextureRTV* pp1, TextureRTV* pp2, uint32_t radius);
     TextureRTV* DenoiseGauss(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap* heap, TextureRTV* pp1, TextureRTV* pp2,
                              uint32_t radius);
-    TextureRTV* DenoiseMedian(ID3D12GraphicsCommandList* cmdList, TextureRTV* pp1, TextureRTV* pp2) const;
-    TextureRTV* DenoiseATrous(ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vMatrix, const XMMATRIX& pMatrix,
-                              TextureRTV* pp1, TextureRTV* pp2, uint32_t iterations,
-                              float phiC, float phiN, float phiP) const;
+    TextureRTV* DenoiseMedian(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap* heap, TextureRTV* pp1, TextureRTV* pp2);
+    TextureRTV* DenoiseATrous(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap* heap, const XMMATRIX& vMatrix, const XMMATRIX& pMatrix,
+                              TextureRTV* pp1, TextureRTV* pp2, D12Resource* normalsDepth, uint32_t iterations,
+                              float phiC, float phiN, float phiP);
 
 private:
-    void initBox(ID3D12Device* device, Heap* heap, D12Resource* pp1);
+    void initBox(ID3D12Device* device, Heap* heap);
     void initGauss(ID3D12Device* device, Heap* heap);
-    void initMedian(ID3D12Device* device, Heap* heap, D12Resource* pp1, D12Resource* pp2);
-    void initATrous(ID3D12Device* device, Heap* heap, D12Resource* pp1, D12Resource* pp2, D12Resource* normalsDepth);
+    void initMedian(ID3D12Device* device, Heap* heap);
+    void initATrous(ID3D12Device* device, Heap* heap);
 
     Model m_fullScreenTriangle;
     Heap* m_pHeap = nullptr;

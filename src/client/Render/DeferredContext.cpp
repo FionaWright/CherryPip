@@ -10,18 +10,22 @@
 #include "System/Config.h"
 
 #include "Debug/GPUEventScoped.h"
+#include "Render/DenoisingManager.h"
 
 void DeferredContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap* heapRTV, Heap* heap)
 {
     // Could improve precision here for increased bandwidth
     m_rtvAlbedo.Init(L"Albedo GBuffer", device, heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
     m_rtvNormalsDepth.Init(L"Normals GBuffer", device, heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
-    m_rtvRoughMetEmissive.Init(L"Roughness Metallic Emissive Buffer", device, heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
+    m_rtvRoughMet.Init(L"Roughness Metallic GBuffer", device, heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
+    m_rtvEmissive.Init(L"Emissive GBuffer", device, heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
+    m_rtvScratch.Init(L"Deferred Scratch Buffer", device, heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
 
     m_rtvHandles = {
         m_rtvAlbedo.GetCpuHandle(),
         m_rtvNormalsDepth.GetCpuHandle(),
-        m_rtvRoughMetEmissive.GetCpuHandle(),
+        m_rtvRoughMet.GetCpuHandle(),
+        m_rtvEmissive.GetCpuHandle(),
     };
 
     D3D12_STATIC_SAMPLER_DESC samplers[1];
@@ -36,7 +40,7 @@ void DeferredContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdL
     samplers[0].MaxLOD = D3D12_FLOAT32_MAX;
 
     m_rootSigGBuffer.SmartInit(device, 1, 4, 0, false, samplers, _countof(samplers));
-    m_rootSigLighting.SmartInit(device, 2, 6, 0, false, samplers, _countof(samplers));
+    m_rootSigLighting.SmartInit(device, 2, 7, 0, false, samplers, _countof(samplers));
 
     {
         D3D12_INPUT_ELEMENT_DESC ildDesc[] =
@@ -103,7 +107,8 @@ void DeferredContext::RenderGBuffer(const D3D* d3d, ID3D12GraphicsCommandList* c
 
     m_rtvAlbedo.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
     m_rtvNormalsDepth.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    m_rtvRoughMetEmissive.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    m_rtvRoughMet.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    m_rtvEmissive.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     // Set RTVs
     {
@@ -168,9 +173,13 @@ void DeferredContext::RenderGBuffer(const D3D* d3d, ID3D12GraphicsCommandList* c
     }
 }
 
-void DeferredContext::RenderLighting(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, const XMMATRIX& pMatrix, TextureRTV* output, const XMFLOAT3& dirLightDir, D12Resource* skybox, D12Resource* irradianceMap, D12Resource* brdfIntegrationMap, const RasterDebugMode debugMode)
+void DeferredContext::RenderLighting(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, const XMMATRIX& pMatrix, TextureRTV* output, const XMFLOAT3& dirLightDir, D12Resource* skybox, D12Resource* irradianceMap, D12Resource* brdfIntegrationMap, const RasterDebugMode debugMode, DenoisingManager* denoisingManager)
 {
     GPU_SCOPE(cmdList, "Deferred Lighting Pass");
+
+    // Blur emissive to get bloom
+    TextureRTV* bloomOutRtv = nullptr;
+    bloomOutRtv = denoisingManager->DenoiseGauss(d3d->GetDevice(), cmdList, heap, &m_rtvEmissive, &m_rtvScratch, 7);
 
     output->GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
     const auto handle = output->GetCpuHandle();
@@ -179,19 +188,19 @@ void DeferredContext::RenderLighting(const D3D* d3d, ID3D12GraphicsCommandList* 
     cmdList->SetGraphicsRootSignature(m_rootSigLighting.Get());
     cmdList->SetPipelineState(m_shaderLighting.GetPSO());
 
-    CbvDeferredLighting cbv;
+    CbvDeferredLighting cbv{};
     cbv.DirLightDir = dirLightDir;
     cbv.MaxCubemapMipMaps = skybox->GetDesc().MipLevels;
     XMStoreFloat4x4(&cbv.InvP, XMMatrixInverse(nullptr, pMatrix));
     m_matLighting.UpdateCBV(0, &cbv);
 
-    CbvRasterDebug cbvDebug;
+    CbvRasterDebug cbvDebug{};
     cbvDebug.Mode = debugMode;
     m_matLighting.UpdateCBV(1, &cbvDebug);
 
     m_matLighting.SetTex(d3d->GetDevice(), 0, heap, m_rtvAlbedo.GetD12Resource());
     m_matLighting.SetTex(d3d->GetDevice(), 1, heap, m_rtvNormalsDepth.GetD12Resource());
-    m_matLighting.SetTex(d3d->GetDevice(), 2, heap, m_rtvRoughMetEmissive.GetD12Resource());
+    m_matLighting.SetTex(d3d->GetDevice(), 2, heap, m_rtvRoughMet.GetD12Resource());
 
     m_matLighting.SetTex(d3d->GetDevice(), 3, heap, brdfIntegrationMap);
 
@@ -210,6 +219,8 @@ void DeferredContext::RenderLighting(const D3D* d3d, ID3D12GraphicsCommandList* 
     srvDesc.TextureCube.MipLevels = 1;
     srvDesc.TextureCube.MostDetailedMip = 0;
     m_matLighting.SetSRV(d3d->GetDevice(), 5, heap, irradianceMap, srvDesc);
+
+    m_matLighting.SetTex(d3d->GetDevice(), 6, heap, bloomOutRtv->GetD12Resource());
 
     m_matLighting.TransitionSrvsToPS(cmdList);
     m_matLighting.SetDescriptorTables(cmdList);

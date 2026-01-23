@@ -28,11 +28,11 @@ class DenoisingManager
 public:
     void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap* heap, D12Resource* pp1, D12Resource* pp2,
               D12Resource* normalsDepth);
-    bool IsInitialized() const { return m_initialized; }
+    [[nodiscard]] bool IsInitialized() const { return m_initialized; }
 
     TextureRTV* DenoiseBox(ID3D12GraphicsCommandList* cmdList, TextureRTV* pp1, TextureRTV* pp2, uint32_t radius) const;
-    TextureRTV* DenoiseGauss(ID3D12GraphicsCommandList* cmdList, TextureRTV* pp1, TextureRTV* pp2,
-                             uint32_t radius) const;
+    TextureRTV* DenoiseGauss(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Heap* heap, TextureRTV* pp1, TextureRTV* pp2,
+                             uint32_t radius);
     TextureRTV* DenoiseMedian(ID3D12GraphicsCommandList* cmdList, TextureRTV* pp1, TextureRTV* pp2) const;
     TextureRTV* DenoiseATrous(ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vMatrix, const XMMATRIX& pMatrix,
                               TextureRTV* pp1, TextureRTV* pp2, uint32_t iterations,
@@ -40,7 +40,7 @@ public:
 
 private:
     void initBox(ID3D12Device* device, Heap* heap, D12Resource* pp1);
-    void initGauss(ID3D12Device* device, Heap* heap, D12Resource* pp1, D12Resource* pp2);
+    void initGauss(ID3D12Device* device, Heap* heap);
     void initMedian(ID3D12Device* device, Heap* heap, D12Resource* pp1, D12Resource* pp2);
     void initATrous(ID3D12Device* device, Heap* heap, D12Resource* pp1, D12Resource* pp2, D12Resource* normalsDepth);
 

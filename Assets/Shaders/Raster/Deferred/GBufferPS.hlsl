@@ -18,7 +18,8 @@ struct GBufferOut
 {
     float4 RgbaAlbedo : SV_Target0;
     float4 RgbNormal_ADepth : SV_Target1;
-	float4 RRough_GMetallic_BEmissive : SV_Target2;
+	float4 RRough_GMetallic : SV_Target2; // 1 Reserved
+	float4 RgbEmissive : SV_Target3; // 1 Reserved
 };
 
 GBufferOut PSMain(VsOut input)
@@ -30,9 +31,11 @@ GBufferOut PSMain(VsOut input)
     output.RgbNormal_ADepth.rgb = normalize(input.normal) * 0.5f + 0.5f; // [-1,1] -> [0,1]
     output.RgbNormal_ADepth.a = input.position.z / input.position.w;
 
-	output.RRough_GMetallic_BEmissive.rg = gRoughMet.Sample(gSampler, input.uv).gb;
-	output.RRough_GMetallic_BEmissive.b = gEmissive.Sample(gSampler, input.uv).r;
-	output.RRough_GMetallic_BEmissive.a = 0.0f;
+	output.RRough_GMetallic.rg = gRoughMet.Sample(gSampler, input.uv).gb;
+    output.RRough_GMetallic.ba = 0.0f;
+
+	output.RgbEmissive.rgb = gEmissive.Sample(gSampler, input.uv).rgb;
+	output.RgbEmissive.a = 0.0f;
 
     return output;
 }

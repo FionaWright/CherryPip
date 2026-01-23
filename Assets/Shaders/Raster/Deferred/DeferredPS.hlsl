@@ -16,7 +16,6 @@ Texture2D<float4> gRoughMet : register(t2);
 Texture2D<float2> gBrdfInt : register(t3);
 TextureCube gEnvMap : register(t4);
 TextureCube gIrradiance : register(t5);
-Texture2D<float4> gBloom : register(t6);
 
 SamplerState gSampler : register(s0);
 
@@ -95,9 +94,6 @@ float4 PSMain(VsOut input) : SV_Target
     indirectSpecular = max(0, indirectSpecular);
     float3 combinedBrdfWithIndirect = combinedBrdf + indirectSpecular;
     float3 LoWithIndirect = pow(combinedBrdfWithIndirect, 1.0f / 2.2f);
-
-    float3 bloomSample = gBloom.Sample(gSampler, input.uv).rgb;
-    LoWithIndirect += bloomSample;
 
     switch (c_rasterDebug.Mode)
     {

@@ -450,15 +450,13 @@ void SceneStudio::denoisingPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     }
 
     if (!m_denoisingManager.IsInitialized())
-        m_denoisingManager.Init(d3d->GetDevice(), cmdList, &m_heap, m_rtvPingPong1.GetD12Resource(),
-                                m_rtvPingPong2.GetD12Resource(),
-                                m_deferredContext.GetNormalsDepth());
+        m_denoisingManager.Init(d3d->GetDevice(), cmdList, &m_heap);
 
     TextureRTV* outputRTV = nullptr;
     switch (m_studioConfig.Denoising.Type)
     {
     case eBox:
-        outputRTV = m_denoisingManager.DenoiseBox(cmdList, &m_rtvPingPong1, &m_rtvPingPong2,
+        outputRTV = m_denoisingManager.DenoiseBox(d3d->GetDevice(), cmdList, &m_heap,  &m_rtvPingPong1, &m_rtvPingPong2,
                                                   m_studioConfig.Denoising.BoxRadius);
         break;
     case eGaussian:
@@ -466,11 +464,11 @@ void SceneStudio::denoisingPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
                                                     m_studioConfig.Denoising.BoxRadius);
         break;
     case eMedian:
-        outputRTV = m_denoisingManager.DenoiseMedian(cmdList, &m_rtvPingPong1, &m_rtvPingPong2);
+        outputRTV = m_denoisingManager.DenoiseMedian(d3d->GetDevice(), cmdList, &m_heap, &m_rtvPingPong1, &m_rtvPingPong2);
         break;
     case eATrous:
-        outputRTV = m_denoisingManager.DenoiseATrous(cmdList, m_camera.GetViewMatrix(), m_projMatrix,
-                                                     &m_rtvPingPong1, &m_rtvPingPong2,
+        outputRTV = m_denoisingManager.DenoiseATrous(d3d->GetDevice(), cmdList, &m_heap,  m_camera.GetViewMatrix(), m_projMatrix,
+                                                     &m_rtvPingPong1, &m_rtvPingPong2, m_deferredContext.GetNormalsDepth(),
                                                      m_studioConfig.Denoising.ATrousIterations,
                                                      m_studioConfig.Denoising.ATrousPhiC,
                                                      m_studioConfig.Denoising.ATrousPhiN,
@@ -604,9 +602,7 @@ void SceneStudio::renderDeferred(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     // Lighting Pass
     {
         if (!m_denoisingManager.IsInitialized())
-            m_denoisingManager.Init(d3d->GetDevice(), cmdList, &m_heap, m_rtvPingPong1.GetD12Resource(),
-                                    m_rtvPingPong2.GetD12Resource(),
-                                    m_deferredContext.GetNormalsDepth());
+            m_denoisingManager.Init(d3d->GetDevice(), cmdList, &m_heap);
 
         m_deferredContext.RenderLighting(d3d, cmdList, &m_heap, m_projMatrix, &m_rtvPingPong1,
                                          m_studioConfig.DirLightDirection, m_envMap.GetCubemap(),

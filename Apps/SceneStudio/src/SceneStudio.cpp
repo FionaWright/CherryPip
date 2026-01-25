@@ -46,7 +46,7 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     {
         m_envMap.Init(d3d->GetDevice(), cmdList, m_envMapList.at(m_selectedEnvMapIdx), m_studioConfig.EnvMapRotation,
                       &m_heap);
-        if (m_studioConfig.Backend != ePathTracer)
+        if (m_studioConfig.Backend != ePathTracer || GBufferPassNeededForDenoiser())
         {
             m_envMap.InitCubemap(d3d->GetDevice(), cmdList, &m_heap);
             m_skybox.UpdateCubemap(d3d->GetDevice(), m_envMap.GetCubemap());
@@ -437,10 +437,15 @@ void copyRtvTex(ID3D12GraphicsCommandList* cmdList, D12Resource* d3dRTV, D12Reso
     rtvTex->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
 }
 
+bool SceneStudio::GBufferPassNeededForDenoiser() const
+{
+    return m_studioConfig.Denoising.Type == eATrous;
+}
+
 void SceneStudio::denoisingPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 {
     // GBuffer Pass
-    if (m_studioConfig.Denoising.Type == eATrous)
+    if (GBufferPassNeededForDenoiser())
     {
         if (!m_deferredContext.IsInitialized())
             m_deferredContext.Init(d3d->GetDevice(), cmdList, &m_heapRTV, &m_heap);

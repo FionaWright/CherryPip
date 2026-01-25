@@ -207,6 +207,10 @@ void Model_Microfacet(
         float3 L_s = SampleGGX_Classic(a2, rngState);
 #elif defined(NDF_TYPE_TROWBRIDGE_REITZ)
         // TODO
+#else
+        float alpha = 0.0f;
+        float a2 = 0.0f;
+        float3 L_s = 0.0f;
 #endif
 
         wi = ShadingToWorldSpace(L_s, T, B, Ns);
@@ -228,6 +232,10 @@ void Model_Microfacet(
         float pdf = Pdf_General(D, V_s, H_s, alpha, true);
 #elif defined(NDF_TYPE_TROWBRIDGE_REITZ)
         // TODO
+#else
+        float D = 0.0f;
+        float G = 0.0f;
+        float pdf = 0.0f;
 #endif
 
         // Torrence-Sparrow BRDF

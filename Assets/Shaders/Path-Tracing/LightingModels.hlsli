@@ -1,4 +1,8 @@
+#ifndef H_LIGHTING_MODELS_H
+#define H_LIGHTING_MODELS_H
+
 #include "Microfacet.hlsli"
+#include "DualIncludes/HlslMath.h"
 
 // Caller must flip normals + swap IoRs if exiting
 float3 Refract(float3 wo, float3 Ns, float iorA, float iorB)
@@ -137,22 +141,8 @@ float3 NormalizeSafe(float3 N, float3 fallback)
     return length(N) == 0 ? fallback : normalize(N);
 }
 
-// Next:
-// Read this: https://medium.com/@Ksatese/advanced-ray-tracer-part-6-f7978842081f
-// And this: https://henryzxu.github.io/pathtracing-p2/
-// Then read PBRTs chapter on microfacet materials
-// Then this whitepaper: https://dl.acm.org/doi/epdf/10.1145/3130800.3130806
-// Finally find a repo with code I can look at and compare
-// If still not working then park it and do importance sampling first maybe
-
-// G_Smith is def broken. Check equation. Not sure if G_SmithFast is correct either but maybe
-// Still unsure what specProb should be
-// Fresnel term doesn't quite match raster either but could be just more physically accurate (different wi)
 // What is sampleVisibleArea?
 // Keep reading PBRT
-// V_s seems weird
-
-// CHALLENGE: Fix it without GPT or help
 
 // https://backend.orbit.dtu.dk/ws/files/126824972/onb_frisvad_jgt2012_v2.pdf
 void BuildBasisFrisvad(float3 N, out float3 T, out float3 B)
@@ -170,7 +160,7 @@ void BuildBasisFrisvad(float3 N, out float3 T, out float3 B)
     B = float3(b, 1.0 - N.y * N.y * a, -N.y);
 }
 
-void Model_GgxSmithSchlick(
+void Model_Microfacet(
     inout uint rngState,
     inout float3 Lo,
     inout float3 throughput,
@@ -187,54 +177,57 @@ void Model_GgxSmithSchlick(
 #endif
 )
 {
-    float3 F0 = lerp(float3(0.04, 0.04, 0.04), albedo, metalness);
-
-    float specProb = 1.00f; // TODO once specular is fixed
-    bool sampleSpecular = PcgRand01(rngState) < specProb;
-
     float3 T, B;
     BuildBasisFrisvad(Ns, T, B);
 
+    Lo += throughput * Li; // Wrong?
+
     // Convert world to shading space
-    // forall vector X, X,z = dot(N, X)
+    // forall vector X, X.z = dot(N, X)
     float3 N_s = float3(0, 0, 1);
     float3 V_s = WorldToShadingSpace(wo, T, B, Ns);
 
-    Lo += throughput * Li; // Wrong?
+    float NdV = SSpaceCosTheta(V_s);
 
-#define MICROFACET_MODEL_GGX
+    float3 F0 = lerp(float3(0.04, 0.04, 0.04), albedo, metalness);
+    float3 F_select = F_Schlick(NdV, F0);
+
+    float specProb = clamp(Luminance(F_select), 0.05f, 0.95f);
+    bool sampleSpecular = PcgRand01(rngState) < specProb;
 
     if (sampleSpecular)
     {
-#if defined(MICROFACET_MODEL_GGX)
+#if defined(NDF_TYPE_GGX)
         float alpha = RoughnessToAlpha_GGX(roughness);
         float a2 = alpha * alpha;
         float3 L_s = SampleGGX_Classic(a2, rngState);
-#elif defined(MICROFACET_MODEL_BECKMANN)
+#elif defined(NDF_TYPE_BECKMANN)
         float alpha = RoughnessToAlpha_Beckmann(roughness);
         float a2 = alpha * alpha;
         float3 L_s = SampleGGX_Classic(a2, rngState);
+#elif defined(NDF_TYPE_TROWBRIDGE_REITZ)
+        // TODO
 #endif
 
         wi = ShadingToWorldSpace(L_s, T, B, Ns);
 
         float3 H_s = NormalizeSafe(V_s + L_s, N_s);
-
         float NdL = SSpaceCosTheta(L_s);
-        float NdV = SSpaceCosTheta(V_s);
         float NdH = SSpaceCosTheta(H_s);
         float VdH = dot(H_s, V_s);
 
-#if defined(MICROFACET_MODEL_GGX)
-        float D = D_GGX(NdH, a2);
         float3 F = F_Schlick(VdH, F0);
+
+#if defined(NDF_TYPE_GGX)
+        float D = D_GGX(NdH, a2);
         float G = G_SmithGGX(NdL, NdV, a2);
         float pdf = PdfGGX_Classic(NdH, VdH, a2);
-#elif defined(MICROFACET_MODEL_BECKMANN)
+#elif defined(NDF_TYPE_BECKMANN)
         float D = D_Beckmann(H_s, a2);
-        float3 F = F_Schlick(VdH, F0);
         float G = G_Beckmann(V_s, L_s, alpha);
         float pdf = Pdf_General(D, V_s, H_s, alpha, true);
+#elif defined(NDF_TYPE_TROWBRIDGE_REITZ)
+        // TODO
 #endif
 
         // Torrence-Sparrow BRDF
@@ -244,11 +237,8 @@ void Model_GgxSmithSchlick(
 #ifdef DEBUG_BUFFER
 #     include "Debug/DebugBuffersMicrofacet.hlsli"
 #endif
-
-        //debug = ShadingToWorldSpace(N_s, T, B, Ns);
-        //hasDebugOutput = true;
     }
-    else // The diffuse is correct! Issue is in specular
+    else
     {
         float3 L_s = RandHemisphereCosine(rngState, N_s);
         wi = ShadingToWorldSpace(L_s, T, B, Ns);
@@ -259,5 +249,9 @@ void Model_GgxSmithSchlick(
         float3 diffuseBrdf = albedo * (1.0 - metalness);
         diffuseBrdf /= PI;
         throughput *= diffuseBrdf * NdL / pdf / max(0.001f, 1.0 - specProb);
+
+        // TODO: DEBUG
     }
 }
+
+#endif

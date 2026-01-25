@@ -622,11 +622,11 @@ void SceneStudio::compilePtShader(const D3D* d3d)
         L"Path-Tracing/Entry/LambDiffPS.hlsl",
         L"Path-Tracing/Entry/GlossyPS.hlsl",
         L"Path-Tracing/Entry/GlassPS.hlsl",
-        L"Path-Tracing/Entry/GgxSmithMicrofacetPS.hlsl",
+        L"Path-Tracing/Entry/MicrofacetPS.hlsl",
         L"Path-Tracing/Entry/FurnaceHdReflectPS.hlsl",
         L"Path-Tracing/Entry/FurnaceHhEmitPS.hlsl"
     };
-    const WCHAR* shaderPath = shaderMap[m_studioConfig.PT.Mode];
+    const WCHAR* shaderPath = shaderMap[m_studioConfig.PT.LightingModel];
 
     CherryPrint("Loading Shader: " << wstringToString(shaderPath));
 
@@ -647,6 +647,16 @@ void SceneStudio::compilePtShader(const D3D* d3d)
         args.push_back(L"-DNORMAL_MAPS_ENABLED");
     if (m_studioConfig.PT.RussianRouletteEnabled)
         args.push_back(L"-DRUSSIAN_ROULETTE_ENABLED");
+
+    if (m_studioConfig.PT.LightingModel == PathTracerLightingModel::eMicrofacet)
+    {
+        static const std::vector<const WCHAR*> c_mapNdfType = {
+            L"-DNDF_TYPE_GGX",
+            L"-DNDF_TYPE_BECKMANN",
+            L"-DNDF_TYPE_TROWBRIDGE_REITZ",
+        };
+        args.push_back(c_mapNdfType.at(m_studioConfig.PT.NdfType));
+    }
 
     m_shaderILD =
     {

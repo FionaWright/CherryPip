@@ -4,42 +4,49 @@ by Fiona Wright
 
 ## Info
 
-D3D12 Graphics Engine with a focus on Path-Tracing.  
+D3D12 Graphics Engine with a focus on Path-Tracing using RayQuery.  
 Built for fun and to further my skills in the graphics programming field.  
 Trying to work on it when I have free time from college.  
+
+Uses CMAKE for the build system.  
+C++, HLSL and Python are the main languages.  
+
+### Third-Party Tools
+- Dear ImGui (GUI)
+- spng (PNG Loader)
+- tinyddsloader (DDS Loader)
+- texconv (PNG/JPG -> DDS Build Step)
+- zlib/fastgltf (GLTF Loader)
+- WinPixEventRuntime (GPU Events/Markers) 
 
 ## Features
 
 ### Engine
-- Better project structure, engine split between HWI, Core Engine and Apps
-- Uses CMAKE for an improved build system
-- Dear ImGui for the GUI
+- Repository split between engine (HWI + System + Render) and Apps (SceneStudio)
 - Easy to use readback buffer system for debugging and analysis 
 - Python Execution at runtime for data analysis on GPU frame data
 - Hot reloading for shaders
-- Can render GLTF scenes in both backends
 - Set up scene configs and switch between them at runtime seamlessly
-- Scene viewer GUI tab where you can check each objects transform, material, etc
+- Scene GUI tab where you can modify each objects transform, material, etc
 
 ### Forward + Deferred Render Backends
 - Microfacet lighting model + Irradiance IBL
-- Many different debug view modes (WorldPos, Normals, Tangents, Roughness, UV, Lambert, Albedo, etc) (24+)
 - Rotatable cubemap skybox that has parity with path tracer backend
+- Many different debug view modes (WorldPos, Normals, Tangents, Roughness, UV, Lambert, Albedo, etc) (24+)
 
 ### Path Tracer Render Backend
-- Using RayQuery through a pixel shader
-- Readback debug system that allows you to find selected pixel value or collect data every frame
-- Two furnace tests
+- Fully deterministic and seeded
 - Russian Roulette, Firefly Threshold, Importance Sampling
-- See different internal parts of the path tracer using Debug Buffer system (Normals, Albedo, HitDist, RNG, FirstBounceDirection, etc) (29+)
 - Lambertian, Glossy, Glass and Microfacet lighting models
 - GGX and Beckmann NDFs, Schlick Fresnel, Smith Geometry Masking
 - Environment maps with support for Panoramic and Octohedral Equal-Area (Rotatable at runtime!)
 - Directional lighting + GPU max parallel search on the EA Environment Map to set automatically direction to where luminance is highest
 - Denoising (Box, Gaussian, Median, Edge-Avoiding A-Trous) using deferred GBuffer pre-pass
 
-### Spectral Tracer Render Backend
-- Work in Progress! 
+#### Debug Tools
+- Readback debug system that allows you to find selected pixel value or collect data every frame
+- Two furnace tests
+- See different internal parts of the path tracer using Debug Buffer system (Normals, Albedo, HitDist, RNG, FirstBounceDirection, etc) (29+)
 
 ## History 
 
@@ -60,6 +67,7 @@ Progress as of 18/01/26:
 
 Progress as of 25/01/26:
 <img width="1361" height="578" alt="image" src="https://github.com/user-attachments/assets/60ed04b8-04b0-4655-878b-7c0c79932d9f" />
+
 
 
 

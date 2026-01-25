@@ -29,4 +29,7 @@ else if (c_debug.DebugIdx == DebugBuffer::eMicrofacetBrdfDiff ||
         c_debug.DebugIdx == DebugBuffer::eMicrofacetPdfDiff)
     debug = 0;
 else
+{
     hasDebugOutput = false;
+    debug = 0;
+}

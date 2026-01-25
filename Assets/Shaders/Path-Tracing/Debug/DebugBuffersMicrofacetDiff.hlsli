@@ -24,4 +24,7 @@ else if (c_debug.DebugIdx == DebugBuffer::eMicrofacetVecHalf ||
         c_debug.DebugIdx == DebugBuffer::eMicrofacetPdfSpec)
     debug = 0;
 else
+{
     hasDebugOutput = false;
+    debug = 0;
+}

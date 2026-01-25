@@ -7,7 +7,7 @@ bool IsNaN(float x)
     return (asuint(x) & 0x7fffffff) > 0x7f800000;
 }
 
-bool IsNaN(float3 x)
+bool IsNaN3(float3 x)
 {
     return IsNaN(x.x) || IsNaN(x.y) || IsNaN(x.z);
 }

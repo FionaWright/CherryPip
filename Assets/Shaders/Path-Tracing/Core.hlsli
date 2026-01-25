@@ -88,6 +88,7 @@ float4 PSMain(VsOut input) : SV_Target0
 
     uint2 pixelCoord = uint2(input.position.xy);
     float3 accumColor = gAccum.Load(pixelCoord).rgb;
+    if (IsNaN3(accumColor)) return float4(1, 0, 1, 1);
 
     float3 newSum = accumColor + colorSum;
 

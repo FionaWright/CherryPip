@@ -56,24 +56,24 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
 #elif defined(LIGHTING_GLOSSY)
 
-        Model_Glossy(rngState, Lo, throughput, mat.DiffuseProbability, roughness, Ns, Li, albedo, wo, wi, L_sample);
+        Model_Glossy(rngState, throughput, mat.DiffuseProbability, roughness, Ns, Li, albedo, wo, wi, L_sample);
 
 #elif defined(LIGHTING_GLASS)
 
         if (mat.Flags & PtMaterialFlags::eIsGlass)
         {
             bool entering = q.CommittedTriangleFrontFace()!=0;
-            Model_Glass(rngState, Lo, throughput, mat.DiffuseProbability, roughness, entering, q.CommittedRayT(), mat.IoR, Ns, Li, albedo, wo, wi, L_sample);
+            Model_Glass(rngState, throughput, mat.DiffuseProbability, roughness, entering, q.CommittedRayT(), mat.IoR, Ns, Li, albedo, wo, wi, L_sample);
         }
         else
-            Model_Glossy(rngState, Lo, throughput, mat.DiffuseProbability, roughness, Ns, Li, albedo, wo, wi, L_sample);
+            Model_Glossy(rngState, throughput, mat.DiffuseProbability, roughness, Ns, Li, albedo, wo, wi, L_sample);
 
 #elif defined(LIGHTING_MICROFACET)
 
         //if (dot(Ns, wo) <= 0) break;
-        float3 debug; bool hasDebugOutput;
+        float3 debug = 0; bool hasDebugOutput = false;
         Model_Microfacet(rngState,
-            Lo, throughput, roughness,
+            throughput, roughness,
             metalness, Ns, Li, albedo,
             wo, wi, L_sample
 #    ifdef DEBUG_BUFFER
@@ -100,9 +100,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         if (i >= c_pathTracing.RussianRouletteMinBounces) // Standard is 2-3
         {
             float p = saturate(max(throughput.r, max(throughput.g, throughput.b)));
-            if (p < 1e-6) // Terminate near-zero throughput rays as they contribute nothing and waste computation. Careful! This may cause issues with certain materials
-                break;
-            p = max(p, 0.05); // Minimum-survival probability 
+            p = max(p, 0.05f);
             if (PcgRand01(rngState) > p)
                 break;
             throughput /= p;
@@ -113,12 +111,12 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         ray.Origin = hitPos + Ng * EPSILON * sign(dot(Ng, ray.Direction));
 
 #ifdef DEBUG_BUFFER
-#    include "Debug/DebugBuffersOnHit.hlsli"
+//#    include "Debug/DebugBuffersOnHit.hlsli"
 #endif
     }
 
 #ifdef DEBUG_BUFFER
-#    include "Debug/DebugBuffersPostTrace.hlsli"
+//#    include "Debug/DebugBuffersPostTrace.hlsli"
 #endif
 
     return Lo;

@@ -177,8 +177,8 @@ float3 SampleH_GGX(float a2, inout uint rngState)
     float r2 = PcgRand01(rngState);
 
     float phi = 2.0 * PI * r1;
-    float cosTheta = sqrt((1.0 - r2) / (1.0 + (a2 - 1.0) * r2));
-    float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+    float cosTheta = sqrt((1.0 - r2) / max(0.001f, 1.0 + (a2 - 1.0) * r2));
+    float sinTheta = sqrt(max(0.0f, 1.0 - cosTheta * cosTheta));
 
     float3 H_s = normalize(float3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta));
     return H_s;

@@ -65,14 +65,11 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ## PT-TODO:
 
 ### Bugs (Physical Inaccuracies)
-- Fix glass issue at grazing angles (Read PBRT section, stop using the goddamn GPT)
 - Fix glass attenuation after, add attenuationDistance field
-- Sporadic black pixels (Like anti-fireflies?)
 
 ### Bugs (Classic)
 - Camera movement gets messed up sometimes
 - Env map rotations not paritied between EA/pano
-- Fix emissives not working in both Cornell and Lantern at the same time (Lantern = Strength=1,Factor=(1,1,1),Tex=Masking. Cornell = Strength=15,Factor=(1,1,1),Tex=(0,0,0)). Set default WhitePOT?
 
 ### Features
 - Mist (Randomly scatter rays depending on distance travelled, see SL video) (Rayleigh scattering! Requires spectral renderer?)

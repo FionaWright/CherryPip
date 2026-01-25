@@ -521,7 +521,8 @@ void SceneStudio::guiScene()
             Material* mat = objects[i]->GetMaterial();
             MaterialData* matData = mat->GetData();
 
-            m_sceneDirty |= ImGui::ColorEdit3(("Base Color Factor##xx" + tempID).c_str(), std::bit_cast<float*>(&matData->BaseColorFactor));
+            m_sceneDirty |= ImGuiUtils::FwColorEdit3(("Base Color Factor##xx" + tempID).c_str(), std::bit_cast<float*>(&matData->BaseColorFactor));
+            m_sceneDirty |= ImGuiUtils::FwColorEdit3(("Emissive Color Factor##xx" + tempID).c_str(), std::bit_cast<float*>(&matData->EmissiveColor));
 
             m_sceneDirty |= ImGuiUtils::FwInputFloat(("Emissive Strength##xx" + tempID).c_str(), &matData->EmissiveStrength);
             m_sceneDirty |= ImGuiUtils::FwInputFloat(("Diffuse Probability##xx" + tempID).c_str(), &matData->DiffuseProbability);

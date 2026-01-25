@@ -111,12 +111,12 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         ray.Origin = hitPos + Ng * EPSILON * sign(dot(Ng, ray.Direction));
 
 #ifdef DEBUG_BUFFER
-//#    include "Debug/DebugBuffersOnHit.hlsli"
+#    include "Debug/DebugBuffersOnHit.hlsli"
 #endif
     }
 
 #ifdef DEBUG_BUFFER
-//#    include "Debug/DebugBuffersPostTrace.hlsli"
+#    include "Debug/DebugBuffersPostTrace.hlsli"
 #endif
 
     return Lo;

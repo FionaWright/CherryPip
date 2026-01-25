@@ -66,7 +66,6 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 ### Bugs (Physical Inaccuracies)
 - Fix glass attenuation after, add attenuationDistance field
-- Sponza NaNs
 
 ### Bugs (Classic)
 - Camera movement gets messed up sometimes
@@ -86,6 +85,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Stop irradiance cubemap making mip maps
 - Bistro subfolder issue (Move all textures to root on build copy?)
 - Beckmann for raster?
+- Denoiser only initializes shaders/etc when needed (Easy refactor)
 
 ## Spectral Tracing
 

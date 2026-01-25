@@ -658,6 +658,8 @@ void SceneStudio::compilePtShader(const D3D* d3d)
         args.push_back(L"-DFORCE_DIFFUSE");
     if (m_studioConfig.PT.PdfSampleVisibleArea)
         args.push_back(L"-DPDF_SAMPLE_VISIBLE_AREA");
+    if (m_studioConfig.PT.DepthOfFieldEnabled)
+        args.push_back(L"-DDEPTH_OF_FIELD_ENABLED");
 
     if (m_studioConfig.PT.LightingModel == PathTracerLightingModel::eMicrofacet)
     {

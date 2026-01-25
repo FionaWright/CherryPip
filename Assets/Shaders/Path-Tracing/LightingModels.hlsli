@@ -63,14 +63,14 @@ GlassResponse CalcReflectRefract(float3 wo, float3 Ns, float iorA, float iorB)
 
 void Model_LambertionDiffuse(
     inout uint rngState,
-    inout float3 Lo,
     inout float3 throughput,
     float3 Ns,
     float3 Li,
     float3 albedo,
-    out float3 wi)
+    out float3 wi,
+    out float3 L_sample)
 {
-    Lo += throughput * Li;
+    L_sample = throughput * Li;
     throughput *= albedo;
 
     float3 diffuseDir = normalize(Ns + RandDirectionSphere(rngState));
@@ -79,7 +79,6 @@ void Model_LambertionDiffuse(
 
 void Model_Glossy(
     inout uint rngState,
-    inout float3 Lo,
     inout float3 throughput,
     float diffuseProbability,
     float roughness,
@@ -87,11 +86,12 @@ void Model_Glossy(
     float3 Li,
     float3 albedo,
     float3 wo,
-    out float3 wi)
+    out float3 wi,
+    out float3 L_sample)
 {
     bool isDiffuse = diffuseProbability >= PcgRand01(rngState);
 
-    Lo += throughput * Li;
+    L_sample = throughput * Li;
     throughput *= lerp(float3(1, 1, 1), albedo, isDiffuse);
 
     float3 diffuseDir = normalize(Ns + RandDirectionSphere(rngState));
@@ -101,7 +101,6 @@ void Model_Glossy(
 
 void Model_Glass(
     inout uint rngState,
-    inout float3 Lo,
     inout float3 throughput,
     float diffuseProbability,
     float roughness,
@@ -112,7 +111,8 @@ void Model_Glass(
     float3 Li,
     float3 albedo,
     float3 wo,
-    out float3 wi)
+    out float3 wi,
+    out float3 L_sample)
 {
     if (!entering)
     {
@@ -133,6 +133,7 @@ void Model_Glass(
     bool reflect = PcgRand01(rngState) <= res.reflectWeight;
     wi = reflect ? res.reflectDir : res.refractDir;
 
+    L_sample = 0;
     throughput *= reflect ? res.reflectWeight : (1.0 - res.reflectWeight);
 }
 
@@ -174,7 +175,8 @@ void Model_Microfacet(
     float3 Li,
     float3 albedo,
     float3 wo,        // V
-    out float3 wi     // L
+    out float3 wi,    // L
+    out float3 L_sample
 #ifdef DEBUG_BUFFER
     , out float3 debug
     , out bool hasDebugOutput
@@ -184,7 +186,8 @@ void Model_Microfacet(
     float3 T, B;
     BuildBasisFrisvad(Ns, T, B);
 
-    //Lo += throughput * Li; // TODO: Wrong?
+    //L_sample = throughput * Li; // TODO: Wrong?
+    L_sample = 0.0f;
 
     // Convert world to shading space
     // forall vector X, X.z = dot(N, X)

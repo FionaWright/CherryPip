@@ -55,6 +55,7 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
 
     bool ptNeedsReset = resetPT;
 
+    ImGui::Spacing();
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Path-Tracer Settings##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
@@ -64,11 +65,7 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
     m_shaderDirty |= ImGui::Checkbox("Russian Roulette##xx", &m_studioConfig.PT.RussianRouletteEnabled);
 
     if (m_studioConfig.PT.RussianRouletteEnabled)
-    {
-        int rrmb = static_cast<int>(m_studioConfig.PT.RussianRouletteMinBounces);
-        ptNeedsReset |= ImGuiUtils::FwInputInt("Russian Roulette Min Bounces##xx", &rrmb);
-        m_studioConfig.PT.RussianRouletteMinBounces = static_cast<uint32_t>(rrmb);
-    }
+        ptNeedsReset |= ImGuiUtils::FwInputUInt("Russian Roulette Min Bounces##xx", &m_studioConfig.PT.RussianRouletteMinBounces);
 
     int spp = static_cast<int>(m_studioConfig.PT.SPP);
     ptNeedsReset |= ImGuiUtils::FwDragInt("SPP##xx", &spp, 1, 1, 256);
@@ -78,14 +75,14 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
     ptNeedsReset |= ImGuiUtils::FwDragInt("Ray Bounces##xx", &bounces, 1, 0, 256);
     m_studioConfig.PT.NumBounces = static_cast<uint32_t>(bounces);
 
-    int maxFrame = static_cast<int>(m_studioConfig.PT.MaxFrameNum);
-    ptNeedsReset |= ImGuiUtils::FwInputInt("Max Frames##xx", &maxFrame);
-    m_studioConfig.PT.MaxFrameNum = static_cast<uint32_t>(maxFrame);
+    ptNeedsReset |= ImGuiUtils::FwInputUInt("Max Frames##xx", &m_studioConfig.PT.MaxFrameNum);
 
     m_shaderDirty |= ImGui::Checkbox("Dir Light Enabled##xx", &m_studioConfig.PT.DirLightEnabled);
     ptNeedsReset |= ImGuiUtils::FwInputFloat("Dir Light Radius (R)##xx", &m_studioConfig.PT.DirLightCosAngularRadius);
 
     m_shaderDirty |= ImGui::Checkbox("Normal Maps Enabled##xx", &m_studioConfig.PT.NormalMapsEnabled);
+
+    m_shaderDirty |= ImGuiUtils::FwInputFloat("Firefly Threshold", &m_studioConfig.PT.FireflyThreshold);
 
     static int e = m_studioConfig.PT.LightingModel;
     ImGui::Text("%s", "Path Tracer Lighting Model:");
@@ -114,6 +111,7 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
         m_shaderDirty |= ImGui::Checkbox("PDF Sample Visible Area", &m_studioConfig.PT.PdfSampleVisibleArea);
     }
 
+    ImGui::Spacing();
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Path-Tracer Tools##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
@@ -121,6 +119,7 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
     ptNeedsReset |= ImGui::Button("Reset PathTracer##xx");
 
 #ifdef _DEBUG
+    ImGui::Spacing();
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Path-Tracer Debug##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
@@ -220,6 +219,7 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
 
 void SceneStudio::GuiRaster()
 {
+    ImGui::Spacing();
     ImGui::SeparatorText("Raster Settings##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
 
@@ -273,6 +273,7 @@ void SceneStudio::guiMain()
 {
     bool resetPT = false;
 
+    ImGui::Spacing();
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Scene##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
@@ -299,6 +300,7 @@ void SceneStudio::guiMain()
         m_sceneDirty |= ImGui::Button("Reload Scene##xx");
     }
 
+    ImGui::Spacing();
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Render Backend##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
@@ -311,6 +313,7 @@ void SceneStudio::guiMain()
         m_studioConfig.Backend = static_cast<RenderBackend>(e);
     }
 
+    ImGui::Spacing();
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Camera##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
@@ -340,6 +343,7 @@ void SceneStudio::guiMain()
         }
     }
 
+    ImGui::Spacing();
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Directional Light##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
@@ -349,6 +353,7 @@ void SceneStudio::guiMain()
         resetPT |= ImGuiUtils::FwInputFloat("Intensity##xx", &m_studioConfig.DirLightIntensity);
     }
 
+    ImGui::Spacing();
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Environment Map##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
@@ -388,6 +393,7 @@ void SceneStudio::guiMain()
         m_shaderDirty |= m_envMapDirty;
     }
 
+    ImGui::Spacing();
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Denoising##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
@@ -456,6 +462,7 @@ void SceneStudio::guiScene()
     const int sceneIdx = m_sceneConfigs.at(m_currentScene).SceneIdx;
     auto& objects = m_scenes.at(sceneIdx)->GetObjects();
 
+    ImGui::Spacing();
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Objects##xx");
     ImGui::Indent(IM_GUI_INDENTATION);

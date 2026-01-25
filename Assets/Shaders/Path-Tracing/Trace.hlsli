@@ -26,8 +26,13 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 #ifdef DEBUG_BUFFER
 #    include "Debug/DebugBuffersOnMiss.hlsli"
 #endif
-            float3 Li = Miss(ray.Origin, ray.Direction, i);
-            Lo += throughput * Li;
+            float3 L_sample = throughput * Miss(ray.Origin, ray.Direction, i);
+
+            float L_lum = Luminance(L_sample);
+            if (L_lum > c_pathTracing.FireflyThreshold)
+                L_sample *= c_pathTracing.FireflyThreshold / L_lum;
+
+            Lo += L_sample;
             break;
         }
 
@@ -43,38 +48,53 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         float3 hitPos = ray.Origin + ray.Direction * q.CommittedRayT();
 
         float3 wo = -ray.Direction;
+        float3 wi, L_sample;
 
 #if defined(LIGHTING_LAMB_DIFF)
-        Model_LambertionDiffuse(rngState, Lo, throughput, Ns, Li, albedo, ray.Direction);
+
+        Model_LambertionDiffuse(rngState, throughput, Ns, Li, albedo, wi, L_sample);
+
 #elif defined(LIGHTING_GLOSSY)
-        Model_Glossy(rngState, Lo, throughput, mat.DiffuseProbability, roughness, Ns, Li, albedo, wo, ray.Direction);
+
+        Model_Glossy(rngState, Lo, throughput, mat.DiffuseProbability, roughness, Ns, Li, albedo, wo, wi, L_sample);
+
 #elif defined(LIGHTING_GLASS)
+
         if (mat.Flags & PtMaterialFlags::eIsGlass)
         {
             bool entering = q.CommittedTriangleFrontFace()!=0;
-            Model_Glass(rngState, Lo, throughput, mat.DiffuseProbability, roughness, entering, q.CommittedRayT(), mat.IoR, Ns, Li, albedo, wo, ray.Direction);
+            Model_Glass(rngState, Lo, throughput, mat.DiffuseProbability, roughness, entering, q.CommittedRayT(), mat.IoR, Ns, Li, albedo, wo, wi, L_sample);
         }
         else
-            Model_Glossy(rngState, Lo, throughput, mat.DiffuseProbability, roughness, Ns, Li, albedo, wo, ray.Direction);
+            Model_Glossy(rngState, Lo, throughput, mat.DiffuseProbability, roughness, Ns, Li, albedo, wo, wi, L_sample);
+
 #elif defined(LIGHTING_MICROFACET)
-        //if (dot(Ns, wo) <= 0) break;
+
+        if (dot(Ns, wo) <= 0) break;
         float3 debug; bool hasDebugOutput;
         Model_Microfacet(rngState,
             Lo, throughput, roughness,
             metalness, Ns, Li, albedo,
-            wo, ray.Direction
+            wo, wi, L_sample
 #    ifdef DEBUG_BUFFER
             , debug
             , hasDebugOutput
 #    endif
         );
+        if (dot(Ns, wi) <= 0) break;
 
 #    ifdef DEBUG_BUFFER
         if (hasDebugOutput)
             return debug;
 #    endif
-        //if (dot(Ns, ray.Direction) <= 0) break;
+
 #endif
+
+        float L_lum = Luminance(L_sample);
+        if (L_lum > c_pathTracing.FireflyThreshold)
+            L_sample *= c_pathTracing.FireflyThreshold / L_lum;
+
+        Lo += L_sample;
 
 #if defined(RUSSIAN_ROULETTE_ENABLED)
         if (i >= c_pathTracing.RussianRouletteMinBounces) // Standard is 2-3
@@ -89,6 +109,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         }
 #endif
 
+        ray.Direction = wi;
         ray.Origin = hitPos + Ng * EPSILON * sign(dot(Ng, ray.Direction));
 
 #ifdef DEBUG_BUFFER

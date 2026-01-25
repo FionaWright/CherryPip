@@ -656,13 +656,14 @@ void SceneStudio::compilePtShader(const D3D* d3d)
         args.push_back(L"-DFORCE_SPECULAR");
     if (m_studioConfig.PT.DebugForceDiffuse)
         args.push_back(L"-DFORCE_DIFFUSE");
+    if (m_studioConfig.PT.PdfSampleVisibleArea)
+        args.push_back(L"-DPDF_SAMPLE_VISIBLE_AREA");
 
     if (m_studioConfig.PT.LightingModel == PathTracerLightingModel::eMicrofacet)
     {
         static const std::vector<const WCHAR*> c_mapNdfType = {
             L"-DNDF_TYPE_GGX",
-            L"-DNDF_TYPE_BECKMANN",
-            L"-DNDF_TYPE_TROWBRIDGE_REITZ",
+            L"-DNDF_TYPE_BECKMANN"
         };
         args.push_back(c_mapNdfType.at(m_studioConfig.PT.NdfType));
     }

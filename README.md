@@ -33,6 +33,7 @@ Trying to work on it when I have free time from college.
 - Russian Roulette
 - See different parts of the path tracer using Debug Buffer system (Normals, Albedo, HitDist, RNG, FirstBounceDirection, etc)
 - Lambertian, Glossy, Glass and Microfacet lighting models
+- GGX, Beckmann and Trowbridge-Reitz NDFs 
 - Environment maps with support for Panoramic and Octohedral Equal-Area (Rotatable at runtime!)
 - Directional lighting + GPU max parallel search on the EA Environment Map to set automatically direction to where luminance is highest
 - Denoising (Box, Gaussian, Median, Edge-Avoiding A-Trous) using deferred GBuffer pre-pass
@@ -56,6 +57,9 @@ Progress as of 10/01/26 (Took a long break):
 
 Progress as of 18/01/26:
 <img width="1696" height="603" alt="image" src="https://github.com/user-attachments/assets/6ae8b25d-a776-4016-bfc3-878b9b3a98fd" />
+
+Progress as of 25/01/26:
+<img width="1361" height="578" alt="image" src="https://github.com/user-attachments/assets/60ed04b8-04b0-4655-878b-7c0c79932d9f" />
 
 
 

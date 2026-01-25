@@ -25,7 +25,7 @@
 - [ ] CI/CD-like tests
 - [x] Specular/Reflections
 - [x] Russian Roulette
-- [ ] DoF
+- [x] DoF
 - [x] Texture Sampling
 - [x] Allow for changing lighting models at runtime (Recompile shader with defines)
 - [x] EA Mapping
@@ -38,7 +38,7 @@
 - [ ] Oren-Nayers Lighting Model
 - [ ] Microfacet Beckmann (PBRT)
 - [ ] Microfacet Trowbridge-Reitz (PBRT)
-- [ ] Firefly threshold
+- [x] Firefly threshold
 - [ ] Ray pipelines
 - [ ] Spectral Path-Tracing 
 - [ ] Rayleigh scattering
@@ -64,17 +64,22 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 ## PT-TODO:
 
+### Bugs (Physical Inaccuracies)
 - Fix glass issue at grazing angles (Read PBRT section, stop using the goddamn GPT)
 - Fix glass attenuation after, add attenuationDistance field
-- Add stanford dragon model to test with and perform glass ball test with it (Object behind should be vertically flipped depending on distance)
-- Mist (Randomly scatter rays depending on distance travelled, see SL video) (Rayleigh scattering! Requires spectral renderer?)
-- Get a big scene that isn't bistro (Junkyard?)
-- PT only build mode that doesn't initialize any raster resources? 
+- Sporadic black pixels (Like anti-fireflies?)
 
+### Bugs (Classic)
 - Camera movement gets messed up sometimes
 - Env map rotations not paritied between EA/pano
 - Fix emissives not working in both Cornell and Lantern at the same time (Lantern = Strength=1,Factor=(1,1,1),Tex=Masking. Cornell = Strength=15,Factor=(1,1,1),Tex=(0,0,0)). Set default WhitePOT?
 
+### Features
+- Mist (Randomly scatter rays depending on distance travelled, see SL video) (Rayleigh scattering! Requires spectral renderer?)
+- PT only build mode that doesn't initialize any raster resources? 
+
+### Misc
+- Get a big scene that isn't bistro (Junkyard?)
 - FPS has heavily dropped since I was away, possibly due to all the extra shaders/etc. Make sure they can be deleted properly when not in use
 
 ## Raster/Laptop-TODO

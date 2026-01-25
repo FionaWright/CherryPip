@@ -70,7 +70,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
 #elif defined(LIGHTING_MICROFACET)
 
-        if (dot(Ns, wo) <= 0) break;
+        //if (dot(Ns, wo) <= 0) break;
         float3 debug; bool hasDebugOutput;
         Model_Microfacet(rngState,
             Lo, throughput, roughness,
@@ -81,7 +81,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             , hasDebugOutput
 #    endif
         );
-        if (dot(Ns, wi) <= 0) break;
+        //if (dot(Ns, wi) <= 0) break;
 
 #    ifdef DEBUG_BUFFER
         if (hasDebugOutput)

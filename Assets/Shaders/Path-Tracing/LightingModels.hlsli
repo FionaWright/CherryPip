@@ -91,7 +91,7 @@ void Model_Glossy(
     throughput *= lerp(float3(1, 1, 1), albedo, isDiffuse);
 
     float3 diffuseDir = normalize(Ns + RandDirectionSphere(rngState));
-    float3 specularDir = Reflect(wo, Ns);
+    float3 specularDir = Reflect(-wo, Ns);
     wi = lerp(specularDir, diffuseDir, roughness * isDiffuse);
 }
 
@@ -120,7 +120,7 @@ void Model_Glass(
 
     float iorCurrent = entering ? IOR_AIR : ior;
     float iorNext = entering ? ior : IOR_AIR;
-    GlassResponse res = CalcReflectRefract(wo, Ns, iorCurrent, iorNext);
+    GlassResponse res = CalcReflectRefract(-wo, Ns, iorCurrent, iorNext);
 
     float3 diffuseDir = normalize(Ns + RandDirectionSphere(rngState));
     res.reflectDir = normalize(lerp(res.reflectDir, diffuseDir, diffuseProbability)); // Why diffuseprobability and not roughness?
@@ -148,9 +148,27 @@ float3 NormalizeSafe(float3 N, float3 fallback)
 // G_Smith is def broken. Check equation. Not sure if G_SmithFast is correct either but maybe
 // Still unsure what specProb should be
 // Fresnel term doesn't quite match raster either but could be just more physically accurate (different wi)
-// Do wi/wo need to be transformed between world space and "shading space"?
+// What is sampleVisibleArea?
+// Keep reading PBRT
+// V_s seems weird
 
 // CHALLENGE: Fix it without GPT or help
+
+// https://backend.orbit.dtu.dk/ws/files/126824972/onb_frisvad_jgt2012_v2.pdf
+void BuildBasisFrisvad(float3 N, out float3 T, out float3 B)
+{
+    if (N.z < -0.999999f)
+    {
+        T = float3(0, -1, 0);
+        B = float3(-1, 0, 0);
+        return;
+    }
+
+    float a = 1.0 / (1.0 + N.z);
+    float b = -N.x * N.y * a;
+    T = float3(1.0 - N.x * N.x * a, b, -N.x);
+    B = float3(b, 1.0 - N.y * N.y * a, -N.y);
+}
 
 void Model_GgxSmithSchlick(
     inout uint rngState,
@@ -174,17 +192,17 @@ void Model_GgxSmithSchlick(
     float specProb = 1.00f; // TODO once specular is fixed
     bool sampleSpecular = PcgRand01(rngState) < specProb;
 
-    float3 T = any_perpendicular(Ns);
-    float3 B = cross(T, Ns);
+    float3 T, B;
+    BuildBasisFrisvad(Ns, T, B);
 
     // Convert world to shading space
-    // NdX or cos(theta) where theta is the angle between N and X is X.z
+    // forall vector X, X,z = dot(N, X)
     float3 N_s = float3(0, 0, 1);
     float3 V_s = WorldToShadingSpace(wo, T, B, Ns);
 
     Lo += throughput * Li; // Wrong?
 
-#define MICROFACET_MODEL_BECKMANN
+#define MICROFACET_MODEL_GGX
 
     if (sampleSpecular)
     {

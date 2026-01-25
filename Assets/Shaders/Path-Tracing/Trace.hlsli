@@ -42,7 +42,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
         float3 hitPos = ray.Origin + ray.Direction * q.CommittedRayT();
 
-        float3 wo = ray.Direction;
+        float3 wo = -ray.Direction;
 
 #if defined(LIGHTING_LAMB_DIFF)
         Model_LambertionDiffuse(rngState, Lo, throughput, Ns, Li, albedo, ray.Direction);

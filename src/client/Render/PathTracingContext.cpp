@@ -213,6 +213,8 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
         cbv.WindowAppGuiWidth = Config::GetSystem().WindowAppGuiWidth;
         cbv.UpdateAccumulation = frameIncAllowed ? 1 : 0;
         cbv.FireflyThreshold = config.FireflyThreshold;
+        cbv.DofFocalDist = config.DofFocalDist;
+        cbv.DofLensRadius = config.DofLensRadius;
 
         cbv.DirLight = dirLightDir;
         cbv.DirLightColor = dirLightColor;

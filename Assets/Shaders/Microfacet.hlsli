@@ -143,6 +143,8 @@ float G_SmithFast(float NdL, float NdV, float roughness)
     return ggxL * ggxV;
 }
 
+// Implicit Height-Correlated / UE4 Heitz Style Beckmann
+// TODO: Get beckmann smith
 float Lambda_Beckmann(float3 W, float alpha)
 {
     float absTanT = abs(SSpaceTanTheta(W));

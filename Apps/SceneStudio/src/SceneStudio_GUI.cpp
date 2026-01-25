@@ -84,6 +84,15 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
 
     m_shaderDirty |= ImGuiUtils::FwInputFloat("Firefly Threshold", &m_studioConfig.PT.FireflyThreshold);
 
+    m_shaderDirty |= ImGui::Checkbox("Depth Of Field Enabled", &m_studioConfig.PT.DepthOfFieldEnabled);
+    if (m_studioConfig.PT.DepthOfFieldEnabled)
+    {
+        ImGui::Indent(IM_GUI_INDENTATION);
+        m_shaderDirty |= ImGuiUtils::FwDragFloat("Focal Distance", &m_studioConfig.PT.DofFocalDist);
+        m_shaderDirty |= ImGuiUtils::FwDragFloat("Lens Radius", &m_studioConfig.PT.DofLensRadius);
+        ImGui::Unindent(IM_GUI_INDENTATION);
+    }
+
     static int e = m_studioConfig.PT.LightingModel;
     ImGui::Text("%s", "Path Tracer Lighting Model:");
     int idx = 0;

@@ -88,7 +88,9 @@ struct CbvPathTracing
     float DirLightIntensity;
 
     float FireflyThreshold;
-    float3 p;
+    float DofFocalDist;
+    float DofLensRadius;
+    float p;
 };
 
 enum class DebugBuffer

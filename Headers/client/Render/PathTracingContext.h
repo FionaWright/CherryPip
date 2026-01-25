@@ -52,6 +52,8 @@ struct PtConfig
     DebugBuffer DebugBufferIdx = DebugBuffer::eNormalsShaded;
     float DirLightCosAngularRadius = 0.00465f;
     float FireflyThreshold = 10.0f;
+    float DofFocalDist = 5.0f;
+    float DofLensRadius = 1.0f;
     alignas(4) bool DebugMode = false;
     alignas(4) bool DebugForceSpecular = false;
     alignas(4) bool DebugForceDiffuse = false;
@@ -64,6 +66,7 @@ struct PtConfig
     alignas(4) bool DirLightEnabled = true;
     alignas(4) bool NormalMapsEnabled = true;
     alignas(4) bool PdfSampleVisibleArea = true;
+    alignas(4) bool DepthOfFieldEnabled = false;
 };
 
 class PathTracingContext

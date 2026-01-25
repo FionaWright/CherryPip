@@ -55,10 +55,25 @@ float4 PSMain(VsOut input) : SV_Target0
     ray.TMin = 0.001;
     ray.TMax = 1000.0;
 
+#ifdef DEPTH_OF_FIELD_ENABLED
+    float3 camRight = normalize(c_pathTracing.InvV[0].xyz);  // X column
+    float3 camUp    = normalize(c_pathTracing.InvV[1].xyz);  // Y column
+    float3 focalPoint = origin + rayDir * c_pathTracing.DofFocalDist;
+#endif
+
     float3 colorSum = float3(0,0,0);
     for (uint i = 0; i < c_pathTracing.SPP; i++)
     {
         uint rngState = PrngSeed((uint2)input.position, i+4648387, c_pathTracing.NumFrames);
+
+#ifdef DEPTH_OF_FIELD_ENABLED
+        float r = sqrt(PcgRand01(rngState)) * c_pathTracing.DofLensRadius;
+        float theta = 2.0 * PI * PcgRand01(rngState);
+        float3 lensOffset = r * (camRight * cos(theta) + camUp * sin(theta));
+        ray.Origin = origin + lensOffset;
+        ray.Direction = normalize(focalPoint - ray.Origin);
+#endif
+
         colorSum += Trace(q,
                           flags,
                           instanceMask,

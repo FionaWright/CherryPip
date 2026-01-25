@@ -38,6 +38,7 @@
 - [ ] Oren-Nayers Lighting Model
 - [ ] Microfacet Beckmann (PBRT)
 - [ ] Microfacet Trowbridge-Reitz (PBRT)
+- [ ] Firefly threshold
 - [ ] Ray pipelines
 - [ ] Spectral Path-Tracing 
 - [ ] Rayleigh scattering
@@ -45,6 +46,8 @@
 - [x] Denoising (Box/Gauss/A-Trous)
 - [x] Denoising Median
 - [ ] Denoising NRD
+- [ ] Maxwell "True" Fresnel (Requires eta/k tables but doesn't seem too hard)
+- [ ] RMSE tests for different lighting models + denoisers
 - [ ] ReSTIR
 - [ ] GPU Memory Profiler (Track memory usage, find leaks/waste)
 
@@ -79,7 +82,6 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Mip maps aren't currently working. Need alternate solution for BC7 textures
 - Fix bistro
 - Stop irradiance cubemap making mip maps
-- Bloom why not lol (Deferred first is easier)
 
 ## Spectral Tracing
 

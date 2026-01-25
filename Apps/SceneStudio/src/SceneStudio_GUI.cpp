@@ -108,9 +108,10 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
         ImGui::Indent(IM_GUI_INDENTATION);
         m_shaderDirty |= ImGui::RadioButton("GGX", &e2, idx++);
         m_shaderDirty |= ImGui::RadioButton("Beckmann", &e2, idx++);
-        m_shaderDirty |= ImGui::RadioButton("Trowbridge-Reitz", &e2, idx++);
         ImGui::Unindent(IM_GUI_INDENTATION);
         m_studioConfig.PT.NdfType = static_cast<MicrofacetNdfType>(e2);
+
+        m_shaderDirty |= ImGui::Checkbox("PDF Sample Visible Area", &m_studioConfig.PT.PdfSampleVisibleArea);
     }
 
     ImGui::Unindent(IM_GUI_INDENTATION);
@@ -184,12 +185,10 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
                     ImGui::SetItemDefaultFocus();
             }
 
-            ImGui::Unindent(IM_GUI_INDENTATION);
             ImGui::EndCombo();
         }
+        ImGui::Unindent(IM_GUI_INDENTATION);
     }
-    
-    ImGui::Unindent(IM_GUI_INDENTATION);
 
     if (ImGui::Checkbox("Force Specular", &m_studioConfig.PT.DebugForceSpecular))
     {

@@ -141,9 +141,6 @@ float3 NormalizeSafe(float3 N, float3 fallback)
     return length(N) == 0 ? fallback : normalize(N);
 }
 
-// What is sampleVisibleArea?
-// Keep reading PBRT
-
 // https://backend.orbit.dtu.dk/ws/files/126824972/onb_frisvad_jgt2012_v2.pdf
 void BuildBasisFrisvad(float3 N, out float3 T, out float3 B)
 {
@@ -159,6 +156,13 @@ void BuildBasisFrisvad(float3 N, out float3 T, out float3 B)
     T = float3(1.0 - N.x * N.x * a, b, -N.x);
     B = float3(b, 1.0 - N.y * N.y * a, -N.y);
 }
+
+// TODO:
+// Read more PBRT, go over microfacet, fresnel and importance sampling
+// Try remove importance sampling from GGX to understand it better
+// Find resources on the sample/pdf parts
+// Get beckmann working
+// Look into the anisotropic beckmann
 
 void Model_Microfacet(
     inout uint rngState,
@@ -180,7 +184,7 @@ void Model_Microfacet(
     float3 T, B;
     BuildBasisFrisvad(Ns, T, B);
 
-    Lo += throughput * Li; // Wrong?
+    //Lo += throughput * Li; // TODO: Wrong?
 
     // Convert world to shading space
     // forall vector X, X.z = dot(N, X)
@@ -192,52 +196,54 @@ void Model_Microfacet(
     float3 F0 = lerp(float3(0.04, 0.04, 0.04), albedo, metalness);
     float3 F_select = F_Schlick(NdV, F0);
 
-    float specProb = clamp(Luminance(F_select), 0.05f, 0.95f);
-    bool sampleSpecular = PcgRand01(rngState) < specProb;
+    float specProb = clamp(Luminance(F_select), 0.05f, 0.95f); // kS
+    bool isSpecular = PcgRand01(rngState) < specProb;
 
 #if defined(FORCE_SPECULAR)
-    sampleSpecular = true;
+    isSpecular = true;
 #elif defined(FORCE_DIFFUSE)
-    sampleSpecular = false;
+    isSpecular = false;
 #endif
 
-    if (sampleSpecular)
+    if (isSpecular)
     {
 #if defined(NDF_TYPE_GGX)
         float alpha = RoughnessToAlpha_GGX(roughness);
         float a2 = alpha * alpha;
-        float3 L_s = SampleGGX_Classic(a2, rngState);
+        float3 H_s = SampleH_GGX(a2, rngState);
 #elif defined(NDF_TYPE_BECKMANN)
         float alpha = RoughnessToAlpha_Beckmann(roughness);
         float a2 = alpha * alpha;
-        float3 L_s = SampleGGX_Classic(a2, rngState);
-#elif defined(NDF_TYPE_TROWBRIDGE_REITZ)
-        // TODO
+        float3 H_s = SampleH_Beckmann(alpha, rngState);
 #else
         float alpha = 0.0f;
         float a2 = 0.0f;
-        float3 L_s = 0.0f;
+        float3 H_s = 0.0f;
 #endif
 
+        float3 L_s = normalize(reflect(-V_s, H_s));
         wi = ShadingToWorldSpace(L_s, T, B, Ns);
 
-        float3 H_s = NormalizeSafe(V_s + L_s, N_s);
         float NdL = SSpaceCosTheta(L_s);
         float NdH = SSpaceCosTheta(H_s);
         float VdH = dot(H_s, V_s);
 
         float3 F = F_Schlick(VdH, F0);
 
+    bool pdfSampleVisibleArea = false;
+#ifdef PDF_SAMPLE_VISIBLE_AREA
+    pdfSampleVisibleArea = true;
+#endif
+
 #if defined(NDF_TYPE_GGX)
         float D = D_GGX(NdH, a2);
         float G = G_SmithGGX(NdL, NdV, a2);
-        float pdf = PdfGGX_Classic(NdH, VdH, a2);
+        float pdf = Pdf_GGX(D, NdH, VdH);
+        //float pdf = Pdf_General(D, G1_GGX(NdV, a2), V_s, H_s, pdfSampleVisibleArea);
 #elif defined(NDF_TYPE_BECKMANN)
         float D = D_Beckmann(H_s, a2);
         float G = G_Beckmann(V_s, L_s, alpha);
-        float pdf = Pdf_General(D, V_s, H_s, alpha, true);
-#elif defined(NDF_TYPE_TROWBRIDGE_REITZ)
-        // TODO
+        float pdf = Pdf_General(D, G1_Beckmann(V_s, alpha), V_s, H_s, pdfSampleVisibleArea);
 #else
         float D = 0.0f;
         float G = 0.0f;
@@ -252,7 +258,7 @@ void Model_Microfacet(
 #     include "Debug/DebugBuffersMicrofacetSpec.hlsli"
 #endif
     }
-    else
+    else // Lambert
     {
         float3 L_s = RandHemisphereCosine(rngState, N_s);
         wi = ShadingToWorldSpace(L_s, T, B, Ns);

@@ -28,8 +28,7 @@ class TLAS;
 enum MicrofacetNdfType : uint32_t
 {
     eGGX,
-    eBeckmann,
-    eTrowbridgeReitz,
+    eBeckmann
 };
 
 enum PathTracerLightingModel : uint32_t
@@ -63,6 +62,7 @@ struct PtConfig
     alignas(4) bool RussianRouletteEnabled = true;
     alignas(4) bool DirLightEnabled = true;
     alignas(4) bool NormalMapsEnabled = true;
+    alignas(4) bool PdfSampleVisibleArea = true;
 };
 
 class PathTracingContext

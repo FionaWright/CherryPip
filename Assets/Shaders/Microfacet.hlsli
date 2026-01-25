@@ -56,6 +56,7 @@ float RoughnessToAlpha_GGX(float roughness)
     return roughness * roughness;
 }
 
+// Heuristic to have beckmann visually match GGX for the same roughness value
 float RoughnessToAlpha_Beckmann(float roughness)
 {
     roughness = max(1e-3f, roughness);
@@ -68,6 +69,7 @@ float RoughnessToAlpha_Beckmann(float roughness)
 //  Normal Distribution Functions
 // ================================
 
+// GGX == Trowbridge-Reitz
 float D_GGX(float NdH, float a2)
 {
     float denominator = (NdH * NdH * (a2 - 1.0f) + 1.0f);
@@ -118,7 +120,6 @@ float AnisoAlphaXyToMaskingAlpha(float3 dirOfInterest, float alphaX, float alpha
     return sqrt(k1 + k2);
 }
 
-// Incorrect?
 float G1_GGX(float NdX, float a2)
 {
     float denom = NdX + sqrt(a2 + (1-a2) * NdX * NdX);
@@ -164,30 +165,11 @@ float G_Beckmann(float3 V, float3 L, float alpha)
     return 1.0f / (1.0f + Lambda_Beckmann(V, alpha) + Lambda_Beckmann(L, alpha));
 }
 
-float Lambda_TrowbridgeReitz(float3 W, float alpha)
-{
-    float absTanT = abs(SSpaceTanTheta(W));
-    if (IsNaN(1/absTanT)) return 0; // Is infinite
-
-    float alpha2Tan2T = (alpha * absTanT) * (alpha * absTanT);
-    return (-1 + sqrt(1.f + alpha2Tan2T)) / 2.0f;
-}
-
-float G1_TrowbridgeReitz(float3 W, float alpha)
-{
-    return 1.0f / (1.0f + Lambda_TrowbridgeReitz(W, alpha));
-}
-
-float G_TrowbridgeReitz(float3 V, float3 L, float alpha)
-{
-    return 1.0f / (1.0f + Lambda_TrowbridgeReitz(V, alpha) + Lambda_TrowbridgeReitz(L, alpha));
-}
-
 // ================================
 //  Direction Sampling Functions
 // ================================
 
-float3 SampleGGX_Classic(float a2, inout uint rngState)
+float3 SampleH_GGX(float a2, inout uint rngState)
 {
     float r1 = PcgRand01(rngState);
     float r2 = PcgRand01(rngState);
@@ -196,28 +178,40 @@ float3 SampleGGX_Classic(float a2, inout uint rngState)
     float cosTheta = sqrt((1.0 - r2) / (1.0 + (a2 - 1.0) * r2));
     float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
 
-    float3 L_s = normalize(float3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta));
-    return L_s;
+    float3 H_s = normalize(float3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta));
+    return H_s;
+}
+
+float3 SampleH_Beckmann(float alpha, inout uint rngState)
+{
+    float r1 = PcgRand01(rngState);
+    float r2 = PcgRand01(rngState);
+
+    float tan2Theta = -alpha * alpha * log(1.0 - r1);
+    float cosTheta = 1.0 / sqrt(1.0 + tan2Theta);
+    float sinTheta = sqrt(max(0.0, 1.0 - cosTheta * cosTheta));
+
+    float phi = 2.0 * PI * r2;
+
+    float3 H_s = normalize(float3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta));
+    return H_s;
 }
 
 // ================================
 //  Probability Density Functions
 // ================================
 
-float PdfGGX_Classic(float NdH, float VdH, float a2)
+float Pdf_GGX(float D, float NdH, float VdH)
 {
-    float D = D_GGX(NdH, a2);
     return D * NdH / (4.0f * max(0.001f, VdH));
 }
 
-// Used for beckmann and trowbridge at least
-float Pdf_General(float D, float3 V, float3 H, float alpha, bool sampleVisibleArea)
+float Pdf_General(float D, float G1v, float3 V, float3 H, bool sampleVisibleArea)
 {
-    float a2 = alpha * alpha;
     if (!sampleVisibleArea)
         return D * abs(SSpaceCosTheta(H));
 
-    return D * G1_Beckmann(V, alpha) * abs(dot(V, H)) / abs(SSpaceCosTheta(V));
+    return D * G1v * abs(dot(V, H)) / abs(SSpaceCosTheta(V));
 }
 
 #endif

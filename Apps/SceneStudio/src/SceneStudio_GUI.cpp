@@ -87,6 +87,32 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
 
     m_shaderDirty |= ImGui::Checkbox("Normal Maps Enabled##xx", &m_studioConfig.PT.NormalMapsEnabled);
 
+    static int e = m_studioConfig.PT.LightingModel;
+    ImGui::Text("%s", "Path Tracer Lighting Model:");
+    int idx = 0;
+    ImGui::Indent(IM_GUI_INDENTATION);
+    m_shaderDirty |= ImGui::RadioButton("Lambert", &e, idx++);
+    m_shaderDirty |= ImGui::RadioButton("Glossy", &e, idx++);
+    m_shaderDirty |= ImGui::RadioButton("Glass", &e, idx++);
+    m_shaderDirty |= ImGui::RadioButton("Microfacet", &e, idx++);
+    m_shaderDirty |= ImGui::RadioButton("Furnace Test (HDR)", &e, idx++);
+    m_shaderDirty |= ImGui::RadioButton("Furnace Test (HHE)", &e, idx++);
+    ImGui::Unindent(IM_GUI_INDENTATION);
+    m_studioConfig.PT.LightingModel = static_cast<PathTracerLightingModel>(e);
+
+    if (m_studioConfig.PT.LightingModel == PathTracerLightingModel::eMicrofacet)
+    {
+        ImGui::Text("%s", "Microfacet Normal Distribution Function:");
+        static int e2 = m_studioConfig.PT.NdfType;
+        idx = 0;
+        ImGui::Indent(IM_GUI_INDENTATION);
+        m_shaderDirty |= ImGui::RadioButton("GGX", &e2, idx++);
+        m_shaderDirty |= ImGui::RadioButton("Beckmann", &e2, idx++);
+        m_shaderDirty |= ImGui::RadioButton("Trowbridge-Reitz", &e2, idx++);
+        ImGui::Unindent(IM_GUI_INDENTATION);
+        m_studioConfig.PT.NdfType = static_cast<MicrofacetNdfType>(e2);
+    }
+
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Path-Tracer Tools##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
@@ -128,6 +154,7 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
         "Microfacet: Light Vector (SS)",
         "Microfacet: Half Vector (SS)",
         "Microfacet: Specular Probability",
+        "Microfacet: Alpha",
         "Microfacet: D",
         "Microfacet: F",
         "Microfacet: G",
@@ -136,32 +163,6 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
         "Microfacet: PDF Diffuse",
         "Microfacet: PDF Specular",
     };
-
-    static int e = m_studioConfig.PT.LightingModel;
-    ImGui::Text("%s", "Path Tracer Lighting Model:");
-    int idx = 0;
-    ImGui::Indent(IM_GUI_INDENTATION);
-    m_shaderDirty |= ImGui::RadioButton("Lambert", &e, idx++);
-    m_shaderDirty |= ImGui::RadioButton("Glossy", &e, idx++);
-    m_shaderDirty |= ImGui::RadioButton("Glass", &e, idx++);
-    m_shaderDirty |= ImGui::RadioButton("Microfacet", &e, idx++);
-    m_shaderDirty |= ImGui::RadioButton("Furnace Test (HDR)", &e, idx++);
-    m_shaderDirty |= ImGui::RadioButton("Furnace Test (HHE)", &e, idx++);
-    ImGui::Unindent(IM_GUI_INDENTATION);
-    m_studioConfig.PT.LightingModel = static_cast<PathTracerLightingModel>(e);
-
-    if (m_studioConfig.PT.LightingModel == PathTracerLightingModel::eMicrofacet)
-    {
-        ImGui::Text("%s", "Microfacet Normal Distribution Function:");
-        static int e2 = m_studioConfig.PT.NdfType;
-        idx = 0;
-        ImGui::Indent(IM_GUI_INDENTATION);
-        m_shaderDirty |= ImGui::RadioButton("GGX", &e2, idx++);
-        m_shaderDirty |= ImGui::RadioButton("Beckmann", &e2, idx++);
-        m_shaderDirty |= ImGui::RadioButton("Trowbridge-Reitz", &e2, idx++);
-        ImGui::Unindent(IM_GUI_INDENTATION);
-        m_studioConfig.PT.NdfType = static_cast<MicrofacetNdfType>(e2);
-    }
 
     m_shaderDirty |= ImGui::Checkbox("Debug Buffers##xx", &m_studioConfig.PT.DebugMode);
     if (m_studioConfig.PT.DebugMode)
@@ -187,6 +188,19 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
             ImGui::EndCombo();
         }
     }
+    
+    ImGui::Unindent(IM_GUI_INDENTATION);
+
+    if (ImGui::Checkbox("Force Specular", &m_studioConfig.PT.DebugForceSpecular))
+    {
+        m_studioConfig.PT.DebugForceDiffuse = false;
+        m_shaderDirty = true;
+    }
+    if (ImGui::Checkbox("Force Diffuse", &m_studioConfig.PT.DebugForceDiffuse))
+    {
+        m_studioConfig.PT.DebugForceSpecular = false;
+        m_shaderDirty = true;
+    }
 
     ptNeedsReset |= m_shaderDirty;
 
@@ -196,7 +210,6 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
         m_readbackManager.SetInReadbackProcess(false);
 #endif
 
-    ImGui::Unindent(IM_GUI_INDENTATION);
     if (ptNeedsReset)
     {
         m_ptContext.Reset();

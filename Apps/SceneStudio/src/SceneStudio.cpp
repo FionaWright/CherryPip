@@ -652,6 +652,10 @@ void SceneStudio::compilePtShader(const D3D* d3d)
         args.push_back(L"-DNORMAL_MAPS_ENABLED");
     if (m_studioConfig.PT.RussianRouletteEnabled)
         args.push_back(L"-DRUSSIAN_ROULETTE_ENABLED");
+    if (m_studioConfig.PT.DebugForceSpecular)
+        args.push_back(L"-DFORCE_SPECULAR");
+    if (m_studioConfig.PT.DebugForceDiffuse)
+        args.push_back(L"-DFORCE_DIFFUSE");
 
     if (m_studioConfig.PT.LightingModel == PathTracerLightingModel::eMicrofacet)
     {

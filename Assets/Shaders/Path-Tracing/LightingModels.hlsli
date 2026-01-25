@@ -195,6 +195,12 @@ void Model_Microfacet(
     float specProb = clamp(Luminance(F_select), 0.05f, 0.95f);
     bool sampleSpecular = PcgRand01(rngState) < specProb;
 
+#if defined(FORCE_SPECULAR)
+    sampleSpecular = true;
+#elif defined(FORCE_DIFFUSE)
+    sampleSpecular = false;
+#endif
+
     if (sampleSpecular)
     {
 #if defined(NDF_TYPE_GGX)
@@ -243,7 +249,7 @@ void Model_Microfacet(
         throughput *= specularBrdf * NdL / max(0.001f, pdf) / max(0.001f, specProb);
 
 #ifdef DEBUG_BUFFER
-#     include "Debug/DebugBuffersMicrofacet.hlsli"
+#     include "Debug/DebugBuffersMicrofacetSpec.hlsli"
 #endif
     }
     else
@@ -258,7 +264,9 @@ void Model_Microfacet(
         diffuseBrdf /= PI;
         throughput *= diffuseBrdf * NdL / pdf / max(0.001f, 1.0 - specProb);
 
-        // TODO: DEBUG
+#ifdef DEBUG_BUFFER
+#     include "Debug/DebugBuffersMicrofacetDiff.hlsli"
+#endif
     }
 }
 

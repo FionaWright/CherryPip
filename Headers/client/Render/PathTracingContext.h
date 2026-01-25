@@ -53,6 +53,8 @@ struct PtConfig
     DebugBuffer DebugBufferIdx = DebugBuffer::eNormalsShaded;
     float DirLightCosAngularRadius = 0.00465f;
     alignas(4) bool DebugMode = false;
+    alignas(4) bool DebugForceSpecular = false;
+    alignas(4) bool DebugForceDiffuse = false;
     alignas(4) bool AccumulationEnabled = true;
     alignas(4) bool JitterEnabled = true;
     alignas(4) bool ReadbackEnabled = false;

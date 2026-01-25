@@ -114,6 +114,7 @@ enum class DebugBuffer
     eMicrofacetVecHalf,
 
     eMicrofacetSpecProb,
+    eMicrofacetAlpha,
     eMicrofacetD,
     eMicrofacetF,
     eMicrofacetG,

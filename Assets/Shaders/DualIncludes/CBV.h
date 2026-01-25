@@ -102,8 +102,17 @@ enum class DebugBuffer
     eRNG,
     eSelfIntersection,
     eNaN,
+
     eRoughness,
     eMetalness,
+
+    eMicrofacetTangent,
+    eMircofacetBinormal,
+    eMicrofacetVecViewWSpace,
+    eMicrofacetVecViewSSpace,
+    eMicrofacetVecLightSSpace,
+    eMicrofacetVecHalf,
+
     eMicrofacetSpecProb,
     eMicrofacetD,
     eMicrofacetF,
@@ -112,7 +121,6 @@ enum class DebugBuffer
     eMicrofacetBrdfSpec,
     eMicrofacetPdfDiff,
     eMicrofacetPdfSpec,
-    eMicrofacetHalfVec,
 };
 
 struct CbvPathTracingDebug

@@ -12,7 +12,7 @@
 
 float3 WorldToShadingSpace(float3 X, float3 T, float3 B, float3 N)
 {
-    return normalize(float3(dot(X, T), dot(X, B), dot(N, T)));
+    return normalize(float3(dot(X, T), dot(X, B), dot(X, N)));
 }
 
 float3 ShadingToWorldSpace(float3 X, float3 T, float3 B, float3 N)

@@ -235,7 +235,7 @@ void SceneStudio::loadAssets(D3D* d3d)
         t,
         XMFLOAT3(1.753f, 1.274f, -0.23f),
         XMFLOAT2(0.105f, 4.747f),
-        true
+        false
     };
     m_sceneConfigs.emplace_back(sceneSponza);
 

@@ -3,6 +3,7 @@
 
 #include "DebugPalette.hlsli"
 #include "Rand01.hlsli"
+#include "MathUtils.hlsli"
 
 void Hit(inout uint rngState,
         inout RayQuery<RAY_FLAGS> q,
@@ -35,9 +36,8 @@ void Hit(inout uint rngState,
     float3 N = v0.normal * bary.x + v1.normal * bary.y + v2.normal * bary.z;
     N = normalize(mul((float3x3)instance.MTI, N));
 #ifdef NORMAL_MAPS_ENABLED
-    float3 T = v0.tangent * bary.x + v1.tangent * bary.y + v2.tangent * bary.z;
-    T = normalize(T - N * dot(T, N)); // Recompute T and B as they may be invalid after interpolation
-    float3 B = normalize(cross(N, T));
+    float3 T, B;
+    BuildBasisFrisvad(N, T, B);
 
     float3 bumpSample = gTextures[mat.TexIdxNormal].Sample(c_sampler, uv).rgb * 2.0f - 1.0f;
     bumpSample.y = -bumpSample.y; // DX-convention

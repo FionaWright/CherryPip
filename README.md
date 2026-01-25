@@ -23,7 +23,7 @@ Trying to work on it when I have free time from college.
 
 ### Forward + Deferred Render Backends
 - Microfacet lighting model + Irradiance IBL
-- Many different debug view modes (WorldPos, Normals, Tangents, Roughness, UV, Lambert, Albedo, etc)
+- Many different debug view modes (WorldPos, Normals, Tangents, Roughness, UV, Lambert, Albedo, etc) (24+)
 - Rotatable cubemap skybox that has parity with path tracer backend
 
 ### Path Tracer Render Backend
@@ -31,7 +31,7 @@ Trying to work on it when I have free time from college.
 - Readback debug system that allows you to find selected pixel value or collect data every frame
 - Two furnace tests
 - Russian Roulette, Firefly Threshold, Importance Sampling
-- See different parts of the path tracer using Debug Buffer system (Normals, Albedo, HitDist, RNG, FirstBounceDirection, etc)
+- See different internal parts of the path tracer using Debug Buffer system (Normals, Albedo, HitDist, RNG, FirstBounceDirection, etc) (29+)
 - Lambertian, Glossy, Glass and Microfacet lighting models
 - GGX and Beckmann NDFs, Schlick Fresnel, Smith Geometry Masking
 - Environment maps with support for Panoramic and Octohedral Equal-Area (Rotatable at runtime!)
@@ -60,6 +60,7 @@ Progress as of 18/01/26:
 
 Progress as of 25/01/26:
 <img width="1361" height="578" alt="image" src="https://github.com/user-attachments/assets/60ed04b8-04b0-4655-878b-7c0c79932d9f" />
+
 
 
 

@@ -66,6 +66,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 ### Bugs (Physical Inaccuracies)
 - Fix glass attenuation after, add attenuationDistance field
+- Sponza NaNs
 
 ### Bugs (Classic)
 - Camera movement gets messed up sometimes
@@ -82,8 +83,9 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ## Raster/Laptop-TODO
 
 - Mip maps aren't currently working. Need alternate solution for BC7 textures
-- Fix bistro
 - Stop irradiance cubemap making mip maps
+- Bistro subfolder issue (Move all textures to root on build copy?)
+- Beckmann for raster?
 
 ## Spectral Tracing
 

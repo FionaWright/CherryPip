@@ -51,6 +51,7 @@ struct PtConfig
     MicrofacetNdfType NdfType = eGGX;
     DebugBuffer DebugBufferIdx = DebugBuffer::eNormalsShaded;
     float DirLightCosAngularRadius = 0.00465f;
+    float FireflyThreshold = 10.0f;
     alignas(4) bool DebugMode = false;
     alignas(4) bool DebugForceSpecular = false;
     alignas(4) bool DebugForceDiffuse = false;

@@ -212,6 +212,7 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
         cbv.AccumulationEnabled = config.AccumulationEnabled ? 1u : 0u;
         cbv.WindowAppGuiWidth = Config::GetSystem().WindowAppGuiWidth;
         cbv.UpdateAccumulation = frameIncAllowed ? 1 : 0;
+        cbv.FireflyThreshold = config.FireflyThreshold;
 
         cbv.DirLight = dirLightDir;
         cbv.DirLightColor = dirLightColor;

@@ -88,8 +88,8 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
     if (m_studioConfig.PT.DepthOfFieldEnabled)
     {
         ImGui::Indent(IM_GUI_INDENTATION);
-        m_shaderDirty |= ImGuiUtils::FwDragFloat("Focal Distance", &m_studioConfig.PT.DofFocalDist);
-        m_shaderDirty |= ImGuiUtils::FwDragFloat("Lens Radius", &m_studioConfig.PT.DofLensRadius);
+        m_shaderDirty |= ImGuiUtils::FwDragFloat("Focal Distance", &m_studioConfig.PT.DofFocalDist, 0.03f);
+        m_shaderDirty |= ImGuiUtils::FwDragFloat("Lens Radius", &m_studioConfig.PT.DofLensRadius, 0.01f);
         ImGui::Unindent(IM_GUI_INDENTATION);
     }
 

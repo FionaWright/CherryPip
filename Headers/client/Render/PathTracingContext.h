@@ -53,7 +53,7 @@ struct PtConfig
     float DirLightCosAngularRadius = 0.00465f;
     float FireflyThreshold = 10.0f;
     float DofFocalDist = 5.0f;
-    float DofLensRadius = 1.0f;
+    float DofLensRadius = 0.05f;
     alignas(4) bool DebugMode = false;
     alignas(4) bool DebugForceSpecular = false;
     alignas(4) bool DebugForceDiffuse = false;

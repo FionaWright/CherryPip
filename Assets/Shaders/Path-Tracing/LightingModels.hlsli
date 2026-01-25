@@ -211,11 +211,11 @@ void Model_Microfacet(
     {
 #if defined(NDF_TYPE_GGX)
         float alpha = RoughnessToAlpha_GGX(roughness);
-        float a2 = alpha * alpha;
+        float a2 = max(1e-6f, alpha * alpha);
         float3 H_s = SampleH_GGX(a2, rngState);
 #elif defined(NDF_TYPE_BECKMANN)
         float alpha = RoughnessToAlpha_Beckmann(roughness);
-        float a2 = alpha * alpha;
+        float a2 = max(1e-6f, alpha * alpha);
         float3 H_s = SampleH_Beckmann(alpha, rngState);
 #else
         float alpha = 0.0f;

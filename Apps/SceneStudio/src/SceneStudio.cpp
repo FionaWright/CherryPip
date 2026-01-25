@@ -630,9 +630,7 @@ void SceneStudio::compilePtShader(const D3D* d3d)
         L"Path-Tracing/Entry/LambDiffPS.hlsl",
         L"Path-Tracing/Entry/GlossyPS.hlsl",
         L"Path-Tracing/Entry/GlassPS.hlsl",
-        L"Path-Tracing/Entry/MicrofacetPS.hlsl",
-        L"Path-Tracing/Entry/FurnaceHdReflectPS.hlsl",
-        L"Path-Tracing/Entry/FurnaceHhEmitPS.hlsl"
+        L"Path-Tracing/Entry/MicrofacetPS.hlsl"
     };
     const WCHAR* shaderPath = shaderMap[m_studioConfig.PT.LightingModel];
 
@@ -663,6 +661,11 @@ void SceneStudio::compilePtShader(const D3D* d3d)
         args.push_back(L"-DPDF_SAMPLE_VISIBLE_AREA");
     if (m_studioConfig.PT.DepthOfFieldEnabled)
         args.push_back(L"-DDEPTH_OF_FIELD_ENABLED");
+
+    if (m_studioConfig.PT.FurnaceTestHdReflect)
+        args.push_back(L"-DFURNACE_TEST_HEMI_DIR_REFLECT");
+    else if (m_studioConfig.PT.FurnaceTestHhEmit)
+        args.push_back(L"-DFURNACE_TEST_HEMI_HEMI_EMIT");
 
     if (m_studioConfig.PT.LightingModel == PathTracerLightingModel::eMicrofacet)
     {

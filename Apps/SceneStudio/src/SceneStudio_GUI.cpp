@@ -101,8 +101,6 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
     m_shaderDirty |= ImGui::RadioButton("Glossy", &e, idx++);
     m_shaderDirty |= ImGui::RadioButton("Glass", &e, idx++);
     m_shaderDirty |= ImGui::RadioButton("Microfacet", &e, idx++);
-    m_shaderDirty |= ImGui::RadioButton("Furnace Test (HDR)", &e, idx++);
-    m_shaderDirty |= ImGui::RadioButton("Furnace Test (HHE)", &e, idx++);
     ImGui::Unindent(IM_GUI_INDENTATION);
     m_studioConfig.PT.LightingModel = static_cast<PathTracerLightingModel>(e);
 
@@ -206,6 +204,17 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
     if (ImGui::Checkbox("Force Diffuse", &m_studioConfig.PT.DebugForceDiffuse))
     {
         m_studioConfig.PT.DebugForceSpecular = false;
+        m_shaderDirty = true;
+    }
+
+    if (ImGui::Checkbox("Furnace Test (HDR)", &m_studioConfig.PT.FurnaceTestHdReflect))
+    {
+        m_studioConfig.PT.FurnaceTestHhEmit = false;
+        m_shaderDirty = true;
+    }
+    if (ImGui::Checkbox("Furnace Test (HHE)", &m_studioConfig.PT.FurnaceTestHhEmit))
+    {
+        m_studioConfig.PT.FurnaceTestHdReflect = false;
         m_shaderDirty = true;
     }
 

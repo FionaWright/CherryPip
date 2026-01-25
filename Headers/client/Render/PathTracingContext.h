@@ -25,12 +25,19 @@ using Microsoft::WRL::ComPtr;
 class BLAS;
 class TLAS;
 
-enum PathTracerMode : uint32_t
+enum MicrofacetNdfType : uint32_t
+{
+    eGGX,
+    eBeckmann,
+    eTrowbridgeReitz,
+};
+
+enum PathTracerLightingModel : uint32_t
 {
     eLambertDiff,
     eGlossy,
     eGlass,
-    eGgxSmithMicrofacet,
+    eMicrofacet,
     eFurnaceTestClassic,
     eFurnaceTestEmissive
 };
@@ -41,7 +48,8 @@ struct PtConfig
     uint32_t NumBounces = 8;
     uint32_t MaxFrameNum = 0;
     uint32_t RussianRouletteMinBounces = 4;
-    PathTracerMode Mode = eGgxSmithMicrofacet;
+    PathTracerLightingModel LightingModel = eMicrofacet;
+    MicrofacetNdfType NdfType = eGGX;
     DebugBuffer DebugBufferIdx = DebugBuffer::eNormalsShaded;
     float DirLightCosAngularRadius = 0.00465f;
     alignas(4) bool DebugMode = false;

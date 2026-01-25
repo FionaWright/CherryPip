@@ -16,10 +16,12 @@ typedef struct uint4 { uint32_t x; uint32_t y; uint32_t z; uint32_t w; } uint4;
 #include <algorithm>
 #include <cmath>
 #define glueMax std::max
+#define glueMin std::min
 #define glueAbs std::abs
 #define glueSqrt std::sqrt
 #define glueCos std::cos
 #define glueSin std::sin
+#define glueAtan std::atan
 #define glueAtan2 std::atan2
 #define glueAsin std::asin
 
@@ -35,10 +37,12 @@ inline float glueDot(const float3 a, const float3 b) { return a.x*b.x + a.y*b.y 
 #else
 
 #define glueMax max
+#define glueMin min
 #define glueAbs abs
 #define glueSqrt sqrt
 #define glueCos cos
 #define glueSin sin
+#define glueAtan atan
 #define glueAtan2 atan2
 #define glueAsin asin
 #define glueClamp clamp

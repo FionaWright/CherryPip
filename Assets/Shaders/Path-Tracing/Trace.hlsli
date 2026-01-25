@@ -56,10 +56,10 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         }
         else
             Model_Glossy(rngState, Lo, throughput, mat.DiffuseProbability, roughness, Ns, Li, albedo, wo, ray.Direction);
-#elif defined(LIGHTING_GGX_SMITH_MICROFACET)
+#elif defined(LIGHTING_MICROFACET)
         //if (dot(Ns, wo) <= 0) break;
         float3 debug; bool hasDebugOutput;
-        Model_GgxSmithSchlick(rngState,
+        Model_Microfacet(rngState,
             Lo, throughput, roughness,
             metalness, Ns, Li, albedo,
             wo, ray.Direction

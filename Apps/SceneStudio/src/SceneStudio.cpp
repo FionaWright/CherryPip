@@ -382,6 +382,9 @@ void SceneStudio::initCustomScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     args.Root = m_rootSigRaster;
     args.DefaultShaderIndex = 0;
     args.Shaders = {m_shaderRaster};
+    args.BrdfIntegrationMap = m_texBrdfIntegrationMap.GetD12Resource();
+    args.Skybox = m_envMap.GetCubemap();
+    args.IrradianceMap = m_skybox.GetIrradianceMap();
 
     Transform t = {};
 

@@ -463,8 +463,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
 
     backupPath = assetDirectory + "Textures/WhitePOT.dds";
     std::shared_ptr<Texture> roughMetTex = loadTextureResource<fastgltf::TextureInfo>(d3d, cmdList, asset, mat.pbrData.metallicRoughnessTexture, localDirectory, backupPath.c_str());
-
-    std::shared_ptr<Texture> emissiveTex = loadTextureResource<fastgltf::TextureInfo>(d3d, cmdList, asset, mat.emissiveTexture, localDirectory, nullptr);
+    std::shared_ptr<Texture> emissiveTex = loadTextureResource<fastgltf::TextureInfo>(d3d, cmdList, asset, mat.emissiveTexture, localDirectory, backupPath.c_str());
 
     std::shared_ptr<Material> material = std::make_shared<Material>();
     material->Init(heap);

@@ -167,7 +167,6 @@ void BuildBasisFrisvad(float3 N, out float3 T, out float3 B)
 
 void Model_Microfacet(
     inout uint rngState,
-    inout float3 Lo,
     inout float3 throughput,
     float roughness,
     float metalness,
@@ -178,16 +177,15 @@ void Model_Microfacet(
     out float3 wi,    // L
     out float3 L_sample
 #ifdef DEBUG_BUFFER
-    , out float3 debug
-    , out bool hasDebugOutput
+    , inout float3 debug
+    , inout bool hasDebugOutput
 #endif
 )
 {
     float3 T, B;
     BuildBasisFrisvad(Ns, T, B);
 
-    //L_sample = throughput * Li; // TODO: Wrong?
-    L_sample = 0.0f;
+    L_sample = throughput * Li;
 
     // Convert world to shading space
     // forall vector X, X.z = dot(N, X)
@@ -200,13 +198,14 @@ void Model_Microfacet(
     float3 F_select = F_Schlick(NdV, F0);
 
     float specProb = clamp(Luminance(F_select), 0.05f, 0.95f); // kS
-    bool isSpecular = PcgRand01(rngState) < specProb;
 
 #if defined(FORCE_SPECULAR)
-    isSpecular = true;
+    specProb = 1.0f;
 #elif defined(FORCE_DIFFUSE)
-    isSpecular = false;
+    specProb = 0.0f;
 #endif
+
+    bool isSpecular = PcgRand01(rngState) < specProb;
 
     if (isSpecular)
     {
@@ -271,7 +270,7 @@ void Model_Microfacet(
         float pdf = NdL / PI;
         float3 diffuseBrdf = albedo * (1.0 - metalness);
         diffuseBrdf /= PI;
-        throughput *= diffuseBrdf * NdL / pdf / max(0.001f, 1.0 - specProb);
+        throughput *= diffuseBrdf * NdL / max(0.001f, pdf) / max(0.001f, 1.0 - specProb);
 
 #ifdef DEBUG_BUFFER
 #     include "Debug/DebugBuffersMicrofacetDiff.hlsli"

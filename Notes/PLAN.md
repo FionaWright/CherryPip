@@ -78,6 +78,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ### Misc
 - Get a big scene that isn't bistro (Junkyard?)
 - FPS has heavily dropped since I was away, possibly due to all the extra shaders/etc. Make sure they can be deleted properly when not in use
+- Get a NICE picture for LinkedIn and post it for fun
 
 ## Raster/Laptop-TODO
 

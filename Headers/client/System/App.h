@@ -14,7 +14,7 @@ protected:
 
 public:
     virtual void OnInit(D3D* d3d);
-    virtual void OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList) = 0;
+    virtual void OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList, double deltaTime) = 0;
     virtual void OnPostUpdate(D3D* d3d) = 0;
     virtual void RenderGUI() = 0;
 

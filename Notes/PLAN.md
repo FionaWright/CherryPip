@@ -88,7 +88,6 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Denoiser only initializes shaders/etc when needed (Easy refactor)
 - Refactor PtMaterialData to just MaterialData and share between backends
 - Camera movement isn't framerate independent for some reason (WASD)
-- Deferred normal maps
 
 ## Spectral Tracing
 

@@ -70,7 +70,7 @@ void Engine::Render()
     D12Resource* rtv = m_d3d->GetRtv();
     rtv->Transition(cmdList.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-    m_apps.at(m_selectedAppIdx)->OnUpdate(m_d3d.get(), cmdList.Get());
+    m_apps.at(m_selectedAppIdx)->OnUpdate(m_d3d.get(), cmdList.Get(), m_clock.GetDeltaMilliseconds());
     m_apps.at(m_selectedAppIdx)->RenderGUI();
 
     {

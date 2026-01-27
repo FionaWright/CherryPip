@@ -121,8 +121,8 @@ void SceneStudio::loadAssets(D3D* d3d)
 
     // TODO: Only set high heap if Bistro initial scene, don't allow changing scene after?
     // TODO: Or introduce better heap descriptor sharing
-    m_heap.Init(device, 50000, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-    m_heapRTV.Init(device, 20, D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    m_heap.Init("SRV/CBV/UAV Heap", device, 50000, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    m_heapRTV.Init("RTV Heap", device, 20, D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
     loadRasterAssets(d3d, cmdList.Get());
 
@@ -368,6 +368,8 @@ void SceneStudio::initScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList, const 
     m_scenes.emplace_back(scene);
 
 #ifdef _DEBUG
+    m_heap.PrintHeapInfo();
+    m_heapRTV.PrintHeapInfo();
     Profiler::PopAndPrint();
 #endif
     CherryPrint("Initialized Scene: " << m_sceneConfigs.at(configIdx).Name);

@@ -30,9 +30,9 @@ void PathTracingContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* c
 
     m_material = std::make_shared<Material>();
     m_material->Init(heap, true);
-    m_material->AddCBV(device, heap, sizeof(CbvPathTracing));
+    m_material->AddCBV(device, heap, sizeof(CbvPathTracing), "CBV Path Tracing");
 #ifdef _DEBUG
-    m_material->AddCBV(device, heap, sizeof(CbvPathTracingDebug));
+    m_material->AddCBV(device, heap, sizeof(CbvPathTracingDebug), "CBV Path Tracing Debug");
 #endif
     m_material->AddUAV(device, heap, m_accumTexture);
 }

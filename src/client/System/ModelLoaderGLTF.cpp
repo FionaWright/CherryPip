@@ -436,9 +436,9 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
 
         std::shared_ptr<Material> material = std::make_shared<Material>();
         material->Init(heap);
-        material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices));
-        material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterVS));
-        material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterDebug));
+        material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices), "CBV Matrices");
+        material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterVS), "CBV Raster Vertex");
+        material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterDebug), "CBV Raster Debug");
         material->SetTex(d3d->GetDevice(), 0, heap, diffuseTex);
 
         MaterialData materialData = {};
@@ -467,10 +467,10 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
 
     std::shared_ptr<Material> material = std::make_shared<Material>();
     material->Init(heap);
-    material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices));
-    material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterVS));
-    material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvForwardLighting));
-    material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterDebug));
+    material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices), "CBV Matrices");
+    material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterVS), "CBV Raster Vertex");
+    material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvForwardLighting), "CBV Forward Lighting");
+    material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterDebug), "CBV Raster Debug");
     material->SetTex(d3d->GetDevice(), 0, heap, diffuseTex);
     material->SetTex(d3d->GetDevice(), 1, heap, normalTex);
     material->SetTex(d3d->GetDevice(), 2, heap, roughMetTex);

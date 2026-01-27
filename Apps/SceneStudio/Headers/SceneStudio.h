@@ -101,6 +101,7 @@ private:
     void GuiRaster();
     void guiMain();
     void guiScene();
+    void guiHeapDebug();
 
     Heap m_heap, m_heapRTV;
     CameraController m_camera;

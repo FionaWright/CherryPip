@@ -8,6 +8,7 @@
 #include "Helper.h"
 #include "HWI/Heap.h"
 #include "HWI/TLAS.h"
+#include "System/Config.h"
 
 Material::~Material()
 {
@@ -24,7 +25,7 @@ void Material::Init(const Heap* heap, bool hasBindlessParam)
     m_hasBindlessParam = hasBindlessParam;
 }
 
-void Material::AddCBV(ID3D12Device* device, Heap* heap, const size_t size)
+void Material::AddCBV(ID3D12Device* device, Heap* heap, const size_t size, const char* debugName)
 {
     const size_t alignedSize = (size + 255) & ~255; // Ceilings the size to the nearest 256
 
@@ -33,7 +34,7 @@ void Material::AddCBV(ID3D12Device* device, Heap* heap, const size_t size)
 
     const D3D12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(alignedSize);
 
-    const UINT idx = heap->GetNextDescriptor();
+    const UINT idx = heap->GetNextDescriptor(debugName);
     CBV cbv = { nullptr, idx, size, alignedSize, nullptr };
 
     V(device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &bufferDesc,
@@ -47,7 +48,7 @@ void Material::AddCBV(ID3D12Device* device, Heap* heap, const size_t size)
     m_cbvs.push_back(cbv);
 }
 
-void Material::SetSRV(ID3D12Device* device, const UINT srvIdx, Heap* heap, D12Resource* d12Resource, const D3D12_SHADER_RESOURCE_VIEW_DESC& desc)
+void Material::SetSRV(ID3D12Device* device, const UINT srvIdx, Heap* heap, D12Resource* d12Resource, const D3D12_SHADER_RESOURCE_VIEW_DESC& desc, const char* debugName)
 {
     if (srvIdx > m_srvs.size())
         throw std::exception("Invalid srv index");
@@ -56,7 +57,7 @@ void Material::SetSRV(ID3D12Device* device, const UINT srvIdx, Heap* heap, D12Re
 
     if (srvIdx == m_srvs.size())
     {
-        const UINT idx = heap->GetNextDescriptor();
+        const UINT idx = heap->GetNextDescriptor(debugName);
         heap->InitSRV(device, resource, desc, idx);
 
         SRV srv = { idx };
@@ -82,7 +83,9 @@ void Material::SetTex(ID3D12Device* device, const UINT srvIdx, Heap* heap, std::
 
     m_tempTextureOwnership.push_back(tex);
 
-    SetSRV(device, srvIdx, heap, tex->GetD12Resource(), srvDesc);
+    std::string debugNameStr = Config::GetSystem().DebugHeapEnabled ? wstringToString(tex->GetD12Resource()->GetDebugName()).c_str() : nullptr;
+    const char* debugName = Config::GetSystem().DebugHeapEnabled ? debugNameStr.c_str() : nullptr;
+    SetSRV(device, srvIdx, heap, tex->GetD12Resource(), srvDesc, debugName);
 }
 
 void Material::SetTex(ID3D12Device* device, const UINT srvIdx, Heap* heap, D12Resource* d12Resource)
@@ -95,7 +98,9 @@ void Material::SetTex(ID3D12Device* device, const UINT srvIdx, Heap* heap, D12Re
     srvDesc.Texture2D.PlaneSlice = 0;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
-    SetSRV(device, srvIdx, heap, d12Resource, srvDesc);
+    std::string debugNameStr = Config::GetSystem().DebugHeapEnabled ? wstringToString(d12Resource->GetDebugName()).c_str() : nullptr;
+    const char* debugName = Config::GetSystem().DebugHeapEnabled ? debugNameStr.c_str() : nullptr;
+    SetSRV(device, srvIdx, heap, d12Resource, srvDesc, debugName);
 }
 
 void Material::SetBuffer(ID3D12Device* device, const UINT srvIdx, Heap* heap, std::shared_ptr<D12Resource> resource, const UINT numElements, const size_t stride)
@@ -108,7 +113,10 @@ void Material::SetBuffer(ID3D12Device* device, const UINT srvIdx, Heap* heap, st
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
     m_tempResourceOwnership.push_back(resource);
-    SetSRV(device, srvIdx, heap, resource.get(), srvDesc);
+
+    std::string debugNameStr = Config::GetSystem().DebugHeapEnabled ? wstringToString(resource->GetDebugName()).c_str() : nullptr;
+    const char* debugName = Config::GetSystem().DebugHeapEnabled ? debugNameStr.c_str() : nullptr;
+    SetSRV(device, srvIdx, heap, resource.get(), srvDesc, debugName);
 }
 
 void Material::SetTlas(ID3D12Device* device, const UINT srvIdx, Heap* heap, const std::shared_ptr<TLAS>& tlas)
@@ -131,7 +139,10 @@ void Material::AddUAV(ID3D12Device* device, Heap* heap, const std::shared_ptr<Te
     uavDesc.Texture2D.MipSlice = 0;
     uavDesc.Texture2D.PlaneSlice = 0;
 
-    const UINT idx = heap->GetNextDescriptor();
+    std::string debugNameStr = Config::GetSystem().DebugHeapEnabled ? wstringToString(tex->GetD12Resource()->GetDebugName()).c_str() : nullptr;
+    const char* debugName = Config::GetSystem().DebugHeapEnabled ? debugNameStr.c_str() : nullptr;
+
+    const UINT idx = heap->GetNextDescriptor(debugName);
     heap->InitUAV(device, tex->GetD12Resource()->GetResource(), uavDesc, idx);
 
     m_tempTextureOwnership.push_back(tex);
@@ -148,7 +159,7 @@ void Material::AddUAV(ID3D12Device* device, Heap* heap, ID3D12Resource* resource
     uavDesc.Texture2D.MipSlice = 0;
     uavDesc.Texture2D.PlaneSlice = 0;
 
-    const UINT idx = heap->GetNextDescriptor();
+    const UINT idx = heap->GetNextDescriptor("UAV");
     heap->InitUAV(device, resource, uavDesc, idx);
 
     const UAV uav = { idx };
@@ -157,7 +168,7 @@ void Material::AddUAV(ID3D12Device* device, Heap* heap, ID3D12Resource* resource
 
 void Material::AddUAV(ID3D12Device* device, Heap* heap, ID3D12Resource* resource, const D3D12_UNORDERED_ACCESS_VIEW_DESC& desc)
 {
-    const UINT idx = heap->GetNextDescriptor();
+    const UINT idx = heap->GetNextDescriptor("UAV");
     heap->InitUAV(device, resource, desc, idx);
 
     const UAV uav = { idx };

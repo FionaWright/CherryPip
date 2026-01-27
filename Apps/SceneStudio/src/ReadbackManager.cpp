@@ -28,7 +28,7 @@ void ReadbackManager::Init(const D3D* d3d, Heap* heap, TextureRTV* ptOut)
 
     m_materialReadbackHighlight = std::make_shared<Material>();
     m_materialReadbackHighlight->Init(heap);
-    m_materialReadbackHighlight->AddCBV(device, heap, sizeof(CbvHighlightPixel));
+    m_materialReadbackHighlight->AddCBV(device, heap, sizeof(CbvHighlightPixel), "CBV Highlight Pixel");
     m_materialReadbackHighlight->AddUAV(device, heap, ptOut->GetResource(), ptOut->GetD12Resource()->GetDesc().Format);
 }
 

@@ -5,6 +5,7 @@
 #include "System/pch.h"
 #include "Render/TextureRTV.h"
 
+#include "Helper.h"
 #include "Debug/GPUEventScoped.h"
 #include "System/Config.h"
 
@@ -38,7 +39,7 @@ void TextureRTV::Init(const LPCWSTR name, ID3D12Device* device, Heap* heap, cons
     rtvDesc.Texture2D.MipSlice = 0;
     rtvDesc.Texture2D.PlaneSlice = 0;
 
-    m_heapIdx = heap->GetNextDescriptor();
+    m_heapIdx = heap->GetNextDescriptor(wstringToString(name).c_str());
     const auto rtvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(heap->GetCPUHandle(), m_heapIdx, heap->GetIncrementSize());
 
     device->CreateRenderTargetView(m_d12Resource.GetResource(), &rtvDesc, rtvHandle);

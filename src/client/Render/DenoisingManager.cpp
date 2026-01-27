@@ -47,7 +47,7 @@ void DenoisingManager::initBox(ID3D12Device* device, Heap* heap)
     m_shaderBox.InitVsPs(L"FullScreenTriangleVS.hlsl", L"Filters/BoxPS.hlsl", m_ild, device, m_rootSigBox.Get());
 
     m_matBox.Init(heap);
-    m_matBox.AddCBV(device, heap, sizeof(CbvFilterBoxAndGauss));
+    m_matBox.AddCBV(device, heap, sizeof(CbvFilterBoxAndGauss), "CBV Box Filter");
 }
 
 void DenoisingManager::initGauss(ID3D12Device* device, Heap* heap)
@@ -60,10 +60,10 @@ void DenoisingManager::initGauss(ID3D12Device* device, Heap* heap)
                             m_rootSigGauss.Get());
 
     m_matGaussH.Init(heap);
-    m_matGaussH.AddCBV(device, heap, sizeof(CbvFilterBoxAndGauss));
+    m_matGaussH.AddCBV(device, heap, sizeof(CbvFilterBoxAndGauss), "CBV Gauss Filter H");
 
     m_matGaussV.Init(heap);
-    m_matGaussV.AddCBV(device, heap, sizeof(CbvFilterBoxAndGauss));
+    m_matGaussV.AddCBV(device, heap, sizeof(CbvFilterBoxAndGauss), "CBV Gauss Filter V");
 }
 
 void DenoisingManager::initMedian(ID3D12Device* device, Heap* heap)
@@ -74,7 +74,7 @@ void DenoisingManager::initMedian(ID3D12Device* device, Heap* heap)
                             m_rootSigMedian.Get());
 
     m_matMedian.Init(heap);
-    m_matMedian.AddCBV(device, heap, sizeof(CbvFilterBoxAndGauss));
+    m_matMedian.AddCBV(device, heap, sizeof(CbvFilterBoxAndGauss), "CBV Median Filter");
 }
 
 void DenoisingManager::initATrous(ID3D12Device* device, Heap* heap)
@@ -88,7 +88,7 @@ void DenoisingManager::initATrous(ID3D12Device* device, Heap* heap)
     for (int i = 0; i < MAX_ATROUS_ITERATIONS; i++)
     {
         m_matsATrous[i].Init(heap);
-        m_matsATrous[i].AddCBV(device, heap, sizeof(CbvFilterATrous));
+        m_matsATrous[i].AddCBV(device, heap, sizeof(CbvFilterATrous), (std::string("CBV A-Trous Filter Pass ") + std::to_string(i)).c_str());
     }
 }
 

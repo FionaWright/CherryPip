@@ -29,8 +29,9 @@ void Object::SetParent(Object* parent)
     m_parent = parent;
 }
 
-void Object::Render(ID3D12GraphicsCommandList* cmdList, CbvMatrices& matrices) const
+void Object::Render(ID3D12GraphicsCommandList* cmdList, CbvMatrices& matrices, const CD3DX12_GPU_DESCRIPTOR_HANDLE& bindlessHandle) const
 {
+    // TODO: Why are these in here
     cmdList->SetGraphicsRootSignature(m_rootSig->Get());
     cmdList->SetPipelineState(m_shader->GetPSO());
 
@@ -41,6 +42,8 @@ void Object::Render(ID3D12GraphicsCommandList* cmdList, CbvMatrices& matrices) c
 
     m_material->TransitionSrvsToPS(cmdList);
     m_material->SetDescriptorTables(cmdList);
+    
+    cmdList->SetGraphicsRootDescriptorTable(2, bindlessHandle);
 
     cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     cmdList->IASetVertexBuffers(0, 1, &m_model->GetVertexBufferView());

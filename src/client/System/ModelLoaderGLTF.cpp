@@ -471,11 +471,8 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterVS), "CBV Raster Vertex");
     material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvForwardLighting), "CBV Forward Lighting");
     material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterDebug), "CBV Raster Debug");
-    material->SetTex(d3d->GetDevice(), 0, heap, diffuseTex);
-    material->SetTex(d3d->GetDevice(), 1, heap, normalTex);
-    material->SetTex(d3d->GetDevice(), 2, heap, roughMetTex);
-    material->SetTex(d3d->GetDevice(), 3, heap, emissiveTex);
-    material->SetTex(d3d->GetDevice(), 4, heap, args.BrdfIntegrationMap);
+    material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterMaterial), "CBV Material");
+    material->SetTex(d3d->GetDevice(), 0, heap, args.BrdfIntegrationMap);
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
@@ -483,7 +480,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     srvDesc.TextureCube.MipLevels = args.Skybox->GetDesc().MipLevels;
     srvDesc.TextureCube.MostDetailedMip = 0;
-    material->SetSRV(d3d->GetDevice(), 5, heap, args.Skybox, srvDesc);
+    material->SetSRV(d3d->GetDevice(), 1, heap, args.Skybox, srvDesc);
 
     srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
@@ -491,7 +488,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     srvDesc.TextureCube.MipLevels = 1;
     srvDesc.TextureCube.MostDetailedMip = 0;
-    material->SetSRV(d3d->GetDevice(), 6, heap, args.IrradianceMap, srvDesc);
+    material->SetSRV(d3d->GetDevice(), 2, heap, args.IrradianceMap, srvDesc);
 
     bool isGlass = (mat.transmission && mat.transmission->transmissionFactor > 0.0) ||
         (mat.alphaMode == fastgltf::AlphaMode::Blend &&
@@ -514,6 +511,13 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     if (isGlass)
         materialData.Flags = PtMaterialFlags::eIsGlass;
     material->SetData(materialData);
+
+    CbvRasterMaterial cbvMat = {};
+    cbvMat.TexIdxAlbedo = materialData.BindlessTexDiffuse;
+    cbvMat.TexIdxNormal = materialData.BindlessTexNormal;
+    cbvMat.TexIdxRoughMet = materialData.BindlessTexRoughMet;
+    cbvMat.TexIdxEmissive = materialData.BindlessTexEmissive;
+    material->UpdateCBV(4, &cbvMat);
 
     auto obj = std::make_shared<Object>();
     obj->Init(node.name.c_str(), t, shaderUsed, args.Root, model, material);

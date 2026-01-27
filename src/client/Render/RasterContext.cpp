@@ -51,7 +51,7 @@ void RasterContext::Render(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, c
     for (int i = 0; i < objects.size(); ++i)
     {
         GPU_SCOPE(cmdList, objects[i]->GetName());
-        objects[i]->Render(cmdList, matrices, bindlessHandle);
+        objects[i]->RenderForward(cmdList, matrices, bindlessHandle);
     }
 }
 

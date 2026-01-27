@@ -434,19 +434,19 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
         std::shared_ptr<Texture> diffuseTex = std::make_shared<Texture>();
         diffuseTex->Init(d3d->GetDevice(), cmdList, diffuseTexInput, 1);
 
-        std::shared_ptr<Material> material = std::make_shared<Material>();
-        material->Init(heap);
-        material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices), "CBV Matrices");
-        material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterVS), "CBV Raster Vertex");
-        material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterDebug), "CBV Raster Debug");
-        material->SetTex(d3d->GetDevice(), 0, heap, diffuseTex);
+        std::shared_ptr<Material> materialForward = std::make_shared<Material>();
+        materialForward->Init(heap);
+        materialForward->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices), "CBV Matrices");
+        materialForward->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterVS), "CBV Raster Vertex");
+        materialForward->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterDebug), "CBV Raster Debug");
+        materialForward->SetTex(d3d->GetDevice(), 0, heap, diffuseTex);
 
         MaterialData materialData = {};
         materialData.BindlessTexDiffuse = heap->AddBindlessTexture(d3d->GetDevice(), diffuseTex);
-        material->SetData(materialData);
+        materialForward->SetData(materialData);
 
         auto obj = std::make_shared<Object>();
-        obj->Init(node.name.c_str(), t, shaderUsed, args.Root, model, material);
+        obj->Init(node.name.c_str(), t, shaderUsed, args.Root, model, materialForward, nullptr);
         args.OutObjects.emplace_back(obj);
         return;
     }
@@ -465,14 +465,14 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     std::shared_ptr<Texture> roughMetTex = loadTextureResource<fastgltf::TextureInfo>(d3d, cmdList, asset, mat.pbrData.metallicRoughnessTexture, localDirectory, backupPath.c_str());
     std::shared_ptr<Texture> emissiveTex = loadTextureResource<fastgltf::TextureInfo>(d3d, cmdList, asset, mat.emissiveTexture, localDirectory, backupPath.c_str());
 
-    std::shared_ptr<Material> material = std::make_shared<Material>();
-    material->Init(heap);
-    material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices), "CBV Matrices");
-    material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterVS), "CBV Raster Vertex");
-    material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvForwardLighting), "CBV Forward Lighting");
-    material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterDebug), "CBV Raster Debug");
-    material->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterMaterial), "CBV Material");
-    material->SetTex(d3d->GetDevice(), 0, heap, args.BrdfIntegrationMap);
+    std::shared_ptr<Material> materialForward = std::make_shared<Material>();
+    materialForward->Init(heap);
+    materialForward->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices), "CBV Matrices");
+    materialForward->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterVS), "CBV Raster Vertex");
+    materialForward->AddCBV(d3d->GetDevice(), heap, sizeof(CbvForwardLighting), "CBV Forward Lighting");
+    materialForward->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterDebug), "CBV Raster Debug");
+    materialForward->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterMaterial), "CBV Material");
+    materialForward->SetTex(d3d->GetDevice(), 0, heap, args.BrdfIntegrationMap);
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
@@ -480,7 +480,7 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     srvDesc.TextureCube.MipLevels = args.Skybox->GetDesc().MipLevels;
     srvDesc.TextureCube.MostDetailedMip = 0;
-    material->SetSRV(d3d->GetDevice(), 1, heap, args.Skybox, srvDesc);
+    materialForward->SetSRV(d3d->GetDevice(), 1, heap, args.Skybox, srvDesc);
 
     srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
@@ -488,14 +488,14 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     srvDesc.TextureCube.MipLevels = 1;
     srvDesc.TextureCube.MostDetailedMip = 0;
-    material->SetSRV(d3d->GetDevice(), 2, heap, args.IrradianceMap, srvDesc);
+    materialForward->SetSRV(d3d->GetDevice(), 2, heap, args.IrradianceMap, srvDesc);
 
     bool isGlass = (mat.transmission && mat.transmission->transmissionFactor > 0.0) ||
         (mat.alphaMode == fastgltf::AlphaMode::Blend &&
          mat.pbrData.metallicFactor < 0.1 &&
          mat.pbrData.roughnessFactor < 0.1);
 
-    material->SetName(mat.name.c_str());
+    materialForward->SetName(mat.name.c_str());
 
     MaterialData materialData = {};
     memcpy(&materialData.BaseColorFactor, &mat.pbrData.baseColorFactor, sizeof(float) * 3);
@@ -510,17 +510,23 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     materialData.BindlessTexEmissive = heap->AddBindlessTexture(d3d->GetDevice(), emissiveTex);
     if (isGlass)
         materialData.Flags = PtMaterialFlags::eIsGlass;
-    material->SetData(materialData);
+    materialForward->SetData(materialData);
 
     CbvRasterMaterial cbvMat = {};
     cbvMat.TexIdxAlbedo = materialData.BindlessTexDiffuse;
     cbvMat.TexIdxNormal = materialData.BindlessTexNormal;
     cbvMat.TexIdxRoughMet = materialData.BindlessTexRoughMet;
     cbvMat.TexIdxEmissive = materialData.BindlessTexEmissive;
-    material->UpdateCBV(4, &cbvMat);
+    materialForward->UpdateCBV(4, &cbvMat);
+
+    std::shared_ptr<Material> materialDeferred = std::make_shared<Material>();
+    materialDeferred->Init(heap);
+    materialDeferred->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices), "CBV Matrices");
+    materialDeferred->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterMaterial), "CBV Raster Material");
+    materialDeferred->UpdateCBV(1, &cbvMat);
 
     auto obj = std::make_shared<Object>();
-    obj->Init(node.name.c_str(), t, shaderUsed, args.Root, model, material);
+    obj->Init(node.name.c_str(), t, shaderUsed, args.Root, model, materialForward, materialDeferred);
     args.OutObjects.emplace_back(obj);
 }
 

@@ -495,7 +495,7 @@ void SceneStudio::guiScene()
 
     for (int i = 0; i < objects.size(); i++)
     {
-        const std::string name = std::string(objects[i]->GetName()) + " (" + objects[i]->GetMaterial()->GetName() + ")";
+        const std::string name = std::string(objects[i]->GetName()) + " (" + objects[i]->GetMaterialForward()->GetName() + ")";
         const std::string tempID = "##" + std::to_string(i);
         if (ImGui::TreeNode((name + tempID).c_str()))
         {
@@ -526,7 +526,7 @@ void SceneStudio::guiScene()
             ImGui::Spacing();
             ImGui::SeparatorText(("Material" + tempID).c_str());
 
-            Material* mat = objects[i]->GetMaterial();
+            Material* mat = objects[i]->GetMaterialForward();
             MaterialData* matData = mat->GetData();
 
             m_sceneDirty |= ImGuiUtils::FwColorEdit3(("Base Color Factor##xx" + tempID).c_str(), std::bit_cast<float*>(&matData->BaseColorFactor));

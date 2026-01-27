@@ -22,17 +22,18 @@ public:
     ~Object();
     void Init(const char* name, const std::shared_ptr<Transform>& transform,
               const std::shared_ptr<Shader>& shader, const std::shared_ptr<RootSig>& rootSig,
-              const std::shared_ptr<Model>& model, const std::shared_ptr<Material>& mat);
+              const std::shared_ptr<Model>& model, const std::shared_ptr<Material>& matForward, const std::shared_ptr<Material>& matDeferred);
     void SetParent(Object* parent);
 
-    void Render(ID3D12GraphicsCommandList* cmdList, CbvMatrices& matrices, const CD3DX12_GPU_DESCRIPTOR_HANDLE& bindlessHandle) const;
+    void RenderForward(ID3D12GraphicsCommandList* cmdList, CbvMatrices& matrices, const CD3DX12_GPU_DESCRIPTOR_HANDLE& bindlessHandle) const;
 
     Transform* GetTransform() const { return m_transform.get(); }
     Shader* GetShader() const { return m_shader.get(); }
     RootSig* GetRootSig() const { return m_rootSig.get(); }
     std::shared_ptr<Model> GetModel() const { return m_model; }
     Object* GetParent() const { return m_parent; }
-    Material* GetMaterial() const { return m_material.get(); }
+    Material* GetMaterialForward() const { return m_materialForward.get(); }
+    Material* GetMaterialDeferred() const { return m_materialDeferred.get(); }
     const char* GetName() const { return m_name.c_str(); }
 
 private:
@@ -42,7 +43,7 @@ private:
     std::shared_ptr<RootSig> m_rootSig;
     std::shared_ptr<Shader> m_shader;
     std::shared_ptr<Model> m_model;
-    std::shared_ptr<Material> m_material;
+    std::shared_ptr<Material> m_materialForward, m_materialDeferred;
 };
 
 

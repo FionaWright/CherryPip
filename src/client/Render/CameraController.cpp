@@ -7,7 +7,7 @@
 #include "System/Config.h"
 #include "System/Input.h"
 
-bool CameraController::UpdateCamera()
+bool CameraController::UpdateCamera(double deltaTime)
 {
     const bool mouseOverGUI = Input::GetMousePos().x < Config::GetSystem().WindowAppGuiWidth || Input::GetMousePos().x > Config::GetSystem().WindowAppGuiWidth + Config::GetSystem().RtvWidth;
 
@@ -64,11 +64,11 @@ bool CameraController::UpdateCamera()
         forwardScalar = Input::GetMouseWheelDelta() * 230 * m_speed;
     if (Input::IsKey(KeyCode::W))
     {
-        forwardScalar += m_speed;
+        forwardScalar += m_speed * deltaTime;
     }
     else if (Input::IsKey(KeyCode::S))
     {
-        forwardScalar -= m_speed;
+        forwardScalar -= m_speed * deltaTime;
     }
 
     const XMFLOAT3 forwardTranslation = XMFLOAT3(forward.x * forwardScalar, forward.y * forwardScalar, forward.z * forwardScalar);
@@ -77,11 +77,11 @@ bool CameraController::UpdateCamera()
     float rightScalar = 0;
     if (Input::IsKey(KeyCode::A))
     {
-        rightScalar += m_speed;
+        rightScalar += m_speed * deltaTime;
     }
     else if (Input::IsKey(KeyCode::D))
     {
-        rightScalar -= m_speed;
+        rightScalar -= m_speed * deltaTime;
     }
 
     const XMFLOAT3 rightTranslation = XMFLOAT3(right.x * rightScalar, right.y * rightScalar, right.z * rightScalar);
@@ -90,11 +90,11 @@ bool CameraController::UpdateCamera()
     float upScalar = 0;
     if (Input::IsKey(KeyCode::E))
     {
-        upScalar += m_speed;
+        upScalar += m_speed * deltaTime;
     }
     else if (Input::IsKey(KeyCode::Q))
     {
-        upScalar -= m_speed;
+        upScalar -= m_speed * deltaTime;
     }
 
     const XMFLOAT3 upTranslation = XMFLOAT3(up.x * upScalar, up.y * upScalar, up.z * upScalar);

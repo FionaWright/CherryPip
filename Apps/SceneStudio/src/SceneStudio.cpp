@@ -40,7 +40,7 @@ void SceneStudio::OnInit(D3D* d3d)
     loadAssets(d3d);
 }
 
-void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
+void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList, double deltaTime)
 {
     if (m_envMapDirty)
     {
@@ -100,7 +100,7 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         break;
     }
 
-    const bool moved = m_camera.UpdateCamera();
+    const bool moved = m_camera.UpdateCamera(deltaTime);
     if (moved)
         m_ptContext.Reset();
 }

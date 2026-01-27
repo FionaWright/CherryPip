@@ -78,7 +78,7 @@ UINT Heap::AddBindlessTexture(ID3D12Device* device, std::shared_ptr<Texture> tex
     srvDesc.Texture2D.PlaneSlice = 0;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
-    std::string debugNameStr = Config::GetSystem().DebugHeapEnabled ? wstringToString(tex->GetD12Resource()->GetDebugName()).c_str() : nullptr;
+    std::string debugNameStr = Config::GetSystem().DebugHeapEnabled ? wstringToString(tex->GetD12Resource()->GetDebugName()).c_str() : "";
     const char* debugName = Config::GetSystem().DebugHeapEnabled ? debugNameStr.c_str() : nullptr;
 
     const UINT idx = GetNextDescriptorBindlessTexture(debugName);

@@ -402,7 +402,7 @@ void SceneStudio::initCustomScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         args.OutObjects.back()->GetTransform()->SetPosition(0.25f, 0.02f, -0.5f);
         args.OutObjects.back()->GetTransform()->SetRotationE(-1.57f, 0.5f, 0.0f);
         args.OutObjects.back()->GetTransform()->SetScale(2.5f);
-        args.OutObjects.back()->GetMaterial()->GetData()->DiffuseProbability = 0.0f;
+        args.OutObjects.back()->GetMaterialForward()->GetData()->DiffuseProbability = 0.0f;
         args.CullingWhiteList.clear();
         t = {};
     }
@@ -412,10 +412,10 @@ void SceneStudio::initCustomScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     {
         t.SetPosition(0, 1, 0);
         ModelLoaderGLTF::LoadSplitModel(d3d, cmdList, &m_heap, L"Sphere/Sphere.gltf", args, t);
-        args.OutObjects.back()->GetMaterial()->GetData()->BindlessTexDiffuse = 0;
-        args.OutObjects.back()->GetMaterial()->GetData()->Metalness = 0;
-        args.OutObjects.back()->GetMaterial()->GetData()->Roughness = 0;
-        args.OutObjects.back()->GetMaterial()->GetData()->Flags = PtMaterialFlags::eIsGlass;
+        args.OutObjects.back()->GetMaterialForward()->GetData()->BindlessTexDiffuse = 0;
+        args.OutObjects.back()->GetMaterialForward()->GetData()->Metalness = 0;
+        args.OutObjects.back()->GetMaterialForward()->GetData()->Roughness = 0;
+        args.OutObjects.back()->GetMaterialForward()->GetData()->Flags = PtMaterialFlags::eIsGlass;
         t = {};
     }
 
@@ -458,7 +458,7 @@ void SceneStudio::denoisingPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
             m_deferredContext.Init(d3d->GetDevice(), cmdList, &m_heapRTV, &m_heap);
 
         const Skybox* skybox = m_studioConfig.EnvMapEnabled ? &m_skybox : nullptr;
-        m_deferredContext.RenderGBuffer(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, skybox);
+        m_deferredContext.RenderGBuffer(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, &m_heap, skybox);
     }
 
     if (!m_denoisingManager.IsInitialized())
@@ -572,9 +572,9 @@ void SceneStudio::renderForward(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         auto& objects = currScene->GetObjects();
         for (int i = 0; i < objects.size(); ++i)
         {
-            objects[i]->GetMaterial()->UpdateCBV(1, &cbvRasterVs);
-            objects[i]->GetMaterial()->UpdateCBV(2, &cbvForwardLighting);
-            objects[i]->GetMaterial()->UpdateCBV(3, &cbvRasterDebug);
+            objects[i]->GetMaterialForward()->UpdateCBV(1, &cbvRasterVs);
+            objects[i]->GetMaterialForward()->UpdateCBV(2, &cbvForwardLighting);
+            objects[i]->GetMaterialForward()->UpdateCBV(3, &cbvRasterDebug);
         }
     }
 
@@ -610,7 +610,7 @@ void SceneStudio::renderDeferred(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
             m_deferredContext.Init(d3d->GetDevice(), cmdList, &m_heapRTV, &m_heap);
 
         const Skybox* skybox = m_studioConfig.EnvMapEnabled ? &m_skybox : nullptr;
-        m_deferredContext.RenderGBuffer(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, skybox);
+        m_deferredContext.RenderGBuffer(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, &m_heap, skybox);
     }
 
     // Lighting Pass

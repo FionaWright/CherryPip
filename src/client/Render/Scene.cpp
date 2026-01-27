@@ -32,7 +32,7 @@ void Scene::Init(const char* name, const XMFLOAT3& camPos, const float pitch, co
     material->SetData(materialData);
 
     const auto object = std::make_shared<Object>();
-    object->Init(name, nullptr, nullptr, nullptr, model, material);
+    object->Init(name, nullptr, nullptr, nullptr, model, material, nullptr);
     m_objects.push_back(object);
 
     m_cameraPitch = pitch;

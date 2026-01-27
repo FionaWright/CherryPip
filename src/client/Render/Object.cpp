@@ -14,14 +14,15 @@ Object::~Object()
 
 void Object::Init(const char* name, const std::shared_ptr<Transform>& transform,
                   const std::shared_ptr<Shader>& shader, const std::shared_ptr<RootSig>& rootSig,
-                  const std::shared_ptr<Model>& model, const std::shared_ptr<Material>& mat)
+                  const std::shared_ptr<Model>& model, const std::shared_ptr<Material>& matForward, const std::shared_ptr<Material>& matDeferred)
 {
     m_name = name;
     m_transform = transform ? transform : std::make_shared<Transform>();
     m_shader = shader;
     m_rootSig = rootSig;
     m_model = model;
-    m_material = mat;
+    m_materialForward = matForward;
+    m_materialDeferred = matDeferred;
 }
 
 void Object::SetParent(Object* parent)
@@ -29,7 +30,7 @@ void Object::SetParent(Object* parent)
     m_parent = parent;
 }
 
-void Object::Render(ID3D12GraphicsCommandList* cmdList, CbvMatrices& matrices, const CD3DX12_GPU_DESCRIPTOR_HANDLE& bindlessHandle) const
+void Object::RenderForward(ID3D12GraphicsCommandList* cmdList, CbvMatrices& matrices, const CD3DX12_GPU_DESCRIPTOR_HANDLE& bindlessHandle) const
 {
     // TODO: Why are these in here
     cmdList->SetGraphicsRootSignature(m_rootSig->Get());
@@ -38,11 +39,11 @@ void Object::Render(ID3D12GraphicsCommandList* cmdList, CbvMatrices& matrices, c
     const XMMATRIX M = m_transform->GetModelMatrix();
     XMStoreFloat4x4(&matrices.M, M);
     XMStoreFloat4x4(&matrices.MTI, XMMatrixInverse(nullptr, XMMatrixTranspose(M)));
-    m_material->UpdateCBV(0, &matrices);
+    m_materialForward->UpdateCBV(0, &matrices);
 
-    m_material->TransitionSrvsToPS(cmdList);
-    m_material->SetDescriptorTables(cmdList);
-    
+    m_materialForward->TransitionSrvsToPS(cmdList);
+    m_materialForward->SetDescriptorTables(cmdList);
+
     cmdList->SetGraphicsRootDescriptorTable(2, bindlessHandle);
 
     cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

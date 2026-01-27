@@ -38,7 +38,7 @@ void DeferredContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdL
     samplers[0].MinLOD = 0;
     samplers[0].MaxLOD = D3D12_FLOAT32_MAX;
 
-    m_rootSigGBuffer.SmartInit(device, 1, 4, 0, false, samplers, _countof(samplers));
+    m_rootSigGBuffer.SmartInit(device, 2, 0, 0, true, samplers, _countof(samplers));
     m_rootSigLighting.SmartInit(device, 2, 6, 0, false, samplers, _countof(samplers));
 
     {
@@ -98,7 +98,7 @@ void DeferredContext::SetScene(Scene* scene)
     m_scene = scene;
 }
 
-void DeferredContext::RenderGBuffer(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vMatrix, const XMMATRIX& pMatrix, const Skybox* skybox)
+void DeferredContext::RenderGBuffer(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vMatrix, const XMMATRIX& pMatrix, const Heap* heap, const Skybox* skybox)
 {
     GPU_SCOPE(cmdList, L"Deferred GBuffer Pass");
 
@@ -143,7 +143,7 @@ void DeferredContext::RenderGBuffer(const D3D* d3d, ID3D12GraphicsCommandList* c
 
         const Transform* transform = object->GetTransform();
         const auto model = object->GetModel();
-        const auto mat = object->GetMaterial();
+        const auto mat = object->GetMaterialDeferred();
 
         XMMATRIX M = transform->GetModelMatrix();
         XMStoreFloat4x4(&matrices.M, M);
@@ -152,6 +152,9 @@ void DeferredContext::RenderGBuffer(const D3D* d3d, ID3D12GraphicsCommandList* c
 
         mat->TransitionSrvsToPS(cmdList);
         mat->SetDescriptorTables(cmdList);
+
+        const CD3DX12_GPU_DESCRIPTOR_HANDLE bindlessHandle(heap->GetGPUHandle(), heap->GetBindlessTexBase(), heap->GetIncrementSize());
+        cmdList->SetGraphicsRootDescriptorTable(1, bindlessHandle);
 
         cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         cmdList->IASetVertexBuffers(0, 1, &model->GetVertexBufferView());

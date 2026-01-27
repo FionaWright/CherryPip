@@ -62,7 +62,7 @@ void PathTracingContext::BuildScene(ID3D12Device* device, ID3D12GraphicsCommandL
         blas->Init(device5.Get(), cmdList4.Get(), object->GetModel(), *object->GetTransform());
         m_blasList.emplace_back(blas);
 
-        const MaterialData* objectMaterialData = object->GetMaterial()->GetData();
+        const MaterialData* objectMaterialData = object->GetMaterialForward()->GetData();
         PtMaterialData ptMaterialData;
         ptMaterialData.BaseColorFactor = objectMaterialData->BaseColorFactor;
         ptMaterialData.EmissiveStrength = objectMaterialData->EmissiveStrength;

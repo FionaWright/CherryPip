@@ -1,3 +1,5 @@
+#include "CBV.h"
+
 struct VsOut
 {
     float4 position : SV_POSITION;
@@ -7,12 +9,11 @@ struct VsOut
     float3 binormal : TEXCOORD3;
 };
 
-Texture2D<float4> gAlbedo : register(t0);
-Texture2D<float4> gNormal : register(t1);
-Texture2D<float4> gRoughMet : register(t2);
-Texture2D<float4> gEmissive : register(t3);
+Texture2D<float4> gTextures[] : register(t0);
 
 SamplerState gSampler : register(s0);
+
+ConstantBuffer<CbvRasterMaterial> c_mat : register(b1);
 
 struct GBufferOut
 {
@@ -26,15 +27,15 @@ GBufferOut PSMain(VsOut input)
 {
     GBufferOut output;
 
-    output.RgbaAlbedo = gAlbedo.Sample(gSampler, input.uv).rgba;
+    output.RgbaAlbedo = gTextures[c_mat.TexIdxAlbedo].Sample(gSampler, input.uv).rgba;
 
     output.RgbNormal_ADepth.rgb = normalize(input.normal) * 0.5f + 0.5f; // [-1,1] -> [0,1]
     output.RgbNormal_ADepth.a = input.position.z / input.position.w;
 
-	output.RRough_GMetallic.rg = gRoughMet.Sample(gSampler, input.uv).gb;
+	output.RRough_GMetallic.rg = gTextures[c_mat.TexIdxRoughMet].Sample(gSampler, input.uv).gb;
     output.RRough_GMetallic.ba = 0.0f;
 
-	output.RgbEmissive.rgb = gEmissive.Sample(gSampler, input.uv).rgb;
+	output.RgbEmissive.rgb = gTextures[c_mat.TexIdxEmissive].Sample(gSampler, input.uv).rgb;
 	output.RgbEmissive.a = 0.0f;
 
     return output;

@@ -24,7 +24,7 @@ public:
     bool IsInitialized() const { return m_initialized; }
 
     void RenderGBuffer(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vMatrix,
-                       const XMMATRIX& pMatrix, const Skybox* skybox);
+                       const XMMATRIX& pMatrix, const Heap* heap, const Skybox* skybox);
 
     void RenderLighting(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, const XMMATRIX& pMatrix,
                         TextureRTV* output, const XMFLOAT3& dirLightDir, D12Resource* skybox,
@@ -42,7 +42,7 @@ private:
     bool m_initialized = false;
 
     RootSig m_rootSigGBuffer;
-    Shader m_shaderGBuffer; // Bad system, requires matching root sig between forward/deferred
+    Shader m_shaderGBuffer;
 
     RootSig m_rootSigLighting;
     Shader m_shaderLighting;

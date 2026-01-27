@@ -119,7 +119,9 @@ void SceneStudio::loadAssets(D3D* d3d)
     ID3D12Device* device = d3d->GetDevice();
     const ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
-    m_heap.Init(device, 10000, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    // TODO: Only set high heap if Bistro initial scene, don't allow changing scene after?
+    // TODO: Or introduce better heap descriptor sharing
+    m_heap.Init(device, 50000, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     m_heapRTV.Init(device, 20, D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
     loadRasterAssets(d3d, cmdList.Get());

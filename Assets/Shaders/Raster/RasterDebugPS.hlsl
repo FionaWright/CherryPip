@@ -11,18 +11,16 @@ struct VsOut
     float3 viewDir : TEXCOORD4;
 };
 
-Texture2D<float4> gDiffuse : register(t0);
-Texture2D<float4> gNormal : register(t1);
-Texture2D<float4> gRoughnessMetallic : register(t2);
-Texture2D<float4> gEmissive : register(t3);
-Texture2D<float2> gBrdfInt : register(t4);
-TextureCube gEnvMap : register(t5);
-TextureCube gIrradiance : register(t6);
+Texture2D<float2> gBrdfInt : register(t0);
+TextureCube gEnvMap : register(t1);
+TextureCube gIrradiance : register(t2);
+Texture2D<float4> gTextures[] : register(t3);
 
 SamplerState gSampler : register(s0);
 
 ConstantBuffer<CbvForwardLighting> c_forward : register(b2);
 ConstantBuffer<CbvRasterDebug> c_rasterDebug : register(b3);
+ConstantBuffer<CbvRasterMaterial> c_mat : register(b4);
 
 // Missing from Alkali:
 // Thin film interference
@@ -31,14 +29,14 @@ ConstantBuffer<CbvRasterDebug> c_rasterDebug : register(b3);
 
 float4 PSMain(VsOut input) : SV_TARGET
 {
-    float4 albedo = gDiffuse.Sample(gSampler, input.uv).rgba;
+    float4 albedo = gTextures[c_mat.TexIdxAlbedo].Sample(gSampler, input.uv).rgba;
 	float4 albedoGamma = float4(pow(albedo.rgb, 2.2f), albedo.a);
 
-    float3 bumpSample = gNormal.SampleLevel(gSampler, input.uv, 0).rgb * 2.0f - 1.0f;
+    float3 bumpSample = gTextures[c_mat.TexIdxNormal].SampleLevel(gSampler, input.uv, 0).rgb * 2.0f - 1.0f;
     bumpSample.y = -bumpSample.y; // DX convention
 
-    float2 roughMet = gRoughnessMetallic.Sample(gSampler, input.uv).gb;
-    float3 emission = gEmissive.Sample(gSampler, input.uv).rgb;
+    float2 roughMet = gTextures[c_mat.TexIdxRoughMet].Sample(gSampler, input.uv).gb;
+    float3 emission = gTextures[c_mat.TexIdxEmissive].Sample(gSampler, input.uv).rgb;
 
     float3 T = normalize(input.tangent);
     float3 B = normalize(input.binormal);

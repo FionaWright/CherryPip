@@ -299,7 +299,7 @@ void SceneStudio::loadRasterAssets(const D3D* d3d, ID3D12GraphicsCommandList* cm
     samplers[0].MaxLOD = D3D12_FLOAT32_MAX;
 
     m_rootSigRaster = std::make_shared<RootSig>();
-    m_rootSigRaster->SmartInit(d3d->GetDevice(), 4, 7, 0, false, samplers, _countof(samplers));
+    m_rootSigRaster->SmartInit(d3d->GetDevice(), 5, 3, 0, true, samplers, _countof(samplers));
 
     D3D12_INPUT_ELEMENT_DESC rasterILD[] =
     {
@@ -585,8 +585,10 @@ void SceneStudio::renderForward(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         const auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_heapRTV.GetCPUHandle(), rtvIdx,
                                                           m_heapRTV.GetIncrementSize());
 
+        cmdList->SetGraphicsRootSignature(m_rootSigRaster->Get());
+
         const Skybox* skybox = m_studioConfig.EnvMapEnabled ? &m_skybox : nullptr;
-        m_rasterContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, handle, skybox);
+        m_rasterContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, handle, &m_heap, skybox);
     }
 
     if (m_studioConfig.Denoising.Enabled)

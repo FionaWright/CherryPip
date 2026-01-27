@@ -6,6 +6,7 @@
 #include "Render/RasterContext.h"
 #include "CBV.h"
 #include "Debug/GPUEventScoped.h"
+#include "HWI/Heap.h"
 #include "Render/Object.h"
 #include "Render/Skybox.h"
 
@@ -14,7 +15,7 @@ void RasterContext::SetScene(Scene* scene)
     m_scene = scene;
 }
 
-void RasterContext::Render(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vMatrix, const XMMATRIX& pMatrix, const D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle, const Skybox* skybox) const
+void RasterContext::Render(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vMatrix, const XMMATRIX& pMatrix, const D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle, const Heap* heap, const Skybox* skybox) const
 {
     GPU_SCOPE(cmdList, "Forward Backend");
 
@@ -37,6 +38,8 @@ void RasterContext::Render(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, c
     XMStoreFloat4x4(&matrices.V, vMatrix);
     XMStoreFloat4x4(&matrices.P, pMatrix);
 
+    const CD3DX12_GPU_DESCRIPTOR_HANDLE bindlessHandle(heap->GetGPUHandle(), heap->GetBindlessTexBase(), heap->GetIncrementSize());
+
     {
         GPU_SCOPE(cmdList, "Skybox Pass");
 
@@ -48,7 +51,7 @@ void RasterContext::Render(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, c
     for (int i = 0; i < objects.size(); ++i)
     {
         GPU_SCOPE(cmdList, objects[i]->GetName());
-        objects[i]->Render(cmdList, matrices);
+        objects[i]->Render(cmdList, matrices, bindlessHandle);
     }
 }
 

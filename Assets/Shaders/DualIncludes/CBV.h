@@ -51,6 +51,15 @@ struct CbvForwardLighting
     uint MaxCubemapMipMaps;
 };
 
+// TODO
+struct CbvRasterMaterial
+{
+    uint TexIdxAlbedo;
+    uint TexIdxNormal;
+    uint TexIdxRoughMet;
+    uint TexIdxEmissive;
+};
+
 struct CbvDeferredLighting
 {
     float4x4 InvP;

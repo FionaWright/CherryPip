@@ -25,7 +25,7 @@ public:
               const std::shared_ptr<Model>& model, const std::shared_ptr<Material>& mat);
     void SetParent(Object* parent);
 
-    void Render(ID3D12GraphicsCommandList* cmdList, CbvMatrices& matrices) const;
+    void Render(ID3D12GraphicsCommandList* cmdList, CbvMatrices& matrices, const CD3DX12_GPU_DESCRIPTOR_HANDLE& bindlessHandle) const;
 
     Transform* GetTransform() const { return m_transform.get(); }
     Shader* GetShader() const { return m_shader.get(); }

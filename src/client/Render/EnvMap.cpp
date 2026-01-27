@@ -67,7 +67,7 @@ void EnvMap::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, cons
     cbv.Rotation = rotation / 360.0f;
 
     m_matPanoToEA.Init(heap);
-    m_matPanoToEA.AddCBV(device, heap, sizeof(CBV_PanoToEA));
+    m_matPanoToEA.AddCBV(device, heap, sizeof(CBV_PanoToEA), "CBV Pano To EA");
     m_matPanoToEA.SetTex(device, 0, heap, m_pano.GetD12Resource());
     m_matPanoToEA.AddUAV(device, heap, m_ea.GetD12Resource()->GetResource(), m_ea.GetFormat());
 
@@ -112,7 +112,7 @@ void EnvMap::InitCubemap(ID3D12Device* device, ID3D12GraphicsCommandList* cmdLis
     uavDesc.Texture2DArray.FirstArraySlice = 0;
 
     m_matPanoToCM.Init(heap);
-    m_matPanoToCM.AddCBV(device, heap, sizeof(CBV));
+    m_matPanoToCM.AddCBV(device, heap, sizeof(CBV), "CBV Cubemap");
     m_matPanoToCM.SetTex(device, 0, heap, m_pano.GetD12Resource());
     m_matPanoToCM.AddUAV(device, heap, m_cubemap.GetD12Resource()->GetResource(), uavDesc);
 
@@ -196,7 +196,7 @@ XMFLOAT3 EnvMap::GetDirectionOfHighestIntensity(D3D* d3d, Heap* heap)
         uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 
         m_matMaxLumRedSearch.Init(heap);
-        m_matMaxLumRedSearch.AddCBV(d3d->GetDevice(), heap, sizeof(CbvMaxLumRedSearch));
+        m_matMaxLumRedSearch.AddCBV(d3d->GetDevice(), heap, sizeof(CbvMaxLumRedSearch), "CBV Max Luminance Reduction Search");
         m_matMaxLumRedSearch.AddUAV(d3d->GetDevice(), heap, m_bufferMaxLumRedSearch.GetResource(), uavDesc);
         m_matMaxLumRedSearch.SetTex(d3d->GetDevice(), 0, heap, m_ea.GetD12Resource());
     }

@@ -59,4 +59,5 @@ void Config::ParseCommandLineArgs(const LPSTR args)
     SetUIntFromArg(&ms_settingsSystem.DefaultAppIdx, "--app");
     SetUIntFromArg(&ms_settingsSystem.DefaultSceneIdx, "--scene");
     SetBoolFromArg(&ms_settingsSystem.VSyncEnabled, "--vsync");
+    SetBoolFromArg(&ms_settingsSystem.DebugHeapEnabled, "--debugHeap");
 }

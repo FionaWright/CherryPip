@@ -85,8 +85,8 @@ void DeferredContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdL
     }
 
     m_matLighting.Init(heap);
-    m_matLighting.AddCBV(device, heap, sizeof(CbvDeferredLighting));
-    m_matLighting.AddCBV(device, heap, sizeof(CbvRasterDebug));
+    m_matLighting.AddCBV(device, heap, sizeof(CbvDeferredLighting), "CBV Deferred Lighting");
+    m_matLighting.AddCBV(device, heap, sizeof(CbvRasterDebug), "CBV Raster Debug");
 
     m_fullScreenTriangle.InitFullScreenTriangle(device, cmdList);
 

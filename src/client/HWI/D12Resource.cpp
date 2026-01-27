@@ -20,6 +20,10 @@ void D12Resource::Init(const LPCWSTR name, ID3D12Device* device, const D3D12_RES
     V(m_resource->SetName(name));
     m_currentState = initialState;
     m_desc = resourceDesc;
+
+#ifdef _DEBUG
+    m_debugName = name;
+#endif
 }
 
 void D12Resource::Fill(const ComPtr<ID3D12Resource>& resource, const D3D12_RESOURCE_STATES& initialState)
@@ -37,6 +41,10 @@ void D12Resource::InitBuffer(const LPCWSTR name, ID3D12Device* device, const siz
                                       IID_PPV_ARGS(&m_resource)));
     V(m_resource->SetName(name));
     m_currentState = D3D12_RESOURCE_STATE_COMMON;
+
+#ifdef _DEBUG
+    m_debugName = name;
+#endif
 }
 
 void D12Resource::InitRTAS(const LPCWSTR name, ID3D12Device* device, const size_t size,
@@ -48,6 +56,10 @@ void D12Resource::InitRTAS(const LPCWSTR name, ID3D12Device* device, const size_
                                       IID_PPV_ARGS(&m_resource)));
     V(m_resource->SetName(name));
     m_currentState = D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
+
+#ifdef _DEBUG
+    m_debugName = name;
+#endif
 }
 
 void D12Resource::CreateHeap(ID3D12Device* device)

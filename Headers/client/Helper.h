@@ -10,13 +10,26 @@
 
 inline std::string wstringToString(const std::wstring& wstr)
 {
-    //setup converter
-    using convert_type = std::codecvt_utf8<wchar_t>;
-    std::wstring_convert<convert_type, wchar_t> converter;
+    if (wstr.empty()) return {};
 
-    //use converter (.to_bytes: wstr->str, .from_bytes: str->wstr)
-    return converter.to_bytes( wstr );
+    int size = WideCharToMultiByte(
+        CP_UTF8, 0,
+        wstr.data(), (int)wstr.size(),
+        nullptr, 0,
+        nullptr, nullptr
+    );
+
+    std::string result(size, 0);
+    WideCharToMultiByte(
+        CP_UTF8, 0,
+        wstr.data(), (int)wstr.size(),
+        result.data(), size,
+        nullptr, nullptr
+    );
+
+    return result;
 }
+
 
 inline std::string HrToString(HRESULT hr)
 {

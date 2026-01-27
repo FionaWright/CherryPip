@@ -39,6 +39,14 @@ void SceneStudio::RenderGUI()
             ImGui::EndTabItem();
         }
 
+#ifdef _DEBUG
+        if (Config::GetSystem().DebugHeapEnabled && ImGui::BeginTabItem("Heap"))
+        {
+            guiHeapDebug();
+            ImGui::EndTabItem();
+        }
+#endif
+
         ImGui::EndTabBar();
     }
 
@@ -548,5 +556,37 @@ void SceneStudio::guiScene()
 #ifdef _DEBUG
         m_readbackManager.ClearReadbackData();
 #endif
+    }
+}
+
+void SceneStudio::guiHeapDebug()
+{
+    const auto& descriptorNameList = m_heap.GetDebugDescriptorList();
+    const auto& descriptorNameListBindless = m_heap.GetDebugDescriptorListBindless();
+
+    if (ImGui::CollapsingHeader("Binded Descriptors"))
+    {
+        ImGui::Indent(IM_GUI_INDENTATION);
+        for (int i = 0; i < m_heap.GetCurrBindedDescriptorCount(); i++)
+        {
+            if (descriptorNameList.at(i))
+                ImGui::Text("[%i] %s", i, descriptorNameList[i]);
+            else
+                ImGui::Text("[%i] Unnamed Descriptor", i);
+        }
+        ImGui::Unindent(IM_GUI_INDENTATION);;
+    }
+
+    if (ImGui::CollapsingHeader("Bindless Descriptors"))
+    {
+        ImGui::Indent(IM_GUI_INDENTATION);
+        for (int i = 0; i < m_heap.GetCurrBindlessDescriptorCount(); i++)
+        {
+            if (descriptorNameListBindless.at(i))
+                ImGui::Text("[%i] %s", i, descriptorNameListBindless[i]);
+            else
+                ImGui::Text("[%i] Unnamed Descriptor", i);
+        }
+        ImGui::Unindent(IM_GUI_INDENTATION);;
     }
 }

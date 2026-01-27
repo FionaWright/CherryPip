@@ -23,6 +23,7 @@ struct SettingsSystem
     bool AppGuiEnabled = true;
 
     bool ProfilingEnabled = true;
+    bool DebugHeapEnabled = false;
 };
 
 struct SettingsRender

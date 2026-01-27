@@ -109,7 +109,9 @@ void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, con
     if (!isBC && MIP_MAPS_ENABLED)
         desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 
-    m_resource.Init(filePath.c_str(), device, desc, D3D12_RESOURCE_STATE_COPY_DEST);
+    const size_t lastSlashPos = filePath.find_last_of('/');
+    const std::wstring fileName = (lastSlashPos == std::string::npos) ? filePath : filePath.substr(lastSlashPos + 1);
+    m_resource.Init(fileName.c_str(), device, desc, D3D12_RESOURCE_STATE_COPY_DEST);
 
     if (isBC)
     {

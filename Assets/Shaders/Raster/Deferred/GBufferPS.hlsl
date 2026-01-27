@@ -29,7 +29,15 @@ GBufferOut PSMain(VsOut input)
 
     output.RgbaAlbedo = gTextures[c_mat.TexIdxAlbedo].Sample(gSampler, input.uv).rgba;
 
-    output.RgbNormal_ADepth.rgb = normalize(input.normal) * 0.5f + 0.5f; // [-1,1] -> [0,1]
+	float3 bumpSample = gTextures[c_mat.TexIdxNormal].SampleLevel(gSampler, input.uv, 0).rgb * 2.0f - 1.0f;
+	bumpSample.y = -bumpSample.y; // DX convention
+
+	float3 T = normalize(input.tangent);
+	float3 B = normalize(input.binormal);
+	float3 N = normalize(input.normal);
+	float3 N_w = normalize(bumpSample.x * T + bumpSample.y * B + bumpSample.z * N);
+
+    output.RgbNormal_ADepth.rgb = N_w * 0.5f + 0.5f; // [-1,1] -> [0,1]
     output.RgbNormal_ADepth.a = input.position.z / input.position.w;
 
 	output.RRough_GMetallic.rg = gTextures[c_mat.TexIdxRoughMet].Sample(gSampler, input.uv).gb;

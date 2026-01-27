@@ -110,7 +110,7 @@ void SceneStudio::OnPostUpdate(D3D* d3d)
     if (m_recomputeEnvMapDirLight)
     {
         m_studioConfig.DirLightDirection = m_envMap.GetDirectionOfHighestIntensity(d3d, &m_heap);
-        m_recomputeEnvMapDirLight = false; 
+        m_recomputeEnvMapDirLight = false;
     }
 }
 

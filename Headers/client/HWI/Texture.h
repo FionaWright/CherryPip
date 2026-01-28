@@ -16,8 +16,8 @@ public:
 
     void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const std::wstring& filePath,
               int arraySize = 1, D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE);
-    void InitEmpty(ID3D12Device* device, DXGI_FORMAT format, UINT width, UINT height, int arraySize = 1,
-                   D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE);
+    void InitEmpty(ID3D12Device* device, DXGI_FORMAT format, int width, int height, int arraySize = 1,
+                   D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE, bool genMipMaps = false);
 
     void InitPNG(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const uint8_t* inData,
                  size_t dataSize,

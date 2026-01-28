@@ -85,7 +85,6 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Mip maps aren't currently working. Need alternate solution for BC7 textures
 - Stop irradiance cubemap making mip maps
 - Beckmann for raster?
-- Denoiser only initializes shaders/etc when needed (Easy refactor)
 - Refactor PtMaterialData to just MaterialData and share between backends
 
 ## Spectral Tracing

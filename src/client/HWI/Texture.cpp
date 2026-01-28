@@ -137,8 +137,8 @@ void Texture::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, con
     Profiler::PopAndPrint();
 }
 
-void Texture::InitEmpty(ID3D12Device* device, const DXGI_FORMAT format, const UINT width, const UINT height, const int arraySize,
-                        const D3D12_RESOURCE_FLAGS flags)
+void Texture::InitEmpty(ID3D12Device* device, const DXGI_FORMAT format, const int width, const int height, const int arraySize,
+                        const D3D12_RESOURCE_FLAGS flags, const bool genMipMaps)
 {
     m_width = width;
     m_height = height;
@@ -148,7 +148,7 @@ void Texture::InitEmpty(ID3D12Device* device, const DXGI_FORMAT format, const UI
     desc.Width = m_width;
     desc.Height = m_height;
     desc.Format = format;
-    desc.MipLevels = static_cast<UINT16>(std::log2(maxDim) + 1.0);;
+    desc.MipLevels = genMipMaps ? static_cast<UINT16>(std::log2(maxDim) + 1.0) : 1;
     desc.DepthOrArraySize = arraySize;
     desc.Flags = flags;
     desc.SampleDesc.Count = 1;

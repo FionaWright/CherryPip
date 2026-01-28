@@ -31,12 +31,6 @@ void DenoisingManager::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmd
     m_sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
     m_sampler.ShaderRegister = 0;
 
-    // TODO: Don't initialize unused filters
-    initBox(device, heap);
-    initGauss(device, heap);
-    initMedian(device, heap);
-    initATrous(device, heap);
-
     m_initialized = true;
 }
 
@@ -97,6 +91,9 @@ TextureRTV* DenoisingManager::DenoiseBox(ID3D12Device* device, ID3D12GraphicsCom
 {
     GPU_SCOPE(cmdList, "Denoising (Box)");
 
+    if (!m_shaderBox.GetPSO())
+        initBox(device, heap);
+
     pp2->GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
     const auto handle = pp2->GetCpuHandle();
     cmdList->OMSetRenderTargets(1, &handle, FALSE, nullptr);
@@ -127,6 +124,9 @@ TextureRTV* DenoisingManager::DenoiseGauss(ID3D12Device* device, ID3D12GraphicsC
                                            const uint32_t radius)
 {
     GPU_SCOPE(cmdList, "Denoising (Gaussian)");
+
+    if (!m_shaderGaussH.GetPSO())
+        initGauss(device, heap);
 
     cmdList->SetGraphicsRootSignature(m_rootSigGauss.Get());
 
@@ -181,6 +181,9 @@ TextureRTV* DenoisingManager::DenoiseMedian(ID3D12Device* device, ID3D12Graphics
 {
     GPU_SCOPE(cmdList, "Denoising (Median)");
 
+    if (!m_shaderMedian.GetPSO())
+        initMedian(device, heap);
+
     pp2->GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
     const auto handle = pp2->GetCpuHandle();
     cmdList->OMSetRenderTargets(1, &handle, FALSE, nullptr);
@@ -212,6 +215,9 @@ TextureRTV* DenoisingManager::DenoiseATrous(ID3D12Device* device, ID3D12Graphics
                                             const float phiP)
 {
     GPU_SCOPE(cmdList, "Denoising (A-Trous)");
+
+    if (!m_shaderATrous.GetPSO())
+        initATrous(device, heap);
 
     cmdList->SetGraphicsRootSignature(m_rootSigATrous.Get());
 

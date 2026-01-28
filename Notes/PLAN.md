@@ -87,7 +87,6 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Beckmann for raster?
 - Denoiser only initializes shaders/etc when needed (Easy refactor)
 - Refactor PtMaterialData to just MaterialData and share between backends
-- Camera movement isn't framerate independent for some reason (WASD)
 
 ## Spectral Tracing
 

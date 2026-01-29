@@ -121,7 +121,7 @@ void SceneStudio::loadAssets(D3D* d3d)
 
     // TODO: Only set high heap if Bistro initial scene, don't allow changing scene after?
     // TODO: Or introduce better heap descriptor sharing
-    m_heap.Init("SRV/CBV/UAV Heap", device, 50000, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    m_heap.Init("SRV/CBV/UAV Heap", device, 70000, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     m_heapRTV.Init("RTV Heap", device, 20, D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
     loadRasterAssets(d3d, cmdList.Get());
@@ -144,7 +144,7 @@ void SceneStudio::loadAssets(D3D* d3d)
 #endif
 
     SceneConfig customScene = {
-        "Custom"
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Custom"
     };
     m_sceneConfigs.emplace_back(customScene);
 
@@ -152,7 +152,7 @@ void SceneStudio::loadAssets(D3D* d3d)
 
     t.SetScale(2.0f);
     SceneConfig sceneCornell = {
-        "Cornell Box",
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Cornell Box",
         L"Cornell/scene.gltf",
         t,
         XMFLOAT3(0, 1.5f, 4.5f),
@@ -163,7 +163,7 @@ void SceneStudio::loadAssets(D3D* d3d)
 
     t = {};
     SceneConfig sceneSphere = {
-        "Sphere",
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Sphere",
         L"Sphere/Sphere.gltf",
         t,
         XMFLOAT3(0, 0, -4.3f),
@@ -174,7 +174,7 @@ void SceneStudio::loadAssets(D3D* d3d)
 
     t = {};
     SceneConfig scenePlane = {
-        "FloatPlane",
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "FloatPlane",
         L"floatplane.glb",
         t,
         XMFLOAT3(0, 0, -4.3f),
@@ -186,7 +186,7 @@ void SceneStudio::loadAssets(D3D* d3d)
     t = {};
     t.SetScale(0.3f);
     SceneConfig sceneTeapot = {
-        "Utah Teapot",
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Utah Teapot",
         L"Utah Teapot/scene.gltf",
         t,
         XMFLOAT3(0, 0, -4.3f),
@@ -198,7 +198,7 @@ void SceneStudio::loadAssets(D3D* d3d)
     t = {};
     t.SetScale(5.0f);
     SceneConfig sceneChess = {
-        "Chess",
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Chess",
         L"Chess/Chess.gltf",
         t,
         XMFLOAT3(0, 0.2f, -0.5f),
@@ -210,7 +210,7 @@ void SceneStudio::loadAssets(D3D* d3d)
     t = {};
     t.SetScale(2.0f);
     SceneConfig sceneLantern = {
-        "Lantern",
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Lantern",
         L"Lantern/Lantern.gltf",
         t,
         XMFLOAT3(0.967f, 11.963f, 50.213f),
@@ -221,18 +221,18 @@ void SceneStudio::loadAssets(D3D* d3d)
 
     t = {};
     SceneConfig sceneBistro = {
-        "Bistro",
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Bistro",
         L"GitIgnored/Bistro/bistro.gltf",
         t,
         XMFLOAT3(0.967f, 11.963f, 50.213f),
         XMFLOAT2(0, PI),
-        true
+        false
     };
     m_sceneConfigs.emplace_back(sceneBistro);
 
     t = {};
     SceneConfig sceneSponza = {
-        "Sponza",
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Sponza",
         L"GitIgnored/Sponza/sponza.gltf",
         t,
         XMFLOAT3(1.753f, 1.274f, -0.23f),
@@ -243,7 +243,7 @@ void SceneStudio::loadAssets(D3D* d3d)
 
     t = {};
     SceneConfig sceneMrSpheres = {
-        "MetalRough Spheres",
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "MetalRough Spheres",
         L"MetalRoughSpheres/MetalRoughSpheres.gltf",
         t,
         XMFLOAT3(-0.5f, -0.25f, 8.5f),
@@ -251,6 +251,17 @@ void SceneStudio::loadAssets(D3D* d3d)
         true
     };
     m_sceneConfigs.emplace_back(sceneMrSpheres);
+
+    t = {};
+    SceneConfig sceneWhiteLands = {
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "White Lands",
+        L"GitIgnored/WhiteLands/WhiteLands.gltf",
+        t,
+        XMFLOAT3(0,0,0),
+        XMFLOAT2(0, PI),
+        false
+    };
+    m_sceneConfigs.emplace_back(sceneWhiteLands);
 
     m_envMapList = {
         L"Env Maps/autumn_field_puresky_4k.hdr",

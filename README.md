@@ -68,6 +68,8 @@ Progress as of 18/01/26:
 Progress as of 25/01/26:
 <img width="1361" height="575" alt="image" src="https://github.com/user-attachments/assets/cf597041-cf49-4f93-9f9e-9f91ccc713d5" />
 
+Progress as of 29/01/26:
+<img width="961" height="575" alt="image" src="https://github.com/user-attachments/assets/dc7b6217-9eaa-4a9b-ad21-7b998f25ba47" />
 
 
 

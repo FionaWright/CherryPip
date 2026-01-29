@@ -71,6 +71,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ### Bugs (Classic)
 - Camera movement gets messed up sometimes
 - Env map rotations not paritied between EA/pano
+- Fix Bistro model transforms
 
 ### Features
 - Mist (Randomly scatter rays depending on distance travelled, see SL video) (Rayleigh scattering! Requires spectral renderer?)

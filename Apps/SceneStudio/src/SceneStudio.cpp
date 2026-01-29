@@ -120,7 +120,6 @@ void SceneStudio::loadAssets(D3D* d3d)
     const ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
     // TODO: Only set high heap if Bistro initial scene, don't allow changing scene after?
-    // TODO: Or introduce better heap descriptor sharing
     m_heap.Init("SRV/CBV/UAV Heap", device, 70000, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     m_heapRTV.Init("RTV Heap", device, 20, D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
@@ -262,6 +261,54 @@ void SceneStudio::loadAssets(D3D* d3d)
         false
     };
     m_sceneConfigs.emplace_back(sceneWhiteLands);
+
+    t = {};
+    t.SetScale(3.0f);
+    SceneConfig sceneCozyKitchen = {
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "CozyKitchen",
+        L"GitIgnored/CozyKitchen/CozyKitchen.gltf",
+        t,
+        XMFLOAT3(1.339f, 1.728f, 0.989f),
+        XMFLOAT2(0.12f, 3.997f),
+        false
+    };
+    m_sceneConfigs.emplace_back(sceneCozyKitchen);
+
+    t = {};
+    t.SetScale(2.0f);
+    SceneConfig sceneAutumn = {
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Autumn",
+        L"GitIgnored/Autumn/Autumn.gltf",
+        t,
+        XMFLOAT3(1.339f, 1.728f, 0.989f),
+        XMFLOAT2(0.12f, 3.997f),
+        false
+    };
+    m_sceneConfigs.emplace_back(sceneAutumn);
+
+    t = {};
+    t.SetScale(2.0f);
+    SceneConfig sceneJunkshop = {
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Junkshop",
+        L"GitIgnored/Junkshop/Junkshop.gltf",
+        t,
+        XMFLOAT3(1.339f, 1.728f, 0.989f),
+        XMFLOAT2(0.12f, 3.997f),
+        false
+    };
+    m_sceneConfigs.emplace_back(sceneJunkshop);
+
+    t = {};
+    t.SetScale(2.0f);
+    SceneConfig sceneLoneMonk = {
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "LoneMonk",
+        L"GitIgnored/LoneMonk/LoneMonk.gltf",
+        t,
+        XMFLOAT3(1.339f, 1.728f, 0.989f),
+        XMFLOAT2(0.12f, 3.997f),
+        false
+    };
+    m_sceneConfigs.emplace_back(sceneLoneMonk);
 
     m_envMapList = {
         L"Env Maps/autumn_field_puresky_4k.hdr",
@@ -668,6 +715,8 @@ void SceneStudio::compilePtShader(const D3D* d3d)
         args.push_back(L"-DDIR_LIGHT_ENABLED");
     if (m_studioConfig.PT.NormalMapsEnabled)
         args.push_back(L"-DNORMAL_MAPS_ENABLED");
+    if (m_studioConfig.PT.AlphaTestingEnabled)
+        args.push_back(L"-DALPHA_TESTING_ENABLED");
     if (m_studioConfig.PT.RussianRouletteEnabled)
         args.push_back(L"-DRUSSIAN_ROULETTE_ENABLED");
     if (m_studioConfig.PT.DebugForceSpecular)

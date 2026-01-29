@@ -83,7 +83,9 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
     ptNeedsReset |= ImGuiUtils::FwDragInt("Ray Bounces##xx", &bounces, 1, 0, 256);
     m_studioConfig.PT.NumBounces = static_cast<uint32_t>(bounces);
 
-    ptNeedsReset |= ImGuiUtils::FwInputUInt("Max Frames##xx", &m_studioConfig.PT.MaxFrameNum);
+    const uint32_t prevMaxFrames = m_studioConfig.PT.MaxFrameNum;
+    if (ImGuiUtils::FwInputUInt("Max Frames##xx", &m_studioConfig.PT.MaxFrameNum))
+        ptNeedsReset |= prevMaxFrames > m_studioConfig.PT.MaxFrameNum || prevMaxFrames == 0;
 
     m_shaderDirty |= ImGui::Checkbox("Dir Light Enabled##xx", &m_studioConfig.PT.DirLightEnabled);
     ptNeedsReset |= ImGuiUtils::FwInputFloat("Dir Light Radius (R)##xx", &m_studioConfig.PT.DirLightCosAngularRadius);

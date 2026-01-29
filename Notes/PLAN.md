@@ -66,6 +66,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 ### Bugs (Physical Inaccuracies)
 - Fix glass attenuation after, add attenuationDistance field
+- Dir light is wrong direction, see reflection in metalRough spheres. Disable bounce threshold to see easier
 
 ### Bugs (Classic)
 - Camera movement gets messed up sometimes

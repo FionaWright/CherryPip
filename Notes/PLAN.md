@@ -75,6 +75,9 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ### Features
 - Mist (Randomly scatter rays depending on distance travelled, see SL video) (Rayleigh scattering! Requires spectral renderer?)
 - PT only build mode that doesn't initialize any raster resources? 
+- Alpha testing
+- Lights
+- Glass Beckmann
 
 ### Misc
 - Get a big scene that isn't bistro (Junkyard?)

@@ -27,7 +27,7 @@ void Model_LambertionDiffuse(
     wi = RandHemisphereUniformWorld(rngState, T, B, Ns);
     float pdf = 1.0f / (2.0f * PI);
     float3 diffuseBrdf = albedo / PI;
-    float NdL = dot(Ns, wi);
+    float NdL = saturate(dot(Ns, wi));
     throughput *= diffuseBrdf * NdL / pdf;
 #endif
 }
@@ -174,10 +174,11 @@ void Model_Microfacet(
 #if defined(NDF_TYPE_GGX)
         float D = D_GGX(NdH, a2);
         //float Dv = D * G1_GGX(NdV, a2) * max(0.0f, HdV) / NdV;
-        float G = pdfSampleVisibleArea ? G1_GGX(NdV, a2) : G_SmithGGX(NdL, NdV, a2);
-        //float pdf = Pdf_GGX(D, NdH, VdH);
+        //float G = pdfSampleVisibleArea ? G1_GGX(NdV, a2) : G_SmithGGX(NdL, NdV, a2);
+        float G = G_SmithGGX(NdL, NdV, a2);
+        float pdf = Pdf_GGX(D, NdH, VdH);
         // This is pdf_h: What do I do with it?
-        float pdf = Pdf_General(D, G1_GGX(NdV, a2), V_s, H_s, pdfSampleVisibleArea);
+        //float pdf_h = Pdf_General(D, G1_GGX(NdV, a2), V_s, H_s, pdfSampleVisibleArea);
 #elif defined(NDF_TYPE_BECKMANN)
         float D = D_Beckmann(H_s, a2);
         float G = G_Beckmann(V_s, L_s, alpha);

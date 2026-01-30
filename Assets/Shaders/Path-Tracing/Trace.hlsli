@@ -19,20 +19,21 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
     for (uint i = 0; i <= c_pathTracing.NumBounces; i++)
     {
         q.TraceRayInline(gTLAS, flags, instanceMask, ray);
-        q.Proceed(); // TODO: while?
+        q.Proceed();
 
         if (q.CommittedStatus() != COMMITTED_TRIANGLE_HIT)
         {
+            float3 L_sample = throughput * Miss(ray.Origin, ray.Direction, i);
+
+            //float L_lum = Luminance(L_sample);
+            //if (L_lum > c_pathTracing.FireflyThreshold)
+            //    L_sample *= c_pathTracing.FireflyThreshold / L_lum;
+
+            Lo += L_sample;
+
 #ifdef DEBUG_BUFFER
 #    include "Debug/DebugBuffersOnMiss.hlsli"
 #endif
-            float3 L_sample = throughput * Miss(ray.Origin, ray.Direction, i);
-
-            float L_lum = Luminance(L_sample);
-            if (L_lum > c_pathTracing.FireflyThreshold)
-                L_sample *= c_pathTracing.FireflyThreshold / L_lum;
-
-            Lo += L_sample;
             break;
         }
 
@@ -108,9 +109,9 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
 #endif
 
-        float L_lum = Luminance(L_sample);
-        if (L_lum > c_pathTracing.FireflyThreshold)
-            L_sample *= c_pathTracing.FireflyThreshold / L_lum;
+        //float L_lum = Luminance(L_sample);
+        //if (L_lum > c_pathTracing.FireflyThreshold)
+        //    L_sample *= c_pathTracing.FireflyThreshold / L_lum;
 
         Lo += L_sample;
 

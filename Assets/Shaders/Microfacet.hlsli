@@ -76,6 +76,10 @@ float D_GGX(float NdH, float a2)
     return a2 / max(0.001f, PI * denominator * denominator);
 }
 
+// TODO: GGX Aniso
+// https://jcgt.org/published/0007/04/01/paper.pdf
+// (Z==N, N==H)
+
 float D_Beckmann(float3 H, float a2)
 {
     float tan2T = SSpaceTan2Theta(H);
@@ -172,6 +176,20 @@ float G_Beckmann(float3 V, float3 L, float alpha)
 // ================================
 
 float3 SampleH_GGX(float a2, inout uint rngState)
+{
+    float r1 = PcgRand01(rngState);
+    float r2 = PcgRand01(rngState);
+
+    float phi = 2.0 * PI * r1;
+    float cosTheta = sqrt(max(0.0f, (1.0 - r2) / max(0.001f, 1.0 + (a2 - 1.0) * r2)));
+    float sinTheta = sqrt(max(0.0f, 1.0 - cosTheta * cosTheta));
+
+    float3 H_s = normalize(float3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta));
+    return H_s;
+}
+
+// TODO
+float3 SampleH_GgxVndf(float a2, inout uint rngState)
 {
     float r1 = PcgRand01(rngState);
     float r2 = PcgRand01(rngState);

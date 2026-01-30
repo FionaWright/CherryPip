@@ -66,7 +66,8 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 ### Bugs (Physical Inaccuracies)
 - Fix glass attenuation after, add attenuationDistance field
-- Dir light is wrong direction, see reflection in metalRough spheres. Disable bounce threshold to see easier
+- Dir light is wrong direction, see reflection in metalRough spheres. Disable bounce threshold to see easier. Make only samplable for diffuse rays?
+- Firefly threshold not helping, fix darkness issue first
 
 ### Bugs (Classic)
 - Camera movement gets messed up sometimes
@@ -76,8 +77,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ### Features
 - Mist (Randomly scatter rays depending on distance travelled, see SL video) (Rayleigh scattering! Requires spectral renderer?)
 - PT only build mode that doesn't initialize any raster resources? 
-- Alpha testing
-- Lights
+- Point Lights
 - Glass Beckmann
 
 ### Misc
@@ -91,6 +91,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Stop irradiance cubemap making mip maps
 - Beckmann for raster?
 - Refactor PtMaterialData to just MaterialData and share between backends
+- Something wrong with sphere model, makes furnace tests hard
 
 ## Spectral Tracing
 

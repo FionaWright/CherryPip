@@ -21,14 +21,16 @@ void Model_LambertionDiffuse(
 
 #ifdef IMPORTANCE_SAMPLING
     wi = RandHemisphereCosineWorld(rngState, T, B, Ns);
+    // diffuseBrdf = albedo / PI
     // pdf = NdL / PI
-    throughput *= albedo; // PI and pdf cancel out
+    // throughput *= diffuseBrdf * NdL / pdf
+    throughput *= albedo; // Terms cancel out
 #else
     wi = RandHemisphereUniformWorld(rngState, T, B, Ns);
-    float pdf = 1.0f / (2.0f * PI);
-    float3 diffuseBrdf = albedo / PI;
     float NdL = saturate(dot(Ns, wi));
-    throughput *= diffuseBrdf * NdL / pdf;
+    float3 diffuseBrdf = albedo / PI;
+    float pdf = 1.0f / (2.0f * PI);
+    throughput *= diffuseBrdf * NdL / max(0.001f, pdf);
 #endif
 }
 
@@ -99,6 +101,11 @@ void Model_Glass(
 // Get beckmann working
 // Look into the anisotropic beckmann
 
+// Avoid code breaking
+#if !defined(NDF_TYPE_GGX) && !defined(NDF_TYPE_BECKMANN)
+#define NDF_TYPE_GGX
+#endif
+
 void Model_Microfacet(
     inout uint rngState,
     inout float3 throughput,
@@ -122,7 +129,7 @@ void Model_Microfacet(
     L_sample = throughput * Li;
 
     // Convert world to shading space
-    // forall vector X, X.z = dot(N, X)
+    // forall X in R^3, X.z = dot(N, X)
     float3 N_s = float3(0, 0, 1);
     float3 V_s = WorldToShadingSpace(wo, T, B, Ns);
 
@@ -151,10 +158,6 @@ void Model_Microfacet(
         float alpha = RoughnessToAlpha_Beckmann(roughness);
         float a2 = max(1e-6f, alpha * alpha);
         float3 H_s = SampleH_Beckmann(alpha, rngState);
-#else
-        float alpha = 0.0f;
-        float a2 = 0.0f;
-        float3 H_s = 0.0f;
 #endif
 
         float3 L_s = normalize(reflect(-V_s, H_s));
@@ -183,10 +186,6 @@ void Model_Microfacet(
         float D = D_Beckmann(H_s, a2);
         float G = G_Beckmann(V_s, L_s, alpha);
         float pdf = Pdf_General(D, G1_Beckmann(V_s, alpha), V_s, H_s, pdfSampleVisibleArea);
-#else
-        float D = 0.0f;
-        float G = 0.0f;
-        float pdf = 0.0f;
 #endif
 
         // Torrence-Sparrow BRDF
@@ -199,15 +198,25 @@ void Model_Microfacet(
     }
     else // Lambert
     {
+#ifdef IMPORTANCE_SAMPLING
         float3 L_s = RandHemisphereCosineSSpace(rngState);
         wi = ShadingToWorldSpace(L_s, T, B, Ns);
 
-        float NdL = L_s.z;
+        // pdf = NdL / PI;
+        // diffuseBrdf = albedo * (1.0 - metalness) / PI;
+        // E = diffuseBrdf * NdL / pdf
+        float3 E = albedo * (1.0 - metalness); // Terms cancel out
+#else
+        float3 L_s = RandHemisphereUniformSSpace(rngState);
+        wi = ShadingToWorldSpace(L_s, T, B, Ns);
 
-        float pdf = NdL / PI;
-        float3 diffuseBrdf = albedo * (1.0 - metalness);
-        diffuseBrdf /= PI;
-        throughput *= diffuseBrdf * NdL / max(0.001f, pdf) / max(0.001f, 1.0 - specProb);
+        float NdL = L_s.z;
+        float pdf = 1.0f / (2.0f * PI);
+        float3 diffuseBrdf = albedo * (1.0 - metalness) / PI;
+        float3 E = diffuseBrdf * NdL / max(0.001f, pdf);
+#endif
+        E /= max(0.001f, 1.0 - specProb);
+        throughput *= E;
 
 #ifdef DEBUG_BUFFER
 #     include "Debug/DebugBuffersMicrofacetDiff.hlsli"

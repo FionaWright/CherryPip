@@ -189,7 +189,7 @@ float3 SampleH_GGX(float a2, inout uint rngState)
 }
 
 // TODO
-float3 SampleH_GgxVndf(float a2, inout uint rngState)
+float3 SampleH_GGXVNDF(float a2, inout uint rngState)
 {
     float r1 = PcgRand01(rngState);
     float r2 = PcgRand01(rngState);
@@ -226,9 +226,9 @@ float Pdf_GGX(float D, float NdH, float VdH)
     return D * NdH / (4.0f * max(0.001f, VdH));
 }
 
-float Pdf_General(float D, float G1v, float3 V, float3 H, bool sampleVisibleArea)
+float Pdf_General(float D, float G1v, float3 V, float3 H, bool vndf)
 {
-    if (!sampleVisibleArea)
+    if (!vndf)
         return D * abs(SSpaceCosTheta(H));
 
     return D * G1v * abs(dot(V, H)) / abs(SSpaceCosTheta(V));

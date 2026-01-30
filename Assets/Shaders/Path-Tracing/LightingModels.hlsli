@@ -95,11 +95,11 @@ void Model_Glass(
 }
 
 // TODO:
-// Read more PBRT, go over microfacet, fresnel and importance sampling
-// Try remove importance sampling from GGX to understand it better
-// Find resources on the sample/pdf parts
-// Get beckmann working
-// Look into the anisotropic beckmann
+// 1. Make GGX look similar in energy levels to Lambert
+// 2. Get VNDF GGX working
+// 3. Get Aniso GGX working
+// 4. Get Beckmann working
+// 5. Get Aniso Beckmann working
 
 // Avoid code breaking
 #if !defined(NDF_TYPE_GGX) && !defined(NDF_TYPE_BECKMANN)
@@ -202,15 +202,16 @@ void Model_Microfacet(
         float3 L_s = RandHemisphereCosineSSpace(rngState);
         wi = ShadingToWorldSpace(L_s, T, B, Ns);
 
-        // pdf = NdL / PI;
-        // diffuseBrdf = albedo * (1.0 - metalness) / PI;
+        float NdL = SSpaceCosTheta(L_s);
+        float3 pdf = NdL / PI;
+        float3 diffuseBrdf = albedo * (1.0 - metalness) / PI; // Left in for debug view
         // E = diffuseBrdf * NdL / pdf
         float3 E = albedo * (1.0 - metalness); // Terms cancel out
 #else
         float3 L_s = RandHemisphereUniformSSpace(rngState);
         wi = ShadingToWorldSpace(L_s, T, B, Ns);
 
-        float NdL = L_s.z;
+        float NdL = SSpaceCosTheta(L_s);
         float pdf = 1.0f / (2.0f * PI);
         float3 diffuseBrdf = albedo * (1.0 - metalness) / PI;
         float3 E = diffuseBrdf * NdL / max(0.001f, pdf);

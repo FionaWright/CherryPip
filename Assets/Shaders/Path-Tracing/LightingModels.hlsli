@@ -95,11 +95,21 @@ void Model_Glass(
 }
 
 // TODO:
-// 1. Make GGX look similar in energy levels to Lambert
 // 2. Get VNDF GGX working
 // 3. Get Aniso GGX working
-// 4. Get Beckmann working
+// 4. Get Beckmann working (Smith first, then lambda)
 // 5. Get Aniso Beckmann working
+// 6. Beckmann VNDF
+
+// Models:
+// (D + G + Sample -> PDF)
+// GGX + Smith + NDF
+// GGX + VCavity + VNDF
+// WIP:
+// GGX + Smith + VNDF
+// GGXAniso + SmithAniso + NDFAniso
+// Beckmann + ? + NDF
+// BeckmannAniso + ?Aniso + NDFAniso
 
 // Avoid code breaking
 #if !defined(NDF_TYPE_GGX) && !defined(NDF_TYPE_BECKMANN)
@@ -153,11 +163,16 @@ void Model_Microfacet(
 #if defined(NDF_TYPE_GGX)
         float alpha = RoughnessToAlpha_GGX(roughness);
         float a2 = max(1e-6f, alpha * alpha);
-        float3 H_s = SampleH_GGX(a2, rngState);
-#elif defined(NDF_TYPE_BECKMANN)
-        float alpha = RoughnessToAlpha_Beckmann(roughness);
+#    ifdef PDF_SAMPLE_VISIBLE_AREA
+        float3 H_s = SampleH_GGX_VCavity_VNDF(a2, V_s, rngState);
+#    else
+        float3 H_s = SampleH_GGX_NDF(a2, rngState);
+#    endif
+#elif defined(NDF_TYPE_BECKMANN) // TODO
+        float alpha = RoughnessToAlpha_Beckmann(roughness); // TODO: Walters Trick here?
         float a2 = max(1e-6f, alpha * alpha);
-        float3 H_s = SampleH_Beckmann(alpha, rngState);
+        // TODO: VNDF
+        float3 H_s = SampleH_Beckmann_NDF(a2, rngState);
 #endif
 
         float3 L_s = normalize(reflect(-V_s, H_s));
@@ -169,23 +184,20 @@ void Model_Microfacet(
 
         float3 F = F_Schlick(VdH, F0);
 
-    bool pdfSampleVisibleArea = false;
-#ifdef PDF_SAMPLE_VISIBLE_AREA
-    pdfSampleVisibleArea = true;
-#endif
-
 #if defined(NDF_TYPE_GGX)
         float D = D_GGX(NdH, a2);
-        //float Dv = D * G1_GGX(NdV, a2) * max(0.0f, HdV) / NdV;
-        //float G = pdfSampleVisibleArea ? G1_GGX(NdV, a2) : G_SmithGGX(NdL, NdV, a2);
+#    ifdef PDF_SAMPLE_VISIBLE_AREA
+        float G = G_VCavity(V_s, L_s, H_s);
+        float Dv = D * G1_VCavity(NdV, a2) * max(0.0f, VdH) / NdV;
+        float pdf = Pdf_GGX_VNDF(Dv, VdH);
+#    else
         float G = G_SmithGGX(NdL, NdV, a2);
-        float pdf = Pdf_GGX(D, NdH, VdH);
-        // This is pdf_h: What do I do with it?
-        //float pdf_h = Pdf_General(D, G1_GGX(NdV, a2), V_s, H_s, pdfSampleVisibleArea);
-#elif defined(NDF_TYPE_BECKMANN)
+        float pdf = Pdf_GGX_NDF(D, NdH, VdH);
+#    endif
+#elif defined(NDF_TYPE_BECKMANN) // TODO
         float D = D_Beckmann(H_s, a2);
         float G = G_Beckmann(V_s, L_s, alpha);
-        float pdf = Pdf_General(D, G1_Beckmann(V_s, alpha), V_s, H_s, pdfSampleVisibleArea);
+        //float pdf = Pdf_General(D, G1_Beckmann(V_s, alpha), V_s, H_s, pdfSampleVisibleArea);
 #endif
 
         // Torrence-Sparrow BRDF

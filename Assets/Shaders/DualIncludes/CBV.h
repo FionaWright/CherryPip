@@ -112,10 +112,13 @@ enum class DebugBuffer
     eMissHit,
     eHitDistRay0,
     eHitDistRay1,
+
     eMaterialID,
     eRNG,
     eSelfIntersection,
     eNaN,
+    eAlbedoAlpha,
+    eFireflyThresholdHit,
 
     eRoughness,
     eMetalness,

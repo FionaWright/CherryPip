@@ -115,6 +115,8 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
     ImGui::Unindent(IM_GUI_INDENTATION);
     m_studioConfig.PT.LightingModel = static_cast<PathTracerLightingModel>(e);
 
+    m_shaderDirty |= ImGui::Checkbox("Importance Sampling Enabled##xx", &m_studioConfig.PT.ImportanceSamplingEnabled);
+
     if (m_studioConfig.PT.LightingModel == PathTracerLightingModel::eMicrofacet)
     {
         ImGui::Text("%s", "Microfacet Normal Distribution Function:");
@@ -163,6 +165,8 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
         "RNG",
         "Self-Intersection",
         "NaN",
+        "Albedo Alpha",
+        "Firefly Threshold Hit",
         "Roughness",
         "Metalness",
         "Microfacet: Tangent",

@@ -15,10 +15,21 @@ void Model_LambertionDiffuse(
     out float3 L_sample)
 {
     L_sample = throughput * Li;
-    throughput *= albedo;
 
-    float3 diffuseDir = normalize(Ns + RandDirectionSphere(rngState));
-    wi = diffuseDir;
+    float3 T, B;
+    BuildBasisFrisvad(Ns, T, B);
+
+#ifdef IMPORTANCE_SAMPLING
+    wi = RandHemisphereCosineWorld(rngState, T, B, Ns);
+    // pdf = NdL / PI
+    throughput *= albedo; // PI and pdf cancel out
+#else
+    wi = RandHemisphereUniformWorld(rngState, T, B, Ns);
+    float pdf = 1.0f / (2.0f * PI);
+    float3 diffuseBrdf = albedo / PI;
+    float NdL = dot(Ns, wi);
+    throughput *= diffuseBrdf * NdL / pdf;
+#endif
 }
 
 void Model_Glossy(
@@ -162,9 +173,11 @@ void Model_Microfacet(
 
 #if defined(NDF_TYPE_GGX)
         float D = D_GGX(NdH, a2);
-        float G = G_SmithGGX(NdL, NdV, a2);
-        float pdf = Pdf_GGX(D, NdH, VdH);
-        //float pdf = Pdf_General(D, G1_GGX(NdV, a2), V_s, H_s, pdfSampleVisibleArea);
+        //float Dv = D * G1_GGX(NdV, a2) * max(0.0f, HdV) / NdV;
+        float G = pdfSampleVisibleArea ? G1_GGX(NdV, a2) : G_SmithGGX(NdL, NdV, a2);
+        //float pdf = Pdf_GGX(D, NdH, VdH);
+        // This is pdf_h: What do I do with it?
+        float pdf = Pdf_General(D, G1_GGX(NdV, a2), V_s, H_s, pdfSampleVisibleArea);
 #elif defined(NDF_TYPE_BECKMANN)
         float D = D_Beckmann(H_s, a2);
         float G = G_Beckmann(V_s, L_s, alpha);
@@ -185,7 +198,7 @@ void Model_Microfacet(
     }
     else // Lambert
     {
-        float3 L_s = RandHemisphereCosine(rngState, N_s);
+        float3 L_s = RandHemisphereCosineSSpace(rngState);
         wi = ShadingToWorldSpace(L_s, T, B, Ns);
 
         float NdL = L_s.z;

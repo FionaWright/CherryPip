@@ -68,6 +68,7 @@ struct PtConfig
     alignas(4) bool FurnaceTestHdReflect = false;
     alignas(4) bool FurnaceTestHhEmit = false;
     alignas(4) bool AlphaTestingEnabled = true;
+    alignas(4) bool ImportanceSamplingEnabled = true;
 };
 
 class PathTracingContext

@@ -727,6 +727,8 @@ void SceneStudio::compilePtShader(const D3D* d3d)
         args.push_back(L"-DPDF_SAMPLE_VISIBLE_AREA");
     if (m_studioConfig.PT.DepthOfFieldEnabled)
         args.push_back(L"-DDEPTH_OF_FIELD_ENABLED");
+    if (m_studioConfig.PT.ImportanceSamplingEnabled)
+        args.push_back(L"-DIMPORTANCE_SAMPLING");
 
     if (m_studioConfig.PT.FurnaceTestHdReflect)
         args.push_back(L"-DFURNACE_TEST_HEMI_DIR_REFLECT");

@@ -32,13 +32,15 @@ C++, HLSL and Python are the main languages.
 ### Forward + Deferred Render Backends
 - Microfacet lighting model + Irradiance IBL
 - Rotatable cubemap skybox that has parity with path tracer backend
-- Many different debug view modes (WorldPos, Normals, Tangents, Roughness, UV, Lambert, Albedo, etc) (24+)
+- Many different debug view modes (WorldPos, Normals, Tangents, Roughness, UV, Lambert, Albedo, etc) (Over 20)
 
 ### Path Tracer Render Backend
 - Fully deterministic and seeded
-- Russian Roulette, Firefly Threshold, Importance Sampling
-- Lambertian, Glossy, Glass and Microfacet lighting models
-- GGX and Beckmann NDFs, Schlick Fresnel, Smith Geometry Masking
+- Russian Roulette, Firefly Threshold, Cosine Importance Sampling
+- Lambertian, Glossy, and Microfacet lighting models
+- GGX and Beckmann NDFs, Schlick Fresnel, Smith and V-Cavity Geometry Masking
+- Importance Sampling using the distribution of visible normals (VNDF)
+- Glass materials supported
 - Environment maps with support for Panoramic and Octohedral Equal-Area (Rotatable at runtime!)
 - Directional lighting + GPU max parallel search on the EA Environment Map to set automatically direction to where luminance is highest
 - Denoising (Box, Gaussian, Median, Edge-Avoiding A-Trous) using deferred GBuffer pre-pass
@@ -46,7 +48,7 @@ C++, HLSL and Python are the main languages.
 #### Debug Tools
 - Readback debug system that allows you to find selected pixel value or collect data every frame
 - Two furnace tests
-- See different internal parts of the path tracer using Debug Buffer system (Normals, Albedo, HitDist, RNG, FirstBounceDirection, etc) (29+)
+- See different internal parts of the path tracer using Debug Buffer system (Normals, Albedo, HitDist, RNG, FirstBounceDirection, etc) (Over 30)
 
 ## History 
 
@@ -70,6 +72,7 @@ Progress as of 25/01/26:
 
 Progress as of 29/01/26:
 <img width="961" height="575" alt="image" src="https://github.com/user-attachments/assets/dc7b6217-9eaa-4a9b-ad21-7b998f25ba47" />
+
 
 
 

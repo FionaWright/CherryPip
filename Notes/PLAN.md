@@ -33,12 +33,14 @@
 - [x] Directional Lighting
 - [ ] NEE 
 - [x] Glass model
-- [ ] Importance Sampling
+- [x] Importance Sampling
 - [ ] MIS
 - [ ] Oren-Nayers Lighting Model
 - [ ] Microfacet Beckmann (PBRT)
-- [ ] Microfacet Trowbridge-Reitz (PBRT)
+- [ ] Microfacet Glass (Beckmann)
+- [ ] Point Lights
 - [x] Firefly threshold
+- [ ] BTDFs (VNDF whitepaper has some good stuff)
 - [ ] Ray pipelines
 - [ ] Spectral Path-Tracing 
 - [ ] Rayleigh scattering
@@ -77,13 +79,12 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ### Features
 - Mist (Randomly scatter rays depending on distance travelled, see SL video) (Rayleigh scattering! Requires spectral renderer?)
 - PT only build mode that doesn't initialize any raster resources? 
-- Point Lights
-- Glass Beckmann
+- Debug tool where you can readback capture a frame into slot A or B, then perform a RMSE test on them. Then make it super-tool that runs it every N frames and graphs convergence 
 
 ### Misc
-- Get a big scene that isn't bistro (Junkyard?)
-- FPS has heavily dropped since I was away, possibly due to all the extra shaders/etc. Make sure they can be deleted properly when not in use
+- FPS has heavily dropped since I was away, possibly due to all the extra shaders/etc. Make sure they can be deleted properly when not in use. 1000+ FPS with lambert distribution should be possible
 - Get a NICE picture for LinkedIn and post it for fun
+- Put DEBUG_ at the start of all debug-related macros (e.g. FORCE_SPECULAR)
 
 ## Raster/Laptop-TODO
 

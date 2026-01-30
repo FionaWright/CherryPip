@@ -48,7 +48,7 @@ float SSpaceCosDeltaPhi(float3 A, float3 B)
 }
 
 // ================================
-//  Roughness To Alpha
+//  Alpha
 // ================================
 
 float RoughnessToAlpha_GGX(float roughness)
@@ -63,6 +63,12 @@ float RoughnessToAlpha_Beckmann(float roughness)
     float x = log(roughness);
     return 1.62142f + 0.819955f * x + 0.1734f * x * x +
            0.0171201f * x * x * x + 0.000640711f * x * x * x * x;
+}
+
+// Returns alpha', a better alpha for beckmann distributions
+float WaltersTrick(float alpha, float NdL)
+{
+    return 1.2f - 0.2f * sqrt(abs(NdL)) * alpha;
 }
 
 // ================================
@@ -171,11 +177,24 @@ float G_Beckmann(float3 V, float3 L, float alpha)
     return 1.0f / (1.0f + Lambda_Beckmann(V, alpha) + Lambda_Beckmann(L, alpha));
 }
 
+// De-generalized from BSDF to BRDF
+float G1_VCavity(float3 W, float3 H)
+{
+    float WdH = dot(W, H);
+    return min(1, 2.0f * H.z * W.z / max(0.001f, WdH));
+}
+
+// Avoid Keleman simplified model, breaks VNDF
+float G_VCavity(float3 V, float3 L, float3 H)
+{
+    return min(G1_VCavity(V, H), G1_VCavity(L, H));
+}
+
 // ================================
 //  Direction Sampling Functions
 // ================================
 
-float3 SampleH_GGX(float a2, inout uint rngState)
+float3 SampleH_GGX_NDF(float a2, inout uint rngState)
 {
     float r1 = PcgRand01(rngState);
     float r2 = PcgRand01(rngState);
@@ -186,32 +205,42 @@ float3 SampleH_GGX(float a2, inout uint rngState)
 
     float3 H_s = normalize(float3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta));
     return H_s;
+}
+
+// https://inria.hal.science/hal-00996995v2
+// VNDF only works with mathematically well-defined G1 models (V-Cavity + Smith)
+float3 SampleH_GGX_VCavity_VNDF(float a2, float3 V, inout uint rngState)
+{
+    float3 H = SampleH_GGX_NDF(a2, rngState);
+    float3 Hp = float3(-H.x, -H.y, H.z);
+
+    float3 L = normalize(reflect(-V, H));
+
+    float r3 = PcgRand01(rngState);
+    float cHdL = saturate(dot(H, L));
+    float cHpdL = saturate(dot(Hp, L));
+
+    if (r3 > cHdL / (cHdL + cHpdL))
+        return Hp;
+    else
+        return H;
 }
 
 // TODO
-float3 SampleH_GGXVNDF(float a2, inout uint rngState)
+float3 SampleH_GGX_Smith_VNDF(float a2, float3 V, inout uint rngState)
 {
-    float r1 = PcgRand01(rngState);
-    float r2 = PcgRand01(rngState);
-
-    float phi = 2.0 * PI * r1;
-    float cosTheta = sqrt(max(0.0f, (1.0 - r2) / max(0.001f, 1.0 + (a2 - 1.0) * r2)));
-    float sinTheta = sqrt(max(0.0f, 1.0 - cosTheta * cosTheta));
-
-    float3 H_s = normalize(float3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta));
-    return H_s;
+    return -1;
 }
 
-float3 SampleH_Beckmann(float alpha, inout uint rngState)
+float3 SampleH_Beckmann_NDF(float a2, inout uint rngState)
 {
     float r1 = PcgRand01(rngState);
     float r2 = PcgRand01(rngState);
 
-    float tan2Theta = -alpha * alpha * log(1.0 - r1);
+    float phi = 2.0 * PI * r2;
+    float tan2Theta = -a2 * log(1.0 - r1);
     float cosTheta = 1.0 / sqrt(1.0 + tan2Theta);
     float sinTheta = sqrt(max(0.0, 1.0 - cosTheta * cosTheta));
-
-    float phi = 2.0 * PI * r2;
 
     float3 H_s = normalize(float3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta));
     return H_s;
@@ -221,11 +250,17 @@ float3 SampleH_Beckmann(float alpha, inout uint rngState)
 //  Probability Density Functions
 // ================================
 
-float Pdf_GGX(float D, float NdH, float VdH)
+float Pdf_GGX_NDF(float D, float NdH, float VdH)
 {
     return D * NdH / (4.0f * max(0.001f, VdH));
 }
 
+float Pdf_GGX_VNDF(float Dv, float VdH)
+{
+    return Dv / (4.0f * max(0.001f, VdH));
+}
+
+// Needs dividing by (4.0f * max(0.001f, VdH)) after? Is this opertion applied to all PDFs assuming Torrence-Sparrow?
 float Pdf_General(float D, float G1v, float3 V, float3 H, bool vndf)
 {
     if (!vndf)

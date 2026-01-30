@@ -35,7 +35,6 @@ enum PathTracerLightingModel : uint32_t
 {
     eLambertDiff,
     eGlossy,
-    eGlass,
     eMicrofacet
 };
 
@@ -69,6 +68,7 @@ struct PtConfig
     alignas(4) bool FurnaceTestHhEmit = false;
     alignas(4) bool AlphaTestingEnabled = true;
     alignas(4) bool ImportanceSamplingEnabled = true;
+    alignas(4) bool GlassModelEnabled = true;
 };
 
 class PathTracingContext

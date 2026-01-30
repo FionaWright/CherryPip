@@ -693,7 +693,6 @@ void SceneStudio::compilePtShader(const D3D* d3d)
     const WCHAR* shaderMap[] = {
         L"Path-Tracing/Entry/LambDiffPS.hlsl",
         L"Path-Tracing/Entry/GlossyPS.hlsl",
-        L"Path-Tracing/Entry/GlassPS.hlsl",
         L"Path-Tracing/Entry/MicrofacetPS.hlsl"
     };
     const WCHAR* shaderPath = shaderMap[m_studioConfig.PT.LightingModel];
@@ -729,6 +728,8 @@ void SceneStudio::compilePtShader(const D3D* d3d)
         args.push_back(L"-DDEPTH_OF_FIELD_ENABLED");
     if (m_studioConfig.PT.ImportanceSamplingEnabled)
         args.push_back(L"-DIMPORTANCE_SAMPLING");
+    if (m_studioConfig.PT.GlassModelEnabled)
+        args.push_back(L"-DLIGHTING_GLASS_ENABLED");
 
     if (m_studioConfig.PT.FurnaceTestHdReflect)
         args.push_back(L"-DFURNACE_TEST_HEMI_DIR_REFLECT");

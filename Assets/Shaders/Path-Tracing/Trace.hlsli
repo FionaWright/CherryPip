@@ -67,39 +67,36 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
 #elif defined(LIGHTING_GLOSSY)
 
-        Model_Glossy(rngState, throughput, mat.DiffuseProbability, roughness, Ns, Li, albedo.rgb, wo, wi, L_sample);
-
-#elif defined(LIGHTING_GLASS)
-
+#    ifdef LIGHTING_GLASS_ENABLED
         if (mat.Flags & PtMaterialFlags::eIsGlass)
         {
             bool entering = q.CommittedTriangleFrontFace()!=0;
             Model_Glass(rngState, throughput, mat.DiffuseProbability, roughness, entering, q.CommittedRayT(), mat.IoR, Ns, Li, albedo.rgb, wo, wi, L_sample);
         }
         else
+#    endif
             Model_Glossy(rngState, throughput, mat.DiffuseProbability, roughness, Ns, Li, albedo.rgb, wo, wi, L_sample);
 
 #elif defined(LIGHTING_MICROFACET)
 
         //if (dot(Ns, wo) <= 0) break;
         float3 debug = 0; bool hasDebugOutput = false;
+
+#    ifdef LIGHTING_GLASS_ENABLED
 		if (mat.Flags & PtMaterialFlags::eIsGlass)
         {
             bool entering = q.CommittedTriangleFrontFace()!=0;
             Model_Glass(rngState, throughput, mat.DiffuseProbability, roughness, entering, q.CommittedRayT(), mat.IoR, Ns, Li, albedo.rgb, wo, wi, L_sample);
         }
 		else
-		{
-			Model_Microfacet(rngState,
-            	throughput, roughness,
-            	metalness, Ns, Li, albedo.rgb,
-            	wo, wi, L_sample
+#    endif
+			Model_Microfacet(rngState, throughput, roughness,
+            	metalness, Ns, Li, albedo.rgb, wo, wi, L_sample
 #    ifdef DEBUG_BUFFER
             	, debug
             	, hasDebugOutput
 #    endif
         	);
-		}
         //if (dot(Ns, wi) <= 0) break;
 
 #    ifdef DEBUG_BUFFER
@@ -109,6 +106,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
 #endif
 
+        // TODO: Reimplement firefly threshold
         //float L_lum = Luminance(L_sample);
         //if (L_lum > c_pathTracing.FireflyThreshold)
         //    L_sample *= c_pathTracing.FireflyThreshold / L_lum;

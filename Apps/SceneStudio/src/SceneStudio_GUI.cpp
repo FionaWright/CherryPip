@@ -110,14 +110,15 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
     ImGui::Indent(IM_GUI_INDENTATION);
     m_shaderDirty |= ImGui::RadioButton("Lambert", &e, idx++);
     m_shaderDirty |= ImGui::RadioButton("Glossy", &e, idx++);
-    m_shaderDirty |= ImGui::RadioButton("Glass", &e, idx++);
     m_shaderDirty |= ImGui::RadioButton("Microfacet", &e, idx++);
     ImGui::Unindent(IM_GUI_INDENTATION);
     m_studioConfig.PT.LightingModel = static_cast<PathTracerLightingModel>(e);
 
+    if (m_studioConfig.PT.LightingModel != eLambertDiff)
+        m_shaderDirty |= ImGui::Checkbox("Glass Model Enabled##xx", &m_studioConfig.PT.GlassModelEnabled);
     m_shaderDirty |= ImGui::Checkbox("Importance Sampling Enabled##xx", &m_studioConfig.PT.ImportanceSamplingEnabled);
 
-    if (m_studioConfig.PT.LightingModel == PathTracerLightingModel::eMicrofacet)
+    if (m_studioConfig.PT.LightingModel == eMicrofacet)
     {
         ImGui::Text("%s", "Microfacet Normal Distribution Function:");
         static int e2 = m_studioConfig.PT.NdfType;

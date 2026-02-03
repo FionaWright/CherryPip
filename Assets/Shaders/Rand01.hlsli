@@ -91,19 +91,29 @@ float3 RandDirectionSphere(inout uint state)
     return normalize(float3(x, y, z));
 }
 
-float3 RandHemisphereUniform(inout uint state, float3 normal)
+float3 RandHemisphereUniformSSpace(inout uint state)
 {
-    float3 dir = RandDirectionSphere(state);
-    return dir * sign(dot(normal, dir)); // If pointing away from normal, flip it
+    float u1 = PcgRand01(state);
+    float u2 = PcgRand01(state);
+
+    float z = u1;                 // cos(theta)
+    float r = sqrt(max(0, 1 - z*z));
+    float phi = 2 * PI * u2;
+
+    return normalize(float3(
+        r * cos(phi),
+        r * sin(phi),
+        z
+    ));
 }
 
-float3 any_perpendicular(float3 n)
+float3 RandHemisphereUniformWorld(inout uint state, float3 T, float3 B, float3 N)
 {
-    return abs(n.z) < 0.999 ? normalize(cross(n, float3(0,0,1))) : normalize(cross(n, float3(0,1,0)));
+    float3 L_s = RandHemisphereUniformSSpace(state);
+    return normalize(L_s.x * T + L_s.y * B + L_s.z * N);
 }
 
-// Optimization to get tangent/bitangent from Hit
-float3 RandHemisphereCosine(inout uint state, float3 normal)
+float3 RandHemisphereCosineSSpace(inout uint state)
 {
     float u1 = PcgRand01(state);
     float u2 = PcgRand01(state);
@@ -115,12 +125,13 @@ float3 RandHemisphereCosine(inout uint state, float3 normal)
     float y = r * sin(theta);
     float z = sqrt(1.0f - u1); // ensures cosine weighting
 
-    // Build an orthonormal basis around 'normal'
-    float3 tangent = normalize(any_perpendicular(normal));
-    float3 bitangent = cross(normal, tangent);
+    return normalize(float3(x, y, z));
+}
 
-    // Transform local (x,y,z) to world space
-    return x * tangent + y * bitangent + z * normal;
+float3 RandHemisphereCosineWorld(inout uint state, float3 T, float3 B, float3 N)
+{
+    float3 L_s = RandHemisphereCosineSSpace(state);
+    return normalize(L_s.x * T + L_s.y * B + L_s.z * N);
 }
 
 

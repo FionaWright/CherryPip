@@ -7,7 +7,7 @@
 
 void Hit(inout uint rngState,
         inout RayQuery<RAY_FLAGS> q,
-        out float3 albedo,
+        out float4 albedo,
         out float3 Ng,
         out float3 Ns,
         out float3 Li,
@@ -47,18 +47,18 @@ void Hit(inout uint rngState,
 #endif
     Ns = q.CommittedTriangleFrontFace() == 0 ? -Ns : Ns;
 
-    float3 albedoSample = gTextures[mat.TexIdxAlbedo].Sample(c_sampler, uv).rgb;
+    float4 albedoSample = gTextures[mat.TexIdxAlbedo].Sample(c_sampler, uv);
     // Does albedo sample need gamma correction?
     float3 emissionSample = gTextures[mat.TexIdxEmissive].Sample(c_sampler, uv).rgb;
 
 #if defined(FURNACE_TEST_HEMI_DIR_REFLECT)
-    albedo = float3(0, 0, 0);
+    albedo = float4(0, 0, 0, 1);
     Li = float3(1, 1, 1);
 #elif defined(FURNACE_TEST_HEMI_HEMI_EMIT)
-    albedo = float3(1, 1, 1);
+    albedo = float4(1, 1, 1, 1);
     Li = float3(0, 0, 0);
 #else
-    albedo = mat.BaseColorFactor * albedoSample;
+    albedo = float4(mat.BaseColorFactor * albedoSample.rgb, albedoSample.a);
     Li = mat.EmissiveStrength * mat.EmissiveColor * emissionSample;
 #endif
 }

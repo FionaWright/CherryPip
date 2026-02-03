@@ -120,8 +120,7 @@ void SceneStudio::loadAssets(D3D* d3d)
     const ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
     // TODO: Only set high heap if Bistro initial scene, don't allow changing scene after?
-    // TODO: Or introduce better heap descriptor sharing
-    m_heap.Init("SRV/CBV/UAV Heap", device, 50000, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    m_heap.Init("SRV/CBV/UAV Heap", device, 70000, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     m_heapRTV.Init("RTV Heap", device, 20, D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
     loadRasterAssets(d3d, cmdList.Get());
@@ -144,7 +143,7 @@ void SceneStudio::loadAssets(D3D* d3d)
 #endif
 
     SceneConfig customScene = {
-        "Custom"
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Custom"
     };
     m_sceneConfigs.emplace_back(customScene);
 
@@ -152,7 +151,7 @@ void SceneStudio::loadAssets(D3D* d3d)
 
     t.SetScale(2.0f);
     SceneConfig sceneCornell = {
-        "Cornell Box",
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Cornell Box",
         L"Cornell/scene.gltf",
         t,
         XMFLOAT3(0, 1.5f, 4.5f),
@@ -163,7 +162,7 @@ void SceneStudio::loadAssets(D3D* d3d)
 
     t = {};
     SceneConfig sceneSphere = {
-        "Sphere",
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Sphere",
         L"Sphere/Sphere.gltf",
         t,
         XMFLOAT3(0, 0, -4.3f),
@@ -174,7 +173,7 @@ void SceneStudio::loadAssets(D3D* d3d)
 
     t = {};
     SceneConfig scenePlane = {
-        "FloatPlane",
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "FloatPlane",
         L"floatplane.glb",
         t,
         XMFLOAT3(0, 0, -4.3f),
@@ -186,7 +185,7 @@ void SceneStudio::loadAssets(D3D* d3d)
     t = {};
     t.SetScale(0.3f);
     SceneConfig sceneTeapot = {
-        "Utah Teapot",
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Utah Teapot",
         L"Utah Teapot/scene.gltf",
         t,
         XMFLOAT3(0, 0, -4.3f),
@@ -198,7 +197,7 @@ void SceneStudio::loadAssets(D3D* d3d)
     t = {};
     t.SetScale(5.0f);
     SceneConfig sceneChess = {
-        "Chess",
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Chess",
         L"Chess/Chess.gltf",
         t,
         XMFLOAT3(0, 0.2f, -0.5f),
@@ -210,7 +209,7 @@ void SceneStudio::loadAssets(D3D* d3d)
     t = {};
     t.SetScale(2.0f);
     SceneConfig sceneLantern = {
-        "Lantern",
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Lantern",
         L"Lantern/Lantern.gltf",
         t,
         XMFLOAT3(0.967f, 11.963f, 50.213f),
@@ -221,18 +220,18 @@ void SceneStudio::loadAssets(D3D* d3d)
 
     t = {};
     SceneConfig sceneBistro = {
-        "Bistro",
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Bistro",
         L"GitIgnored/Bistro/bistro.gltf",
         t,
         XMFLOAT3(0.967f, 11.963f, 50.213f),
         XMFLOAT2(0, PI),
-        true
+        false
     };
     m_sceneConfigs.emplace_back(sceneBistro);
 
     t = {};
     SceneConfig sceneSponza = {
-        "Sponza",
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Sponza",
         L"GitIgnored/Sponza/sponza.gltf",
         t,
         XMFLOAT3(1.753f, 1.274f, -0.23f),
@@ -243,7 +242,7 @@ void SceneStudio::loadAssets(D3D* d3d)
 
     t = {};
     SceneConfig sceneMrSpheres = {
-        "MetalRough Spheres",
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "MetalRough Spheres",
         L"MetalRoughSpheres/MetalRoughSpheres.gltf",
         t,
         XMFLOAT3(-0.5f, -0.25f, 8.5f),
@@ -251,6 +250,65 @@ void SceneStudio::loadAssets(D3D* d3d)
         true
     };
     m_sceneConfigs.emplace_back(sceneMrSpheres);
+
+    t = {};
+    SceneConfig sceneWhiteLands = {
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "White Lands",
+        L"GitIgnored/WhiteLands/WhiteLands.gltf",
+        t,
+        XMFLOAT3(0,0,0),
+        XMFLOAT2(0, PI),
+        false
+    };
+    m_sceneConfigs.emplace_back(sceneWhiteLands);
+
+    t = {};
+    t.SetScale(3.0f);
+    SceneConfig sceneCozyKitchen = {
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "CozyKitchen",
+        L"GitIgnored/CozyKitchen/CozyKitchen.gltf",
+        t,
+        XMFLOAT3(1.339f, 1.728f, 0.989f),
+        XMFLOAT2(0.12f, 3.997f),
+        false
+    };
+    m_sceneConfigs.emplace_back(sceneCozyKitchen);
+
+    t = {};
+    t.SetScale(2.0f);
+    SceneConfig sceneAutumn = {
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Autumn",
+        L"GitIgnored/Autumn/Autumn.gltf",
+        t,
+        XMFLOAT3(1.339f, 1.728f, 0.989f),
+        XMFLOAT2(0.12f, 3.997f),
+        false
+    };
+    m_sceneConfigs.emplace_back(sceneAutumn);
+
+    t = {};
+    t.SetScale(2.0f);
+    SceneConfig sceneJunkshop = {
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Junkshop",
+        L"GitIgnored/Junkshop/Junkshop.gltf",
+        t,
+        XMFLOAT3(1.339f, 1.728f, 0.989f),
+        XMFLOAT2(0.12f, 3.997f),
+        false
+    };
+    m_sceneConfigs.emplace_back(sceneJunkshop);
+
+    t = {};
+    t.SetScale(2.0f);
+    SceneConfig sceneLoneMonk = {
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "LoneMonk",
+        L"GitIgnored/LoneMonk/LoneMonk.gltf",
+        t,
+        XMFLOAT3(1.339f, 1.728f, 0.989f),
+        XMFLOAT2(0.12f, 3.997f),
+        false
+    };
+    m_sceneConfigs.emplace_back(sceneLoneMonk);
 
     m_envMapList = {
         L"Env Maps/autumn_field_puresky_4k.hdr",
@@ -635,7 +693,6 @@ void SceneStudio::compilePtShader(const D3D* d3d)
     const WCHAR* shaderMap[] = {
         L"Path-Tracing/Entry/LambDiffPS.hlsl",
         L"Path-Tracing/Entry/GlossyPS.hlsl",
-        L"Path-Tracing/Entry/GlassPS.hlsl",
         L"Path-Tracing/Entry/MicrofacetPS.hlsl"
     };
     const WCHAR* shaderPath = shaderMap[m_studioConfig.PT.LightingModel];
@@ -657,6 +714,8 @@ void SceneStudio::compilePtShader(const D3D* d3d)
         args.push_back(L"-DDIR_LIGHT_ENABLED");
     if (m_studioConfig.PT.NormalMapsEnabled)
         args.push_back(L"-DNORMAL_MAPS_ENABLED");
+    if (m_studioConfig.PT.AlphaTestingEnabled)
+        args.push_back(L"-DALPHA_TESTING_ENABLED");
     if (m_studioConfig.PT.RussianRouletteEnabled)
         args.push_back(L"-DRUSSIAN_ROULETTE_ENABLED");
     if (m_studioConfig.PT.DebugForceSpecular)
@@ -667,6 +726,10 @@ void SceneStudio::compilePtShader(const D3D* d3d)
         args.push_back(L"-DPDF_SAMPLE_VISIBLE_AREA");
     if (m_studioConfig.PT.DepthOfFieldEnabled)
         args.push_back(L"-DDEPTH_OF_FIELD_ENABLED");
+    if (m_studioConfig.PT.ImportanceSamplingEnabled)
+        args.push_back(L"-DIMPORTANCE_SAMPLING");
+    if (m_studioConfig.PT.GlassModelEnabled)
+        args.push_back(L"-DLIGHTING_GLASS_ENABLED");
 
     if (m_studioConfig.PT.FurnaceTestHdReflect)
         args.push_back(L"-DFURNACE_TEST_HEMI_DIR_REFLECT");

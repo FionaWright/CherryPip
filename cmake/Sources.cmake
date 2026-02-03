@@ -87,6 +87,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_CONFIGURATION_TYPES MATCHES "Debug
             src/client/Debug/PythonExecutor.cpp
             src/client/Debug/Profiler.cpp
             src/client/Debug/ReadbackBuffer.cpp
+            src/client/Debug/RmseTester.cpp
     )
     set(PROJECT_HEADERS
             ${PROJECT_HEADERS}
@@ -96,5 +97,6 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_CONFIGURATION_TYPES MATCHES "Debug
             Headers/client/Debug/PythonExecutor.h
             Headers/client/Debug/Profiler.h
             Headers/client/Debug/ReadbackBuffer.h
+            Headers/client/Debug/RmseTester.h
     )
 endif()

@@ -518,7 +518,7 @@ bool SceneStudio::GBufferPassNeededForDenoiser() const
     return m_studioConfig.Denoising.Type == eATrous;
 }
 
-void SceneStudio::denoisingPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
+TextureRTV* SceneStudio::denoisingPass(const D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 {
     // GBuffer Pass
     if (GBufferPassNeededForDenoiser())
@@ -559,7 +559,7 @@ void SceneStudio::denoisingPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         throw std::exception("Unsupported Denoiser");
     }
 
-    copyRtvTex(cmdList, d3d->GetRtv(), outputRTV->GetD12Resource());
+    return outputRTV;
 }
 
 void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
@@ -591,7 +591,7 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 
         ID3D12RootSignature* rootSig = m_studioConfig.PT.DebugMode ? m_rootSigDebug->Get() : m_rootSig->Get();
         const int debugBufferIdx = m_studioConfig.PT.DebugMode
-                                       ? static_cast<uint32_t>(m_studioConfig.PT.DebugBufferIdx)
+                                       ? static_cast<int>(m_studioConfig.PT.DebugBufferIdx)
                                        : -1;
 
         m_ptContext.Render(cmdList, rootSig, m_shader->GetPSO(), &m_camera.GetCamera(), &m_heap, m_projMatrix,
@@ -611,7 +611,8 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 
     if (m_studioConfig.Denoising.Enabled)
     {
-        denoisingPass(d3d, cmdList);
+        TextureRTV* outputRTV = denoisingPass(d3d, cmdList);
+        copyRtvTex(cmdList, d3d->GetRtv(), outputRTV->GetD12Resource());
         return;
     }
 
@@ -660,13 +661,12 @@ void SceneStudio::renderForward(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         m_rasterContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, handle, &m_heap, skybox);
     }
 
-    if (m_studioConfig.Denoising.Enabled)
-    {
-        denoisingPass(d3d, cmdList);
-        return;
-    }
+    TextureRTV* currBuffer = &m_rtvPingPong1;
 
-    copyRtvTex(cmdList, d3d->GetRtv(), m_rtvPingPong1.GetD12Resource());
+    if (m_studioConfig.Denoising.Enabled)
+        currBuffer = denoisingPass(d3d, cmdList);
+
+    copyRtvTex(cmdList, d3d->GetRtv(), currBuffer->GetD12Resource());
 }
 
 void SceneStudio::renderDeferred(D3D* d3d, ID3D12GraphicsCommandList* cmdList)

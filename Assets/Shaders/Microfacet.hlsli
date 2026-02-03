@@ -72,6 +72,15 @@ float WaltersTrick(float alpha, float NdL)
     return 1.2f - 0.2f * sqrt(abs(NdL)) * alpha;
 }
 
+// Anisotropic variables given from GLTF
+// TODO: anisotropicRotation, anisotropicTexture
+// TODO: Find a model which uses it (Brushed metal, CDs, hair, etc)
+float2 AlphaToAnisoAlpha(float alpha, float anisotropyStrength)
+{
+    float aspect = sqrt(1.0f - 0.9 * abs(anisotropyStrength));
+    return float2(alpha / aspect, alpha * aspect);
+}
+
 // ================================
 //  Direction Sampling Functions
 // ================================
@@ -221,9 +230,11 @@ float D_GGX(float NdH, float a2)
     return a2 / max(0.001f, PI * denominator * denominator);
 }
 
-// TODO: GGX Aniso
-// https://jcgt.org/published/0007/04/01/paper.pdf
-// (Z==N, N==H)
+float D_GGXAniso(float3 H, float alphaX, float alphaY)
+{
+    float k = H.x * H.x / (alphaX * alphaX) + H.y * H.y / (alphaY * alphaY) + H.z * H.z;
+    return 1.0f / (PI * alphaX * alphaY * k * k);
+}
 
 float D_Beckmann(float3 H, float a2)
 {

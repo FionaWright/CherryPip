@@ -93,6 +93,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Refactor PtMaterialData to just MaterialData and share between backends
 - Irradiance prealiasing, convert discrete to continuous through c = d + 0.5? Does this apply to unjittered PT samples as well?
 - Something wrong with sphere model, makes furnace tests hard
+- Bindless heap sharing
 
 ## Spectral Tracing
 

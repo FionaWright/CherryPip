@@ -10,12 +10,12 @@
 //  Shading Space Math Utils
 // ================================
 
-float3 WorldToShadingSpace(float3 X, float3 T, float3 B, float3 N)
+float3 ToDefinedSpace(float3 X, float3 T, float3 B, float3 N)
 {
     return normalize(float3(dot(X, T), dot(X, B), dot(X, N)));
 }
 
-float3 ShadingToWorldSpace(float3 X, float3 T, float3 B, float3 N)
+float3 InvToDefinedSpace(float3 X, float3 T, float3 B, float3 N)
 {
     return normalize(X.x * T + X.y * B + X.z * N);
 }
@@ -72,20 +72,26 @@ float WaltersTrick(float alpha, float NdL)
     return 1.2f - 0.2f * sqrt(abs(NdL)) * alpha;
 }
 
-// Anisotropic variables given from GLTF
-// TODO: anisotropicRotation, anisotropicTexture
-// TODO: Find a model which uses it (Brushed metal, CDs, hair, etc)
 float2 AlphaToAnisoAlpha(float alpha, float anisotropyStrength)
 {
     float aspect = sqrt(1.0f - 0.9 * abs(anisotropyStrength));
     return float2(alpha / aspect, alpha * aspect);
 }
 
+// Used for anisotropic microfacet models
+// Compute alpha from alphaX and alphaY and use it in below functions
+float AnisoAlphaToMaskingAlpha(float3 dirOfInterest, float alphaX, float alphaY)
+{
+    float k1 = SSpaceCos2Phi(dirOfInterest) * alphaX * alphaX;
+    float k2 = SSpaceSin2Phi(dirOfInterest) * alphaY * alphaY;
+    return sqrt(k1 + k2);
+}
+
 // ================================
 //  Direction Sampling Functions
 // ================================
 
-float3 SampleH_GGX_NDF(float a2, inout uint rngState)
+float3 SampleH_GGX(float a2, inout uint rngState)
 {
     float r1 = PcgRand01(rngState);
     float r2 = PcgRand01(rngState);
@@ -98,12 +104,33 @@ float3 SampleH_GGX_NDF(float a2, inout uint rngState)
     return H_s;
 }
 
+float3 SampleH_GGXAniso(float alphaX, float alphaY, float2 anisoDir, float3 T, float3 B, float3 N, inout uint rngState)
+{
+    float r1 = PcgRand01(rngState);
+    float r2 = PcgRand01(rngState);
+
+    float phi = atan(alphaY / alphaX * tan(2.0 * PI * r1));
+    float sinPhi = sin(phi);
+    float cosPhi = cos(phi);
+
+    float alpha2 =
+        1.0 / (cosPhi*cosPhi / (alphaX*alphaX) +
+               sinPhi*sinPhi / (alphaY*alphaY));
+
+    float cosTheta = sqrt((1.0 - r2) / (1.0 + (alpha2 - 1.0) * r2));
+    float sinTheta = sqrt(1.0 - cosTheta*cosTheta);
+
+    return normalize(sinTheta * cosPhi * T +
+        sinTheta * sinPhi * B +
+        cosTheta * N);
+}
+
 // https://inria.hal.science/hal-00996995v2
 // VNDF only works with mathematically well-defined G1 models (V-Cavity + Smith)
 // Ignore this one, get Smith_VNDF working first imo
 float3 SampleH_VCavity_VNDF(float a2, float3 V, inout uint rngState)
 {
-    float3 H = SampleH_GGX_NDF(a2, rngState);
+    float3 H = SampleH_GGX(a2, rngState);
     float3 Hp = float3(-H.x, -H.y, H.z);
 
     float3 L = normalize(reflect(-V, H));
@@ -205,7 +232,7 @@ float3 SampleH_Smith_VNDF(float alphaX, float alphaY, float3 V, inout uint rngSt
     return float3(-slope.x * invH, -slope.y * invH, invH);
 }
 
-float3 SampleH_Beckmann_NDF(float a2, inout uint rngState)
+float3 SampleH_Beckmann(float a2, inout uint rngState)
 {
     float r1 = PcgRand01(rngState);
     float r2 = PcgRand01(rngState);
@@ -271,15 +298,6 @@ float3 F_Schlick(float VdH, float3 F0)
 //  Geometry Masking Functions
 // ================================
 
-// Used for anisotropic microfacet models
-// Compute alpha from alphaX and alphaY and use it in below functions
-float AnisoAlphaXyToMaskingAlpha(float3 dirOfInterest, float alphaX, float alphaY)
-{
-    float k1 = SSpaceCos2Phi(dirOfInterest) * alphaX * alphaX;
-    float k2 = SSpaceSin2Phi(dirOfInterest) * alphaY * alphaY;
-    return sqrt(k1 + k2);
-}
-
 float G1_GGX(float NdX, float a2)
 {
     float denom = NdX + sqrt(max(0.0f, a2 + (1-a2) * NdX * NdX));
@@ -289,6 +307,33 @@ float G1_GGX(float NdX, float a2)
 float G_SmithGGX(float NdL, float NdV, float a2)
 {
     return G1_GGX(NdL, a2) * G1_GGX(NdV, a2);
+}
+
+float G_SmithGGXAniso(float3 L, float3 V, float alphaX, float alphaY, float3 T, float3 B, float3 N)
+{
+    float3 L_a = ToDefinedSpace(L, T, B, N);
+    float3 V_a = ToDefinedSpace(V, T, B, N);
+    float alphaL = AnisoAlphaToMaskingAlpha(L_a, alphaX, alphaY);
+    float alphaV = AnisoAlphaToMaskingAlpha(V_a, alphaX, alphaY);
+    return G1_GGX(L_a.z, alphaL) * G1_GGX(V_a.z, alphaV);
+}
+
+float Lambda_GGXAniso(float3 W, float alphaX, float alphaY)
+{
+    float aX2 = alphaX * alphaX;
+    float aY2 = alphaY * alphaY;
+    float k = (aX2 * W.x * W.x + aY2 * W.y * W.y) / max(0.0001f, W.z * W.z);
+    return 0.5f * (-1 + sqrt(1 + k));
+}
+
+float G1_GGXAniso(float3 W, float alphaX, float alphaY)
+{
+    return 1.0f / max(0.001f, 1 + Lambda_GGXAniso(W, alphaX, alphaY));
+}
+
+float G_GGXAniso(float3 V, float3 L, float alphaX, float alphaY)
+{
+    return 1.0f / max(0.001f, 1 + Lambda_GGXAniso(V, alphaX, alphaY) + Lambda_GGXAniso(L, alphaX, alphaY));
 }
 
 // Schlick-GGX Approximation. Faster but less accurate
@@ -344,11 +389,18 @@ float G_VCavity(float3 V, float3 L, float3 H)
 //  Probability Density Functions
 // ================================
 
-float Pdf_GGX_NDF(float D, float NdH, float VdH)
+float Pdf_GGX(float D, float NdH, float VdH)
 {
     return D * NdH / (4.0f * max(0.001f, VdH));
 }
 
+float Pdf_GGXAniso(float D, float NdH, float VdH)
+{
+    return 1.0f;
+    return D * NdH / (4.0f * max(0.001f, VdH));
+}
+
+// Nonsense, find actual PDF
 float Pdf_GGX_VNDF(float Dv, float VdH)
 {
     return Dv / (4.0f * max(0.001f, VdH));

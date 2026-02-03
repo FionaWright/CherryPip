@@ -252,6 +252,17 @@ void SceneStudio::loadAssets(D3D* d3d)
     m_sceneConfigs.emplace_back(sceneMrSpheres);
 
     t = {};
+    SceneConfig sceneAnisoDiscs = {
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Aniso Discs",
+        L"AnisoDiscs/AnisotropyDiscTest.gltf",
+        t,
+        XMFLOAT3(0.17f, 1.471f, 3.542f),
+        XMFLOAT2(0.0f, PI),
+        true
+    };
+    m_sceneConfigs.emplace_back(sceneAnisoDiscs);
+
+    t = {};
     SceneConfig sceneWhiteLands = {
         "(" + std::to_string(m_sceneConfigs.size()) +") " + "White Lands",
         L"GitIgnored/WhiteLands/WhiteLands.gltf",
@@ -722,8 +733,10 @@ void SceneStudio::compilePtShader(const D3D* d3d)
         args.push_back(L"-DFORCE_SPECULAR");
     if (m_studioConfig.PT.DebugForceDiffuse)
         args.push_back(L"-DFORCE_DIFFUSE");
-    if (m_studioConfig.PT.PdfSampleVisibleArea)
-        args.push_back(L"-DPDF_SAMPLE_VISIBLE_AREA");
+    if (m_studioConfig.PT.SampleVisibleNormals)
+        args.push_back(L"-DSAMPLE_VISIBLE_NORMALS");
+    if (m_studioConfig.PT.AnisotropyEnabled)
+        args.push_back(L"-DANISOTROPY_ENABLED");
     if (m_studioConfig.PT.DepthOfFieldEnabled)
         args.push_back(L"-DDEPTH_OF_FIELD_ENABLED");
     if (m_studioConfig.PT.ImportanceSamplingEnabled)

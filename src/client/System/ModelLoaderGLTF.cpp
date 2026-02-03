@@ -336,9 +336,11 @@ std::shared_ptr<Texture> ModelLoaderGLTF::loadTextureResource(const D3D* d3d, ID
 {
     static_assert(std::is_base_of_v<fastgltf::TextureInfo, T>);
 
+    std::shared_ptr<Texture> pTex = std::make_shared<Texture>();
+
     std::variant<std::string, const std::byte*> texInput = "";
     size_t dataSize = 0;
-    if (gltfTex.has_value())
+    if (gltfTex && gltfTex.has_value())
     {
         texInput = loadTexture(asset, gltfTex.value().textureIndex, dataSize);
         if (std::holds_alternative<std::string>(texInput))
@@ -346,9 +348,7 @@ std::shared_ptr<Texture> ModelLoaderGLTF::loadTextureResource(const D3D* d3d, ID
     }
     else if (backupPath)
         texInput = backupPath;
-
-    std::shared_ptr<Texture> pTex = std::make_shared<Texture>();
-    if (!gltfTex.has_value() && !backupPath)
+    else
     {
         pTex->InitEmpty(d3d->GetDevice(), DXGI_FORMAT_R8G8B8A8_UNORM, 1, 1);
         return pTex;
@@ -464,6 +464,15 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     backupPath = assetDirectory + "Textures/WhitePOT.dds";
     std::shared_ptr<Texture> roughMetTex = loadTextureResource<fastgltf::TextureInfo>(d3d, cmdList, asset, mat.pbrData.metallicRoughnessTexture, localDirectory, backupPath.c_str());
     std::shared_ptr<Texture> emissiveTex = loadTextureResource<fastgltf::TextureInfo>(d3d, cmdList, asset, mat.emissiveTexture, localDirectory, backupPath.c_str());
+    std::shared_ptr<Texture> anisoTex;
+    if (mat.anisotropy)
+        anisoTex = loadTextureResource<fastgltf::TextureInfo>(d3d, cmdList, asset, mat.anisotropy->anisotropyTexture, localDirectory, backupPath.c_str());
+    else if (!ResourceSharer::TryGetFromDatabase(backupPath, anisoTex))
+    {
+        anisoTex = std::make_shared<Texture>();
+        anisoTex->Init(d3d->GetDevice(), cmdList, backupPath);
+        ResourceSharer::AddToDatabase(backupPath, anisoTex);
+    }
 
     std::shared_ptr<Material> materialForward = std::make_shared<Material>();
     materialForward->Init(heap);
@@ -504,10 +513,13 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     materialData.Roughness = mat.pbrData.roughnessFactor;
     materialData.Metalness = mat.pbrData.metallicFactor;
     materialData.IoR = mat.ior;
+    materialData.AnisoStrength = mat.anisotropy ? mat.anisotropy->anisotropyStrength : 0.0f;
+    materialData.AnisoRotation = mat.anisotropy ? mat.anisotropy->anisotropyRotation : 0.0f;
     materialData.BindlessTexDiffuse = heap->AddBindlessTexture(d3d->GetDevice(), diffuseTex);
     materialData.BindlessTexNormal = heap->AddBindlessTexture(d3d->GetDevice(), normalTex);
     materialData.BindlessTexRoughMet = heap->AddBindlessTexture(d3d->GetDevice(), roughMetTex);
     materialData.BindlessTexEmissive = heap->AddBindlessTexture(d3d->GetDevice(), emissiveTex);
+    materialData.BindlessTexAniso = heap->AddBindlessTexture(d3d->GetDevice(), anisoTex);
     if (isGlass)
         materialData.Flags = PtMaterialFlags::eIsGlass;
     materialForward->SetData(materialData);
@@ -633,6 +645,7 @@ void ModelLoaderGLTF::LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
             fastgltf::Extensions::KHR_materials_specular |
             fastgltf::Extensions::KHR_materials_iridescence |
             fastgltf::Extensions::KHR_materials_ior |
+            fastgltf::Extensions::KHR_materials_anisotropy |
             fastgltf::Extensions::KHR_texture_transform | // Not actually implemented yet, breaks WhiteLands?
             fastgltf::Extensions::KHR_materials_emissive_strength);
         ms_initialisedParser = true;

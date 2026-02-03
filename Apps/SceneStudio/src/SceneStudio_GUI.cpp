@@ -129,7 +129,8 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
         ImGui::Unindent(IM_GUI_INDENTATION);
         m_studioConfig.PT.NdfType = static_cast<MicrofacetNdfType>(e2);
 
-        m_shaderDirty |= ImGui::Checkbox("PDF Sample Visible Area", &m_studioConfig.PT.PdfSampleVisibleArea);
+        m_shaderDirty |= ImGui::Checkbox("Anisotropy Enabled", &m_studioConfig.PT.AnisotropyEnabled);
+        m_shaderDirty |= ImGui::Checkbox("Sample Visible Normals", &m_studioConfig.PT.SampleVisibleNormals);
     }
 
     ImGui::Spacing();
@@ -176,8 +177,11 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
         "Microfacet: View Vector (SS)",
         "Microfacet: Light Vector (SS)",
         "Microfacet: Half Vector (SS)",
-        "Microfacet: Specular Probability",
+        "Microfacet: Aniso Dir (AS)",
+        "Microfacet: Aniso Strength",
         "Microfacet: Alpha",
+        "Microfacet: Aniso Alpha",
+        "Microfacet: Specular Probability",
         "Microfacet: D",
         "Microfacet: F",
         "Microfacet: G",

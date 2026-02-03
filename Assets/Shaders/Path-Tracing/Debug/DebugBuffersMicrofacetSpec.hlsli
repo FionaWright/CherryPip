@@ -25,6 +25,19 @@ else if (c_debug.DebugIdx == DebugBuffer::eMicrofacetTangent)
     debug = T;
 else if (c_debug.DebugIdx == DebugBuffer::eMircofacetBinormal)
     debug = B;
+#ifdef ANISOTROPY_ENABLED
+else if (c_debug.DebugIdx == DebugBuffer::eMicrofacetAnisoDir)
+    debug = float3(anisoDirAndStrength.xy, 0);
+else if (c_debug.DebugIdx == DebugBuffer::eMicrofacetAnisoStrength)
+    debug = anisoDirAndStrength.zzz;
+else if (c_debug.DebugIdx == DebugBuffer::eMicrofacetAnisoAlpha)
+    debug = float3(alphaX, alphaY, 0);
+#else
+else if (c_debug.DebugIdx == DebugBuffer::eMicrofacetAnisoDir ||
+        c_debug.DebugIdx == DebugBuffer::eMicrofacetAnisoStrength ||
+        c_debug.DebugIdx == DebugBuffer::eMicrofacetAnisoAlpha)
+    debug = 0;
+#endif
 else if (c_debug.DebugIdx == DebugBuffer::eMicrofacetBrdfDiff ||
         c_debug.DebugIdx == DebugBuffer::eMicrofacetPdfDiff)
     debug = 0;

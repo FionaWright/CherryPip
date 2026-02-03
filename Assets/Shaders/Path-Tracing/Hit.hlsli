@@ -12,7 +12,11 @@ void Hit(inout uint rngState,
         out float3 Ns,
         out float3 Li,
         out PtMaterialData mat,
-        out float2 uv)
+        out float2 uv
+#ifdef ANISOTROPY_ENABLED
+        , out float3 anisoDirAndStrength
+#endif
+)
 {
     PtInstanceData instance = gInstances[q.CommittedInstanceIndex()];
     mat = gMaterials[instance.MaterialIdx];
@@ -50,6 +54,15 @@ void Hit(inout uint rngState,
     float4 albedoSample = gTextures[mat.TexIdxAlbedo].Sample(c_sampler, uv);
     // Does albedo sample need gamma correction?
     float3 emissionSample = gTextures[mat.TexIdxEmissive].Sample(c_sampler, uv).rgb;
+
+#ifdef ANISOTROPY_ENABLED
+    anisoDirAndStrength = gTextures[mat.TexIdxAniso].Sample(c_sampler, uv).rgb;
+    anisoDirAndStrength.rg = anisoDirAndStrength.rg * 2.0f - 1.0f; // [0,1] -> [-1,1]. Don't normalize
+    float len2 = dot(anisoDirAndStrength.rg, anisoDirAndStrength.rg);
+    anisoDirAndStrength.rg = (len2 > 1e-6f) ? anisoDirAndStrength.rg * rsqrt(len2) : float2(1, 0); // safe fallback
+    anisoDirAndStrength.b *= mat.AnisoStrength;
+    anisoDirAndStrength.b = clamp(anisoDirAndStrength.b, -0.99f, 0.99f);
+#endif
 
 #if defined(FURNACE_TEST_HEMI_DIR_REFLECT)
     albedo = float4(0, 0, 0, 1);

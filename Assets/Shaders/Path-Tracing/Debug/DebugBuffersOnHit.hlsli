@@ -7,7 +7,7 @@ else if (c_debug.DebugIdx == DebugBuffer::eFirstBounceDirection)
 else if (c_debug.DebugIdx == DebugBuffer::eHitPos)
     return hitPos;
 else if (c_debug.DebugIdx == DebugBuffer::eBaseColor)
-    return albedo;
+    return albedo.rgb;
 else if (c_debug.DebugIdx == DebugBuffer::eMissHit)
     return float3(1, 1, 1);
 else if (c_debug.DebugIdx == DebugBuffer::eHitDistRay0)
@@ -29,3 +29,7 @@ else if (c_debug.DebugIdx == DebugBuffer::eRoughness)
     return float3(roughness.rrr);
 else if (c_debug.DebugIdx == DebugBuffer::eMetalness)
     return float3(metalness.rrr);
+else if (c_debug.DebugIdx == DebugBuffer::eAlbedoAlpha)
+    return float3(albedo.aaa);
+//else if (c_debug.DebugIdx == DebugBuffer::eFireflyThresholdHit && L_lum > c_pathTracing.FireflyThreshold)
+//    return float3(1, 0, 0);

@@ -16,7 +16,7 @@ void Heap::Init(const char* name, ID3D12Device* device, const size_t numDescript
     m_descriptorIncSize = device->GetDescriptorHandleIncrementSize(m_type);
     m_heapSize = numDescriptors;
 
-    m_baseBindlessTex = m_heapSize / 2;
+    m_baseBindlessTex = static_cast<size_t>(static_cast<float>(m_heapSize) * 0.65f);
     m_currentHeapIndexBindlessTex = m_baseBindlessTex; // Should I give more control to the user?
 
     D3D12_DESCRIPTOR_HEAP_DESC desc = {};
@@ -32,13 +32,13 @@ void Heap::Init(const char* name, ID3D12Device* device, const size_t numDescript
     {
         // Assumes 50/50 split between binded and bindless for now
         m_debugDescriptorNames.resize(m_baseBindlessTex);
-        m_debugDescriptorNamesBindless.resize(m_baseBindlessTex);
+        m_debugDescriptorNamesBindless.resize(m_heapSize - m_baseBindlessTex);
     }
 }
 
 UINT Heap::GetNextDescriptor(const char* debugName)
 {
-    if (m_currentHeapIndex == m_baseBindlessTex)
+    if (m_currentHeapIndex >= m_baseBindlessTex)
         throw std::exception("Heap is too smol :(");
 
     const UINT idx = m_currentHeapIndex;
@@ -54,7 +54,7 @@ UINT Heap::GetNextDescriptor(const char* debugName)
 
 UINT Heap::GetNextDescriptorBindlessTexture(const char* debugName)
 {
-    if (m_currentHeapIndexBindlessTex == m_heapSize)
+    if (m_currentHeapIndexBindlessTex >= m_heapSize)
         throw std::exception("Heap is too smol :(");
 
     const UINT idx = m_currentHeapIndexBindlessTex;

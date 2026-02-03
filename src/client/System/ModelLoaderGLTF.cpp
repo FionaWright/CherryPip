@@ -633,6 +633,7 @@ void ModelLoaderGLTF::LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
             fastgltf::Extensions::KHR_materials_specular |
             fastgltf::Extensions::KHR_materials_iridescence |
             fastgltf::Extensions::KHR_materials_ior |
+            fastgltf::Extensions::KHR_texture_transform | // Not actually implemented yet, breaks WhiteLands?
             fastgltf::Extensions::KHR_materials_emissive_strength);
         ms_initialisedParser = true;
     }

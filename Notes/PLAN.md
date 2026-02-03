@@ -83,9 +83,9 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ## Raster/Laptop-TODO
 
 - Mip maps aren't currently working. Need alternate solution for BC7 textures
-- Stop irradiance cubemap making mip maps
 - Beckmann for raster?
 - Refactor PtMaterialData to just MaterialData and share between backends
+- Irradiance prealiasing, convert discrete to continuous through c = d + 0.5? Does this apply to unjittered PT samples as well?
 
 ## Spectral Tracing
 

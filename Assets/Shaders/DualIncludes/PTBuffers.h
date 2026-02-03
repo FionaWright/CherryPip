@@ -23,15 +23,15 @@ enum PtMaterialFlags : uint
 struct PtMaterialData
 {
     float3 BaseColorFactor;
-    float p;
-
-    float3 EmissiveColor;
     float EmissiveStrength;
 
+    float3 EmissiveColor;
     uint TexIdxAlbedo;
+
     uint TexIdxNormal;
     uint TexIdxRoughMet;
     uint TexIdxEmissive;
+    uint TexIdxAniso;
 
     float Roughness;
     float Metalness;
@@ -39,7 +39,8 @@ struct PtMaterialData
     float IoR;
 
     PtMaterialFlags Flags;
-    float3 p2;
+    float AnisoStrength;
+    float2 p;
 };
 
 struct Vertex

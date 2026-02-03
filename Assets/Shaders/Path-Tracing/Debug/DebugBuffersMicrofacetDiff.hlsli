@@ -21,6 +21,9 @@ else if (c_debug.DebugIdx == DebugBuffer::eMicrofacetVecHalf ||
         c_debug.DebugIdx == DebugBuffer::eMicrofacetG ||
         c_debug.DebugIdx == DebugBuffer::eMicrofacetBrdfSpec ||
         c_debug.DebugIdx == DebugBuffer::eMicrofacetAlpha ||
+        c_debug.DebugIdx == DebugBuffer::eMicrofacetAnisoDir ||
+        c_debug.DebugIdx == DebugBuffer::eMicrofacetAnisoStrength ||
+        c_debug.DebugIdx == DebugBuffer::eMicrofacetAnisoAlpha ||
         c_debug.DebugIdx == DebugBuffer::eMicrofacetPdfSpec)
     debug = 0;
 else

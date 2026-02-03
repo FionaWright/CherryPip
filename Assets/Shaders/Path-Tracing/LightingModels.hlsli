@@ -95,8 +95,8 @@ void Model_Glass(
 }
 
 // TODO:
-// 2. Get VNDF GGX working
 // 3. Get Aniso GGX working
+// 2. Get VNDF GGX working
 // 4. Get Beckmann working (Smith first, then lambda)
 // 5. Get Aniso Beckmann working
 // 6. Beckmann VNDF
@@ -127,6 +127,9 @@ void Model_Microfacet(
     float3 wo,        // V
     out float3 wi,    // L
     out float3 L_sample
+#ifdef ANISOTROPY_ENABLED
+    , float3 anisoDirAndStrength
+#endif
 #ifdef DEBUG_BUFFER
     , inout float3 debug
     , inout bool hasDebugOutput
@@ -141,7 +144,7 @@ void Model_Microfacet(
     // Convert world to shading space
     // forall X in R^3, X.z = dot(N, X)
     float3 N_s = float3(0, 0, 1);
-    float3 V_s = WorldToShadingSpace(wo, T, B, Ns);
+    float3 V_s = ToDefinedSpace(wo, T, B, Ns);
 
     float NdV = SSpaceCosTheta(V_s);
 
@@ -161,22 +164,44 @@ void Model_Microfacet(
     if (isSpecular)
     {
 #if defined(NDF_TYPE_GGX)
+#    ifdef ANISOTROPY_ENABLED
+        float alpha = RoughnessToAlpha_GGX(roughness);
+        float2 alphaXY = AlphaToAnisoAlpha(alpha, anisoDirAndStrength.z);
+        float alphaX = max(1e-3, alphaXY.x);
+        float alphaY = max(1e-3, alphaXY.y);
+        bool isAniso = anisoDirAndStrength.z > 0 && abs(alphaX - alphaY) > 0.0001f;
+        float3 H_s;
+        if (isAniso)
+        {
+            float3 anisoT = float3(anisoDirAndStrength.xy, 0);
+            float3 anisoB = float3(-anisoDirAndStrength.y, anisoDirAndStrength.x, 0);
+            float3 anisoN = float3(0, 0, 1);
+            H_s = SampleH_GGXAniso(alphaX, alphaY, anisoDirAndStrength.xy, anisoT, anisoB, anisoN, rngState);
+        }
+        else
+            H_s = SampleH_GGX(alpha * alpha, rngState);
+#    else
+#        ifdef SAMPLE_VISIBLE_NORMALS
         float alpha = RoughnessToAlpha_GGX(roughness);
         float a2 = max(1e-6f, alpha * alpha);
-#    ifdef PDF_SAMPLE_VISIBLE_AREA
         float3 H_s = SampleH_VCavity_VNDF(a2, V_s, rngState);
-#    else
-        float3 H_s = SampleH_GGX_NDF(a2, rngState);
+#        else
+        float alpha = RoughnessToAlpha_GGX(roughness);
+        float a2 = max(1e-6f, alpha * alpha);
+        float3 H_s = SampleH_GGX(a2, rngState);
+#        endif
 #    endif
 #elif defined(NDF_TYPE_BECKMANN) // TODO
         float alpha = RoughnessToAlpha_Beckmann(roughness); // TODO: Walters Trick here?
         float a2 = max(1e-6f, alpha * alpha);
-        // TODO: VNDF
-        float3 H_s = SampleH_Beckmann_NDF(a2, rngState);
+        float3 H_s = SampleH_Beckmann(a2, rngState);
 #endif
 
         float3 L_s = normalize(reflect(-V_s, H_s));
-        wi = ShadingToWorldSpace(L_s, T, B, Ns);
+        wi = ToDefinedSpace(L_s, T, B, Ns);
+
+        if (L_s.z <= 0.0f) // Can I get rid of this? Only needed for aniso
+            return;
 
         float NdL = SSpaceCosTheta(L_s);
         float NdH = SSpaceCosTheta(H_s);
@@ -184,25 +209,44 @@ void Model_Microfacet(
 
         float3 F = F_Schlick(VdH, F0);
 
+        float D, G, pdf;
 #if defined(NDF_TYPE_GGX)
-        float D = D_GGX(NdH, a2);
-#    ifdef PDF_SAMPLE_VISIBLE_AREA
-        float G = G_VCavity(V_s, L_s, H_s);
-        float Dv = D * G1_VCavity(NdV, a2) * max(0.0f, VdH) / NdV;
-        float pdf = Pdf_GGX_VNDF(Dv, VdH);
+#    ifdef ANISOTROPY_ENABLED
+        if (isAniso)
+        {
+            D = D_GGXAniso(H_s, alphaX, alphaY);
+            //float G = G_SmithGGXAniso(L_s, V_s, alphaX, alphaY, anisoT, anisoB, anisoN);
+            G = G_GGXAniso(L_s, V_s, alphaX, alphaY);
+            pdf = Pdf_GGXAniso(D, NdH, VdH);
+        }
+        else
+        {
+            D = D_GGX(NdH, alpha * alpha);
+            G = G_SmithGGX(NdL, NdV, alpha * alpha);
+            pdf = Pdf_GGX(D, NdH, VdH);
+        }
 #    else
-        float G = G_SmithGGX(NdL, NdV, a2);
-        float pdf = Pdf_GGX_NDF(D, NdH, VdH);
+#        ifdef SAMPLE_VISIBLE_NORMALS
+        D = D_GGX(NdH, a2); // Wrong
+        G = G_VCavity(V_s, L_s, H_s);
+        float Dv = D * G1_VCavity(NdV, a2) * max(0.0f, VdH) / NdV;
+        pdf = Pdf_GGX_VNDF(Dv, VdH);
+#        else
+        D = D_GGX(NdH, a2);
+        G = G_SmithGGX(NdL, NdV, a2);
+        pdf = Pdf_GGX(D, NdH, VdH);
+#        endif
 #    endif
 #elif defined(NDF_TYPE_BECKMANN) // TODO
-        float D = D_Beckmann(H_s, a2);
-        float G = G_Beckmann(V_s, L_s, alpha);
-        //float pdf = Pdf_General(D, G1_Beckmann(V_s, alpha), V_s, H_s, pdfSampleVisibleArea);
+        D = D_Beckmann(H_s, a2);
+        G = G_Beckmann(V_s, L_s, alpha);
+        //pdf = Pdf_General(D, G1_Beckmann(V_s, alpha), V_s, H_s, pdfSampleVisibleArea);
 #endif
 
         // Torrence-Sparrow BRDF
         float3 specularBrdf = (D * G * F) / max(0.001f, 4 * NdV * NdL);
         throughput *= specularBrdf * NdL / max(0.001f, pdf) / max(0.001f, specProb);
+        //throughput *= L_s.z < 0;
 
 #ifdef DEBUG_BUFFER
 #     include "Debug/DebugBuffersMicrofacetSpec.hlsli"
@@ -212,7 +256,7 @@ void Model_Microfacet(
     {
 #ifdef IMPORTANCE_SAMPLING
         float3 L_s = RandHemisphereCosineSSpace(rngState);
-        wi = ShadingToWorldSpace(L_s, T, B, Ns);
+        wi = InvToDefinedSpace(L_s, T, B, Ns);
 
         float NdL = SSpaceCosTheta(L_s);
         float3 pdf = NdL / PI;
@@ -221,7 +265,7 @@ void Model_Microfacet(
         float3 E = albedo * (1.0 - metalness); // Terms cancel out
 #else
         float3 L_s = RandHemisphereUniformSSpace(rngState);
-        wi = ShadingToWorldSpace(L_s, T, B, Ns);
+        wi = InvToDefinedSpace(L_s, T, B, Ns);
 
         float NdL = SSpaceCosTheta(L_s);
         float pdf = 1.0f / (2.0f * PI);

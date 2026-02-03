@@ -40,10 +40,17 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 		float3 hitPos = ray.Origin + ray.Direction * q.CommittedRayT();
 
         PtMaterialData mat;
-		float4 albedo = 0;
-        float3 Ng = 0, Ns = 0, Li = 0;
-        float2 uv = 0;
-        Hit(rngState, q, albedo, Ng, Ns, Li, mat, uv);
+		float4 albedo = -1;
+        float3 Ng = -1, Ns = -1, Li = -1;
+        float2 uv = -1;
+        float3 anisoDirAndStrength = -1;
+        Hit(rngState,
+            q, albedo, Ng,
+            Ns, Li, mat, uv
+#ifdef ANISOTROPY_ENABLED
+            , anisoDirAndStrength
+#endif
+        );
 
 #ifdef ALPHA_TESTING_ENABLED
 		bool cutout = albedo.a < 0.001f || PcgRand01(rngState) > albedo.a;
@@ -92,6 +99,9 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 #    endif
 			Model_Microfacet(rngState, throughput, roughness,
             	metalness, Ns, Li, albedo.rgb, wo, wi, L_sample
+#    ifdef ANISOTROPY_ENABLED
+                , anisoDirAndStrength
+#    endif
 #    ifdef DEBUG_BUFFER
             	, debug
             	, hasDebugOutput

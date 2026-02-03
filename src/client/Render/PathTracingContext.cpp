@@ -73,6 +73,8 @@ void PathTracingContext::BuildScene(ID3D12Device* device, ID3D12GraphicsCommandL
         ptMaterialData.TexIdxNormal = objectMaterialData->BindlessTexNormal;
         ptMaterialData.TexIdxRoughMet = objectMaterialData->BindlessTexRoughMet;
         ptMaterialData.TexIdxEmissive = objectMaterialData->BindlessTexEmissive;
+        ptMaterialData.TexIdxAniso = objectMaterialData->BindlessTexAniso;
+        ptMaterialData.AnisoStrength = objectMaterialData->AnisoStrength;
         ptMaterialData.IoR = objectMaterialData->IoR;
         ptMaterialData.Flags = objectMaterialData->Flags;
         ptMaterialData.EmissiveColor = objectMaterialData->EmissiveColor;

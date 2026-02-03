@@ -62,7 +62,8 @@ struct PtConfig
     alignas(4) bool RussianRouletteEnabled = true;
     alignas(4) bool DirLightEnabled = true;
     alignas(4) bool NormalMapsEnabled = true;
-    alignas(4) bool PdfSampleVisibleArea = true;
+    alignas(4) bool SampleVisibleNormals = false;
+    alignas(4) bool AnisotropyEnabled = true;
     alignas(4) bool DepthOfFieldEnabled = false;
     alignas(4) bool FurnaceTestHdReflect = false;
     alignas(4) bool FurnaceTestHhEmit = false;

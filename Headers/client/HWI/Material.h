@@ -45,8 +45,12 @@ struct MaterialData
     int BindlessTexNormal = -1;
     int BindlessTexRoughMet = -1;
     int BindlessTexEmissive = -1;
+    int BindlessTexAniso = -1;
     PtMaterialFlags Flags = PtMaterialFlags::eNone;
     float IoR = 1.5f;
+
+    float AnisoStrength = 1.0f;
+    float AnisoRotation = 0.0f; // Unimplemented
 
     float DiffuseProbability = 1.0f; // TODO: Compute in shader using luminance/F0/etc
 };

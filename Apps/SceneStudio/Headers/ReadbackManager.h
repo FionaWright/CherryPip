@@ -23,7 +23,7 @@ class ReadbackManager
 public:
     void Init(const D3D* d3d, Heap* heap, TextureRTV* ptOut);
 
-    void ReadbackPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList, TextureRTV* ptOut, bool readbackEveryFrame);
+    void ReadbackPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList, TextureRTV* inputRTV, bool readbackEveryFrame);
     void GUI(bool prevReadbackEnabled, bool& readbackEveryFrame);
 
     void SetInReadbackProcess(const bool inProcess) { m_inReadbackEveryFrameProcess = inProcess; }

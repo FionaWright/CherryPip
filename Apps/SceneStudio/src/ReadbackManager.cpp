@@ -32,7 +32,7 @@ void ReadbackManager::Init(const D3D* d3d, Heap* heap, TextureRTV* ptOut)
     m_materialReadbackHighlight->AddUAV(device, heap, ptOut->GetResource(), ptOut->GetD12Resource()->GetDesc().Format);
 }
 
-void ReadbackManager::ReadbackPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList, TextureRTV* ptOut, const bool readbackEveryFrame)
+void ReadbackManager::ReadbackPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList, TextureRTV* inputRTV, const bool readbackEveryFrame)
 {
     if (Input::IsMouseLeftDown())
     {
@@ -50,16 +50,16 @@ void ReadbackManager::ReadbackPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList,
     if (!validMousePos)
         return;
 
-    const uint32_t px = static_cast<uint32_t>(m_mousePosOnClick.x);
-    const uint32_t py = static_cast<uint32_t>(m_mousePosOnClick.y);
+    const auto px = static_cast<uint32_t>(m_mousePosOnClick.x);
+    const auto py = static_cast<uint32_t>(m_mousePosOnClick.y);
 
     // Post-Pass: Highlight Selected Pixel
     {
-        ptOut->GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+        inputRTV->GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
         cmdList->SetComputeRootSignature(m_rootSigReadbackHighlight->Get());
 
-        CbvHighlightPixel highlightPixel;
+        CbvHighlightPixel highlightPixel{};
         highlightPixel.SelectedPixelCoords = { px, py };
         m_materialReadbackHighlight->UpdateCBV(0, &highlightPixel);
 
@@ -68,7 +68,7 @@ void ReadbackManager::ReadbackPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList,
         cmdList->SetPipelineState(m_shaderReadbackHighlight->GetPSO());
         cmdList->Dispatch(1, 1, 1);
 
-        ptOut->GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        inputRTV->GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
     }
 
     if (readbackEveryFrame && !m_inReadbackEveryFrameProcess)
@@ -77,10 +77,10 @@ void ReadbackManager::ReadbackPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList,
     if (m_finishedReadingBack)
         return;
 
-    m_readbackBuffer.Readback(d3d, ptOut->GetD12Resource());
+    m_readbackBuffer.Readback(d3d, inputRTV->GetD12Resource());
     const std::vector<uint8_t>& byteData = m_readbackBuffer.GetData();
     const size_t pixelIdx = py * Config::GetSystem().RtvWidth + px;
-    const Rgba8* rgbaData = reinterpret_cast<const Rgba8*>(byteData.data());
+    const auto* rgbaData = reinterpret_cast<const Rgba8*>(byteData.data());
     const Rgba8 pixelData = rgbaData[pixelIdx];
     m_readbackRgbaData.push_back(pixelData);
 

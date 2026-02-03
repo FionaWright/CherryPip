@@ -106,3 +106,34 @@ Put all spectral notes into a new file, this might get large
 
 See:
 https://github.com/ashpil/moonshine 
+
+## RMSE Tester
+
+GUI Button: Take snapshot into slot {A,B}
+- Copies the inputRTV into a slot {A,B} buffer
+
+GUI Button: Compute RMSE between slots
+- Runs RMSE CS on the two slots
+- Readback RMSE and show on GUI
+
+GUI InputInt: Golden Frame Snapshot (N)
+GUI InputText: Golden File Path (Relative to Data/GoldenImages/)
+GUI Button: Compute Golden Image
+- Runs the path-tracer for N frames and then puts a snapshot into slot A. Then readsback the buffer and saves it into a file
+
+GUI InputInt: Convergence Test Max Frames
+GUI InputInt: Frame Bin Size
+GUI InputText: Test Name
+GUI Button: Run Convergence Test
+- Loads golden image into slot A if not already there
+- for (int i = 0; i < TestMaxFrames; i += FrameBinSize)
+-   Set PT max frames to i
+-   Wait for PT to pause
+-   Copy into slot B
+-   Run RMSE CS
+-   Readback RMSE and write it alongside i to Data/RMSEs/TestName.txt
+- Run python and give TestName as argument
+- Python copies RMSEs from file and puts into a vector
+- Plot data with Bokeh
+
+Stretch Goal: FLIP model

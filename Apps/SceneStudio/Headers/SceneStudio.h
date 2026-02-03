@@ -92,7 +92,7 @@ private:
     void initScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList, uint32_t configIdx);
     void initCustomScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     bool GBufferPassNeededForDenoiser() const;
-    void denoisingPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
+    TextureRTV* denoisingPass(const D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void renderForward(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void renderDeferred(D3D* d3d, ID3D12GraphicsCommandList* cmdList);

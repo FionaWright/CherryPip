@@ -164,7 +164,7 @@ void Model_Microfacet(
         float alpha = RoughnessToAlpha_GGX(roughness);
         float a2 = max(1e-6f, alpha * alpha);
 #    ifdef PDF_SAMPLE_VISIBLE_AREA
-        float3 H_s = SampleH_GGX_VCavity_VNDF(a2, V_s, rngState);
+        float3 H_s = SampleH_VCavity_VNDF(a2, V_s, rngState);
 #    else
         float3 H_s = SampleH_GGX_NDF(a2, rngState);
 #    endif

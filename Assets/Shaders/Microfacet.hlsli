@@ -74,8 +74,11 @@ float WaltersTrick(float alpha, float NdL)
 
 float2 AlphaToAnisoAlpha(float alpha, float anisotropyStrength)
 {
-    float aspect = sqrt(1.0f - 0.9 * abs(anisotropyStrength));
-    return float2(alpha / aspect, alpha * aspect);
+    //float aspect = sqrt(1.0f - 0.9 * abs(anisotropyStrength));
+    //return float2(alpha / aspect, alpha * aspect);
+
+    float strength2 = anisotropyStrength * anisotropyStrength;
+    return float2(lerp(alpha, 1.0f, strength2), alpha);
 }
 
 // Used for anisotropic microfacet models
@@ -262,6 +265,9 @@ float D_GGXAniso(float3 H, float alphaX, float alphaY)
     float k = H.x * H.x / (alphaX * alphaX) + H.y * H.y / (alphaY * alphaY) + H.z * H.z;
     return 1.0f / (PI * alphaX * alphaY * k * k);
 }
+
+// TODO: This gives a different D_GGXAniso
+// https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_materials_anisotropy/README.md
 
 float D_Beckmann(float3 H, float a2)
 {

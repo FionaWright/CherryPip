@@ -169,7 +169,7 @@ void Model_Microfacet(
         float2 alphaXY = AlphaToAnisoAlpha(alpha, anisoDirAndStrength.z);
         float alphaX = max(1e-3, alphaXY.x);
         float alphaY = max(1e-3, alphaXY.y);
-        bool isAniso = anisoDirAndStrength.z > 0 && abs(alphaX - alphaY) > 0.0001f;
+        bool isAniso = abs(alphaX - alphaY) > 0.0001f;
         float3 H_s;
         if (isAniso)
         {

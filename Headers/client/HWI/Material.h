@@ -49,7 +49,7 @@ struct MaterialData
     PtMaterialFlags Flags = PtMaterialFlags::eNone;
     float IoR = 1.5f;
 
-    float AnisoStrength = 1.0f;
+    float AnisoStrength = 0.0f;
     float AnisoRotation = 0.0f; // Unimplemented
 
     float DiffuseProbability = 1.0f; // TODO: Compute in shader using luminance/F0/etc

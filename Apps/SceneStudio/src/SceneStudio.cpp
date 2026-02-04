@@ -112,6 +112,13 @@ void SceneStudio::OnPostUpdate(D3D* d3d)
         m_studioConfig.DirLightDirection = m_envMap.GetDirectionOfHighestIntensity(d3d, &m_heap);
         m_recomputeEnvMapDirLight = false;
     }
+
+#ifdef _DEBUG
+    if (m_rmseTester.NeedTakeSnapshot())
+    {
+        m_rmseTester.TakeSnapshot(d3d, m_rmseTesterSlot, m_finalRTV->GetD12Resource());
+    }
+#endif
 }
 
 void SceneStudio::loadAssets(D3D* d3d)
@@ -599,6 +606,8 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
                            m_studioConfig.DirLightDirection, debugBufferIdx);
     }
 
+    m_finalRTV = &m_rtvPingPong1;
+
 #ifdef _DEBUG
     // Readback Pass (PP1 to RTV)
     if (m_studioConfig.PT.ReadbackEnabled)
@@ -611,8 +620,8 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 
     if (m_studioConfig.Denoising.Enabled)
     {
-        TextureRTV* outputRTV = denoisingPass(d3d, cmdList);
-        copyRtvTex(cmdList, d3d->GetRtv(), outputRTV->GetD12Resource());
+        m_finalRTV = denoisingPass(d3d, cmdList);
+        copyRtvTex(cmdList, d3d->GetRtv(), m_finalRTV->GetD12Resource());
         return;
     }
 
@@ -661,12 +670,12 @@ void SceneStudio::renderForward(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         m_rasterContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, handle, &m_heap, skybox);
     }
 
-    TextureRTV* currBuffer = &m_rtvPingPong1;
+    m_finalRTV = &m_rtvPingPong1;
 
     if (m_studioConfig.Denoising.Enabled)
-        currBuffer = denoisingPass(d3d, cmdList);
+        m_finalRTV = denoisingPass(d3d, cmdList);
 
-    copyRtvTex(cmdList, d3d->GetRtv(), currBuffer->GetD12Resource());
+    copyRtvTex(cmdList, d3d->GetRtv(), m_finalRTV->GetD12Resource());
 }
 
 void SceneStudio::renderDeferred(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
@@ -693,7 +702,9 @@ void SceneStudio::renderDeferred(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
                                          m_studioConfig.Raster.Mode, &m_denoisingManager);
     }
 
-    copyRtvTex(cmdList, d3d->GetRtv(), m_rtvPingPong1.GetD12Resource());
+    m_finalRTV = &m_rtvPingPong1;
+
+    copyRtvTex(cmdList, d3d->GetRtv(), m_finalRTV->GetD12Resource());
 }
 
 void SceneStudio::compilePtShader(const D3D* d3d)

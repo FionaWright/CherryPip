@@ -41,7 +41,7 @@ public:
     void LoadGolden(D3D* d3d, uint32_t slot);
 
     void BeginConvergenceTest(uint32_t maxFrames, const char* testName, uint32_t frameInc);
-    void UpdateConvergenceTest(uint32_t currFrame);
+    void UpdateConvergenceTest(D3D* d3d, const uint32_t currFrame, Heap* heap, D12Resource* finalRTV);
 
 private:
     Texture m_slotA, m_slotB;
@@ -52,10 +52,14 @@ private:
     bool m_computeRMSENextFrame = false;
     bool m_runningComputeGolden = false, m_runningConvergenceTest = false;
 
-    uint32_t m_goldenMaxFrames = 0;
-    const char* m_goldenPath = nullptr;
+    uint32_t m_maxFrames = 0;
+    const char* m_taskName = nullptr;
     ReadbackBuffer m_goldenReadbackBuffer;
     bool m_loadGoldenNextFrame = false;
+
+    uint32_t m_frameIncrement = 0;
+    uint32_t m_lastFrameConvergenceTested = 0;
+    std::vector<float> m_rmses;
 
     RootSig m_rootSigSumSquaredErr;
     Shader m_shaderSumSquaredErr;

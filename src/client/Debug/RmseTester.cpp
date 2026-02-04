@@ -9,6 +9,7 @@
 #include "Helper.h"
 #include "spng.h"
 #include "Debug/GPUEventScoped.h"
+#include "Debug/PythonExecutor.h"
 #include "HWI/D3D.h"
 #include "HWI/Heap.h"
 #include "System/FileHelper.h"
@@ -178,13 +179,13 @@ void RmseTester::ComputeRMSE(D3D* d3d, Heap* heap)
 void RmseTester::BeginComputeGolden(uint32_t maxFrames, const char* path)
 {
     m_runningComputeGolden = true;
-    m_goldenMaxFrames = maxFrames;
-    m_goldenPath = path;
+    m_maxFrames = maxFrames;
+    m_taskName = path;
 }
 
 void RmseTester::UpdateComputeGolden(D3D* d3d, const uint32_t currFrame, D12Resource* finalRTV)
 {
-    if (currFrame < m_goldenMaxFrames || !m_runningComputeGolden)
+    if (currFrame < m_maxFrames || !m_runningComputeGolden)
         return;
 
     if (!m_goldenReadbackBuffer.IsInitialized())
@@ -200,7 +201,7 @@ void RmseTester::UpdateComputeGolden(D3D* d3d, const uint32_t currFrame, D12Reso
 
 void RmseTester::SaveGolden(const uint8_t* data, const size_t bufferSize, const int width, const int height) const
 {
-    const std::string filePath = wstringToString(ASSETS_SOURCE_DIR) + "/../Data/GoldenImages/" + m_goldenPath + ".png";
+    const std::string filePath = wstringToString(ASSETS_SOURCE_DIR) + "/../Data/GoldenImages/" + m_taskName + ".png";
 
     const std::filesystem::path path = filePath;
     std::filesystem::create_directories(path.parent_path());
@@ -231,7 +232,7 @@ void RmseTester::SaveGolden(const uint8_t* data, const size_t bufferSize, const 
 
 void RmseTester::PrepareLoadGolden(const char* path)
 {
-    m_goldenPath = path;
+    m_taskName = path;
     m_loadGoldenNextFrame = true;
 }
 
@@ -239,7 +240,7 @@ void RmseTester::LoadGolden(D3D* d3d, const uint32_t slot)
 {
     auto* slotTex = slot == 0 ? &m_slotA : &m_slotB;
 
-    const std::string filePath = wstringToString(ASSETS_SOURCE_DIR) + "/../Data/GoldenImages/" + m_goldenPath + ".png";
+    const std::string filePath = wstringToString(ASSETS_SOURCE_DIR) + "/../Data/GoldenImages/" + m_taskName + ".png";
 
     d3d->Flush();
     const auto cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
@@ -256,10 +257,33 @@ void RmseTester::LoadGolden(D3D* d3d, const uint32_t slot)
     m_loadGoldenNextFrame = false;
 }
 
-void RmseTester::BeginConvergenceTest(uint32_t maxFrames, const char* testName, uint32_t frameInc)
+void RmseTester::BeginConvergenceTest(const uint32_t maxFrames, const char* testName, const uint32_t frameInc)
 {
+    m_maxFrames = maxFrames;
+    m_taskName = testName;
+    m_frameIncrement = frameInc;
+    m_lastFrameConvergenceTested = 0;
+    m_rmses.clear();
 }
 
-void RmseTester::UpdateConvergenceTest(uint32_t currFrame)
+void RmseTester::UpdateConvergenceTest(D3D* d3d, const uint32_t currFrame, Heap* heap, D12Resource* finalRTV)
 {
+    if (currFrame - m_lastFrameConvergenceTested < m_frameIncrement)
+        return;
+
+    TakeSnapshot(d3d, 1, finalRTV);
+    ComputeRMSE(d3d, heap);
+    m_rmses.emplace_back(m_lastComputedRMSE);
+    m_lastFrameConvergenceTested = currFrame;
+
+    if (currFrame > m_maxFrames)
+    {
+        // Write m_rmses to file (m_taskName_RMSEs.txt)
+
+        // Write Py file, pass in file path
+        std::vector<const char*> args = {
+
+        };
+        PythonExecutor::ExecutePython("PlotRMSE.py", args);
+    }
 }

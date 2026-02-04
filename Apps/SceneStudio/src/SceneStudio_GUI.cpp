@@ -529,6 +529,11 @@ void SceneStudio::guiMain()
             m_rmseTester.BeginComputeGolden(goldenMaxFrames, path);
         }
 
+        if (ImGui::Button("Load Golden Image"))
+        {
+            m_rmseTester.PrepareLoadGolden(path);
+        }
+
         ImGui::Unindent(IM_GUI_INDENTATION);
     }
 #endif

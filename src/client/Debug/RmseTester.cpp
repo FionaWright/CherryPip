@@ -100,9 +100,10 @@ void RmseTester::ComputeRMSE(D3D* d3d, Heap* heap)
         m_matSumSquaredErr.Init(heap);
         m_matSumSquaredErr.AddCBV(d3d->GetDevice(), heap, sizeof(CbvMaxLumRedSearch), "CBV Max Luminance Reduction Search"); // TODO: rename
         m_matSumSquaredErr.AddUAV(d3d->GetDevice(), heap, m_bufferSumSquaredErr.GetResource(), uavDesc);
-        m_matSumSquaredErr.SetTex(d3d->GetDevice(), 0, heap, m_slotA.GetD12Resource());
-        m_matSumSquaredErr.SetTex(d3d->GetDevice(), 1, heap, m_slotB.GetD12Resource());
     }
+
+    m_matSumSquaredErr.SetTex(d3d->GetDevice(), 0, heap, m_slotA.GetD12Resource());
+    m_matSumSquaredErr.SetTex(d3d->GetDevice(), 1, heap, m_slotB.GetD12Resource());
 
     d3d->Flush();
 
@@ -193,39 +194,66 @@ void RmseTester::UpdateComputeGolden(D3D* d3d, const uint32_t currFrame, D12Reso
     m_goldenReadbackBuffer.Readback(d3d, finalRTV);
     const std::vector<uint8_t> readbackData = m_goldenReadbackBuffer.GetData();
 
-    // TODO: Move to SaveSlotA(path) function?
-    // Write to file
-    {
-        const std::string filePath = wstringToString(ASSETS_SOURCE_DIR) + "/../Data/GoldenImages/" + m_goldenPath + ".png";
-
-        const std::filesystem::path path = filePath;
-        std::filesystem::create_directories(path.parent_path());
-
-        FILE* file;
-        fopen_s(&file, filePath.c_str(), "wb");
-        if (!file)
-            throw std::exception("I/O Error");
-
-        int ret;
-        spng_ctx* ctx = spng_ctx_new(SPNG_CTX_ENCODER);
-
-        spng_ihdr ihdr = {};
-        ihdr.width = finalRTV->GetDesc().Width;
-        ihdr.height = finalRTV->GetDesc().Height;
-        ihdr.color_type = SPNG_COLOR_TYPE_TRUECOLOR_ALPHA;
-        ihdr.bit_depth = 8;
-        ret = spng_set_ihdr(ctx, &ihdr);
-        assert(ret == 0);
-        ret = spng_set_png_file(ctx, file);
-        assert(ret == 0);
-        ret = spng_encode_image(ctx, readbackData.data(), readbackData.size(), SPNG_FMT_PNG, SPNG_ENCODE_FINALIZE);
-        assert(ret == 0);
-        spng_ctx_free(ctx);
-
-        fclose(file);
-    }
-
+    SaveGolden(readbackData.data(), readbackData.size(), finalRTV->GetDesc().Width, finalRTV->GetDesc().Height);
     m_runningComputeGolden = false;
+}
+
+void RmseTester::SaveGolden(const uint8_t* data, const size_t bufferSize, const int width, const int height) const
+{
+    const std::string filePath = wstringToString(ASSETS_SOURCE_DIR) + "/../Data/GoldenImages/" + m_goldenPath + ".png";
+
+    const std::filesystem::path path = filePath;
+    std::filesystem::create_directories(path.parent_path());
+
+    FILE* file;
+    fopen_s(&file, filePath.c_str(), "wb");
+    if (!file)
+        throw std::exception("I/O Error");
+
+    int ret;
+    spng_ctx* ctx = spng_ctx_new(SPNG_CTX_ENCODER);
+
+    spng_ihdr ihdr = {};
+    ihdr.width = width;
+    ihdr.height = height;
+    ihdr.color_type = SPNG_COLOR_TYPE_TRUECOLOR_ALPHA;
+    ihdr.bit_depth = 8;
+    ret = spng_set_ihdr(ctx, &ihdr);
+    assert(ret == 0);
+    ret = spng_set_png_file(ctx, file);
+    assert(ret == 0);
+    ret = spng_encode_image(ctx, data, bufferSize, SPNG_FMT_PNG, SPNG_ENCODE_FINALIZE);
+    assert(ret == 0);
+    spng_ctx_free(ctx);
+
+    fclose(file);
+}
+
+void RmseTester::PrepareLoadGolden(const char* path)
+{
+    m_goldenPath = path;
+    m_loadGoldenNextFrame = true;
+}
+
+void RmseTester::LoadGolden(D3D* d3d, const uint32_t slot)
+{
+    auto* slotTex = slot == 0 ? &m_slotA : &m_slotB;
+
+    const std::string filePath = wstringToString(ASSETS_SOURCE_DIR) + "/../Data/GoldenImages/" + m_goldenPath + ".png";
+
+    d3d->Flush();
+    const auto cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
+    slotTex->Init(d3d->GetDevice(), cmdList.Get(), filePath);
+    V(cmdList->Close());
+    d3d->ExecuteCommandList(cmdList.Get());
+    d3d->Flush();
+
+    if (slot == 0)
+        m_slotAFilled = true;
+    else
+        m_slotBFilled = true;
+
+    m_loadGoldenNextFrame = false;
 }
 
 void RmseTester::BeginConvergenceTest(uint32_t maxFrames, const char* testName, uint32_t frameInc)

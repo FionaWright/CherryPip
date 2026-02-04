@@ -519,6 +519,8 @@ void SceneStudio::guiMain()
         }
         ImGui::Text("%s", (std::string("RMSE: ") + std::to_string(m_rmseTester.GetComputedRMSE())).c_str());
 
+        ImGui::Separator();
+
         static uint32_t goldenMaxFrames = 50;
         ImGuiUtils::FwInputUInt("Golden Frames##xxx", &goldenMaxFrames);
         static char path[256];
@@ -532,6 +534,25 @@ void SceneStudio::guiMain()
         if (ImGui::Button("Load Golden Image"))
         {
             m_rmseTester.PrepareLoadGolden(path);
+        }
+
+        ImGui::Separator();
+
+        static uint32_t convergenceMaxFrames = 50;
+        ImGuiUtils::FwInputUInt("Max Frames##xxx", &convergenceMaxFrames);
+        static uint32_t frameInc = 1;
+        ImGuiUtils::FwInputUInt("Frame Inc##xxx", &frameInc);
+        static char testName[256];
+        ImGui::InputText("Test Name", testName, 256);
+
+        if (ImGui::Button("Convergence Test"))
+        {
+            m_rmseTester.BeginConvergenceTest(convergenceMaxFrames, testName, frameInc);
+        }
+
+        if (m_rmseTester.IsRunningConvergence())
+        {
+            ImGui::SameLine(); ImGui::Text("Test: %.2f\%", m_rmseTester.GetConvergenceTestPercent() * 100.0f);
         }
 
         ImGui::Unindent(IM_GUI_INDENTATION);

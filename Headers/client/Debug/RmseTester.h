@@ -41,7 +41,9 @@ public:
     void LoadGolden(D3D* d3d, uint32_t slot);
 
     void BeginConvergenceTest(uint32_t maxFrames, const char* testName, uint32_t frameInc);
+    [[nodiscard]] bool IsRunningConvergence() const { return m_runningConvergenceTest; }
     void UpdateConvergenceTest(D3D* d3d, const uint32_t currFrame, Heap* heap, D12Resource* finalRTV);
+    [[nodiscard]] float GetConvergenceTestPercent() const { return m_lastFrameConvergenceTested / static_cast<float>(m_maxFrames);}
 
 private:
     Texture m_slotA, m_slotB;

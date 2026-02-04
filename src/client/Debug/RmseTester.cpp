@@ -264,6 +264,7 @@ void RmseTester::BeginConvergenceTest(const uint32_t maxFrames, const char* test
     m_frameIncrement = frameInc;
     m_lastFrameConvergenceTested = 0;
     m_rmses.clear();
+    m_runningConvergenceTest = true;
 }
 
 void RmseTester::UpdateConvergenceTest(D3D* d3d, const uint32_t currFrame, Heap* heap, D12Resource* finalRTV)
@@ -276,14 +277,34 @@ void RmseTester::UpdateConvergenceTest(D3D* d3d, const uint32_t currFrame, Heap*
     m_rmses.emplace_back(m_lastComputedRMSE);
     m_lastFrameConvergenceTested = currFrame;
 
-    if (currFrame > m_maxFrames)
+    if (currFrame < m_maxFrames)
+        return;
+
+    const std::string filePath = wstringToString(ASSETS_SOURCE_DIR) + "/../Data/RMSEs/" + m_taskName + ".csv";
+
+    // Write RMSEs to file
     {
-        // Write m_rmses to file (m_taskName_RMSEs.txt)
+        const std::filesystem::path path = filePath;
+        std::filesystem::create_directories(path.parent_path());
 
-        // Write Py file, pass in file path
-        std::vector<const char*> args = {
-
-        };
-        PythonExecutor::ExecutePython("PlotRMSE.py", args);
+        std::fstream f;
+        f.open(filePath.c_str(), std::ios::binary | std::fstream::out | std::ios::trunc);
+        f.clear();
+        f << "RMSE" << std::endl;
+        for (int i = 0; i < m_rmses.size(); i++)
+            f << std::to_string(m_rmses[i]) << std::endl;
+        f.close();
     }
+
+    // Plot graph
+    {
+        const std::vector<const char*> args = {
+            filePath.c_str(),
+            "--show",
+            "--save"
+        };
+        PythonExecutor::ExecutePython("PlotConvergence.py", args);
+    }
+
+    m_runningConvergenceTest = false;
 }

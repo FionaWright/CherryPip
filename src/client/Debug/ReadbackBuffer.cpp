@@ -39,6 +39,8 @@ void ReadbackBuffer::Init(const D3D* d3d, const size_t width, const size_t heigh
     ));
 
     m_readbackBuffer.Fill(resource, D3D12_RESOURCE_STATE_COPY_DEST);
+
+    m_isInitialized = true;
 }
 
 void ReadbackBuffer::Readback(D3D* d3d, D12Resource* resource)

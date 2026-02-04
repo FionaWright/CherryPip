@@ -14,6 +14,8 @@ public:
     void Init(const D3D* d3d, size_t width, size_t height);
     void Readback(D3D* d3d, D12Resource* resource);
 
+    [[nodiscard]] bool IsInitialized() const { return m_isInitialized; }
+
     std::vector<uint8_t>& GetData() { return m_readbackData; }
 
 private:
@@ -21,6 +23,8 @@ private:
 
     D12Resource m_readbackBuffer;
     size_t m_bufferSize = 0;
+
+    bool m_isInitialized = false;
 
     size_t m_width = 0, m_height = 0;
 

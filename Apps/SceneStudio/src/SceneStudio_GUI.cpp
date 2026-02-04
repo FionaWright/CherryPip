@@ -517,6 +517,7 @@ void SceneStudio::guiMain()
         {
             m_rmseTester.PrepareComputeRMSE();
         }
+        ImGui::Text("%s", (std::string("RMSE: ") + std::to_string(m_rmseTester.GetComputedRMSE())).c_str());
 
         ImGui::Unindent(IM_GUI_INDENTATION);
     }

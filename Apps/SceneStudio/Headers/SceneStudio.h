@@ -19,6 +19,7 @@
 
 #ifdef _DEBUG
 #include "ReadbackManager.h"
+#include "Debug/RmseTester.h"
 #endif
 
 class BLAS;
@@ -140,7 +141,10 @@ private:
 
 #ifdef _DEBUG
     ReadbackManager m_readbackManager;
+    RmseTester m_rmseTester;
+    uint32_t m_rmseTesterSlot = 0;
 #endif
+    TextureRTV* m_finalRTV = &m_rtvPingPong1;
 };
 
 

@@ -493,6 +493,29 @@ void SceneStudio::guiMain()
     default:
         break;
     }
+
+#ifdef _DEBUG
+    ImGui::Text("RMSE Tester (tmp name)");
+    {
+        ImGui::Indent(IM_GUI_INDENTATION);
+
+        ImGui::Text("%s", "Selected Slot:");
+        static int e2 = m_rmseTesterSlot;
+        int idx = 0;
+        ImGui::Indent(IM_GUI_INDENTATION);
+        ImGui::RadioButton(m_rmseTester.SlotAFilled() ? "Slot A (Filled)" : "Slot A", &e2, idx++);
+        ImGui::RadioButton(m_rmseTester.SlotBFilled() ? "Slot B (Filled)" : "Slot B", &e2, idx++);
+        ImGui::Unindent(IM_GUI_INDENTATION);
+        m_rmseTesterSlot = static_cast<uint32_t>(e2);
+
+        if (ImGui::Button("Take Snapshot"))
+        {
+            m_rmseTester.PrepareTakeSnapshot();
+        }
+
+        ImGui::Unindent(IM_GUI_INDENTATION);
+    }
+#endif
 }
 
 void SceneStudio::guiScene()

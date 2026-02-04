@@ -13,7 +13,13 @@ class RmseTester
 {
 public:
     void Init(D3D* d3d);
-    void TakeSnapshot(uint32_t slot);
+
+    void PrepareTakeSnapshot() { m_takeSnapshotNextFrame = true; }
+    bool NeedTakeSnapshot() const { return m_takeSnapshotNextFrame; }
+    void TakeSnapshot(D3D* d3d, uint32_t slot, const D12Resource* finalRTV);
+
+    [[nodiscard]] bool SlotAFilled() const { return m_slotAFilled; }
+    [[nodiscard]] bool SlotBFilled() const { return m_slotBFilled; }
 
     void ComputeRMSE(D3D* d3d);
     [[nodiscard]] float GetComputedRMSE() const { return m_lastComputedRMSE; }
@@ -26,7 +32,11 @@ public:
 
 private:
     Texture m_slotA, m_slotB;
+    bool m_slotAFilled = false, m_slotBFilled = false;
     float m_lastComputedRMSE = -1.0f;
+
+    bool m_takeSnapshotNextFrame = false;
+    bool m_runningComputeGolden = false, m_runningConvergenceTest = false;
 };
 
 

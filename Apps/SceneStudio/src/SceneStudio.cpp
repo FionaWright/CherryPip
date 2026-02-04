@@ -128,6 +128,10 @@ void SceneStudio::OnPostUpdate(D3D* d3d)
         //m_rmseTester.UpdateComputeGolden(d3d, m_ptContext.GetFrameNum(), m_finalRTV->GetD12Resource());
         m_rmseTester.UpdateComputeGolden(d3d, tmpTest++, m_finalRTV->GetD12Resource());
     }
+    if (m_rmseTester.NeedLoadGolden())
+    {
+        m_rmseTester.LoadGolden(d3d, m_rmseTesterSlot);
+    }
 #endif
 }
 

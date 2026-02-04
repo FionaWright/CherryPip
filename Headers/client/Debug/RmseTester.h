@@ -34,6 +34,12 @@ public:
     [[nodiscard]] bool IsRunningGolden() const { return m_runningComputeGolden; }
     void UpdateComputeGolden(D3D* d3d, uint32_t currFrame, D12Resource* finalRTV);
 
+    void SaveGolden(const uint8_t* data, size_t bufferSize, int width, int height) const;
+
+    void PrepareLoadGolden(const char* path);
+    [[nodiscard]] bool NeedLoadGolden() const { return m_loadGoldenNextFrame; }
+    void LoadGolden(D3D* d3d, uint32_t slot);
+
     void BeginConvergenceTest(uint32_t maxFrames, const char* testName, uint32_t frameInc);
     void UpdateConvergenceTest(uint32_t currFrame);
 
@@ -49,6 +55,7 @@ private:
     uint32_t m_goldenMaxFrames = 0;
     const char* m_goldenPath = nullptr;
     ReadbackBuffer m_goldenReadbackBuffer;
+    bool m_loadGoldenNextFrame = false;
 
     RootSig m_rootSigSumSquaredErr;
     Shader m_shaderSumSquaredErr;

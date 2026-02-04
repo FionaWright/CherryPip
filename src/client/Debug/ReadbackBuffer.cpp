@@ -5,14 +5,20 @@
 #include "Debug/ReadbackBuffer.h"
 
 #include "../../../Headers/client/Helper.h"
+#include "fastgltf/util.hpp"
 #include "HWI/D3D.h"
 
-void ReadbackBuffer::Init(const D3D* d3d, const size_t width, const size_t height)
+void ReadbackBuffer::Init(const D3D* d3d, const D12Resource* resource)
 {
     // Assumes Rgba8
-    m_width = width;
-    m_height = height;
-    m_bufferSize = m_width * m_height * sizeof(uint8_t) * 4;
+    m_width = resource->GetDesc().Width;
+    m_height = resource->GetDesc().Height;
+
+    const D3D12_RESOURCE_DESC desc = resource->GetDesc();
+    D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint;
+    UINT numRows;
+    d3d->GetDevice()->GetCopyableFootprints(&desc, 0, 1, 0,
+        &footprint, &numRows, &m_rowPitch, &m_bufferSize);
 
     D3D12_HEAP_PROPERTIES heapProps = {};
     heapProps.Type = D3D12_HEAP_TYPE_READBACK;
@@ -27,7 +33,7 @@ void ReadbackBuffer::Init(const D3D* d3d, const size_t width, const size_t heigh
     readbackDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
     readbackDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 
-    ComPtr<ID3D12Resource> resource;
+    ComPtr<ID3D12Resource> bufferResource;
 
     V(d3d->GetDevice()->CreateCommittedResource(
         &heapProps,
@@ -35,10 +41,10 @@ void ReadbackBuffer::Init(const D3D* d3d, const size_t width, const size_t heigh
         &readbackDesc,
         D3D12_RESOURCE_STATE_COPY_DEST,
         nullptr,
-        IID_PPV_ARGS(&resource)
+        IID_PPV_ARGS(&bufferResource)
     ));
 
-    m_readbackBuffer.Fill(resource, D3D12_RESOURCE_STATE_COPY_DEST);
+    m_readbackBuffer.Fill(bufferResource, D3D12_RESOURCE_STATE_COPY_DEST);
 
     m_isInitialized = true;
 }
@@ -48,17 +54,31 @@ void ReadbackBuffer::Readback(D3D* d3d, D12Resource* resource)
     assert(resource->GetDesc().Width == m_width && resource->GetDesc().Height == m_height);
     copyToBuffer(d3d, resource);
 
-    m_readbackData.clear();
-    m_readbackData.resize(m_bufferSize);
+    std::vector<uint8_t> unpackedData;
+    unpackedData.resize(m_bufferSize);
 
     void* mappedData = nullptr;
     const D3D12_RANGE readRange = {0, m_bufferSize};
     V(m_readbackBuffer.GetResource()->Map(0, &readRange, &mappedData));
 
-    memcpy(m_readbackData.data(), mappedData, m_bufferSize);
+    memcpy(unpackedData.data(), mappedData, m_bufferSize);
 
     constexpr D3D12_RANGE writeRange = {0, 0};
     m_readbackBuffer.GetResource()->Unmap(0, &writeRange);
+
+    constexpr uint32_t channels = 4;
+    const uint32_t bytesPerRow = m_width * channels;
+    m_readbackData.clear();
+    m_readbackData.resize(m_width * m_height * channels);
+
+    const uint32_t alignedRowPitch = (m_rowPitch + 255) / 256 * 256;
+
+    for (uint32_t y = 0; y < m_height; ++y)
+    {
+        uint8_t* dstAddr = m_readbackData.data() + y * bytesPerRow;
+        const uint8_t* srcAddr = unpackedData.data() + y * alignedRowPitch;
+        memcpy(dstAddr, srcAddr, bytesPerRow);
+    }
 }
 
 void ReadbackBuffer::copyToBuffer(D3D* d3d, D12Resource* resource) const
@@ -83,12 +103,7 @@ void ReadbackBuffer::copyToBuffer(D3D* d3d, D12Resource* resource) const
     D3D12_TEXTURE_COPY_LOCATION dstLocation = {};
     dstLocation.pResource = m_readbackBuffer.GetResource();
     dstLocation.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
-    dstLocation.PlacedFootprint.Offset = 0;
-    dstLocation.PlacedFootprint.Footprint.Width = resource->GetDesc().Width;
-    dstLocation.PlacedFootprint.Footprint.Height = resource->GetDesc().Height;
-    dstLocation.PlacedFootprint.Footprint.Format = resource->GetDesc().Format;
-    dstLocation.PlacedFootprint.Footprint.Depth = 1;
-    dstLocation.PlacedFootprint.Footprint.RowPitch = rowSizeInBytes;
+    dstLocation.PlacedFootprint = footprint;
 
     cmdList->CopyTextureRegion(&dstLocation, 0, 0, 0, &srcLocation, nullptr);
 

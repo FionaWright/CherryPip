@@ -40,3 +40,16 @@ def plot_value_counts(x_data: list[float], name: str, show_plot: bool, save_plot
         save(p)
     if show_plot:
         show(p)
+
+def plot_line(data: list[float], name: str, show_plot: bool, save_plot: bool):
+    x = list(range(len(data)))  # index (e.g., iteration or epoch)
+
+    p = figure(title=name, x_axis_label="Frame", y_axis_label="RMSE")
+    p.line(x, data, line_width=2)
+    p.scatter(x, data, size=6)
+
+    output_file(f"BokehData/{name}.html")
+    if save_plot:
+        save(p)
+    if show_plot:
+        show(p)

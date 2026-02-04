@@ -114,24 +114,29 @@ void SceneStudio::OnPostUpdate(D3D* d3d)
     }
 
 #ifdef _DEBUG
+    static int tmpTest = 0;
     if (m_rmseTester.NeedTakeSnapshot())
     {
         m_rmseTester.TakeSnapshot(d3d, m_rmseTesterSlot, m_finalRTV->GetD12Resource());
     }
-    if (m_rmseTester.NeedComputeRMSE())
+    else if (m_rmseTester.NeedComputeRMSE())
     {
         m_rmseTester.ComputeRMSE(d3d, &m_heap);
     }
-    if (m_rmseTester.IsRunningGolden())
+    else if (m_rmseTester.IsRunningGolden())
     {
-        static int tmpTest = 0;
         //m_rmseTester.UpdateComputeGolden(d3d, m_ptContext.GetFrameNum(), m_finalRTV->GetD12Resource());
         m_rmseTester.UpdateComputeGolden(d3d, tmpTest++, m_finalRTV->GetD12Resource());
     }
-    if (m_rmseTester.NeedLoadGolden())
+    else if (m_rmseTester.NeedLoadGolden())
     {
         m_rmseTester.LoadGolden(d3d, m_rmseTesterSlot);
     }
+    else if (m_rmseTester.IsRunningConvergence())
+    {
+        m_rmseTester.UpdateConvergenceTest(d3d, tmpTest++, &m_heap, m_finalRTV->GetD12Resource());
+    }
+    else tmpTest = 0;
 #endif
 }
 

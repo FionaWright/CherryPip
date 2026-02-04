@@ -4,6 +4,7 @@
 
 #ifndef CHERRYPIP_RMSETESTER_H
 #define CHERRYPIP_RMSETESTER_H
+#include "ReadbackBuffer.h"
 #include "HWI/Material.h"
 #include "HWI/RootSig.h"
 #include "HWI/Shader.h"
@@ -43,6 +44,10 @@ private:
     bool m_takeSnapshotNextFrame = false;
     bool m_computeRMSENextFrame = false;
     bool m_runningComputeGolden = false, m_runningConvergenceTest = false;
+
+    uint32_t m_goldenMaxFrames = 0;
+    const char* m_goldenPath = nullptr;
+    D12Resource m_goldenReadbackBuffer;
 
     RootSig m_rootSigSumSquaredErr;
     Shader m_shaderSumSquaredErr;

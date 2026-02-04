@@ -7,9 +7,11 @@
 #include "Buffers.h"
 #include "CBV.h"
 #include "Helper.h"
+#include "spng.h"
 #include "Debug/GPUEventScoped.h"
 #include "HWI/D3D.h"
 #include "HWI/Heap.h"
+#include "System/FileHelper.h"
 
 void RmseTester::Init(D3D* d3d)
 {
@@ -174,10 +176,69 @@ void RmseTester::ComputeRMSE(D3D* d3d, Heap* heap)
 
 void RmseTester::BeginComputeGolden(uint32_t maxFrames, const char* path)
 {
+    m_runningComputeGolden = true;
+    m_goldenMaxFrames = maxFrames;
+    m_goldenPath = path;
 }
 
-void RmseTester::UpdateComputeGolden(uint32_t currFrame)
+void RmseTester::UpdateComputeGolden(D3D* d3d, const uint32_t currFrame, D12Resource* finalRTV)
 {
+    if (currFrame < m_goldenMaxFrames)
+        return;
+
+    assert(finalRTV->GetDesc().Format == DXGI_FORMAT_R8G8B8A8_UNORM);
+    const size_t bufferSize = finalRTV->GetDesc().Width * finalRTV->GetDesc().Height * sizeof(float) * 4;
+
+    if (!m_goldenReadbackBuffer.GetResource())
+    {
+        m_goldenReadbackBuffer.InitBuffer(L"Golden Readback Buffer", d3d->GetDevice(), bufferSize, D3D12_RESOURCE_FLAG_NONE, true);
+    }
+
+    std::vector<uint8_t> readbackData;
+    readbackData.resize(bufferSize);
+
+    auto cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
+
+    // Copy Texture -> ReadbackBuffer
+    {
+        finalRTV->Transition(cmdList.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE);
+        m_goldenReadbackBuffer.Transition(cmdList.Get(), D3D12_RESOURCE_STATE_COPY_DEST);
+        cmdList->CopyResource(m_goldenReadbackBuffer.GetResource(), 0, finalRTV->GetResource(), 0, bufferSize);
+    }
+
+    V(cmdList->Close());
+    d3d->ExecuteCommandList(cmdList.Get());
+    d3d->Flush();
+
+    // Readback data
+    {
+        void* mappedData = nullptr;
+        const D3D12_RANGE readRange = {0, bufferSize};
+        V(m_goldenReadbackBuffer.GetResource()->Map(0, &readRange, &mappedData));
+
+        memcpy(readbackData.data(), mappedData, bufferSize);
+
+        constexpr D3D12_RANGE writeRange = {0, 0};
+        m_goldenReadbackBuffer.GetResource()->Unmap(0, &writeRange);
+    }
+
+    // TODO: Move to SaveSlotA(path) function?
+    // Write to file
+    {
+        const std::string filePath = wstringToString(FileHelper::GetAssetsPath()) + "Data/GoldenImages/" + m_goldenPath;
+
+        FILE* file;
+        fopen_s(&file, filePath.c_str(), "rb");
+        if (!file)
+            throw std::exception("I/O Error");
+
+        spng_ctx* ctx = spng_ctx_new(0);
+        spng_set_png_file(ctx, file);
+        spng_encode_image(ctx, readbackData.data(), readbackData.size(), SPNG_FMT_RGBA8, 0);
+        spng_ctx_free(ctx);
+
+        fclose(file);
+    }
 }
 
 void RmseTester::BeginConvergenceTest(uint32_t maxFrames, const char* testName, uint32_t frameInc)

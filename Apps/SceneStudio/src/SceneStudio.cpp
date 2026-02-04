@@ -118,6 +118,10 @@ void SceneStudio::OnPostUpdate(D3D* d3d)
     {
         m_rmseTester.TakeSnapshot(d3d, m_rmseTesterSlot, m_finalRTV->GetD12Resource());
     }
+    if (m_rmseTester.NeedComputeRMSE())
+    {
+        m_rmseTester.ComputeRMSE(d3d, &m_heap);
+    }
 #endif
 }
 
@@ -354,6 +358,7 @@ void SceneStudio::loadAssets(D3D* d3d)
 
 #ifdef _DEBUG
     m_readbackManager.Init(d3d, &m_heap, &m_rtvPingPong1);
+    m_rmseTester.Init(d3d);
 #endif
 
     V(cmdList->Close());

@@ -513,6 +513,11 @@ void SceneStudio::guiMain()
             m_rmseTester.PrepareTakeSnapshot();
         }
 
+        if (ImGui::Button("Compute RMSE"))
+        {
+            m_rmseTester.PrepareComputeRMSE();
+        }
+
         ImGui::Unindent(IM_GUI_INDENTATION);
     }
 #endif

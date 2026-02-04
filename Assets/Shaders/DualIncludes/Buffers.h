@@ -9,4 +9,9 @@ struct MaxLumRedSearchStruct
     uint2 UV;
 };
 
+struct SumSquaredErrorStruct
+{
+    float SquaredError;
+};
+
 #endif

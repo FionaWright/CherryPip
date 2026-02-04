@@ -4,6 +4,9 @@
 
 #ifndef CHERRYPIP_RMSETESTER_H
 #define CHERRYPIP_RMSETESTER_H
+#include "HWI/Material.h"
+#include "HWI/RootSig.h"
+#include "HWI/Shader.h"
 #include "HWI/Texture.h"
 
 
@@ -16,12 +19,14 @@ public:
 
     void PrepareTakeSnapshot() { m_takeSnapshotNextFrame = true; }
     bool NeedTakeSnapshot() const { return m_takeSnapshotNextFrame; }
-    void TakeSnapshot(D3D* d3d, uint32_t slot, const D12Resource* finalRTV);
+    void TakeSnapshot(D3D* d3d, uint32_t slot, D12Resource* finalRTV);
 
     [[nodiscard]] bool SlotAFilled() const { return m_slotAFilled; }
     [[nodiscard]] bool SlotBFilled() const { return m_slotBFilled; }
 
-    void ComputeRMSE(D3D* d3d);
+    void PrepareComputeRMSE() { m_computeRMSENextFrame = true; }
+    bool NeedComputeRMSE() const { return m_computeRMSENextFrame; }
+    void ComputeRMSE(D3D* d3d, Heap* heap);
     [[nodiscard]] float GetComputedRMSE() const { return m_lastComputedRMSE; }
 
     void BeginComputeGolden(uint32_t maxFrames, const char* path);
@@ -36,7 +41,14 @@ private:
     float m_lastComputedRMSE = -1.0f;
 
     bool m_takeSnapshotNextFrame = false;
+    bool m_computeRMSENextFrame = false;
     bool m_runningComputeGolden = false, m_runningConvergenceTest = false;
+
+    RootSig m_rootSigSumSquaredErr;
+    Shader m_shaderSumSquaredErr;
+    Material m_matSumSquaredErr;
+    D12Resource m_bufferSumSquaredErr;
+    D12Resource m_readbackBufferSumSquaredErr;
 };
 
 

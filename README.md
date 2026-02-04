@@ -38,8 +38,8 @@ C++, HLSL and Python are the main languages.
 - Fully deterministic and seeded
 - Russian Roulette, Firefly Threshold, Cosine Importance Sampling
 - Lambertian, Glossy, and Microfacet lighting models
-- GGX and Beckmann NDFs, Schlick Fresnel, Smith and V-Cavity Geometry Masking
-- Importance Sampling using the distribution of visible normals (VNDF)
+- GGX and WIP(Beckmann) NDFs, Schlick Fresnel, Smith and V-Cavity Geometry Masking
+- WIP: Importance Sampling using the distribution of visible normals (VNDF)
 - Glass materials supported
 - Environment maps with support for Panoramic and Octohedral Equal-Area (Rotatable at runtime!)
 - Directional lighting + GPU max parallel search on the EA Environment Map to set automatically direction to where luminance is highest
@@ -49,6 +49,7 @@ C++, HLSL and Python are the main languages.
 - Readback debug system that allows you to find selected pixel value or collect data every frame
 - Two furnace tests
 - See different internal parts of the path tracer using Debug Buffer system (Normals, Albedo, HitDist, RNG, FirstBounceDirection, etc) (Over 30)
+- Take snapshots of the path-tracer output, generate/save/load golden images, automatically compute RMSE over frames and plot using python + Bokeh
 
 ## History 
 
@@ -72,6 +73,7 @@ Progress as of 25/01/26:
 
 Progress as of 29/01/26:
 <img width="961" height="575" alt="image" src="https://github.com/user-attachments/assets/dc7b6217-9eaa-4a9b-ad21-7b998f25ba47" />
+
 
 
 

@@ -11,7 +11,7 @@
 class ReadbackBuffer
 {
 public:
-    void Init(const D3D* d3d, size_t width, size_t height);
+    void Init(const D3D* d3d, const D12Resource* resource);
     void Readback(D3D* d3d, D12Resource* resource);
 
     [[nodiscard]] bool IsInitialized() const { return m_isInitialized; }
@@ -27,6 +27,7 @@ private:
     bool m_isInitialized = false;
 
     size_t m_width = 0, m_height = 0;
+    size_t m_rowPitch = 0;
 
     std::vector<uint8_t> m_readbackData;
 };

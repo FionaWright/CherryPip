@@ -31,7 +31,8 @@ public:
     [[nodiscard]] float GetComputedRMSE() const { return m_lastComputedRMSE; }
 
     void BeginComputeGolden(uint32_t maxFrames, const char* path);
-    void UpdateComputeGolden(uint32_t currFrame);
+    [[nodiscard]] bool IsRunningGolden() const { return m_runningComputeGolden; }
+    void UpdateComputeGolden(D3D* d3d, uint32_t currFrame, D12Resource* finalRTV);
 
     void BeginConvergenceTest(uint32_t maxFrames, const char* testName, uint32_t frameInc);
     void UpdateConvergenceTest(uint32_t currFrame);
@@ -47,7 +48,7 @@ private:
 
     uint32_t m_goldenMaxFrames = 0;
     const char* m_goldenPath = nullptr;
-    D12Resource m_goldenReadbackBuffer;
+    ReadbackBuffer m_goldenReadbackBuffer;
 
     RootSig m_rootSigSumSquaredErr;
     Shader m_shaderSumSquaredErr;

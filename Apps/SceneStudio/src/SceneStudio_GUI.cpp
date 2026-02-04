@@ -519,6 +519,16 @@ void SceneStudio::guiMain()
         }
         ImGui::Text("%s", (std::string("RMSE: ") + std::to_string(m_rmseTester.GetComputedRMSE())).c_str());
 
+        static uint32_t goldenMaxFrames = 50;
+        ImGuiUtils::FwInputUInt("Golden Frames##xxx", &goldenMaxFrames);
+        static char path[256];
+        ImGui::InputText("Golden File Path", path, 256);
+
+        if (ImGui::Button("Compute Golden"))
+        {
+            m_rmseTester.BeginComputeGolden(goldenMaxFrames, path);
+        }
+
         ImGui::Unindent(IM_GUI_INDENTATION);
     }
 #endif

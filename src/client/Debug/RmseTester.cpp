@@ -183,62 +183,49 @@ void RmseTester::BeginComputeGolden(uint32_t maxFrames, const char* path)
 
 void RmseTester::UpdateComputeGolden(D3D* d3d, const uint32_t currFrame, D12Resource* finalRTV)
 {
-    if (currFrame < m_goldenMaxFrames)
+    if (currFrame < m_goldenMaxFrames || !m_runningComputeGolden)
         return;
 
-    assert(finalRTV->GetDesc().Format == DXGI_FORMAT_R8G8B8A8_UNORM);
-    const size_t bufferSize = finalRTV->GetDesc().Width * finalRTV->GetDesc().Height * sizeof(float) * 4;
-
-    if (!m_goldenReadbackBuffer.GetResource())
+    if (!m_goldenReadbackBuffer.IsInitialized())
     {
-        m_goldenReadbackBuffer.InitBuffer(L"Golden Readback Buffer", d3d->GetDevice(), bufferSize, D3D12_RESOURCE_FLAG_NONE, true);
+        m_goldenReadbackBuffer.Init(d3d, finalRTV);
     }
-
-    std::vector<uint8_t> readbackData;
-    readbackData.resize(bufferSize);
-
-    auto cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
-
-    // Copy Texture -> ReadbackBuffer
-    {
-        finalRTV->Transition(cmdList.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE);
-        m_goldenReadbackBuffer.Transition(cmdList.Get(), D3D12_RESOURCE_STATE_COPY_DEST);
-        cmdList->CopyResource(m_goldenReadbackBuffer.GetResource(), 0, finalRTV->GetResource(), 0, bufferSize);
-    }
-
-    V(cmdList->Close());
-    d3d->ExecuteCommandList(cmdList.Get());
-    d3d->Flush();
-
-    // Readback data
-    {
-        void* mappedData = nullptr;
-        const D3D12_RANGE readRange = {0, bufferSize};
-        V(m_goldenReadbackBuffer.GetResource()->Map(0, &readRange, &mappedData));
-
-        memcpy(readbackData.data(), mappedData, bufferSize);
-
-        constexpr D3D12_RANGE writeRange = {0, 0};
-        m_goldenReadbackBuffer.GetResource()->Unmap(0, &writeRange);
-    }
+    m_goldenReadbackBuffer.Readback(d3d, finalRTV);
+    const std::vector<uint8_t> readbackData = m_goldenReadbackBuffer.GetData();
 
     // TODO: Move to SaveSlotA(path) function?
     // Write to file
     {
-        const std::string filePath = wstringToString(FileHelper::GetAssetsPath()) + "Data/GoldenImages/" + m_goldenPath;
+        const std::string filePath = wstringToString(ASSETS_SOURCE_DIR) + "/../Data/GoldenImages/" + m_goldenPath + ".png";
+
+        const std::filesystem::path path = filePath;
+        std::filesystem::create_directories(path.parent_path());
 
         FILE* file;
-        fopen_s(&file, filePath.c_str(), "rb");
+        fopen_s(&file, filePath.c_str(), "wb");
         if (!file)
             throw std::exception("I/O Error");
 
-        spng_ctx* ctx = spng_ctx_new(0);
-        spng_set_png_file(ctx, file);
-        spng_encode_image(ctx, readbackData.data(), readbackData.size(), SPNG_FMT_RGBA8, 0);
+        int ret;
+        spng_ctx* ctx = spng_ctx_new(SPNG_CTX_ENCODER);
+
+        spng_ihdr ihdr = {};
+        ihdr.width = finalRTV->GetDesc().Width;
+        ihdr.height = finalRTV->GetDesc().Height;
+        ihdr.color_type = SPNG_COLOR_TYPE_TRUECOLOR_ALPHA;
+        ihdr.bit_depth = 8;
+        ret = spng_set_ihdr(ctx, &ihdr);
+        assert(ret == 0);
+        ret = spng_set_png_file(ctx, file);
+        assert(ret == 0);
+        ret = spng_encode_image(ctx, readbackData.data(), readbackData.size(), SPNG_FMT_PNG, SPNG_ENCODE_FINALIZE);
+        assert(ret == 0);
         spng_ctx_free(ctx);
 
         fclose(file);
     }
+
+    m_runningComputeGolden = false;
 }
 
 void RmseTester::BeginConvergenceTest(uint32_t maxFrames, const char* testName, uint32_t frameInc)

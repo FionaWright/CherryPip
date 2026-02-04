@@ -24,7 +24,7 @@ void ReadbackManager::Init(const D3D* d3d, Heap* heap, TextureRTV* ptOut)
     m_shaderReadbackHighlight = std::make_shared<Shader>();
     m_shaderReadbackHighlight->InitCs(L"Compute/DebugHighlightPixelCS.hlsl", device, m_rootSigReadbackHighlight->Get());
 
-    m_readbackBuffer.Init(d3d, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight);
+    m_readbackBuffer.Init(d3d, ptOut->GetD12Resource());
 
     m_materialReadbackHighlight = std::make_shared<Material>();
     m_materialReadbackHighlight->Init(heap);

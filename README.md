@@ -49,7 +49,8 @@ C++, HLSL and Python are the main languages.
 - Readback debug system that allows you to find selected pixel value or collect data every frame
 - Two furnace tests
 - See different internal parts of the path tracer using Debug Buffer system (Normals, Albedo, HitDist, RNG, FirstBounceDirection, etc) (Over 30)
-- Take snapshots of the path-tracer output, generate/save/load golden images, automatically compute RMSE over frames and plot using python + Bokeh
+- Take snapshots of the path-tracer output, generate/save/load golden images and compute RMSE between two snapshots
+- Run convergence test to compute RMSE between path-tracer output and golden image continuously, then plot data using python script
 
 ## History 
 
@@ -73,6 +74,7 @@ Progress as of 25/01/26:
 
 Progress as of 29/01/26:
 <img width="961" height="575" alt="image" src="https://github.com/user-attachments/assets/dc7b6217-9eaa-4a9b-ad21-7b998f25ba47" />
+
 
 
 

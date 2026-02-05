@@ -96,20 +96,15 @@ void Model_Glass(
 
 // TODO:
 // 3. Get Aniso GGX working
-// 2. Get VNDF GGX working
+// 2. Get VNDF GGX working (see also https://arxiv.org/pdf/2306.05044)
 // 4. Get Beckmann working (Smith first, then lambda)
 // 5. Get Aniso Beckmann working
 // 6. Beckmann VNDF
 
-// Models:
-// (D + G + Sample -> PDF)
-// GGX + Smith + NDF
-// GGX + VCavity + VNDF
-// WIP:
-// GGX + Smith + VNDF
-// GGXAniso + SmithAniso + NDFAniso
-// Beckmann + ? + NDF
-// BeckmannAniso + ?Aniso + NDFAniso
+// TODO: Aniso
+// Get the barn lamp and strength test aniso models
+// Read GLTF spec and copy code from there, don't delete any old code
+// Get it working
 
 // Avoid code breaking
 #if !defined(NDF_TYPE_GGX) && !defined(NDF_TYPE_BECKMANN)

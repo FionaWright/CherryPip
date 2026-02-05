@@ -529,6 +529,12 @@ void SceneStudio::guiMain()
         if (ImGui::Button("Compute Golden"))
         {
             m_rmseTester.BeginComputeGolden(goldenMaxFrames, path);
+            m_ptContext.Reset();
+        }
+
+        if (m_rmseTester.IsRunningGolden())
+        {
+            ImGui::SameLine(); ImGui::Text("Progress: %.2f/100\%", 100.0f * m_ptContext.GetFrameNum() / static_cast<float>(goldenMaxFrames));
         }
 
         if (ImGui::Button("Load Golden Image"))
@@ -548,11 +554,12 @@ void SceneStudio::guiMain()
         if (ImGui::Button("Convergence Test"))
         {
             m_rmseTester.BeginConvergenceTest(convergenceMaxFrames, testName, frameInc);
+            m_ptContext.Reset();
         }
 
         if (m_rmseTester.IsRunningConvergence())
         {
-            ImGui::SameLine(); ImGui::Text("Test: %.2f\%", m_rmseTester.GetConvergenceTestPercent() * 100.0f);
+            ImGui::SameLine(); ImGui::Text("Progress: %.2f\%", m_rmseTester.GetConvergenceTestPercent() * 100.0f);
         }
 
         ImGui::Unindent(IM_GUI_INDENTATION);

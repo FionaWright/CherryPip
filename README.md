@@ -23,8 +23,7 @@ C++, HLSL and Python are the main languages.
 
 ### Engine
 - Repository split between engine (HWI + System + Render) and Apps (SceneStudio)
-- Easy to use readback buffer system for debugging and analysis 
-- Python Execution at runtime for data analysis on GPU frame data
+- Python Execution at runtime for data analysis / debugging
 - Hot reloading for shaders
 - Set up scene configs and switch between them at runtime seamlessly
 - Scene GUI tab where you can modify each objects transform, material, etc
@@ -41,9 +40,9 @@ C++, HLSL and Python are the main languages.
 - GGX and WIP(Beckmann) NDFs, Schlick Fresnel, Smith and V-Cavity Geometry Masking
 - WIP: Importance Sampling using the distribution of visible normals (VNDF)
 - Glass materials supported
-- Environment maps with support for Panoramic and Octohedral Equal-Area (Rotatable at runtime!)
+- Environment maps with support for Panoramic and Octohedral Equal-Area (Rotatable at runtime)
 - Directional lighting + GPU max parallel search on the EA Environment Map to set automatically direction to where luminance is highest
-- Denoising (Box, Gaussian, Median, Edge-Avoiding A-Trous) using deferred GBuffer pre-pass
+- Denoising (Box, Gaussian, Median, Edge-Avoiding A-Trous) using GBuffer pre-pass
 
 #### Debug Tools
 - Readback debug system that allows you to find selected pixel value or collect data every frame
@@ -74,6 +73,7 @@ Progress as of 25/01/26:
 
 Progress as of 29/01/26:
 <img width="961" height="575" alt="image" src="https://github.com/user-attachments/assets/dc7b6217-9eaa-4a9b-ad21-7b998f25ba47" />
+
 
 
 

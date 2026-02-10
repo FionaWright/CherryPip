@@ -308,3 +308,17 @@ void RmseTester::UpdateConvergenceTest(D3D* d3d, const uint32_t currFrame, Heap*
 
     m_runningConvergenceTest = false;
 }
+
+void RmseTester::CompareTests(const std::vector<std::string>& testNames)
+{
+    // Plot graph
+    {
+        std::vector<const char*> args;
+        for (int i = 0; i < testNames.size(); i++)
+        {
+            const std::string filePath = "\"" + wstringToString(ASSETS_SOURCE_DIR) + "/../Data/RMSEs/" + testNames[i] + ".csv\"";
+            args.push_back(_strdup(filePath.c_str()));
+        }
+        PythonExecutor::ExecutePython("PlotMultiConvergence.py", args);
+    }
+}

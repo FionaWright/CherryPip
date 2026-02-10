@@ -504,7 +504,7 @@ void SceneStudio::guiMain()
     }
 
 #ifdef _DEBUG
-    ImGui::Text("RMSE Tester (tmp name)");
+    if (ImGui::TreeNode("RMSE Debug Tool"))
     {
         ImGui::Indent(IM_GUI_INDENTATION);
 
@@ -528,6 +528,7 @@ void SceneStudio::guiMain()
         }
         ImGui::Text("%s", (std::string("RMSE: ") + std::to_string(m_rmseTester.GetComputedRMSE())).c_str());
 
+        ImGui::Spacing();
         ImGui::Separator();
 
         static uint32_t goldenMaxFrames = 50;
@@ -551,6 +552,7 @@ void SceneStudio::guiMain()
             m_rmseTester.PrepareLoadGolden(path);
         }
 
+        ImGui::Spacing();
         ImGui::Separator();
 
         static uint32_t convergenceMaxFrames = 50;
@@ -571,7 +573,33 @@ void SceneStudio::guiMain()
             ImGui::SameLine(); ImGui::Text("Progress: %.2f\%", m_rmseTester.GetConvergenceTestPercent() * 100.0f);
         }
 
+        ImGui::Spacing();
+        ImGui::Separator();
+
+        static std::vector<std::string> testNames = { "", "" };
+        for (int i = 0; i < testNames.size(); i++)
+        {
+            char buff[256] = {};
+            memcpy(buff, testNames[i].data(), testNames[i].size());
+            std::string label = std::string("Test Name ") + std::to_string(i);
+            ImGui::InputText(label.c_str(), buff, 256);
+            testNames[i] = buff;
+        }
+
+        const int lastIdx = testNames.size() - 1;
+        if (lastIdx > 1 && testNames[lastIdx].empty() && testNames[lastIdx - 1].empty())
+            testNames.erase(testNames.end() - 1);
+        else if (!testNames[lastIdx].empty())
+            testNames.emplace_back("");
+
+        if (ImGui::Button("Compare Tests"))
+        {
+            testNames.erase(testNames.end() - 1);
+            m_rmseTester.CompareTests(testNames);
+        }
+
         ImGui::Unindent(IM_GUI_INDENTATION);
+        ImGui::TreePop();
     }
 #endif
 }

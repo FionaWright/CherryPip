@@ -118,6 +118,15 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
         m_shaderDirty |= ImGui::Checkbox("Glass Model Enabled##xx", &m_studioConfig.PT.GlassModelEnabled);
     m_shaderDirty |= ImGui::Checkbox("Importance Sampling Enabled##xx", &m_studioConfig.PT.ImportanceSamplingEnabled);
 
+    ImGui::Text("%s", "RNG Sampling Strategy:");
+    static int e3 = m_studioConfig.PT.SamplingStrat;
+    idx = 0;
+    ImGui::Indent(IM_GUI_INDENTATION);
+    m_shaderDirty |= ImGui::RadioButton("Independent", &e3, idx++);
+    m_shaderDirty |= ImGui::RadioButton("Owen Scrambled Radical Inverse (Halton)", &e3, idx++);
+    ImGui::Unindent(IM_GUI_INDENTATION);
+    m_studioConfig.PT.SamplingStrat = static_cast<PathTracerSamplingStrategy>(e3);
+
     if (m_studioConfig.PT.LightingModel == eMicrofacet)
     {
         ImGui::Text("%s", "Microfacet Normal Distribution Function:");

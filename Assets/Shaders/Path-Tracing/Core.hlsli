@@ -1,6 +1,5 @@
 #include "CBV.h"
 #include "PtBuffers.h"
-#include "Rand01.hlsli"
 
 #define EPSILON 1e-2
 #define RAY_FLAGS RAY_FLAG_CULL_NON_OPAQUE|RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES
@@ -20,6 +19,8 @@ ConstantBuffer<CbvPathTracing> c_pathTracing : register(b0);
 #ifdef SAMPLING_HALTON_OWEN
     ConstantBuffer<CbvPrimes> c_primes : register(b2);
 #endif
+
+#include "Rand01.hlsli"
 
 RaytracingAccelerationStructure gTLAS : register(t0);
 StructuredBuffer<PtInstanceData> gInstances : register(t1);

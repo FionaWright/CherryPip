@@ -5,8 +5,7 @@
 #include "Rand01.hlsli"
 #include "MathUtils.hlsli"
 
-void Hit(inout uint rngState,
-        inout RayQuery<RAY_FLAGS> q,
+void Hit(inout RayQuery<RAY_FLAGS> q,
         out float4 albedo,
         out float3 Ng,
         out float3 Ns,

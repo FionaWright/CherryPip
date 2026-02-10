@@ -102,6 +102,11 @@ struct CbvPathTracing
     float p;
 };
 
+struct CbvPrimes
+{
+    uint Primes[1000];
+};
+
 enum class DebugBuffer
 {
     eNormalsShaded,

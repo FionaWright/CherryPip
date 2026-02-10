@@ -94,25 +94,19 @@ float AnisoAlphaToMaskingAlpha(float3 dirOfInterest, float alphaX, float alphaY)
 //  Direction Sampling Functions
 // ================================
 
-float3 SampleH_GGX(float a2, inout uint rngState)
+float3 SampleH_GGX(float a2, float u1, float u2)
 {
-    float r1 = PcgRand01(rngState);
-    float r2 = PcgRand01(rngState);
-
-    float phi = 2.0 * PI * r1;
-    float cosTheta = sqrt(max(0.0f, (1.0 - r2) / max(0.001f, 1.0 + (a2 - 1.0) * r2)));
+    float phi = 2.0 * PI * u1;
+    float cosTheta = sqrt(max(0.0f, (1.0 - u2) / max(0.001f, 1.0 + (a2 - 1.0) * u2)));
     float sinTheta = sqrt(max(0.0f, 1.0 - cosTheta * cosTheta));
 
     float3 H_s = normalize(float3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta));
     return H_s;
 }
 
-float3 SampleH_GGXAniso(float alphaX, float alphaY, float2 anisoDir, float3 T, float3 B, float3 N, inout uint rngState)
+float3 SampleH_GGXAniso(float alphaX, float alphaY, float2 anisoDir, float3 T, float3 B, float3 N, float u1, float u2)
 {
-    float r1 = PcgRand01(rngState);
-    float r2 = PcgRand01(rngState);
-
-    float phi = atan(alphaY / alphaX * tan(2.0 * PI * r1));
+    float phi = atan(alphaY / alphaX * tan(2.0 * PI * u1));
     float sinPhi = sin(phi);
     float cosPhi = cos(phi);
 
@@ -120,7 +114,7 @@ float3 SampleH_GGXAniso(float alphaX, float alphaY, float2 anisoDir, float3 T, f
         1.0 / (cosPhi*cosPhi / (alphaX*alphaX) +
                sinPhi*sinPhi / (alphaY*alphaY));
 
-    float cosTheta = sqrt((1.0 - r2) / (1.0 + (alpha2 - 1.0) * r2));
+    float cosTheta = sqrt((1.0 - u2) / (1.0 + (alpha2 - 1.0) * u2));
     float sinTheta = sqrt(1.0 - cosTheta*cosTheta);
 
     return normalize(sinTheta * cosPhi * T +
@@ -131,18 +125,17 @@ float3 SampleH_GGXAniso(float alphaX, float alphaY, float2 anisoDir, float3 T, f
 // https://inria.hal.science/hal-00996995v2
 // VNDF only works with mathematically well-defined G1 models (V-Cavity + Smith)
 // Ignore this one, get Smith_VNDF working first imo
-float3 SampleH_VCavity_VNDF(float a2, float3 V, inout uint rngState)
+float3 SampleH_VCavity_VNDF(float a2, float3 V, float u1, float u2, float u3)
 {
-    float3 H = SampleH_GGX(a2, rngState);
+    float3 H = SampleH_GGX(a2, u1, u2);
     float3 Hp = float3(-H.x, -H.y, H.z);
 
     float3 L = normalize(reflect(-V, H));
 
-    float r3 = PcgRand01(rngState);
     float cHdL = saturate(dot(H, L));
     float cHpdL = saturate(dot(Hp, L));
 
-    if (r3 > cHdL / (cHdL + cHpdL))
+    if (u3 > cHdL / (cHdL + cHpdL))
         return Hp;
     else
         return H;
@@ -200,11 +193,8 @@ float2 SampleP22wo_11_GGX(float theta, float r1, float r2)
 }
 
 // Untested
-float3 SampleH_Smith_VNDF(float alphaX, float alphaY, float3 V, inout uint rngState)
+float3 SampleH_Smith_VNDF(float alphaX, float alphaY, float3 V, float u1, float u2)
 {
-    float r1 = PcgRand01(rngState);
-    float r2 = PcgRand01(rngState);
-
     // Stretch V
     V.x *= alphaX;
     V.y *= alphaY;
@@ -219,7 +209,7 @@ float3 SampleH_Smith_VNDF(float alphaX, float alphaY, float3 V, inout uint rngSt
     }
 
     // Sample P22_wo(x_slope, y_slope, 1, 1)
-    float2 slope = SampleP22wo_11_GGX(theta, r1, r2); // TODO: Generalize
+    float2 slope = SampleP22wo_11_GGX(theta, u1, u2); // TODO: Generalize
 
     // Rotate
     float cosPhi = cos(phi);
@@ -235,13 +225,10 @@ float3 SampleH_Smith_VNDF(float alphaX, float alphaY, float3 V, inout uint rngSt
     return float3(-slope.x * invH, -slope.y * invH, invH);
 }
 
-float3 SampleH_Beckmann(float a2, inout uint rngState)
+float3 SampleH_Beckmann(float a2, float u1, float u2)
 {
-    float r1 = PcgRand01(rngState);
-    float r2 = PcgRand01(rngState);
-
-    float phi = 2.0 * PI * r2;
-    float tan2Theta = -a2 * log(1.0 - r1);
+    float phi = 2.0 * PI * u2;
+    float tan2Theta = -a2 * log(1.0 - u1);
     float cosTheta = 1.0 / sqrt(1.0 + tan2Theta);
     float sinTheta = sqrt(max(0.0, 1.0 - cosTheta * cosTheta));
 

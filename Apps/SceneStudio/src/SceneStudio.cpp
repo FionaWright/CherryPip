@@ -158,7 +158,7 @@ void SceneStudio::loadAssets(D3D* d3d)
     samplers[0].ShaderRegister = 0;
 
     m_rootSig = std::make_shared<RootSig>();
-    m_rootSig->SmartInit(device, 1, 6, 1, true, samplers, _countof(samplers));
+    m_rootSig->SmartInit(device, 3, 6, 1, true, samplers, _countof(samplers));
 
 #ifdef _DEBUG
     m_rootSigDebug = std::make_shared<RootSig>();
@@ -776,6 +776,11 @@ void SceneStudio::compilePtShader(const D3D* d3d)
         args.push_back(L"-DFURNACE_TEST_HEMI_DIR_REFLECT");
     else if (m_studioConfig.PT.FurnaceTestHhEmit)
         args.push_back(L"-DFURNACE_TEST_HEMI_HEMI_EMIT");
+
+    if (m_studioConfig.PT.SamplingStrat == eOwenScrambledRadicalInverse)
+        args.push_back(L"-DSAMPLING_HALTON_OWEN");
+    else if (m_studioConfig.PT.SamplingStrat == eIndependent)
+        args.push_back(L"-DSAMPLING_INDEPENDENT");
 
     if (m_studioConfig.PT.LightingModel == PathTracerLightingModel::eMicrofacet)
     {

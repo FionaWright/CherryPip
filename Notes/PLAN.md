@@ -81,7 +81,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Mist (Randomly scatter rays depending on distance travelled, see SL video) (Rayleigh scattering! Requires spectral renderer?)
 - PT only build mode that doesn't initialize any raster resources? 
 - Debug tool where you can readback capture a frame into slot A or B, then perform a RMSE test on them. Then make it super-tool that runs it every N frames and graphs convergence 
-- Better sampling strategy for the jitter (It is sub-pixel uniform right now, there are subpixel positions never checked). See Owen Scrambled Radical Inverse in PBRT. Replace PcgRand01() with it? 
+- (!!!) Make Jitter use OSRI
 
 ### Misc
 - FPS has heavily dropped since I was away, possibly due to all the extra shaders/etc. Make sure they can be deleted properly when not in use. 1000+ FPS with lambert distribution should be possible

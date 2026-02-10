@@ -17,6 +17,10 @@ ConstantBuffer<CbvPathTracing> c_pathTracing : register(b0);
 	#include "DebugPalette.hlsli"
     #include "Path-Tracing/MathUtils.hlsli"
 #endif
+#ifdef SAMPLING_HALTON_OWEN
+    ConstantBuffer<CbvPrimes> c_primes : register(b2);
+#endif
+
 RaytracingAccelerationStructure gTLAS : register(t0);
 StructuredBuffer<PtInstanceData> gInstances : register(t1);
 StructuredBuffer<Vertex> gVertexMegaBuffer : register(t2);
@@ -41,6 +45,7 @@ float4 PSMain(VsOut input) : SV_Target0
 
     float3 origin = c_pathTracing.CameraPositionWorld;
 
+    // TODO: Make Jitter computed in here
     float2 ndc = (input.uv + c_pathTracing.Jitter) * 2.0f - 1.0f; // [-1,1] range
     ndc.y = -ndc.y;
     float4 clip = float4(ndc, 0, 1); // z=0 for near plane
@@ -64,11 +69,13 @@ float4 PSMain(VsOut input) : SV_Target0
     float3 colorSum = float3(0,0,0);
     for (uint i = 0; i < c_pathTracing.SPP; i++)
     {
-        uint rngState = PrngSeed((uint2)input.position, i+4648387, c_pathTracing.NumFrames);
+        uint rngState = GetHash((uint2)input.position, i, c_pathTracing.NumFrames);
 
 #ifdef DEPTH_OF_FIELD_ENABLED
-        float r = sqrt(PcgRand01(rngState)) * c_pathTracing.DofLensRadius;
-        float theta = 2.0 * PI * PcgRand01(rngState);
+        float rLensU = Rand01(DIM_LENS_U, i, rngState);
+        float rLensV = Rand01(DIM_LENS_V, i, rngState);
+        float r = sqrt(rLensU) * c_pathTracing.DofLensRadius;
+        float theta = 2.0 * PI * rLensV;
         float3 lensOffset = r * (camRight * cos(theta) + camUp * sin(theta));
         ray.Origin = origin + lensOffset;
         ray.Direction = normalize(focalPoint - ray.Origin);
@@ -78,6 +85,7 @@ float4 PSMain(VsOut input) : SV_Target0
                           flags,
                           instanceMask,
                           ray,
+                          i,
                           rngState);
     }
 

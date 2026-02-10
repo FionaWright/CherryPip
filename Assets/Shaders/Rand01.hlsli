@@ -68,11 +68,8 @@ float3 RandDirectionSphere(inout uint state)
     return normalize(float3(x, y, z));
 }
 
-float3 RandHemisphereUniformSSpace(inout uint state)
+float3 RandHemisphereUniformSSpace(float u1, float u2)
 {
-    float u1 = PcgRand01(state);
-    float u2 = PcgRand01(state);
-
     float z = u1;                 // cos(theta)
     float r = sqrt(max(0, 1 - z*z));
     float phi = 2 * PI * u2;
@@ -84,17 +81,14 @@ float3 RandHemisphereUniformSSpace(inout uint state)
     ));
 }
 
-float3 RandHemisphereUniformWorld(inout uint state, float3 T, float3 B, float3 N)
+float3 RandHemisphereUniformWorld(float u1, float u2, float3 T, float3 B, float3 N)
 {
-    float3 L_s = RandHemisphereUniformSSpace(state);
+    float3 L_s = RandHemisphereUniformSSpace(u1, u2);
     return normalize(L_s.x * T + L_s.y * B + L_s.z * N);
 }
 
-float3 RandHemisphereCosineSSpace(inout uint state)
+float3 RandHemisphereCosineSSpace(float u1, float u2)
 {
-    float u1 = PcgRand01(state);
-    float u2 = PcgRand01(state);
-
     float r = sqrt(u1);
     float theta = 2.0f * PI * u2;
 
@@ -105,11 +99,13 @@ float3 RandHemisphereCosineSSpace(inout uint state)
     return normalize(float3(x, y, z));
 }
 
-float3 RandHemisphereCosineWorld(inout uint state, float3 T, float3 B, float3 N)
+float3 RandHemisphereCosineWorld(float u1, float u2, float3 T, float3 B, float3 N)
 {
-    float3 L_s = RandHemisphereCosineSSpace(state);
+    float3 L_s = RandHemisphereCosineSSpace(u1, u2);
     return normalize(L_s.x * T + L_s.y * B + L_s.z * N);
 }
+
+#ifdef SAMPLING_HALTON_OWEN
 
 // https://github.com/mmp/pbrt-v4/blob/master/src/pbrt/util/math.h
 uint64_t MixBits(uint64_t v)
@@ -159,7 +155,7 @@ uint PermutationElement(uint i, uint l, uint p) {
 // baseIdx is the dimension. Keep it different for each usage per ray sample, but the same across ray samples
 float OwenScrambledRadicalInverse(int baseIdx, uint64_t a, uint hash)
 {
-    int base = Primes[baseIdx];
+    int base = c_primes.Primes[baseIdx];
     float invBase = 1.0f / (float)base;
     float invBaseM = 1;
 
@@ -202,5 +198,45 @@ float OwenScrambledRadicalInverse(int baseIdx, uint64_t a, uint hash)
 // Max bounces = 50
 // Total Dimensionality Needed = 304
 // Create a CBV array for the first 1000 primes to be safe
+
+#endif
+
+uint GetHash(uint2 uvID, uint sampleIdx, uint frameNum)
+{
+#if defined(SAMPLING_HALTON_OWEN)
+    return PrngSeed(uvID, sampleIdx+4648387, frameNum); // TODO: Why constant? Remove
+#elif defined(SAMPLING_INDEPENDANT)
+    return PrngSeed(uvID, frameNum, 0);
+#endif
+}
+
+#define DIM_JITTER_X 0
+#define DIM_JITTER_Y 1
+#define DIM_LENS_U 2
+#define DIM_LENS_V 3
+#define BASE_DIM_COUNT 4
+
+#define DIM_D_ALPHA 0
+#define DIM_D_SPECULAR_PROB 1
+#define DIM_D_BSDF_U1 2
+#define DIM_D_BSDF_U2 3
+#define DIM_D_BSDF_U3 4
+#define DIM_D_RUSSIAN 5
+#define BOUNCE_DIM_COUNT 6
+
+uint GetBaseDim(uint bounceIdx)
+{
+    return BASE_DIM_COUNT + BOUNCE_DIM_COUNT * bounceIdx;
+}
+
+float Rand01(int dimension, uint64_t sampleIdx, inout uint state)
+{
+#if defined(SAMPLING_HALTON_OWEN)
+    // Assume state is a fixed scramble/hash value
+    return OwenScrambledRadicalInverse(dimension, sampleIdx, state);
+#elif defined(SAMPLING_INDEPENDANT)
+    return PcgRand01(state);
+#endif
+}
 
 #endif

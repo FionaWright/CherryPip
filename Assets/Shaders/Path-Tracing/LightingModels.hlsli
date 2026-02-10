@@ -8,6 +8,8 @@
 void Model_LambertionDiffuse(
     inout uint rngState,
     inout float3 throughput,
+    uint rngBaseDimension,
+    uint rngSampleIdx,
     float3 Ns,
     float3 Li,
     float3 albedo,
@@ -19,14 +21,17 @@ void Model_LambertionDiffuse(
     float3 T, B;
     BuildBasisFrisvad(Ns, T, B);
 
+    float u1 = Rand01(rngBaseDimension + DIM_D_BSDF_U1, rngSampleIdx, rngState);
+    float u2 = Rand01(rngBaseDimension + DIM_D_BSDF_U2, rngSampleIdx, rngState);
+
 #ifdef IMPORTANCE_SAMPLING
-    wi = RandHemisphereCosineWorld(rngState, T, B, Ns);
+    wi = RandHemisphereCosineWorld(u1, u2, T, B, Ns);
     // diffuseBrdf = albedo / PI
     // pdf = NdL / PI
     // throughput *= diffuseBrdf * NdL / pdf
     throughput *= albedo; // Terms cancel out
 #else
-    wi = RandHemisphereUniformWorld(rngState, T, B, Ns);
+    wi = RandHemisphereUniformWorld(u1, u2, T, B, Ns);
     float NdL = saturate(dot(Ns, wi));
     float3 diffuseBrdf = albedo / PI;
     float pdf = 1.0f / (2.0f * PI);
@@ -37,6 +42,8 @@ void Model_LambertionDiffuse(
 void Model_Glossy(
     inout uint rngState,
     inout float3 throughput,
+    uint rngBaseDimension,
+    uint rngSampleIdx,
     float diffuseProbability,
     float roughness,
     float3 Ns,
@@ -46,12 +53,16 @@ void Model_Glossy(
     out float3 wi,
     out float3 L_sample)
 {
-    bool isDiffuse = diffuseProbability >= PcgRand01(rngState);
+    //float u1 = Rand01(rngBaseDimension + DIM_D_BSDF_U1, rngSampleIdx, rngState);
+    //float u2 = Rand01(rngBaseDimension + DIM_D_BSDF_U2, rngSampleIdx, rngState);
+
+    float rSpecProb = Rand01(rngBaseDimension + DIM_D_SPECULAR_PROB, rngSampleIdx, rngState);
+    bool isDiffuse = diffuseProbability >= rSpecProb;
 
     L_sample = throughput * Li;
     throughput *= lerp(float3(1, 1, 1), albedo, isDiffuse);
 
-    float3 diffuseDir = normalize(Ns + RandDirectionSphere(rngState));
+    float3 diffuseDir = normalize(Ns + RandDirectionSphere(rngState)); // TODO: Bad sampling
     float3 specularDir = Reflect(-wo, Ns);
     wi = lerp(specularDir, diffuseDir, roughness * isDiffuse);
 }
@@ -59,6 +70,8 @@ void Model_Glossy(
 void Model_Glass(
     inout uint rngState,
     inout float3 throughput,
+    uint rngBaseDimension,
+    uint rngSampleIdx,
     float diffuseProbability,
     float roughness,
     bool entering,
@@ -83,11 +96,15 @@ void Model_Glass(
     float iorNext = entering ? ior : IOR_AIR;
     GlassResponse res = CalcReflectRefract(-wo, Ns, iorCurrent, iorNext);
 
-    float3 diffuseDir = normalize(Ns + RandDirectionSphere(rngState));
+    //float u1 = Rand01(rngBaseDimension + DIM_D_BSDF_U1, rngSampleIdx, rngState);
+    //float u2 = Rand01(rngBaseDimension + DIM_D_BSDF_U2, rngSampleIdx, rngState);
+
+    float3 diffuseDir = normalize(Ns + RandDirectionSphere(rngState)); // TODO: Bad sampling
     res.reflectDir = normalize(lerp(res.reflectDir, diffuseDir, diffuseProbability)); // Why diffuseprobability and not roughness?
     res.refractDir = normalize(lerp(res.refractDir, -diffuseDir, roughness));
 
-    bool reflect = PcgRand01(rngState) <= res.reflectWeight;
+    float rSpecProb = Rand01(rngBaseDimension + DIM_D_SPECULAR_PROB, rngSampleIdx, rngState);
+    bool reflect = rSpecProb <= res.reflectWeight;
     wi = reflect ? res.reflectDir : res.refractDir;
 
     L_sample = 0;
@@ -114,6 +131,8 @@ void Model_Glass(
 void Model_Microfacet(
     inout uint rngState,
     inout float3 throughput,
+    uint rngBaseDimension,
+    uint rngSampleIdx,
     float roughness,
     float metalness,
     float3 Ns,
@@ -154,7 +173,11 @@ void Model_Microfacet(
     specProb = 0.0f;
 #endif
 
-    bool isSpecular = PcgRand01(rngState) < specProb;
+    float u1 = Rand01(rngBaseDimension + DIM_D_BSDF_U1, rngSampleIdx, rngState);
+    float u2 = Rand01(rngBaseDimension + DIM_D_BSDF_U2, rngSampleIdx, rngState);
+    float rSpecProb = Rand01(rngBaseDimension + DIM_D_SPECULAR_PROB, rngSampleIdx, rngState);
+
+    bool isSpecular = rSpecProb < specProb;
 
     if (isSpecular)
     {
@@ -250,7 +273,7 @@ void Model_Microfacet(
     else // Lambert
     {
 #ifdef IMPORTANCE_SAMPLING
-        float3 L_s = RandHemisphereCosineSSpace(rngState);
+        float3 L_s = RandHemisphereCosineSSpace(u1, u2);
         wi = InvToDefinedSpace(L_s, T, B, Ns);
 
         float NdL = SSpaceCosTheta(L_s);
@@ -259,7 +282,7 @@ void Model_Microfacet(
         // E = diffuseBrdf * NdL / pdf
         float3 E = albedo * (1.0 - metalness); // Terms cancel out
 #else
-        float3 L_s = RandHemisphereUniformSSpace(rngState);
+        float3 L_s = RandHemisphereUniformSSpace(u1, u2);
         wi = InvToDefinedSpace(L_s, T, B, Ns);
 
         float NdL = SSpaceCosTheta(L_s);

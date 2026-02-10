@@ -7,6 +7,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             uint flags,
             uint instanceMask,
             RayDesc ray,
+            uint rngSampleIdx,
             inout uint rngState)
 {
     float3 Lo = float3(0, 0, 0);
@@ -37,6 +38,8 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             break;
         }
 
+        uint rngBaseDimension = GetBaseDim(i);
+
 		float3 hitPos = ray.Origin + ray.Direction * q.CommittedRayT();
 
         PtMaterialData mat;
@@ -44,8 +47,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         float3 Ng = -1, Ns = -1, Li = -1;
         float2 uv = -1;
         float3 anisoDirAndStrength = -1;
-        Hit(rngState,
-            q, albedo, Ng,
+        Hit(q, albedo, Ng,
             Ns, Li, mat, uv
 #ifdef ANISOTROPY_ENABLED
             , anisoDirAndStrength
@@ -53,7 +55,8 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         );
 
 #ifdef ALPHA_TESTING_ENABLED
-		bool cutout = albedo.a < 0.001f || PcgRand01(rngState) > albedo.a;
+        float rAlpha = Rand01(rngBaseDimension + DIM_D_ALPHA, rngSampleIdx, rngState);
+		bool cutout = albedo.a < 0.001f || rAlpha > albedo.a;
 		if (cutout)
 		{
         	ray.Origin = hitPos + Ng * EPSILON * sign(dot(Ng, ray.Direction));
@@ -70,7 +73,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
 #if defined(LIGHTING_LAMB_DIFF)
 
-        Model_LambertionDiffuse(rngState, throughput, Ns, Li, albedo.rgb, wi, L_sample);
+        Model_LambertionDiffuse(rngState, rngBaseDimension, rngSampleIdx, throughput, Ns, Li, albedo.rgb, wi, L_sample);
 
 #elif defined(LIGHTING_GLOSSY)
 
@@ -128,7 +131,8 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         {
             float p = saturate(max(throughput.r, max(throughput.g, throughput.b)));
             p = max(p, 0.05f);
-            if (PcgRand01(rngState) > p)
+            float rRR = Rand01(rngBaseDimension + DIM_D_RUSSIAN, rngSampleIdx, rngState);
+            if (rRR > p)
                 break;
             throughput /= p;
         }

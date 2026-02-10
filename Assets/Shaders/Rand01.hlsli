@@ -25,35 +25,12 @@ uint PrngSeed(uint2 pixel, uint sample_i, uint temporal_i) {
 }
 
 // https://www.pcg-random.org/
-float PcgRand01_X(inout uint state)
-{
-    state = state * 747796405u + 2891336453u;
-    uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
-    word = (word >> 22u) ^ word;
-    return word / UINT_MAX;
-}
-
 float PcgRand01(inout uint state)
 {
     state += 0x6D2B79F5u;
     uint z = (state ^ (state >> 15)) * (1u | state);
     z ^= z + (z ^ (z >> 7)) * (61u | z);
     return float((z ^ (z >> 14))) / UINT_MAX;
-}
-
-uint4 Pcg4d(uint4 v)
-{
-    v = v * 1664525u + 1013904223u;
-    v.x += v.y*v.w;
-    v.y += v.z*v.x;
-    v.z += v.x*v.y;
-    v.w += v.y*v.z;
-    v ^= v >> 16u;
-    v.x += v.y*v.w;
-    v.y += v.z*v.x;
-    v.z += v.x*v.y;
-    v.w += v.y*v.z;
-    return v;
 }
 
 float3 RandDirectionCube(inout uint state)
@@ -134,5 +111,96 @@ float3 RandHemisphereCosineWorld(inout uint state, float3 T, float3 B, float3 N)
     return normalize(L_s.x * T + L_s.y * B + L_s.z * N);
 }
 
+// https://github.com/mmp/pbrt-v4/blob/master/src/pbrt/util/math.h
+uint64_t MixBits(uint64_t v)
+{
+    v ^= (v >> 31);
+    v *= 0x7fb5d329728ea185;
+    v ^= (v >> 27);
+    v *= 0x81dadef4bc2dd44d;
+    v ^= (v >> 33);
+    return v;
+}
+
+// https://github.com/mmp/pbrt-v4/blob/master/src/pbrt/util/math.h
+// Returns the ith element of a random permutation of l values based on the seed p
+uint PermutationElement(uint i, uint l, uint p) {
+    uint w = l - 1;
+    w |= w >> 1;
+    w |= w >> 2;
+    w |= w >> 4;
+    w |= w >> 8;
+    w |= w >> 16;
+    do
+    {
+        i ^= p;
+        i *= 0xe170893d;
+        i ^= p >> 16;
+        i ^= (i & w) >> 4;
+        i ^= p >> 8;
+        i *= 0x0929eb3f;
+        i ^= p >> 23;
+        i ^= (i & w) >> 1;
+        i *= 1 | p >> 27;
+        i *= 0x6935fa69;
+        i ^= (i & w) >> 11;
+        i *= 0x74dcb303;
+        i ^= (i & w) >> 2;
+        i *= 0x9e501cc3;
+        i ^= (i & w) >> 2;
+        i *= 0xc860a3df;
+        i &= w;
+        i ^= i >> 5;
+    } while (i >= l);
+    return (i + p) % l;
+}
+
+// https://pbr-book.org/4ed/Sampling_and_Reconstruction/Halton_Sampler
+// baseIdx is the dimension. Keep it different for each usage per ray sample, but the same across ray samples
+float OwenScrambledRadicalInverse(int baseIdx, uint64_t a, uint hash)
+{
+    int base = Primes[baseIdx];
+    float invBase = 1.0f / (float)base;
+    float invBaseM = 1;
+
+    uint64_t reversedDigits = 0;
+    int digitIndex = 0;
+    while (1.0f - invBaseM < 1.0f)
+    {
+        uint64_t next = a / base;
+        int digitValue = a - next * base;
+        uint digitHash = MixBits(hash ^ reversedDigits);
+        digitValue = PermutationElement(digitValue, base, digitHash);
+        reversedDigits = reversedDigits * base + digitValue;
+        invBaseM *= invBase;
+        ++digitIndex;
+        a = next;
+
+    }
+    return min(invBaseM * reversedDigits, OneMinusEpsilon);
+}
+
+// OSRI Usage:
+// uint scramble = Hash(pixel.xy, frameNum); // Per pixel
+// uint sampleIdx = samplei; // Per Sample (SPP)
+// float jitterX = OSRI(0, sampleIdx, scramble);
+// float jitterY = OSRI(1, sampleIdx, scramble);
+
+// OSRI Dimensionality:
+// 0 - Subpixel Jitter X
+// 1 - Subpixel Jitter Y
+// 2 - Lens U (DoF)
+// 3 - Lens V (DoF)
+// Per Bounce (d = 4 + 6 * BounceIdx):
+// d+0 - Alpha Cut Probability
+// d+1 - Specular Probability (Or Reflect Probability for glass)
+// d+2 - BSDF Sample U1
+// d+3 - BSDF Sample U2
+// d+4 - BSDF Sample U3
+// d+5 - Russian Roulette Probability
+
+// Max bounces = 50
+// Total Dimensionality Needed = 304
+// Create a CBV array for the first 1000 primes to be safe
 
 #endif

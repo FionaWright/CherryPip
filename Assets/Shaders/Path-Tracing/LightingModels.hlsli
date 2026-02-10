@@ -217,7 +217,7 @@ void Model_Microfacet(
 #endif
 
         float3 L_s = normalize(reflect(-V_s, H_s));
-        wi = ToDefinedSpace(L_s, T, B, Ns);
+        wi = InvToDefinedSpace(L_s, T, B, Ns);
 
         if (L_s.z <= 0.0f) // Can I get rid of this? Only needed for aniso
             return;

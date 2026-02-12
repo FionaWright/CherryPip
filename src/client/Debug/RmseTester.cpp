@@ -257,11 +257,12 @@ void RmseTester::LoadGolden(D3D* d3d, const uint32_t slot)
     m_loadGoldenNextFrame = false;
 }
 
-void RmseTester::BeginConvergenceTest(const uint32_t maxFrames, const char* testName, const uint32_t frameInc)
+void RmseTester::BeginConvergenceTest(const uint32_t maxFrames, const char* testName, const uint32_t frameInc, const bool plotAndShow)
 {
     m_maxFrames = maxFrames;
     m_taskName = testName;
     m_frameIncrement = frameInc;
+    m_plotAndShow = plotAndShow;
     m_lastFrameConvergenceTested = 0;
     m_rmses.clear();
     m_runningConvergenceTest = true;
@@ -298,11 +299,14 @@ void RmseTester::UpdateConvergenceTest(D3D* d3d, const uint32_t currFrame, Heap*
 
     // Plot graph
     {
-        const std::vector<const char*> args = {
-            filePath.c_str(),
-            "--show",
-            "--save"
+        std::vector<const char*> args = {
+            filePath.c_str()
         };
+        if (m_plotAndShow)
+        {
+            args.emplace_back("--show");
+            args.emplace_back("--save");
+        }
         PythonExecutor::ExecutePython("PlotConvergence.py", args);
     }
 

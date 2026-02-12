@@ -7,7 +7,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             uint flags,
             uint instanceMask,
             RayDesc ray,
-            uint rngSampleIdx,
+            uint globalSampleIdx,
             inout uint rngState)
 {
     float3 Lo = float3(0, 0, 0);
@@ -55,7 +55,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         );
 
 #ifdef ALPHA_TESTING_ENABLED
-        float rAlpha = Rand01(rngBaseDimension + DIM_D_ALPHA, rngSampleIdx, rngState);
+        float rAlpha = Rand01(rngBaseDimension + DIM_D_ALPHA, globalSampleIdx, rngState);
 		bool cutout = albedo.a < 0.001f || rAlpha > albedo.a;
 		if (cutout)
 		{
@@ -73,7 +73,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
 #if defined(LIGHTING_LAMB_DIFF)
 
-        Model_LambertionDiffuse(rngState, throughput, rngBaseDimension, rngSampleIdx, Ns, Li, albedo.rgb, wi, L_sample);
+        Model_LambertionDiffuse(rngState, throughput, rngBaseDimension, globalSampleIdx, Ns, Li, albedo.rgb, wi, L_sample);
 
 #elif defined(LIGHTING_GLOSSY)
 
@@ -81,11 +81,11 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         if (mat.Flags & PtMaterialFlags::eIsGlass)
         {
             bool entering = q.CommittedTriangleFrontFace()!=0;
-            Model_Glass(rngState, throughput, rngBaseDimension, rngSampleIdx, mat.DiffuseProbability, roughness, entering, q.CommittedRayT(), mat.IoR, Ns, Li, albedo.rgb, wo, wi, L_sample);
+            Model_Glass(rngState, throughput, rngBaseDimension, globalSampleIdx, mat.DiffuseProbability, roughness, entering, q.CommittedRayT(), mat.IoR, Ns, Li, albedo.rgb, wo, wi, L_sample);
         }
         else
 #    endif
-            Model_Glossy(rngState, throughput, rngBaseDimension, rngSampleIdx, mat.DiffuseProbability, roughness, Ns, Li, albedo.rgb, wo, wi, L_sample);
+            Model_Glossy(rngState, throughput, rngBaseDimension, globalSampleIdx, mat.DiffuseProbability, roughness, Ns, Li, albedo.rgb, wo, wi, L_sample);
 
 #elif defined(LIGHTING_MICROFACET)
 
@@ -96,11 +96,11 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 		if (mat.Flags & PtMaterialFlags::eIsGlass)
         {
             bool entering = q.CommittedTriangleFrontFace()!=0;
-            Model_Glass(rngState, throughput, rngBaseDimension, rngSampleIdx, mat.DiffuseProbability, roughness, entering, q.CommittedRayT(), mat.IoR, Ns, Li, albedo.rgb, wo, wi, L_sample);
+            Model_Glass(rngState, throughput, rngBaseDimension, globalSampleIdx, mat.DiffuseProbability, roughness, entering, q.CommittedRayT(), mat.IoR, Ns, Li, albedo.rgb, wo, wi, L_sample);
         }
 		else
 #    endif
-			Model_Microfacet(rngState, throughput, rngBaseDimension, rngSampleIdx, roughness,
+			Model_Microfacet(rngState, throughput, rngBaseDimension, globalSampleIdx, roughness,
             	metalness, Ns, Li, albedo.rgb, wo, wi, L_sample
 #    ifdef ANISOTROPY_ENABLED
                 , anisoDirAndStrength
@@ -131,7 +131,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         {
             float p = saturate(max(throughput.r, max(throughput.g, throughput.b)));
             p = max(p, 0.05f);
-            float rRR = Rand01(rngBaseDimension + DIM_D_RUSSIAN, rngSampleIdx, rngState);
+            float rRR = Rand01(rngBaseDimension + DIM_D_RUSSIAN, globalSampleIdx, rngState);
             if (rRR > p)
                 break;
             throughput /= p;

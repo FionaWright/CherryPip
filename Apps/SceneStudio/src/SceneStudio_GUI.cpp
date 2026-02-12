@@ -561,10 +561,12 @@ void SceneStudio::guiMain()
         ImGuiUtils::FwInputUInt("Frame Inc##xxx", &frameInc);
         static char testName[256];
         ImGui::InputText("Test Name", testName, 256);
+        static bool plotAndShow = false;
+        ImGui::Checkbox("Plot and Show", &plotAndShow);
 
         if (ImGui::Button("Convergence Test"))
         {
-            m_rmseTester.BeginConvergenceTest(convergenceMaxFrames, testName, frameInc);
+            m_rmseTester.BeginConvergenceTest(convergenceMaxFrames, testName, frameInc, plotAndShow);
             m_ptContext.Reset();
             ResetCameraToSceneStart();
         }

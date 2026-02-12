@@ -71,13 +71,13 @@ struct PtConfig
     alignas(4) bool DirLightEnabled = true;
     alignas(4) bool NormalMapsEnabled = true;
     alignas(4) bool SampleVisibleNormals = false;
-    alignas(4) bool AnisotropyEnabled = true;
+    alignas(4) bool AnisotropyEnabled = false;
     alignas(4) bool DepthOfFieldEnabled = false;
     alignas(4) bool FurnaceTestHdReflect = false;
     alignas(4) bool FurnaceTestHhEmit = false;
     alignas(4) bool AlphaTestingEnabled = true;
     alignas(4) bool ImportanceSamplingEnabled = true;
-    alignas(4) bool GlassModelEnabled = true;
+    alignas(4) bool GlassModelEnabled = false;
 };
 
 class PathTracingContext

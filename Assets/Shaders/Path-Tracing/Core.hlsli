@@ -89,11 +89,13 @@ float4 PSMain(VsOut input) : SV_Target0
         ray.Direction = normalize(focalPoint - ray.Origin);
 #endif
 
+        uint globalSampleIdx = c_pathTracing.NumFrames * c_pathTracing.SPP + i;
+
         colorSum += Trace(q,
                           flags,
                           instanceMask,
                           ray,
-                          i,
+                          globalSampleIdx,
                           rngState);
     }
 

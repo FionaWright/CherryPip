@@ -41,7 +41,8 @@ enum PathTracerLightingModel : uint32_t
 enum PathTracerSamplingStrategy : uint32_t
 {
     eIndependent,
-    eOwenScrambledRadicalInverse,
+    eHalton,
+    eHaltonOwen,
 };
 
 struct PtConfig
@@ -53,7 +54,7 @@ struct PtConfig
     PathTracerLightingModel LightingModel = eMicrofacet;
     MicrofacetNdfType NdfType = eGGX;
     DebugBuffer DebugBufferIdx = DebugBuffer::eNormalsShaded;
-    PathTracerSamplingStrategy SamplingStrat = eOwenScrambledRadicalInverse;
+    PathTracerSamplingStrategy SamplingStrat = eIndependent;
     float DirLightCosAngularRadius = 0.00465f;
     float FireflyThreshold = 10.0f;
     float DofFocalDist = 5.0f;

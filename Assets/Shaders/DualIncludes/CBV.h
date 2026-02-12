@@ -78,6 +78,7 @@ struct CbvPathTracing
 {
     float4x4 InvP;
     float4x4 InvV;
+
     float3 CameraPositionWorld;
     uint NumBounces;
 
@@ -86,9 +87,9 @@ struct CbvPathTracing
     uint NumFrames;
     uint AccumulationEnabled;
 
-    uint WindowAppGuiWidth;
+    uint RESERVED;
     uint UpdateAccumulation;
-    float2 Jitter;
+    float2 TexelSize;
 
     float3 DirLight;
     float DirLightCosAngularRadius;

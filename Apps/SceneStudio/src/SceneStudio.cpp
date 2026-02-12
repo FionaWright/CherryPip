@@ -34,6 +34,10 @@ void SceneStudio::OnInit(D3D* d3d)
 
     m_studioConfig.Backend = d3d->GetRayTracingSupported() ? RenderBackend::ePathTracer : RenderBackend::eForward;
     Config::SetUIntFromArg(reinterpret_cast<uint32_t*>(&m_studioConfig.Backend), "--backend");
+    Config::SetUIntFromArg(reinterpret_cast<uint32_t*>(&m_studioConfig.PT.LightingModel), "--lightingModel");
+    Config::SetBoolFromArg(&m_studioConfig.EnvMapEnabled, "--envMapEnabled");
+    Config::SetBoolFromArg(&m_studioConfig.PT.DirLightEnabled, "--dirLightEnabled");
+    Config::SetBoolFromArg(&m_studioConfig.PT.RussianRouletteEnabled, "--russianRoulette");
 
     m_shader = std::make_shared<Shader>();
 
@@ -771,14 +775,18 @@ void SceneStudio::compilePtShader(const D3D* d3d)
         args.push_back(L"-DIMPORTANCE_SAMPLING");
     if (m_studioConfig.PT.GlassModelEnabled)
         args.push_back(L"-DLIGHTING_GLASS_ENABLED");
+    if (m_studioConfig.PT.JitterEnabled)
+        args.push_back(L"-DJITTER_ENABLED");
 
     if (m_studioConfig.PT.FurnaceTestHdReflect)
         args.push_back(L"-DFURNACE_TEST_HEMI_DIR_REFLECT");
     else if (m_studioConfig.PT.FurnaceTestHhEmit)
         args.push_back(L"-DFURNACE_TEST_HEMI_HEMI_EMIT");
 
-    if (m_studioConfig.PT.SamplingStrat == eOwenScrambledRadicalInverse)
+    if (m_studioConfig.PT.SamplingStrat == eHaltonOwen)
         args.push_back(L"-DSAMPLING_HALTON_OWEN");
+    else if (m_studioConfig.PT.SamplingStrat == eHalton)
+        args.push_back(L"-DSAMPLING_HALTON");
     else if (m_studioConfig.PT.SamplingStrat == eIndependent)
         args.push_back(L"-DSAMPLING_INDEPENDENT");
 

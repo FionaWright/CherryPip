@@ -118,6 +118,15 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
         m_shaderDirty |= ImGui::Checkbox("Glass Model Enabled##xx", &m_studioConfig.PT.GlassModelEnabled);
     m_shaderDirty |= ImGui::Checkbox("Importance Sampling Enabled##xx", &m_studioConfig.PT.ImportanceSamplingEnabled);
 
+    ImGui::Text("%s", "RNG Sampling Strategy:");
+    static int e3 = m_studioConfig.PT.SamplingStrat;
+    idx = 0;
+    ImGui::Indent(IM_GUI_INDENTATION);
+    m_shaderDirty |= ImGui::RadioButton("Independent", &e3, idx++);
+    m_shaderDirty |= ImGui::RadioButton("Owen Scrambled Radical Inverse (Halton)", &e3, idx++);
+    ImGui::Unindent(IM_GUI_INDENTATION);
+    m_studioConfig.PT.SamplingStrat = static_cast<PathTracerSamplingStrategy>(e3);
+
     if (m_studioConfig.PT.LightingModel == eMicrofacet)
     {
         ImGui::Text("%s", "Microfacet Normal Distribution Function:");
@@ -495,7 +504,7 @@ void SceneStudio::guiMain()
     }
 
 #ifdef _DEBUG
-    ImGui::Text("RMSE Tester (tmp name)");
+    if (ImGui::TreeNode("RMSE Debug Tool"))
     {
         ImGui::Indent(IM_GUI_INDENTATION);
 
@@ -519,6 +528,7 @@ void SceneStudio::guiMain()
         }
         ImGui::Text("%s", (std::string("RMSE: ") + std::to_string(m_rmseTester.GetComputedRMSE())).c_str());
 
+        ImGui::Spacing();
         ImGui::Separator();
 
         static uint32_t goldenMaxFrames = 50;
@@ -542,6 +552,7 @@ void SceneStudio::guiMain()
             m_rmseTester.PrepareLoadGolden(path);
         }
 
+        ImGui::Spacing();
         ImGui::Separator();
 
         static uint32_t convergenceMaxFrames = 50;
@@ -562,7 +573,33 @@ void SceneStudio::guiMain()
             ImGui::SameLine(); ImGui::Text("Progress: %.2f\%", m_rmseTester.GetConvergenceTestPercent() * 100.0f);
         }
 
+        ImGui::Spacing();
+        ImGui::Separator();
+
+        static std::vector<std::string> testNames = { "", "" };
+        for (int i = 0; i < testNames.size(); i++)
+        {
+            char buff[256] = {};
+            memcpy(buff, testNames[i].data(), testNames[i].size());
+            std::string label = std::string("Test Name ") + std::to_string(i);
+            ImGui::InputText(label.c_str(), buff, 256);
+            testNames[i] = buff;
+        }
+
+        const int lastIdx = testNames.size() - 1;
+        if (lastIdx > 1 && testNames[lastIdx].empty() && testNames[lastIdx - 1].empty())
+            testNames.erase(testNames.end() - 1);
+        else if (!testNames[lastIdx].empty())
+            testNames.emplace_back("");
+
+        if (ImGui::Button("Compare Tests"))
+        {
+            testNames.erase(testNames.end() - 1);
+            m_rmseTester.CompareTests(testNames);
+        }
+
         ImGui::Unindent(IM_GUI_INDENTATION);
+        ImGui::TreePop();
     }
 #endif
 }

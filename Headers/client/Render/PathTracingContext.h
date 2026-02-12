@@ -38,6 +38,12 @@ enum PathTracerLightingModel : uint32_t
     eMicrofacet
 };
 
+enum PathTracerSamplingStrategy : uint32_t
+{
+    eIndependent,
+    eOwenScrambledRadicalInverse,
+};
+
 struct PtConfig
 {
     uint32_t SPP = 1;
@@ -47,6 +53,7 @@ struct PtConfig
     PathTracerLightingModel LightingModel = eMicrofacet;
     MicrofacetNdfType NdfType = eGGX;
     DebugBuffer DebugBufferIdx = DebugBuffer::eNormalsShaded;
+    PathTracerSamplingStrategy SamplingStrat = eOwenScrambledRadicalInverse;
     float DirLightCosAngularRadius = 0.00465f;
     float FireflyThreshold = 10.0f;
     float DofFocalDist = 5.0f;
@@ -104,6 +111,9 @@ private:
     std::vector<PtInstanceData> m_instanceDataList;
     std::shared_ptr<D12Resource> m_instanceDataBuffer, m_vertexMegaBuffer, m_indexMegaBuffer, m_materialBuffer;
     UINT m_vertexMegaBufferCount = 0, m_indexMegaBufferCount = 0;
+
+    CbvPrimes m_cbvPrimes{};
+    bool m_primesInitialized = false;
 };
 
 

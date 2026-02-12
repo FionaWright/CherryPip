@@ -39,6 +39,7 @@ C++, HLSL and Python are the main languages.
 - Lambertian, Glossy, and Microfacet lighting models
 - GGX and WIP(Beckmann) NDFs, Schlick Fresnel, Smith and V-Cavity Geometry Masking
 - WIP: Importance Sampling using the distribution of visible normals (VNDF)
+- Owen Scrambled Radical Inverse Stochastic Sampling for Random Number Generation. Leads to faster convergence!
 - Glass materials supported
 - Environment maps with support for Panoramic and Octohedral Equal-Area (Rotatable at runtime)
 - Directional lighting + GPU max parallel search on the EA Environment Map to set automatically direction to where luminance is highest
@@ -53,34 +54,29 @@ C++, HLSL and Python are the main languages.
 
 ## History 
 
-Progress as of 29/10/25:
+Progress as of 29/10/25:  
 <img width="1699" height="606" alt="image" src="https://github.com/user-attachments/assets/3c638d43-bdc2-465f-8689-2469e6ab254d" />
 
-Progress as of 08/11/25:
+Progress as of 08/11/25:  
 <img width="1699" height="599" alt="image" src="https://github.com/user-attachments/assets/8a37f88e-0d83-475e-9b28-3272d3ca2607" />
 
-Progress as of 09/11/25:
+Progress as of 09/11/25:  
 <img width="1699" height="604" alt="image" src="https://github.com/user-attachments/assets/ac64c41a-92c5-4159-b324-cfad17abffa0" />
 
-Progress as of 10/01/26 (Took a long break):
+Progress as of 10/01/26 (Took a long break):  
 <img width="1020" height="573" alt="image" src="https://github.com/user-attachments/assets/f13adf28-8360-4225-a2ab-e718a83e969b" />
 
-Progress as of 18/01/26:
+Progress as of 18/01/26:  
 <img width="1696" height="603" alt="image" src="https://github.com/user-attachments/assets/6ae8b25d-a776-4016-bfc3-878b9b3a98fd" />
 
-Progress as of 25/01/26:
+Progress as of 25/01/26:  
 <img width="1361" height="575" alt="image" src="https://github.com/user-attachments/assets/cf597041-cf49-4f93-9f9e-9f91ccc713d5" />
 
-Progress as of 29/01/26:
+Progress as of 29/01/26:  
 <img width="961" height="575" alt="image" src="https://github.com/user-attachments/assets/dc7b6217-9eaa-4a9b-ad21-7b998f25ba47" />
 
-
-
-
-
-
-
-
+Progress as of 10/02/26:  
+<img width="621" height="610" alt="image" src="https://github.com/user-attachments/assets/73239719-29bb-47ee-bd71-3d2676cdfaef" />
 
 
 

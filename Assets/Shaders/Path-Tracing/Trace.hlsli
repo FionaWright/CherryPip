@@ -73,7 +73,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
 #if defined(LIGHTING_LAMB_DIFF)
 
-        Model_LambertionDiffuse(rngState, rngBaseDimension, rngSampleIdx, throughput, Ns, Li, albedo.rgb, wi, L_sample);
+        Model_LambertionDiffuse(rngState, throughput, rngBaseDimension, rngSampleIdx, Ns, Li, albedo.rgb, wi, L_sample);
 
 #elif defined(LIGHTING_GLOSSY)
 
@@ -81,11 +81,11 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         if (mat.Flags & PtMaterialFlags::eIsGlass)
         {
             bool entering = q.CommittedTriangleFrontFace()!=0;
-            Model_Glass(rngState, throughput, mat.DiffuseProbability, roughness, entering, q.CommittedRayT(), mat.IoR, Ns, Li, albedo.rgb, wo, wi, L_sample);
+            Model_Glass(rngState, throughput, rngBaseDimension, rngSampleIdx, mat.DiffuseProbability, roughness, entering, q.CommittedRayT(), mat.IoR, Ns, Li, albedo.rgb, wo, wi, L_sample);
         }
         else
 #    endif
-            Model_Glossy(rngState, throughput, mat.DiffuseProbability, roughness, Ns, Li, albedo.rgb, wo, wi, L_sample);
+            Model_Glossy(rngState, throughput, rngBaseDimension, rngSampleIdx, mat.DiffuseProbability, roughness, Ns, Li, albedo.rgb, wo, wi, L_sample);
 
 #elif defined(LIGHTING_MICROFACET)
 
@@ -96,11 +96,11 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 		if (mat.Flags & PtMaterialFlags::eIsGlass)
         {
             bool entering = q.CommittedTriangleFrontFace()!=0;
-            Model_Glass(rngState, throughput, mat.DiffuseProbability, roughness, entering, q.CommittedRayT(), mat.IoR, Ns, Li, albedo.rgb, wo, wi, L_sample);
+            Model_Glass(rngState, throughput, rngBaseDimension, rngSampleIdx, mat.DiffuseProbability, roughness, entering, q.CommittedRayT(), mat.IoR, Ns, Li, albedo.rgb, wo, wi, L_sample);
         }
 		else
 #    endif
-			Model_Microfacet(rngState, throughput, roughness,
+			Model_Microfacet(rngState, throughput, rngBaseDimension, rngSampleIdx, roughness,
             	metalness, Ns, Li, albedo.rgb, wo, wi, L_sample
 #    ifdef ANISOTROPY_ENABLED
                 , anisoDirAndStrength

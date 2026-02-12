@@ -194,29 +194,30 @@ void Model_Microfacet(
             float3 anisoT = float3(anisoDirAndStrength.xy, 0);
             float3 anisoB = float3(-anisoDirAndStrength.y, anisoDirAndStrength.x, 0);
             float3 anisoN = float3(0, 0, 1);
-            H_s = SampleH_GGXAniso(alphaX, alphaY, anisoDirAndStrength.xy, anisoT, anisoB, anisoN, rngState);
+            H_s = SampleH_GGXAniso(alphaX, alphaY, anisoDirAndStrength.xy, anisoT, anisoB, anisoN, u1, u2);
         }
         else
-            H_s = SampleH_GGX(alpha * alpha, rngState);
+            H_s = SampleH_GGX(alpha * alpha, u1, u2);
 #    else
 #        ifdef SAMPLE_VISIBLE_NORMALS
         float alpha = RoughnessToAlpha_GGX(roughness);
         float a2 = max(1e-6f, alpha * alpha);
-        float3 H_s = SampleH_VCavity_VNDF(a2, V_s, rngState);
+        float u3 = Rand01(rngBaseDimension + DIM_D_BSDF_U3, rngSampleIdx, rngState);
+        float3 H_s = SampleH_VCavity_VNDF(a2, V_s, u1, u2, u3);
 #        else
         float alpha = RoughnessToAlpha_GGX(roughness);
         float a2 = max(1e-6f, alpha * alpha);
-        float3 H_s = SampleH_GGX(a2, rngState);
+        float3 H_s = SampleH_GGX(a2, u1, u2);
 #        endif
 #    endif
 #elif defined(NDF_TYPE_BECKMANN) // TODO
         float alpha = RoughnessToAlpha_Beckmann(roughness); // TODO: Walters Trick here?
         float a2 = max(1e-6f, alpha * alpha);
-        float3 H_s = SampleH_Beckmann(a2, rngState);
+        float3 H_s = SampleH_Beckmann(a2, u1, u2);
 #endif
 
         float3 L_s = normalize(reflect(-V_s, H_s));
-        wi = ToDefinedSpace(L_s, T, B, Ns);
+        wi = InvToDefinedSpace(L_s, T, B, Ns);
 
         if (L_s.z <= 0.0f) // Can I get rid of this? Only needed for aniso
             return;

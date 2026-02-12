@@ -3,6 +3,7 @@
 
 #define UINT_MAX 4294967296.0
 #define PI 3.141592653589793
+#define ONE_MINUS_EPSILON 0x1.fffffep-1
 
 uint wang_hash(uint a) {
     a = (a ^ 61u) ^ (a >> 16);
@@ -155,7 +156,7 @@ uint PermutationElement(uint i, uint l, uint p) {
 // baseIdx is the dimension. Keep it different for each usage per ray sample, but the same across ray samples
 float OwenScrambledRadicalInverse(int baseIdx, uint64_t a, uint hash)
 {
-    int base = c_primes.Primes[baseIdx];
+    int base = c_primes.Primes[baseIdx]; // TODO: Not a fan of this file knowing about CBVs but...
     float invBase = 1.0f / (float)base;
     float invBaseM = 1;
 
@@ -164,8 +165,8 @@ float OwenScrambledRadicalInverse(int baseIdx, uint64_t a, uint hash)
     while (1.0f - invBaseM < 1.0f)
     {
         uint64_t next = a / base;
-        int digitValue = a - next * base;
-        uint digitHash = MixBits(hash ^ reversedDigits);
+        int digitValue = (int)(a - next * base);
+        uint digitHash = (uint)MixBits(hash ^ reversedDigits);
         digitValue = PermutationElement(digitValue, base, digitHash);
         reversedDigits = reversedDigits * base + digitValue;
         invBaseM *= invBase;
@@ -173,7 +174,7 @@ float OwenScrambledRadicalInverse(int baseIdx, uint64_t a, uint hash)
         a = next;
 
     }
-    return min(invBaseM * reversedDigits, OneMinusEpsilon);
+    return min(invBaseM * (float)reversedDigits, ONE_MINUS_EPSILON);
 }
 
 // OSRI Usage:
@@ -205,8 +206,10 @@ uint GetHash(uint2 uvID, uint sampleIdx, uint frameNum)
 {
 #if defined(SAMPLING_HALTON_OWEN)
     return PrngSeed(uvID, sampleIdx+4648387, frameNum); // TODO: Why constant? Remove
-#elif defined(SAMPLING_INDEPENDANT)
+#elif defined(SAMPLING_INDEPENDENT)
     return PrngSeed(uvID, frameNum, 0);
+#else
+    return 0;
 #endif
 }
 
@@ -229,13 +232,21 @@ uint GetBaseDim(uint bounceIdx)
     return BASE_DIM_COUNT + BOUNCE_DIM_COUNT * bounceIdx;
 }
 
-float Rand01(int dimension, uint64_t sampleIdx, inout uint state)
+float Rand01(
+    int dimension,
+    uint64_t sampleIdx,
+#if defined(SAMPLING_INDEPENDENT)
+    inout
+#endif
+    uint state)
 {
 #if defined(SAMPLING_HALTON_OWEN)
     // Assume state is a fixed scramble/hash value
     return OwenScrambledRadicalInverse(dimension, sampleIdx, state);
-#elif defined(SAMPLING_INDEPENDANT)
+#elif defined(SAMPLING_INDEPENDENT)
     return PcgRand01(state);
+#else
+    return 0;
 #endif
 }
 

@@ -68,6 +68,11 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 ## PT-TODO:
 
+### Main Tasks
+- Sample 2D points from Halton and plot them to see if they're incorrect. Keep debugging until convergence is clearly better
+- Fix Anisotropic issues
+- Fix VNDF issues
+
 ### Bugs (Physical Inaccuracies)
 - Fix glass attenuation after, add attenuationDistance field
 - Dir light is wrong direction, see reflection in metalRough spheres. Disable bounce threshold to see easier. Make only samplable for diffuse rays?
@@ -81,8 +86,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ### Features
 - Mist (Randomly scatter rays depending on distance travelled, see SL video) (Rayleigh scattering! Requires spectral renderer?)
 - PT only build mode that doesn't initialize any raster resources? 
-- Debug tool where you can readback capture a frame into slot A or B, then perform a RMSE test on them. Then make it super-tool that runs it every N frames and graphs convergence 
-- Sobel_Owen, Sobel_FastOwen ? Rename prev to Halton_Owen
+- Sobel_Owen, Sobel_FastOwen
 
 ### Misc
 - FPS has heavily dropped since I was away, possibly due to all the extra shaders/etc. Make sure they can be deleted properly when not in use. 1000+ FPS with lambert distribution should be possible

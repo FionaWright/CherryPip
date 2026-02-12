@@ -4,12 +4,15 @@
 
 #include "System/pch.h"
 #include "Render/CameraController.h"
+
+#include "imgui.h"
 #include "System/Config.h"
 #include "System/Input.h"
 
 bool CameraController::UpdateCamera(double deltaTime)
 {
     const bool mouseOverGUI = Input::GetMousePos().x < Config::GetSystem().WindowAppGuiWidth || Input::GetMousePos().x > Config::GetSystem().WindowAppGuiWidth + Config::GetSystem().RtvWidth;
+    const bool inTextField = ImGui::GetIO().WantCaptureKeyboard;
 
     if (Input::IsMouseRight() && !mouseOverGUI)
     {
@@ -56,6 +59,9 @@ bool CameraController::UpdateCamera(double deltaTime)
         m_camera.AddPosition(rightTranslation);
         return deltaMouse.x != 0 || deltaMouse.y != 0;
     }
+
+    if (inTextField)
+        return false;
 
     const XMFLOAT3 forward = m_camera.GetForward();
 

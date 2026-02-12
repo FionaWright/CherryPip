@@ -378,9 +378,7 @@ void SceneStudio::guiMain()
 
         if (ImGui::Button("Reset Camera to Scene Start##xx"))
         {
-            const auto currScene = m_sceneConfigs.at(m_currentScene);
-            m_camera.GetCamera().SetPosition(currScene.InitialCamPos);
-            m_camera.GetCamera().SetPitchYaw(currScene.InitialCamPitchYaw.x, currScene.InitialCamPitchYaw.y);
+            ResetCameraToSceneStart();
             resetPT = true;
         }
         if (ImGui::Button("Reset Camera to Origin##xx"))
@@ -541,6 +539,7 @@ void SceneStudio::guiMain()
         {
             m_rmseTester.BeginComputeGolden(goldenMaxFrames, path);
             m_ptContext.Reset();
+            ResetCameraToSceneStart();
         }
 
         if (m_rmseTester.IsRunningGolden())
@@ -567,6 +566,7 @@ void SceneStudio::guiMain()
         {
             m_rmseTester.BeginConvergenceTest(convergenceMaxFrames, testName, frameInc);
             m_ptContext.Reset();
+            ResetCameraToSceneStart();
         }
 
         if (m_rmseTester.IsRunningConvergence())

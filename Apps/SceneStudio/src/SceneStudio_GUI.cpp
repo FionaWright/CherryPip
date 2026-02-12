@@ -114,16 +114,13 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
     ImGui::Unindent(IM_GUI_INDENTATION);
     m_studioConfig.PT.LightingModel = static_cast<PathTracerLightingModel>(e);
 
-    if (m_studioConfig.PT.LightingModel != eLambertDiff)
-        m_shaderDirty |= ImGui::Checkbox("Glass Model Enabled##xx", &m_studioConfig.PT.GlassModelEnabled);
-    m_shaderDirty |= ImGui::Checkbox("Importance Sampling Enabled##xx", &m_studioConfig.PT.ImportanceSamplingEnabled);
-
     ImGui::Text("%s", "RNG Sampling Strategy:");
     static int e3 = m_studioConfig.PT.SamplingStrat;
     idx = 0;
     ImGui::Indent(IM_GUI_INDENTATION);
     m_shaderDirty |= ImGui::RadioButton("Independent", &e3, idx++);
     m_shaderDirty |= ImGui::RadioButton("Halton", &e3, idx++);
+    m_shaderDirty |= ImGui::RadioButton("Apple Halton", &e3, idx++);
     m_shaderDirty |= ImGui::RadioButton("Owen Scrambled Halton", &e3, idx++);
     ImGui::Unindent(IM_GUI_INDENTATION);
     m_studioConfig.PT.SamplingStrat = static_cast<PathTracerSamplingStrategy>(e3);
@@ -142,6 +139,10 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
         m_shaderDirty |= ImGui::Checkbox("Anisotropy Enabled", &m_studioConfig.PT.AnisotropyEnabled);
         m_shaderDirty |= ImGui::Checkbox("Sample Visible Normals", &m_studioConfig.PT.SampleVisibleNormals);
     }
+
+    if (m_studioConfig.PT.LightingModel != eLambertDiff)
+        m_shaderDirty |= ImGui::Checkbox("Glass Model Enabled##xx", &m_studioConfig.PT.GlassModelEnabled);
+    m_shaderDirty |= ImGui::Checkbox("Importance Sampling Enabled##xx", &m_studioConfig.PT.ImportanceSamplingEnabled);
 
     ImGui::Spacing();
     ImGui::Unindent(IM_GUI_INDENTATION);

@@ -5,6 +5,8 @@
 #define PI 3.141592653589793
 #define ONE_MINUS_EPSILON 0x1.fffffep-1
 
+#include "Halton.hlsli"
+
 uint wang_hash(uint a) {
     a = (a ^ 61u) ^ (a >> 16);
     a *= 9u;
@@ -106,116 +108,14 @@ float3 RandHemisphereCosineWorld(float u1, float u2, float3 T, float3 B, float3 
     return normalize(L_s.x * T + L_s.y * B + L_s.z * N);
 }
 
-// https://github.com/mmp/pbrt-v4/blob/master/src/pbrt/util/math.h
-uint64_t MixBits(uint64_t v)
-{
-    v ^= (v >> 31);
-    v *= 0x7fb5d329728ea185;
-    v ^= (v >> 27);
-    v *= 0x81dadef4bc2dd44d;
-    v ^= (v >> 33);
-    return v;
-}
-
-// https://github.com/mmp/pbrt-v4/blob/master/src/pbrt/util/math.h
-// Returns the ith element of a random permutation of l values based on the seed p
-uint PermutationElement(uint i, uint l, uint p) {
-    uint w = l - 1;
-    w |= w >> 1;
-    w |= w >> 2;
-    w |= w >> 4;
-    w |= w >> 8;
-    w |= w >> 16;
-    do
-    {
-        i ^= p;
-        i *= 0xe170893d;
-        i ^= p >> 16;
-        i ^= (i & w) >> 4;
-        i ^= p >> 8;
-        i *= 0x0929eb3f;
-        i ^= p >> 23;
-        i ^= (i & w) >> 1;
-        i *= 1 | p >> 27;
-        i *= 0x6935fa69;
-        i ^= (i & w) >> 11;
-        i *= 0x74dcb303;
-        i ^= (i & w) >> 2;
-        i *= 0x9e501cc3;
-        i ^= (i & w) >> 2;
-        i *= 0xc860a3df;
-        i &= w;
-        i ^= i >> 5;
-    } while (i >= l);
-    return (i + p) % l;
-}
-
-#if defined(SAMPLING_HALTON_OWEN) || defined(SAMPLING_HALTON)
-
-// https://pbr-book.org/4ed/Sampling_and_Reconstruction/Halton_Sampler
-// baseIdx is the dimension. Keep it different for each usage per ray sample, but the same across ray samples
-float OwenScrambledRadicalInverse(int baseIdx, uint64_t a, uint hash)
-{
-    int base = c_primes.Primes[baseIdx]; // TODO: Not a fan of this file knowing about CBVs but...
-    float invBase = 1.0f / (float)base;
-    float invBaseM = 1;
-
-    uint64_t reversedDigits = 0;
-    int digitIndex = 0;
-    while (1.0f - invBaseM < 1.0f)
-    {
-        uint64_t next = a / base;
-        int digitValue = (int)(a - next * base);
-        uint digitHash = (uint)MixBits(hash ^ reversedDigits);
-        digitValue = PermutationElement(digitValue, base, digitHash);
-        reversedDigits = reversedDigits * base + digitValue;
-        invBaseM *= invBase;
-        ++digitIndex;
-        a = next;
-
-    }
-    return min(invBaseM * (float)reversedDigits, ONE_MINUS_EPSILON);
-}
-
-float RadicalInverse(int baseIdx, uint64_t a)
-{
-    uint base = c_primes.Primes[baseIdx];
-    float invBase = 1.0f / (float)base;
-    float invBaseM = 1;
-
-    uint64_t r = 0;
-    while (a)
-	{
-	    uint64_t next = a / base;
-        uint64_t digit = a - next * base;
-        r = r * base + digit;
-        invBaseM *= invBase;
-        a = next;
-    }
-    return min((float)r * invBaseM, ONE_MINUS_EPSILON);
-}
-
-#endif
-
-// OSRI Dimensionality:
-// 0 - Subpixel Jitter X
-// 1 - Subpixel Jitter Y
-// 2 - Lens U (DoF)
-// 3 - Lens V (DoF)
-// Per Bounce (d = 4 + 6 * BounceIdx):
-// d+0 - Alpha Cut Probability
-// d+1 - Specular Probability (Or Reflect Probability for glass)
-// d+2 - BSDF Sample U1
-// d+3 - BSDF Sample U2
-// d+4 - BSDF Sample U3
-// d+5 - Russian Roulette Probability
-
 uint GetHash(uint2 uvID, uint sampleIdx, uint frameNum)
 {
 #if defined(SAMPLING_HALTON_OWEN)
     return PrngSeed(uvID, sampleIdx, frameNum);
 #elif defined(SAMPLING_HALTON)
 	return PrngSeed(uvID, sampleIdx, frameNum);
+#elif defined(SAMPLING_HALTON_APPLE)
+    return PrngSeed(uvID, sampleIdx, frameNum);
 #elif defined(SAMPLING_INDEPENDENT)
     return PrngSeed(uvID, sampleIdx, frameNum);
 #else
@@ -223,36 +123,39 @@ uint GetHash(uint2 uvID, uint sampleIdx, uint frameNum)
 #endif
 }
 
-#define DIM_JITTER_X 0
-#define DIM_JITTER_Y 1
-#define DIM_LENS_U 2
-#define DIM_LENS_V 3
-#define BASE_DIM_COUNT 4
-
-#define DIM_D_ALPHA 0
-#define DIM_D_SPECULAR_PROB 1
-#define DIM_D_BSDF_U1 2
-#define DIM_D_BSDF_U2 3
-#define DIM_D_BSDF_U3 4
-#define DIM_D_RUSSIAN 5
-#define BOUNCE_DIM_COUNT 6
-
-uint GetBaseDim(uint bounceIdx)
-{
-    return BASE_DIM_COUNT + BOUNCE_DIM_COUNT * bounceIdx;
-}
-
 float Rand01(int dimension, uint64_t globalSampleIdx, inout uint hash)
 {
 #if defined(SAMPLING_HALTON_OWEN)
-    return OwenScrambledRadicalInverse(dimension, globalSampleIdx, hash);
+
+    uint64_t scramble = hash ^ MixBits(dimension); // ?
+    return OwenScrambledRadicalInverse(dimension, globalSampleIdx, scramble);
+
 #elif defined(SAMPLING_HALTON)
+
     return RadicalInverse(dimension, hash);
+
+#elif defined(SAMPLING_HALTON_APPLE)
+
+    return AppleRadicalInverse(dimension, hash);
+
 #elif defined(SAMPLING_INDEPENDENT)
+
     return PcgRand01(hash);
+
 #else
     return 0;
 #endif
+}
+
+// Returns independent sample
+// Only modifies hash if SAMPLING_INDEPENDENT
+float Rand01_PCG(
+#if defined(SAMPLING_INDEPENDENT)
+    inout
+#endif
+    uint hash)
+{
+    return PcgRand01(hash);
 }
 
 #endif

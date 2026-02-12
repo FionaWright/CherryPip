@@ -35,8 +35,9 @@ void SceneStudio::OnInit(D3D* d3d)
     m_studioConfig.Backend = d3d->GetRayTracingSupported() ? RenderBackend::ePathTracer : RenderBackend::eForward;
     Config::SetUIntFromArg(reinterpret_cast<uint32_t*>(&m_studioConfig.Backend), "--backend");
     Config::SetUIntFromArg(reinterpret_cast<uint32_t*>(&m_studioConfig.PT.LightingModel), "--lightingModel");
+    Config::SetUIntFromArg(&m_studioConfig.PT.SPP, "--spp");
     Config::SetBoolFromArg(&m_studioConfig.EnvMapEnabled, "--envMapEnabled");
-    Config::SetBoolFromArg(&m_studioConfig.PT.DirLightEnabled, "--dirLightEnabled");
+    Config::SetBoolFromArg(&m_studioConfig.PT.DirLightEnabled, "--dirLight");
     Config::SetBoolFromArg(&m_studioConfig.PT.RussianRouletteEnabled, "--russianRoulette");
 
     m_shader = std::make_shared<Shader>();
@@ -164,11 +165,6 @@ void SceneStudio::loadAssets(D3D* d3d)
     m_rootSig = std::make_shared<RootSig>();
     m_rootSig->SmartInit(device, 3, 6, 1, true, samplers, _countof(samplers));
 
-#ifdef _DEBUG
-    m_rootSigDebug = std::make_shared<RootSig>();
-    m_rootSigDebug->SmartInit(device, 2, 6, 1, true, samplers, _countof(samplers));
-#endif
-
     SceneConfig customScene = {
         "(" + std::to_string(m_sceneConfigs.size()) +") " + "Custom"
     };
@@ -227,8 +223,8 @@ void SceneStudio::loadAssets(D3D* d3d)
         "(" + std::to_string(m_sceneConfigs.size()) +") " + "Chess",
         L"Chess/Chess.gltf",
         t,
-        XMFLOAT3(0, 0.2f, -0.5f),
-        XMFLOAT2(0, 0),
+        XMFLOAT3(0.45f, 0.919f, -1.434f),
+        XMFLOAT2(0.66f, -0.36f),
         false
     };
     m_sceneConfigs.emplace_back(sceneChess);
@@ -616,12 +612,11 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
                                                           m_heapRTV.GetIncrementSize());
         cmdList->OMSetRenderTargets(1, &handle, FALSE, nullptr);
 
-        ID3D12RootSignature* rootSig = m_studioConfig.PT.DebugMode ? m_rootSigDebug->Get() : m_rootSig->Get();
         const int debugBufferIdx = m_studioConfig.PT.DebugMode
                                        ? static_cast<int>(m_studioConfig.PT.DebugBufferIdx)
                                        : -1;
 
-        m_ptContext.Render(cmdList, rootSig, m_shader->GetPSO(), &m_camera.GetCamera(), &m_heap, m_projMatrix,
+        m_ptContext.Render(cmdList, m_rootSig->Get(), m_shader->GetPSO(), &m_camera.GetCamera(), &m_heap, m_projMatrix,
                            m_studioConfig.PT, m_studioConfig.DirLightIntensity, m_studioConfig.DirLightColor,
                            m_studioConfig.DirLightDirection, debugBufferIdx);
     }
@@ -741,13 +736,9 @@ void SceneStudio::compilePtShader(const D3D* d3d)
 
     CherryPrint("Loading Shader: " << wstringToString(shaderPath));
 
-    ID3D12RootSignature* rootSig = m_rootSig->Get();
     std::vector<const WCHAR*> args = {};
     if (m_studioConfig.PT.DebugMode)
-    {
         args.push_back(L"-DDEBUG_BUFFER");
-        rootSig = m_rootSigDebug->Get();
-    }
     if (m_studioConfig.EnvMapEnabled)
         args.push_back(L"-DENV_MAP_ENABLED");
     if (m_studioConfig.PT.EnvMapIsEqualArea)
@@ -786,6 +777,8 @@ void SceneStudio::compilePtShader(const D3D* d3d)
         args.push_back(L"-DSAMPLING_HALTON_OWEN");
     else if (m_studioConfig.PT.SamplingStrat == eHalton)
         args.push_back(L"-DSAMPLING_HALTON");
+    else if (m_studioConfig.PT.SamplingStrat == eHaltonApple)
+        args.push_back(L"-DSAMPLING_HALTON_APPLE");
     else if (m_studioConfig.PT.SamplingStrat == eIndependent)
         args.push_back(L"-DSAMPLING_INDEPENDENT");
 
@@ -811,7 +804,7 @@ void SceneStudio::compilePtShader(const D3D* d3d)
     };
     const D3D12_INPUT_LAYOUT_DESC ild = {m_shaderILD.data(), static_cast<UINT>(m_shaderILD.size())};
 
-    m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", shaderPath, ild, d3d->GetDevice(), rootSig, false, args);
+    m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", shaderPath, ild, d3d->GetDevice(), m_rootSig->Get(), false, args);
 }
 
 void SceneStudio::ResetCameraToSceneStart()

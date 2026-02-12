@@ -131,7 +131,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         {
             float p = saturate(max(throughput.r, max(throughput.g, throughput.b)));
             p = max(p, 0.05f);
-            float rRR = Rand01(rngBaseDimension + DIM_D_RUSSIAN, globalSampleIdx, rngState);
+            float rRR = Rand01_PCG(rngState);
             if (rRR > p)
                 break;
             throughput /= p;

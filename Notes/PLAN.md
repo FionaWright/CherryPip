@@ -35,6 +35,7 @@
 - [x] Glass model
 - [x] Importance Sampling
 - [ ] MIS
+- [ ] Proper distant light using bounding sphere of plane (No singular sun-point) (PBRT)
 - [ ] Oren-Nayers Lighting Model
 - [ ] Microfacet Beckmann (PBRT)
 - [ ] Microfacet Glass (Beckmann)
@@ -82,6 +83,8 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - PT only build mode that doesn't initialize any raster resources? 
 - Debug tool where you can readback capture a frame into slot A or B, then perform a RMSE test on them. Then make it super-tool that runs it every N frames and graphs convergence 
 - Better sampling strategy for the jitter (It is sub-pixel uniform right now, there are subpixel positions never checked). See Owen Scrambled Radical Inverse in PBRT. Replace PcgRand01() with it? 
+- `return OwenScrambledRadicalInverse(dimension, haltonIndex, MixBits(1 + (dimension << 4)));` ? 
+- Sobel_Owen, Sobel_FastOwen ? Rename prev to Halton_Owen
 
 ### Misc
 - FPS has heavily dropped since I was away, possibly due to all the extra shaders/etc. Make sure they can be deleted properly when not in use. 1000+ FPS with lambert distribution should be possible
@@ -96,6 +99,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Irradiance prealiasing, convert discrete to continuous through c = d + 0.5? Does this apply to unjittered PT samples as well?
 - Something wrong with sphere model, makes furnace tests hard
 - Bindless heap sharing
+- Line drawing debug tool (Use for dir light and axes)
 
 ## Spectral Tracing
 

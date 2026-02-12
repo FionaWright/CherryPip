@@ -86,6 +86,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - `return OwenScrambledRadicalInverse(dimension, haltonIndex, MixBits(1 + (dimension << 4)));` ? 
 - Sobel_Owen, Sobel_FastOwen ? Rename prev to Halton_Owen
 - (!!!) Make Jitter use OSRI
+- Primes are wrong
 
 ### Misc
 - FPS has heavily dropped since I was away, possibly due to all the extra shaders/etc. Make sure they can be deleted properly when not in use. 1000+ FPS with lambert distribution should be possible

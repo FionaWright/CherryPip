@@ -229,27 +229,16 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
         cbv.SPP = config.SPP;
         cbv.NumFrames = m_numFrames;
         cbv.AccumulationEnabled = config.AccumulationEnabled ? 1u : 0u;
-        cbv.WindowAppGuiWidth = Config::GetSystem().WindowAppGuiWidth;
         cbv.UpdateAccumulation = frameIncAllowed ? 1 : 0;
         cbv.FireflyThreshold = config.FireflyThreshold;
         cbv.DofFocalDist = config.DofFocalDist;
         cbv.DofLensRadius = config.DofLensRadius;
+        cbv.TexelSize = XMFLOAT2(1.0f / Config::GetSystem().RtvWidth, 1.0f / Config::GetSystem().RtvHeight);
 
         cbv.DirLight = dirLightDir;
         cbv.DirLightColor = dirLightColor;
         cbv.DirLightCosAngularRadius = 1.0f - config.DirLightCosAngularRadius;
         cbv.DirLightIntensity = dirLightIntensity;
-
-        cbv.Jitter = XMFLOAT2(0, 0);
-        if (config.JitterEnabled)
-        {
-            const XMFLOAT2 texelSize = XMFLOAT2(1.0f / Config::GetSystem().RtvWidth, 1.0f / Config::GetSystem().RtvHeight);
-            cbv.Jitter = XMFLOAT2((m_numFrames % 8) / 8.0f, ((m_numFrames / 8) % 8) / 8.0f);
-            cbv.Jitter.x = (cbv.Jitter.x - 0.5f) * 2.0f;
-            cbv.Jitter.y = (cbv.Jitter.y - 0.5f) * 2.0f;
-            cbv.Jitter.x *= texelSize.x;
-            cbv.Jitter.y *= texelSize.y;
-        }
 
         m_material->UpdateCBV(0, &cbv);
 
@@ -260,7 +249,8 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
             m_material->UpdateCBV(1, &cbvDebug);
         }
 
-        if (config.SamplingStrat == eOwenScrambledRadicalInverse && !m_primesInitialized)
+        const bool needPrimes = config.SamplingStrat == eHalton || config.SamplingStrat == eHaltonOwen;
+        if (needPrimes && !m_primesInitialized)
         {
             Fill1000Primes(m_cbvPrimes.Primes);
             m_material->UpdateCBV(2, &m_cbvPrimes);

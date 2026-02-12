@@ -106,8 +106,6 @@ float3 RandHemisphereCosineWorld(float u1, float u2, float3 T, float3 B, float3 
     return normalize(L_s.x * T + L_s.y * B + L_s.z * N);
 }
 
-#ifdef SAMPLING_HALTON_OWEN
-
 // https://github.com/mmp/pbrt-v4/blob/master/src/pbrt/util/math.h
 uint64_t MixBits(uint64_t v)
 {
@@ -152,6 +150,8 @@ uint PermutationElement(uint i, uint l, uint p) {
     return (i + p) % l;
 }
 
+#if defined(SAMPLING_HALTON_OWEN) || defined(SAMPLING_HALTON)
+
 // https://pbr-book.org/4ed/Sampling_and_Reconstruction/Halton_Sampler
 // baseIdx is the dimension. Keep it different for each usage per ray sample, but the same across ray samples
 float OwenScrambledRadicalInverse(int baseIdx, uint64_t a, uint hash)
@@ -177,11 +177,23 @@ float OwenScrambledRadicalInverse(int baseIdx, uint64_t a, uint hash)
     return min(invBaseM * (float)reversedDigits, ONE_MINUS_EPSILON);
 }
 
-// OSRI Usage:
-// uint scramble = Hash(pixel.xy, frameNum); // Per pixel
-// uint sampleIdx = samplei; // Per Sample (SPP)
-// float jitterX = OSRI(0, sampleIdx, scramble);
-// float jitterY = OSRI(1, sampleIdx, scramble);
+float RadicalInverse(int baseIdx, uint64_t a)
+{
+    int base = c_primes.Primes[baseIdx]; // TODO: Not a fan of this file knowing about CBVs but...
+    float invBase = 1.0f / (float)base;
+    float invBaseM = 1;
+
+    float r = 0;
+    while (a)
+	{
+	   invBaseM *= invBase;
+       r = r + invBaseM * float(a % base);
+       a /= base;
+    }
+    return min(r, ONE_MINUS_EPSILON);
+}
+
+#endif
 
 // OSRI Dimensionality:
 // 0 - Subpixel Jitter X
@@ -196,18 +208,14 @@ float OwenScrambledRadicalInverse(int baseIdx, uint64_t a, uint hash)
 // d+4 - BSDF Sample U3
 // d+5 - Russian Roulette Probability
 
-// Max bounces = 50
-// Total Dimensionality Needed = 304
-// Create a CBV array for the first 1000 primes to be safe
-
-#endif
-
 uint GetHash(uint2 uvID, uint sampleIdx, uint frameNum)
 {
 #if defined(SAMPLING_HALTON_OWEN)
-    return PrngSeed(uvID, sampleIdx+4648387, frameNum); // TODO: Why constant? Remove
+    return PrngSeed(uvID, 0, frameNum);
+#elif defined(SAMPLING_HALTON)
+	return PrngSeed(uvID, 0, frameNum);
 #elif defined(SAMPLING_INDEPENDENT)
-    return PrngSeed(uvID, frameNum, 0);
+	return PrngSeed(uvID, sampleIdx+4648387, frameNum); // TODO: Why constant? Remove
 #else
     return 0;
 #endif
@@ -232,19 +240,14 @@ uint GetBaseDim(uint bounceIdx)
     return BASE_DIM_COUNT + BOUNCE_DIM_COUNT * bounceIdx;
 }
 
-float Rand01(
-    int dimension,
-    uint64_t sampleIdx,
-#if defined(SAMPLING_INDEPENDENT)
-    inout
-#endif
-    uint state)
+float Rand01(int dimension, uint64_t sampleIdx, inout uint hash)
 {
 #if defined(SAMPLING_HALTON_OWEN)
-    // Assume state is a fixed scramble/hash value
-    return OwenScrambledRadicalInverse(dimension, sampleIdx, state);
+    return OwenScrambledRadicalInverse(dimension, sampleIdx, hash);
+#elif defined(SAMPLING_HALTON)
+	return RadicalInverse(dimension, hash);
 #elif defined(SAMPLING_INDEPENDENT)
-    return PcgRand01(state);
+    return PcgRand01(hash);
 #else
     return 0;
 #endif

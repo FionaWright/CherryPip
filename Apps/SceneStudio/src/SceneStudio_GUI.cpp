@@ -123,7 +123,8 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
     idx = 0;
     ImGui::Indent(IM_GUI_INDENTATION);
     m_shaderDirty |= ImGui::RadioButton("Independent", &e3, idx++);
-    m_shaderDirty |= ImGui::RadioButton("Owen Scrambled Radical Inverse (Halton)", &e3, idx++);
+    m_shaderDirty |= ImGui::RadioButton("Halton", &e3, idx++);
+    m_shaderDirty |= ImGui::RadioButton("Owen Scrambled Halton", &e3, idx++);
     ImGui::Unindent(IM_GUI_INDENTATION);
     m_studioConfig.PT.SamplingStrat = static_cast<PathTracerSamplingStrategy>(e3);
 

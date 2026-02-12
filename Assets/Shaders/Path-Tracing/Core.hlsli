@@ -16,7 +16,7 @@ ConstantBuffer<CbvPathTracing> c_pathTracing : register(b0);
 	#include "DebugPalette.hlsli"
     #include "Path-Tracing/MathUtils.hlsli"
 #endif
-#ifdef SAMPLING_HALTON_OWEN
+#if defined(SAMPLING_HALTON_OWEN) || defined(SAMPLING_HALTON)
     ConstantBuffer<CbvPrimes> c_primes : register(b2);
 #endif
 
@@ -46,33 +46,40 @@ float4 PSMain(VsOut input) : SV_Target0
 
     float3 origin = c_pathTracing.CameraPositionWorld;
 
-    // TODO: Make Jitter computed in here
-    float2 ndc = (input.uv + c_pathTracing.Jitter) * 2.0f - 1.0f; // [-1,1] range
-    ndc.y = -ndc.y;
-    float4 clip = float4(ndc, 0, 1); // z=0 for near plane
-    float4 view = mul(c_pathTracing.InvP, clip);
-    view /= view.w;
-    float4 world = mul(c_pathTracing.InvV, view);
-    float3 rayDir = normalize(world.xyz - origin);
-
     RayDesc ray;
     ray.Origin = origin;
-    ray.Direction = rayDir;
+    ray.Direction = 0;
     ray.TMin = 0.001;
     ray.TMax = 1000.0;
-
-#ifdef DEPTH_OF_FIELD_ENABLED
-    float3 camRight = normalize(c_pathTracing.InvV[0].xyz);  // X column
-    float3 camUp    = normalize(c_pathTracing.InvV[1].xyz);  // Y column
-    float3 focalPoint = origin + rayDir * c_pathTracing.DofFocalDist;
-#endif
 
     float3 colorSum = float3(0,0,0);
     for (uint i = 0; i < c_pathTracing.SPP; i++)
     {
         uint rngState = GetHash((uint2)input.position, i, c_pathTracing.NumFrames);
 
+        float2 pixelUV = input.uv;
+
+#ifdef JITTER_ENABLED
+        float rJitterX = Rand01(DIM_JITTER_X, i, rngState);
+        float rJitterY = Rand01(DIM_JITTER_Y, i, rngState);
+        float2 jitter = float2(rJitterX, rJitterY) - 0.5f; // [0,1] -> [-1,1]
+        jitter *= c_pathTracing.TexelSize;
+        pixelUV += jitter;
+#endif
+
+        float2 ndc = pixelUV * 2.0f - 1.0f; // [0,1] -> [-1,1]
+        ndc.y = -ndc.y;
+        float4 clip = float4(ndc, 0, 1); // z=0 for near plane
+        float4 view = mul(c_pathTracing.InvP, clip);
+        view /= view.w;
+        float4 world = mul(c_pathTracing.InvV, view);
+        ray.Direction = normalize(world.xyz - origin);
+
 #ifdef DEPTH_OF_FIELD_ENABLED
+        float3 camRight = normalize(c_pathTracing.InvV[0].xyz);  // X column
+        float3 camUp    = normalize(c_pathTracing.InvV[1].xyz);  // Y column
+        float3 focalPoint = origin + ray.Direction * c_pathTracing.DofFocalDist;
+
         float rLensU = Rand01(DIM_LENS_U, i, rngState);
         float rLensV = Rand01(DIM_LENS_V, i, rngState);
         float r = sqrt(rLensU) * c_pathTracing.DofLensRadius;

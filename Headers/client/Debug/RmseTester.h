@@ -40,11 +40,12 @@ public:
     [[nodiscard]] bool NeedLoadGolden() const { return m_loadGoldenNextFrame; }
     void LoadGolden(D3D* d3d, uint32_t slot);
 
-    void BeginConvergenceTest(uint32_t maxFrames, const char* testName, uint32_t frameInc);
+    void BeginConvergenceTest(uint32_t maxFrames, const char* testName, uint32_t frameInc, bool plotAndShow);
     [[nodiscard]] bool IsRunningConvergence() const { return m_runningConvergenceTest; }
     void UpdateConvergenceTest(D3D* d3d, const uint32_t currFrame, Heap* heap, D12Resource* finalRTV);
-    void CompareTests(const std::vector<std::string>& testNames);
     [[nodiscard]] float GetConvergenceTestPercent() const { return m_lastFrameConvergenceTested / static_cast<float>(m_maxFrames);}
+
+    void CompareTests(const std::vector<std::string>& testNames);
 
 private:
     Texture m_slotA, m_slotB;
@@ -54,6 +55,8 @@ private:
     bool m_takeSnapshotNextFrame = false;
     bool m_computeRMSENextFrame = false;
     bool m_runningComputeGolden = false, m_runningConvergenceTest = false;
+
+    bool m_plotAndShow = false;
 
     uint32_t m_maxFrames = 0;
     const char* m_taskName = nullptr;

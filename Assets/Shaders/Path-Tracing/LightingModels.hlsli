@@ -9,7 +9,7 @@ void Model_LambertionDiffuse(
     inout uint rngState,
     inout float3 throughput,
     uint rngBaseDimension,
-    uint rngSampleIdx,
+    uint globalSampleIdx,
     float3 Ns,
     float3 Li,
     float3 albedo,
@@ -21,8 +21,8 @@ void Model_LambertionDiffuse(
     float3 T, B;
     BuildBasisFrisvad(Ns, T, B);
 
-    float u1 = Rand01(rngBaseDimension + DIM_D_BSDF_U1, rngSampleIdx, rngState);
-    float u2 = Rand01(rngBaseDimension + DIM_D_BSDF_U2, rngSampleIdx, rngState);
+    float u1 = Rand01(rngBaseDimension + DIM_D_BSDF_U1, globalSampleIdx, rngState);
+    float u2 = Rand01(rngBaseDimension + DIM_D_BSDF_U2, globalSampleIdx, rngState);
 
 #ifdef IMPORTANCE_SAMPLING
     wi = RandHemisphereCosineWorld(u1, u2, T, B, Ns);
@@ -43,7 +43,7 @@ void Model_Glossy(
     inout uint rngState,
     inout float3 throughput,
     uint rngBaseDimension,
-    uint rngSampleIdx,
+    uint globalSampleIdx,
     float diffuseProbability,
     float roughness,
     float3 Ns,
@@ -53,10 +53,10 @@ void Model_Glossy(
     out float3 wi,
     out float3 L_sample)
 {
-    //float u1 = Rand01(rngBaseDimension + DIM_D_BSDF_U1, rngSampleIdx, rngState);
-    //float u2 = Rand01(rngBaseDimension + DIM_D_BSDF_U2, rngSampleIdx, rngState);
+    //float u1 = Rand01(rngBaseDimension + DIM_D_BSDF_U1, globalSampleIdx, rngState);
+    //float u2 = Rand01(rngBaseDimension + DIM_D_BSDF_U2, globalSampleIdx, rngState);
 
-    float rSpecProb = Rand01(rngBaseDimension + DIM_D_SPECULAR_PROB, rngSampleIdx, rngState);
+    float rSpecProb = Rand01(rngBaseDimension + DIM_D_SPECULAR_PROB, globalSampleIdx, rngState);
     bool isDiffuse = diffuseProbability >= rSpecProb;
 
     L_sample = throughput * Li;
@@ -71,7 +71,7 @@ void Model_Glass(
     inout uint rngState,
     inout float3 throughput,
     uint rngBaseDimension,
-    uint rngSampleIdx,
+    uint globalSampleIdx,
     float diffuseProbability,
     float roughness,
     bool entering,
@@ -96,14 +96,14 @@ void Model_Glass(
     float iorNext = entering ? ior : IOR_AIR;
     GlassResponse res = CalcReflectRefract(-wo, Ns, iorCurrent, iorNext);
 
-    //float u1 = Rand01(rngBaseDimension + DIM_D_BSDF_U1, rngSampleIdx, rngState);
-    //float u2 = Rand01(rngBaseDimension + DIM_D_BSDF_U2, rngSampleIdx, rngState);
+    //float u1 = Rand01(rngBaseDimension + DIM_D_BSDF_U1, globalSampleIdx, rngState);
+    //float u2 = Rand01(rngBaseDimension + DIM_D_BSDF_U2, globalSampleIdx, rngState);
 
     float3 diffuseDir = normalize(Ns + RandDirectionSphere(rngState)); // TODO: Bad sampling
     res.reflectDir = normalize(lerp(res.reflectDir, diffuseDir, diffuseProbability)); // Why diffuseprobability and not roughness?
     res.refractDir = normalize(lerp(res.refractDir, -diffuseDir, roughness));
 
-    float rSpecProb = Rand01(rngBaseDimension + DIM_D_SPECULAR_PROB, rngSampleIdx, rngState);
+    float rSpecProb = Rand01(rngBaseDimension + DIM_D_SPECULAR_PROB, globalSampleIdx, rngState);
     bool reflect = rSpecProb <= res.reflectWeight;
     wi = reflect ? res.reflectDir : res.refractDir;
 
@@ -132,7 +132,7 @@ void Model_Microfacet(
     inout uint rngState,
     inout float3 throughput,
     uint rngBaseDimension,
-    uint rngSampleIdx,
+    uint globalSampleIdx,
     float roughness,
     float metalness,
     float3 Ns,
@@ -173,9 +173,9 @@ void Model_Microfacet(
     specProb = 0.0f;
 #endif
 
-    float u1 = Rand01(rngBaseDimension + DIM_D_BSDF_U1, rngSampleIdx, rngState);
-    float u2 = Rand01(rngBaseDimension + DIM_D_BSDF_U2, rngSampleIdx, rngState);
-    float rSpecProb = Rand01(rngBaseDimension + DIM_D_SPECULAR_PROB, rngSampleIdx, rngState);
+    float u1 = Rand01(rngBaseDimension + DIM_D_BSDF_U1, globalSampleIdx, rngState);
+    float u2 = Rand01(rngBaseDimension + DIM_D_BSDF_U2, globalSampleIdx, rngState);
+    float rSpecProb = Rand01(rngBaseDimension + DIM_D_SPECULAR_PROB, globalSampleIdx, rngState);
 
     bool isSpecular = rSpecProb < specProb;
 
@@ -202,7 +202,7 @@ void Model_Microfacet(
 #        ifdef SAMPLE_VISIBLE_NORMALS
         float alpha = RoughnessToAlpha_GGX(roughness);
         float a2 = max(1e-6f, alpha * alpha);
-        float u3 = Rand01(rngBaseDimension + DIM_D_BSDF_U3, rngSampleIdx, rngState);
+        float u3 = Rand01(rngBaseDimension + DIM_D_BSDF_U3, globalSampleIdx, rngState);
         float3 H_s = SampleH_VCavity_VNDF(a2, V_s, u1, u2, u3);
 #        else
         float alpha = RoughnessToAlpha_GGX(roughness);

@@ -213,9 +213,11 @@ float RadicalInverse(int baseIdx, uint64_t a)
 uint GetHash(uint2 uvID, uint sampleIdx, uint frameNum)
 {
 #if defined(SAMPLING_HALTON_OWEN)
-    return PrngSeed(uvID, 0, frameNum);
-#elif defined(SAMPLING_HALTON) || defined(SAMPLING_INDEPENDENT)
+    return PrngSeed(uvID, sampleIdx, frameNum);
+#elif defined(SAMPLING_HALTON)
 	return PrngSeed(uvID, sampleIdx, frameNum);
+#elif defined(SAMPLING_INDEPENDENT)
+    return PrngSeed(uvID, sampleIdx, frameNum);
 #else
     return 0;
 #endif
@@ -240,13 +242,12 @@ uint GetBaseDim(uint bounceIdx)
     return BASE_DIM_COUNT + BOUNCE_DIM_COUNT * bounceIdx;
 }
 
-float Rand01(int dimension, uint64_t sampleIdx, inout uint hash)
+float Rand01(int dimension, uint64_t globalSampleIdx, inout uint hash)
 {
 #if defined(SAMPLING_HALTON_OWEN)
-    return OwenScrambledRadicalInverse(dimension, sampleIdx, hash);
+    return OwenScrambledRadicalInverse(dimension, globalSampleIdx, hash);
 #elif defined(SAMPLING_HALTON)
-	float val = RadicalInverse(dimension, sampleIdx);
-    return frac(val + PcgRand01(hash));
+    return RadicalInverse(dimension, hash);
 #elif defined(SAMPLING_INDEPENDENT)
     return PcgRand01(hash);
 #else

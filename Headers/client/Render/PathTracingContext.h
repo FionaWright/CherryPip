@@ -42,6 +42,7 @@ enum PathTracerSamplingStrategy : uint32_t
 {
     eIndependent,
     eHalton,
+    eHaltonApple,
     eHaltonOwen,
 };
 

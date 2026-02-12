@@ -16,7 +16,7 @@ ConstantBuffer<CbvPathTracing> c_pathTracing : register(b0);
 	#include "DebugPalette.hlsli"
     #include "Path-Tracing/MathUtils.hlsli"
 #endif
-#if defined(SAMPLING_HALTON_OWEN) || defined(SAMPLING_HALTON)
+#if defined(SAMPLING_HALTON_OWEN) || defined(SAMPLING_HALTON) || defined(SAMPLING_HALTON_APPLE)
     ConstantBuffer<CbvPrimes> c_primes : register(b2);
 #endif
 
@@ -57,11 +57,13 @@ float4 PSMain(VsOut input) : SV_Target0
     {
         uint rngState = GetHash((uint2)input.position, i, c_pathTracing.NumFrames);
 
+        uint globalSampleIdx = c_pathTracing.NumFrames * c_pathTracing.SPP + i;
+
         float2 pixelUV = input.uv;
 
 #ifdef JITTER_ENABLED
-        float rJitterX = Rand01(DIM_JITTER_X, i, rngState);
-        float rJitterY = Rand01(DIM_JITTER_Y, i, rngState);
+        float rJitterX = Rand01(DIM_JITTER_X, globalSampleIdx, rngState);
+        float rJitterY = Rand01(DIM_JITTER_Y, globalSampleIdx, rngState);
         float2 jitter = float2(rJitterX, rJitterY) - 0.5f; // [0,1] -> [-1,1]
         jitter *= c_pathTracing.TexelSize;
         pixelUV += jitter;
@@ -80,16 +82,14 @@ float4 PSMain(VsOut input) : SV_Target0
         float3 camUp    = normalize(c_pathTracing.InvV[1].xyz);  // Y column
         float3 focalPoint = origin + ray.Direction * c_pathTracing.DofFocalDist;
 
-        float rLensU = Rand01(DIM_LENS_U, i, rngState);
-        float rLensV = Rand01(DIM_LENS_V, i, rngState);
+        float rLensU = Rand01(DIM_LENS_U, globalSampleIdx, rngState);
+        float rLensV = Rand01(DIM_LENS_V, globalSampleIdx, rngState);
         float r = sqrt(rLensU) * c_pathTracing.DofLensRadius;
         float theta = 2.0 * PI * rLensV;
         float3 lensOffset = r * (camRight * cos(theta) + camUp * sin(theta));
         ray.Origin = origin + lensOffset;
         ray.Direction = normalize(focalPoint - ray.Origin);
 #endif
-
-        uint globalSampleIdx = c_pathTracing.NumFrames * c_pathTracing.SPP + i;
 
         colorSum += Trace(q,
                           flags,

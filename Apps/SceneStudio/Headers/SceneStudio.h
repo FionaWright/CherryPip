@@ -109,7 +109,7 @@ private:
     CameraController m_camera;
 
     std::shared_ptr<Shader> m_shader;
-    std::shared_ptr<RootSig> m_rootSig, m_rootSigDebug, m_rootSigRaster;
+    std::shared_ptr<RootSig> m_rootSig, m_rootSigRaster;
 
     std::vector<D3D12_INPUT_ELEMENT_DESC> m_shaderILD;
     bool m_shaderDirty = true;

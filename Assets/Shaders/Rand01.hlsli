@@ -179,18 +179,20 @@ float OwenScrambledRadicalInverse(int baseIdx, uint64_t a, uint hash)
 
 float RadicalInverse(int baseIdx, uint64_t a)
 {
-    int base = c_primes.Primes[baseIdx]; // TODO: Not a fan of this file knowing about CBVs but...
+    uint base = c_primes.Primes[baseIdx];
     float invBase = 1.0f / (float)base;
     float invBaseM = 1;
 
-    float r = 0;
+    uint64_t r = 0;
     while (a)
 	{
-	   invBaseM *= invBase;
-       r = r + invBaseM * float(a % base);
-       a /= base;
+	    uint64_t next = a / base;
+        uint64_t digit = a - next * base;
+        r = r * base + digit;
+        invBaseM *= invBase;
+        a = next;
     }
-    return min(r, ONE_MINUS_EPSILON);
+    return min((float)r * invBaseM, ONE_MINUS_EPSILON);
 }
 
 #endif
@@ -212,10 +214,8 @@ uint GetHash(uint2 uvID, uint sampleIdx, uint frameNum)
 {
 #if defined(SAMPLING_HALTON_OWEN)
     return PrngSeed(uvID, 0, frameNum);
-#elif defined(SAMPLING_HALTON)
-	return PrngSeed(uvID, 0, frameNum);
-#elif defined(SAMPLING_INDEPENDENT)
-	return PrngSeed(uvID, sampleIdx+4648387, frameNum); // TODO: Why constant? Remove
+#elif defined(SAMPLING_HALTON) || defined(SAMPLING_INDEPENDENT)
+	return PrngSeed(uvID, sampleIdx, frameNum);
 #else
     return 0;
 #endif
@@ -245,7 +245,8 @@ float Rand01(int dimension, uint64_t sampleIdx, inout uint hash)
 #if defined(SAMPLING_HALTON_OWEN)
     return OwenScrambledRadicalInverse(dimension, sampleIdx, hash);
 #elif defined(SAMPLING_HALTON)
-	return RadicalInverse(dimension, hash);
+	float val = RadicalInverse(dimension, sampleIdx);
+    return frac(val + PcgRand01(hash));
 #elif defined(SAMPLING_INDEPENDENT)
     return PcgRand01(hash);
 #else

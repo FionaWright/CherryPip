@@ -98,6 +98,7 @@ private:
     void renderForward(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void renderDeferred(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void compilePtShader(const D3D* d3d);
+    void ResetCameraToSceneStart();
     void GuiPathTracer(bool resetPT);
     void GuiRaster();
     void guiMain();

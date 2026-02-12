@@ -360,8 +360,7 @@ void SceneStudio::loadAssets(D3D* d3d)
     auto currScene = m_sceneConfigs.at(m_currentScene);
     if (m_currentScene != 0)
     {
-        m_camera.GetCamera().SetPosition(currScene.InitialCamPos);
-        m_camera.GetCamera().SetPitchYaw(currScene.InitialCamPitchYaw.x, currScene.InitialCamPitchYaw.y);
+        ResetCameraToSceneStart();
     }
 
     m_ptContext.Init(device, cmdList.Get(), &m_heap);
@@ -813,4 +812,11 @@ void SceneStudio::compilePtShader(const D3D* d3d)
     const D3D12_INPUT_LAYOUT_DESC ild = {m_shaderILD.data(), static_cast<UINT>(m_shaderILD.size())};
 
     m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", shaderPath, ild, d3d->GetDevice(), rootSig, false, args);
+}
+
+void SceneStudio::ResetCameraToSceneStart()
+{
+    const auto currScene = m_sceneConfigs.at(m_currentScene);
+    m_camera.GetCamera().SetPosition(currScene.InitialCamPos);
+    m_camera.GetCamera().SetPitchYaw(currScene.InitialCamPitchYaw.x, currScene.InitialCamPitchYaw.y);
 }

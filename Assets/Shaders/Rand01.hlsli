@@ -111,11 +111,11 @@ float3 RandHemisphereCosineWorld(float u1, float u2, float3 T, float3 B, float3 
 uint GetHash(uint2 uvID, uint sampleIdx, uint frameNum)
 {
 #if defined(SAMPLING_HALTON_OWEN)
-    return PrngSeed(uvID, sampleIdx, frameNum);
+    return PrngSeed(uvID, 0, 0);
 #elif defined(SAMPLING_HALTON)
-	return PrngSeed(uvID, sampleIdx, frameNum);
+	return PrngSeed(uvID, 0, 0);
 #elif defined(SAMPLING_HALTON_APPLE)
-    return PrngSeed(uvID, sampleIdx, frameNum);
+    return PrngSeed(uvID, 0, 0);
 #elif defined(SAMPLING_INDEPENDENT)
     return PrngSeed(uvID, sampleIdx, frameNum);
 #else
@@ -127,16 +127,18 @@ float Rand01(int dimension, uint64_t globalSampleIdx, inout uint hash)
 {
 #if defined(SAMPLING_HALTON_OWEN)
 
-    uint64_t scramble = hash ^ MixBits(dimension); // ?
-    return OwenScrambledRadicalInverse(dimension, globalSampleIdx, scramble);
+    uint64_t extraHash = hash + globalSampleIdx;
+    return OwenScrambledRadicalInverse(dimension, extraHash, hash);
 
 #elif defined(SAMPLING_HALTON)
 
-    return RadicalInverse(dimension, hash);
+    uint64_t extraHash = hash + globalSampleIdx;
+    return RadicalInverse(dimension, extraHash);
 
 #elif defined(SAMPLING_HALTON_APPLE)
 
-    return AppleRadicalInverse(dimension, hash);
+    uint64_t extraHash = hash + globalSampleIdx;
+    return AppleRadicalInverse(dimension, extraHash);
 
 #elif defined(SAMPLING_INDEPENDENT)
 

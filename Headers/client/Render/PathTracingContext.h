@@ -54,13 +54,13 @@ struct PtConfig
     uint32_t RussianRouletteMinBounces = 4;
     PathTracerLightingModel LightingModel = eMicrofacet;
     MicrofacetNdfType NdfType = eGGX;
-    DebugBuffer DebugBufferIdx = DebugBuffer::eNormalsShaded;
+    DebugInfoOutput DebugInfoOutputMode = DebugInfoOutput::eNormalsShaded;
     PathTracerSamplingStrategy SamplingStrat = eIndependent;
     float DirLightCosAngularRadius = 0.00465f;
     float FireflyThreshold = 10.0f;
     float DofFocalDist = 5.0f;
     float DofLensRadius = 0.05f;
-    alignas(4) bool DebugMode = false;
+    alignas(4) bool DebugInfoOutputEnabled = false;
     alignas(4) bool DebugForceSpecular = false;
     alignas(4) bool DebugForceDiffuse = false;
     alignas(4) bool AccumulationEnabled = true;
@@ -92,7 +92,7 @@ public:
                 int debugModeIdx = -1);
     void Reset();
 
-    uint32_t GetFrameNum() const { return m_numFrames; }
+    uint32_t GetFrameNum() const { return m_frameIdx; }
     Texture* GetAccumTexture() const { return m_accumTexture.get(); }
 
     std::shared_ptr<D12Resource> GetInstanceDataBuffer() const { return m_instanceDataBuffer; }
@@ -105,7 +105,7 @@ private:
 
     std::shared_ptr<Material> m_material;
 
-    uint32_t m_numFrames = 0;
+    uint32_t m_frameIdx = 0;
 
     Model m_fullScreenTriangle;
     std::shared_ptr<Texture> m_accumTexture, m_accumClearBuffer;

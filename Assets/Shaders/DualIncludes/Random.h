@@ -159,7 +159,12 @@ float Rand01(int dimension, GLUE_INOUT(RngInfo) rngInfo)
 
 float Rand01_Bounce(int dimension, GLUE_INOUT(RngInfo) rngInfo)
 {
-#if defined(SAMPLING_HALTON_OWEN) || defined(SAMPLING_HALTON) || defined(SAMPLING_HALTON)
+// Non-scambled Halton breaks at high dimensionality
+#if defined(SAMPLING_HALTON) || defined(SAMPLING_HALTON_APPLE) || defined(SAMPLING_INDEPENDENT)
+    return PcgRand01(rngInfo.IndependentRngState);
+#endif
+
+#if defined(SAMPLING_HALTON_OWEN)
     dimension += rngInfo.BounceBaseDimension;
 #endif
     return Rand01(dimension, rngInfo);

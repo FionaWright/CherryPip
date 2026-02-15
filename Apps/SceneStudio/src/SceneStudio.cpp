@@ -612,8 +612,8 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
                                                           m_heapRTV.GetIncrementSize());
         cmdList->OMSetRenderTargets(1, &handle, FALSE, nullptr);
 
-        const int debugBufferIdx = m_studioConfig.PT.DebugMode
-                                       ? static_cast<int>(m_studioConfig.PT.DebugBufferIdx)
+        const int debugBufferIdx = m_studioConfig.PT.DebugInfoOutputEnabled
+                                       ? static_cast<int>(m_studioConfig.PT.DebugInfoOutputMode)
                                        : -1;
 
         m_ptContext.Render(cmdList, m_rootSig->Get(), m_shader->GetPSO(), &m_camera.GetCamera(), &m_heap, m_projMatrix,
@@ -737,8 +737,13 @@ void SceneStudio::compilePtShader(const D3D* d3d)
     CherryPrint("Loading Shader: " << wstringToString(shaderPath));
 
     std::vector<const WCHAR*> args = {};
-    if (m_studioConfig.PT.DebugMode)
-        args.push_back(L"-DDEBUG_BUFFER");
+    if (m_studioConfig.PT.DebugInfoOutputEnabled)
+        args.push_back(L"-DDEBUG_PT_INFO_OUTPUT");
+    if (m_studioConfig.PT.DebugForceSpecular)
+        args.push_back(L"-DDEBUG_FORCE_SPECULAR");
+    if (m_studioConfig.PT.DebugForceDiffuse)
+        args.push_back(L"-DDEBUG_FORCE_DIFFUSE");
+
     if (m_studioConfig.EnvMapEnabled)
         args.push_back(L"-DENV_MAP_ENABLED");
     if (m_studioConfig.PT.EnvMapIsEqualArea)
@@ -751,10 +756,6 @@ void SceneStudio::compilePtShader(const D3D* d3d)
         args.push_back(L"-DALPHA_TESTING_ENABLED");
     if (m_studioConfig.PT.RussianRouletteEnabled)
         args.push_back(L"-DRUSSIAN_ROULETTE_ENABLED");
-    if (m_studioConfig.PT.DebugForceSpecular)
-        args.push_back(L"-DFORCE_SPECULAR");
-    if (m_studioConfig.PT.DebugForceDiffuse)
-        args.push_back(L"-DFORCE_DIFFUSE");
     if (m_studioConfig.PT.SampleVisibleNormals)
         args.push_back(L"-DSAMPLE_VISIBLE_NORMALS");
     if (m_studioConfig.PT.AnisotropyEnabled)

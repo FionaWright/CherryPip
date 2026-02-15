@@ -69,7 +69,6 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ## PT-TODO:
 
 ### Main Tasks
-- Sample 2D points from Halton and plot them to see if they're incorrect. Keep debugging until convergence is clearly better
 - Fix Anisotropic issues
 - Fix VNDF issues
 
@@ -86,12 +85,11 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ### Features
 - Mist (Randomly scatter rays depending on distance travelled, see SL video) (Rayleigh scattering! Requires spectral renderer?)
 - PT only build mode that doesn't initialize any raster resources? 
-- Sobel_Owen, Sobel_FastOwen
+- Sobel_Owen, Sobel_FastOwen samplers
 
 ### Misc
 - FPS has heavily dropped since I was away, possibly due to all the extra shaders/etc. Make sure they can be deleted properly when not in use. 1000+ FPS with lambert distribution should be possible
 - Get a NICE picture for LinkedIn and post it for fun
-- Put DEBUG_ at the start of all debug-related macros (e.g. FORCE_SPECULAR)
 - Class refactor to clean up shader code
 
 ## Raster/Laptop-TODO

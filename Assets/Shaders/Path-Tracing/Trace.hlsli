@@ -12,8 +12,8 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
     float3 Lo = float3(0, 0, 0);
     float3 throughput = float3(1, 1, 1);
 
-#ifdef DEBUG_BUFFER
-#    include "Debug/DebugBuffersPreTrace.hlsli"
+#ifdef DEBUG_PT_INFO_OUTPUT
+#    include "Debug/DebugInfoOutputPreTrace.hlsli"
 #endif
 
     for (uint i = 0; i <= c_pathTracing.NumBounces; i++)
@@ -31,8 +31,8 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
             Lo += L_sample;
 
-#ifdef DEBUG_BUFFER
-#    include "Debug/DebugBuffersOnMiss.hlsli"
+#ifdef DEBUG_PT_INFO_OUTPUT
+#    include "Debug/DebugInfoOutputOnMiss.hlsli"
 #endif
             break;
         }
@@ -107,14 +107,14 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 #    ifdef ANISOTROPY_ENABLED
                 , anisoDirAndStrength
 #    endif
-#    ifdef DEBUG_BUFFER
+#    ifdef DEBUG_PT_INFO_OUTPUT
             	, debug
             	, hasDebugOutput
 #    endif
         	);
         //if (dot(Ns, wi) <= 0) break;
 
-#    ifdef DEBUG_BUFFER
+#    ifdef DEBUG_PT_INFO_OUTPUT
         if (hasDebugOutput)
             return debug;
 #    endif
@@ -143,13 +143,13 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         ray.Direction = wi;
         ray.Origin = hitPos + Ng * EPSILON * sign(dot(Ng, ray.Direction));
 
-#ifdef DEBUG_BUFFER
-#    include "Debug/DebugBuffersOnHit.hlsli"
+#ifdef DEBUG_PT_INFO_OUTPUT
+#    include "Debug/DebugInfoOutputOnHit.hlsli"
 #endif
     }
 
-#ifdef DEBUG_BUFFER
-#    include "Debug/DebugBuffersPostTrace.hlsli"
+#ifdef DEBUG_PT_INFO_OUTPUT
+#    include "Debug/DebugInfoOutputPostTrace.hlsli"
 #endif
 
     return Lo;

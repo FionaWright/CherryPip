@@ -69,7 +69,7 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
     ImGui::Indent(IM_GUI_INDENTATION);
 
     ptNeedsReset |= ImGui::Checkbox("Accumulation Enabled##xx", &m_studioConfig.PT.AccumulationEnabled);
-    ptNeedsReset |= ImGui::Checkbox("Jitter Enabled##xx", &m_studioConfig.PT.JitterEnabled);
+    m_shaderDirty |= ImGui::Checkbox("Jitter Enabled##xx", &m_studioConfig.PT.JitterEnabled);
     m_shaderDirty |= ImGui::Checkbox("Russian Roulette##xx", &m_studioConfig.PT.RussianRouletteEnabled);
 
     if (m_studioConfig.PT.RussianRouletteEnabled)

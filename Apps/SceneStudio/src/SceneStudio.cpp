@@ -23,10 +23,6 @@
 #include "Debug/PythonExecutor.h"
 #endif
 
-// TODO: Temp
-#include "Rand01.h"
-#include "MathUtils.h"
-
 void SceneStudio::OnInit(D3D* d3d)
 {
     App::OnInit(d3d);
@@ -47,68 +43,6 @@ void SceneStudio::OnInit(D3D* d3d)
     m_shader = std::make_shared<Shader>();
 
     loadAssets(d3d);
-
-    // DEBUGGING:
-
-    return;
-
-    const std::string filePath = wstringToString(ASSETS_SOURCE_DIR) + "/../Data/2D.csv";
-
-    Fill1000Primes(c_primes.Primes);
-
-    const int mode = 1;
-
-    constexpr int NUM_SAMPLES = 5000;
-    std::vector<XMFLOAT2> pointSamples = {};
-    for (int sampleIdx = 0; sampleIdx < NUM_SAMPLES; sampleIdx++)
-    {
-        if (mode == 0)
-        {
-            const uint32_t hash = PrngSeed(uint2(34, 56), 0, 0);
-            const uint32_t extraHash = hash + sampleIdx;
-            const float rJitterX = OwenScrambledRadicalInverse(DIM_JITTER_X, extraHash, hash);
-            const float rJitterY = OwenScrambledRadicalInverse(DIM_JITTER_Y, extraHash, hash);
-            pointSamples.emplace_back(XMFLOAT2(rJitterX, rJitterY));
-        }
-        else if (mode == 1)
-        {
-            uint32_t hash = PrngSeed(uint2(34, 56), sampleIdx, 0);
-            const float rJitterX = PcgRand01(hash);
-            const float rJitterY = PcgRand01(hash);
-            pointSamples.emplace_back(XMFLOAT2(rJitterX, rJitterY));
-        }
-        else if (mode == 2)
-        {
-            const uint32_t hash = PrngSeed(uint2(34, 56), 0, 0);
-            const uint32_t extraHash = hash + sampleIdx;
-            const float rJitterX = RadicalInverse(DIM_JITTER_X, extraHash);
-            const float rJitterY = RadicalInverse(DIM_JITTER_Y, extraHash);
-            pointSamples.emplace_back(XMFLOAT2(rJitterX, rJitterY));
-        }
-    }
-
-    {
-        const std::filesystem::path path = filePath;
-        std::filesystem::create_directories(path.parent_path());
-
-        std::fstream f;
-        f.open(filePath.c_str(), std::ios::binary | std::fstream::out | std::ios::trunc);
-        f.clear();
-        f << "X,Y" << std::endl;
-        for (int i = 0; i < pointSamples.size(); i++)
-            f << std::to_string(pointSamples[i].x) << "," << std::to_string(pointSamples[i].y) << std::endl;
-        f.close();
-    }
-
-    {
-        std::vector<const char*> args = {
-            filePath.c_str(),
-            "--show", "--save"
-        };
-        PythonExecutor::ExecutePython("Plot2D.py", args);
-    }
-
-    __debugbreak();
 }
 
 void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList, double deltaTime)

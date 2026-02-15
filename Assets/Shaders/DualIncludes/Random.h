@@ -118,12 +118,24 @@ struct RngInfo
     uint IndependentRngState; // Modified during independent sampling
 };
 
+uint GetHashScramble(uint2 pos, uint sampleIdx, uint frameIdx)
+{
+#if defined(SAMPLING_HALTON)
+    return PrngSeed(pos, 0, 0);
+#elif defined(SAMPLING_HALTON_APPLE)
+    return PrngSeed(pos, 0, 0);
+#elif defined(SAMPLING_HALTON_OWEN)
+    return PrngSeed(pos, 0, 0);
+#else
+    return 0;
+#endif
+}
+
 float Rand01(int dimension, GLUE_INOUT(RngInfo) rngInfo)
 {
-#if defined(SAMPLING_HALTON_OWEN)
+#if defined(SAMPLING_INDEPENDENT)
 
-    uint64_t extraHash = rngInfo.HashScramble + rngInfo.GlobalSampleIdx;
-    return OwenScrambledRadicalInverse(dimension, extraHash, rngInfo.HashScramble);
+    return PcgRand01(rngInfo.IndependentRngState);
 
 #elif defined(SAMPLING_HALTON)
 
@@ -135,9 +147,10 @@ float Rand01(int dimension, GLUE_INOUT(RngInfo) rngInfo)
     uint64_t extraHash = rngInfo.HashScramble + rngInfo.GlobalSampleIdx;
     return AppleRadicalInverse(dimension, extraHash);
 
-#elif defined(SAMPLING_INDEPENDENT)
+#elif defined(SAMPLING_HALTON_OWEN)
 
-    return PcgRand01(rngInfo.IndependentRngState);
+    uint64_t extraHash = rngInfo.HashScramble + rngInfo.GlobalSampleIdx;
+    return OwenScrambledRadicalInverse(dimension, extraHash, rngInfo.HashScramble);
 
 #else
     return 0;

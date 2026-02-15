@@ -203,19 +203,19 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
         "Microfacet: PDF Specular",
     };
 
-    m_shaderDirty |= ImGui::Checkbox("Debug Buffers##xx", &m_studioConfig.PT.DebugMode);
-    if (m_studioConfig.PT.DebugMode)
+    m_shaderDirty |= ImGui::Checkbox("Info Output Enabled##xx", &m_studioConfig.PT.DebugInfoOutputEnabled);
+    if (m_studioConfig.PT.DebugInfoOutputEnabled)
     {
         ImGui::Indent(IM_GUI_INDENTATION);
-        const char* curSelection = c_debugBufferStrMap.at(static_cast<uint32_t>(m_studioConfig.PT.DebugBufferIdx));
-        if (ImGuiUtils::BeginComboWithTooltip("Debug Buffer##xx", curSelection))
+        const char* curSelection = c_debugBufferStrMap.at(static_cast<uint32_t>(m_studioConfig.PT.DebugInfoOutputMode));
+        if (ImGuiUtils::BeginComboWithTooltip("Info Output Mode##xx", curSelection))
         {
             for (size_t i = 0; i < c_debugBufferStrMap.size(); i++)
             {
-                const bool isSelected = static_cast<uint32_t>(m_studioConfig.PT.DebugBufferIdx) == i;
+                const bool isSelected = static_cast<uint32_t>(m_studioConfig.PT.DebugInfoOutputMode) == i;
                 if (ImGui::Selectable(c_debugBufferStrMap.at(i), isSelected))
                 {
-                    m_studioConfig.PT.DebugBufferIdx = static_cast<DebugBuffer>(i);
+                    m_studioConfig.PT.DebugInfoOutputMode = static_cast<DebugInfoOutput>(i);
                     ptNeedsReset = true;
                 }
 

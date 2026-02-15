@@ -171,9 +171,9 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
 {
     GPU_SCOPE(cmdList, L"Path Tracing Backend");
 
-    const bool frameIncAllowed = config.MaxFrameNum == 0 || m_numFrames < config.MaxFrameNum;
+    const bool frameIncAllowed = config.MaxFrameNum == 0 || m_frameIdx < config.MaxFrameNum;
 
-    if (m_numFrames == 0)
+    if (m_frameIdx == 0)
     {
         m_accumTexture->Transition(cmdList, D3D12_RESOURCE_STATE_COPY_DEST);
 
@@ -210,7 +210,7 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
         cbv.NumBounces = config.NumBounces;
         cbv.RussianRouletteMinBounces = config.RussianRouletteMinBounces;
         cbv.SPP = config.SPP;
-        cbv.NumFrames = m_numFrames;
+        cbv.FrameIdx = m_frameIdx;
         cbv.AccumulationEnabled = config.AccumulationEnabled ? 1u : 0u;
         cbv.UpdateAccumulation = frameIncAllowed ? 1 : 0;
         cbv.FireflyThreshold = config.FireflyThreshold;
@@ -228,7 +228,7 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
         if (debugModeIdx != -1)
         {
             CbvPathTracingDebug cbvDebug;
-            cbvDebug.DebugIdx = static_cast<DebugBuffer>(debugModeIdx);
+            cbvDebug.DebugIdx = static_cast<DebugInfoOutput>(debugModeIdx);
             m_material->UpdateCBV(1, &cbvDebug);
         }
 
@@ -252,10 +252,10 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
     }
 
     if (frameIncAllowed)
-        m_numFrames++;
+        m_frameIdx++;
 }
 
 void PathTracingContext::Reset()
 {
-    m_numFrames = 0;
+    m_frameIdx = 0;
 }

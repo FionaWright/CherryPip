@@ -84,7 +84,7 @@ struct CbvPathTracing
 
     uint RussianRouletteMinBounces;
     uint SPP;
-    uint NumFrames;
+    uint FrameIdx;
     uint AccumulationEnabled;
 
     uint RESERVED;
@@ -108,7 +108,7 @@ struct CbvPrimes
     uint Primes[1000];
 };
 
-enum class DebugBuffer
+enum class DebugInfoOutput
 {
     eNormalsShaded,
     eNormalsGeo,
@@ -154,7 +154,7 @@ enum class DebugBuffer
 
 struct CbvPathTracingDebug
 {
-    DebugBuffer DebugIdx;
+    DebugInfoOutput DebugIdx;
     uint3 p;
 };
 

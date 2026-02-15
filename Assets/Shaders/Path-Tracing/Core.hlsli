@@ -11,7 +11,7 @@ struct VsOut
 };
 
 ConstantBuffer<CbvPathTracing> c_pathTracing : register(b0);
-#ifdef DEBUG_BUFFER
+#ifdef DEBUG_PT_INFO_OUTPUT
     ConstantBuffer<CbvPathTracingDebug> c_debug : register(b1);
 	#include "DebugPalette.hlsli"
     #include "Path-Tracing/MathUtils.hlsli"
@@ -58,10 +58,10 @@ float4 PSMain(VsOut input) : SV_Target0
         RngInfo rngInfo;
         rngInfo.SampleIdx = i;
 
-        rngInfo.IndependentRngState = PrngSeed((uint2)input.position.xy, rngInfo.SampleIdx, c_pathTracing.NumFrames);
+        rngInfo.IndependentRngState = PrngSeed((uint2)input.position.xy, rngInfo.SampleIdx, c_pathTracing.FrameIdx);
 #ifndef SAMPLING_INDEPENDENT
-        rngInfo.GlobalSampleIdx = c_pathTracing.NumFrames * c_pathTracing.SPP + rngInfo.SampleIdx;
-        rngInfo.HashScramble = GetHashScramble((uint2)input.position.xy, rngInfo.SampleIdx, c_pathTracing.NumFrames);
+        rngInfo.GlobalSampleIdx = c_pathTracing.FrameIdx * c_pathTracing.SPP + rngInfo.SampleIdx;
+        rngInfo.HashScramble = GetHashScramble((uint2)input.position.xy, rngInfo.SampleIdx, c_pathTracing.FrameIdx);
 #endif
 
         float2 pixelUV = input.position.xy;
@@ -114,7 +114,7 @@ float4 PSMain(VsOut input) : SV_Target0
 
     float3 newSum = accumColor + colorSum;
 
-    float accumFrameCount = (float)c_pathTracing.NumFrames;
+    float accumFrameCount = (float)c_pathTracing.FrameIdx;
     float totalFrames = accumFrameCount + 1.0f;
 
     float3 average = (accumColor * accumFrameCount + colorSum) / totalFrames;

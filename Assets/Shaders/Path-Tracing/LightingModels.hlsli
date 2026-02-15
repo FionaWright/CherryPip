@@ -136,7 +136,7 @@ void Model_Microfacet(
 #ifdef ANISOTROPY_ENABLED
     , float3 anisoDirAndStrength
 #endif
-#ifdef DEBUG_BUFFER
+#ifdef DEBUG_PT_INFO_OUTPUT
     , inout float3 debug
     , inout bool hasDebugOutput
 #endif
@@ -159,9 +159,9 @@ void Model_Microfacet(
 
     float specProb = clamp(Luminance(F_select), 0.05f, 0.95f); // kS
 
-#if defined(FORCE_SPECULAR)
+#if defined(DEBUG_FORCE_SPECULAR)
     specProb = 1.0f;
-#elif defined(FORCE_DIFFUSE)
+#elif defined(DEBUG_FORCE_DIFFUSE)
     specProb = 0.0f;
 #endif
 
@@ -259,8 +259,8 @@ void Model_Microfacet(
         throughput *= specularBrdf * NdL / max(0.001f, pdf) / max(0.001f, specProb);
         //throughput *= L_s.z < 0;
 
-#ifdef DEBUG_BUFFER
-#     include "Debug/DebugBuffersMicrofacetSpec.hlsli"
+#ifdef DEBUG_PT_INFO_OUTPUT
+#     include "Debug/DebugInfoOutputMicrofacetSpec.hlsli"
 #endif
     }
     else // Lambert
@@ -286,8 +286,8 @@ void Model_Microfacet(
         E /= max(0.001f, 1.0 - specProb);
         throughput *= E;
 
-#ifdef DEBUG_BUFFER
-#     include "Debug/DebugBuffersMicrofacetDiff.hlsli"
+#ifdef DEBUG_PT_INFO_OUTPUT
+#     include "Debug/DebugInfoOutputMicrofacetDiff.hlsli"
 #endif
     }
 }

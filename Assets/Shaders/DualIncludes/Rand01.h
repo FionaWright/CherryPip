@@ -106,56 +106,50 @@ float3 RandHemisphereCosineSSpace(float u1, float u2)
     return glueNormalize(float3(x, y, z));
 }
 
-uint GetHash(uint2 uvID, uint sampleIdx, uint frameNum)
+struct RngInfo
 {
-#if defined(SAMPLING_HALTON_OWEN)
-    return PrngSeed(uvID, 0, 0);
-#elif defined(SAMPLING_HALTON)
-	return PrngSeed(uvID, 0, 0);
-#elif defined(SAMPLING_HALTON_APPLE)
-    return PrngSeed(uvID, 0, 0);
-#elif defined(SAMPLING_INDEPENDENT)
-    return PrngSeed(uvID, sampleIdx, frameNum);
-#else
-    return 0;
+    uint SampleIdx;
+#ifndef SAMPLING_INDEPENDENT
+    uint GlobalSampleIdx;
+    uint HashScramble;
+    uint BounceBaseDimension;
 #endif
-}
 
-float Rand01(int dimension, uint64_t globalSampleIdx, GLUE_INOUT(uint) hash)
+    uint IndependentRngState; // Modified during independent sampling
+};
+
+float Rand01(int dimension, GLUE_INOUT(RngInfo) rngInfo)
 {
 #if defined(SAMPLING_HALTON_OWEN)
 
-    uint64_t extraHash = hash + globalSampleIdx;
-    return OwenScrambledRadicalInverse(dimension, extraHash, hash);
+    uint64_t extraHash = rngInfo.HashScramble + rngInfo.GlobalSampleIdx;
+    return OwenScrambledRadicalInverse(dimension, extraHash, rngInfo.HashScramble);
 
 #elif defined(SAMPLING_HALTON)
 
-    uint64_t extraHash = hash + globalSampleIdx;
+    uint64_t extraHash = rngInfo.HashScramble + rngInfo.GlobalSampleIdx;
     return RadicalInverse(dimension, extraHash);
 
 #elif defined(SAMPLING_HALTON_APPLE)
 
-    uint64_t extraHash = hash + globalSampleIdx;
+    uint64_t extraHash = rngInfo.HashScramble + rngInfo.GlobalSampleIdx;
     return AppleRadicalInverse(dimension, extraHash);
 
 #elif defined(SAMPLING_INDEPENDENT)
 
-    return PcgRand01(hash);
+    return PcgRand01(rngInfo.IndependentRngState);
 
 #else
     return 0;
 #endif
 }
 
-// Returns independent sample
-// Only modifies hash if SAMPLING_INDEPENDENT
-float Rand01_PCG(
-#if defined(SAMPLING_INDEPENDENT)
-    inout
-#endif
-    uint hash)
+float Rand01_Bounce(int dimension, GLUE_INOUT(RngInfo) rngInfo)
 {
-    return PcgRand01(hash);
+#if defined(SAMPLING_HALTON_OWEN) || defined(SAMPLING_HALTON) || defined(SAMPLING_HALTON)
+    dimension += rngInfo.BounceBaseDimension;
+#endif
+    return Rand01(dimension, rngInfo);
 }
 
 #ifndef __cplusplus

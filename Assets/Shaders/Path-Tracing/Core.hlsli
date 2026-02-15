@@ -55,15 +55,20 @@ float4 PSMain(VsOut input) : SV_Target0
     float3 colorSum = float3(0,0,0);
     for (uint i = 0; i < c_pathTracing.SPP; i++)
     {
-        uint rngState = GetHash((uint2)input.position, i, c_pathTracing.NumFrames);
+        RngInfo rngInfo;
+        rngInfo.SampleIdx = i;
 
-        uint globalSampleIdx = c_pathTracing.NumFrames * c_pathTracing.SPP + i;
+        rngInfo.IndependentRngState = PrngSeed((uint2)input.position.xy, rngInfo.SampleIdx, c_pathTracing.NumFrames);
+#ifndef SAMPLING_INDEPENDENT
+        rngInfo.GlobalSampleIdx = c_pathTracing.NumFrames * c_pathTracing.SPP + rngInfo.SampleIdx;
+        rngInfo.HashScramble = PrngSeed((uint2)input.position.xy, 0, 0);
+#endif
 
         float2 pixelUV = input.uv;
 
 #ifdef JITTER_ENABLED
-        float rJitterX = Rand01(DIM_JITTER_X, globalSampleIdx, rngState);
-        float rJitterY = Rand01(DIM_JITTER_Y, globalSampleIdx, rngState);
+        float rJitterX = Rand01(DIM_JITTER_X, rngInfo);
+        float rJitterY = Rand01(DIM_JITTER_Y, rngInfo);
         float2 jitter = float2(rJitterX, rJitterY) - 0.5f;
         jitter *= c_pathTracing.TexelSize;
         pixelUV += jitter;
@@ -82,8 +87,8 @@ float4 PSMain(VsOut input) : SV_Target0
         float3 camUp    = normalize(c_pathTracing.InvV[1].xyz);  // Y column
         float3 focalPoint = origin + ray.Direction * c_pathTracing.DofFocalDist;
 
-        float rLensU = Rand01(DIM_LENS_U, globalSampleIdx, rngState);
-        float rLensV = Rand01(DIM_LENS_V, globalSampleIdx, rngState);
+        float rLensU = Rand01(DIM_LENS_U, rngInfo);
+        float rLensV = Rand01(DIM_LENS_V, rngInfo);
         float r = sqrt(rLensU) * c_pathTracing.DofLensRadius;
         float theta = 2.0 * PI * rLensV;
         float3 lensOffset = r * (camRight * cos(theta) + camUp * sin(theta));
@@ -95,8 +100,7 @@ float4 PSMain(VsOut input) : SV_Target0
                           flags,
                           instanceMask,
                           ray,
-                          globalSampleIdx,
-                          rngState);
+                          rngInfo);
     }
 
     colorSum /= float(c_pathTracing.SPP);

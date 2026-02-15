@@ -201,3 +201,21 @@ XMFLOAT3 UnpackColor3(uint32_t color)
 {
     return XMFLOAT3((color & 0xFF) / 255.0f, ((color >> 8) & 0xFF) / 255.0f, ((color >> 16) & 0xFF) / 255.0f);
 }
+
+void Fill1000Primes(uint32_t* primesArray)
+{
+    constexpr uint32_t limit = 8000; // enough for first 1000 primes
+    bool isPrime[limit + 1] = {};
+    for (uint32_t i = 2; i <= limit; ++i)
+        isPrime[i] = true;
+
+    for (uint32_t i = 2; i * i <= limit; ++i)
+        if (isPrime[i])
+            for (uint32_t j = i * i; j <= limit; j += i)
+                isPrime[j] = false;
+
+    uint32_t idx = 0;
+    for (uint32_t i = 2; idx < 1000; ++i)
+        if (isPrime[i])
+            primesArray[idx++] = i;
+}

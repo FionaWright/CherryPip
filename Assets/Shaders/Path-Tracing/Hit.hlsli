@@ -2,7 +2,7 @@
 #define H_HITPS_H
 
 #include "DebugPalette.hlsli"
-#include "Rand01.hlsli"
+#include "Rand01.h"
 #include "MathUtils.hlsli"
 
 void Hit(inout RayQuery<RAY_FLAGS> q,

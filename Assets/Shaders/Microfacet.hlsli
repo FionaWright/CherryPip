@@ -1,7 +1,7 @@
 #ifndef H_MICROFACET_H
 #define H_MICROFACET_H
 
-#include "Rand01.hlsli"
+#include "Rand01.h"
 #include "Path-Tracing/MathUtils.hlsli"
 
 // https://www.pbr-book.org/3ed-2018/Reflection_Models/Microfacet_Models

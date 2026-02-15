@@ -72,3 +72,35 @@ def plot_multiple_lines(data_lists: list[list[float]], names: list[str], show_pl
         save(p)
     if show_plot:
         show(p)
+
+def plot_points_2d(points: list[tuple[float, float]], name: str, show_plot: bool, save_plot: bool):
+    if not points:
+        raise ValueError("points list is empty")
+
+    x_vals = [p[0] for p in points]
+    y_vals = [p[1] for p in points]
+    p = figure(
+        title=name,
+        x_axis_label="X",
+        y_axis_label="Y",
+        x_range=(0, 1),
+        y_range=(0, 1),
+        width=600,
+        height=600,
+        match_aspect=True
+    )
+
+    p.scatter(
+        x_vals,
+        y_vals,
+        size=6,
+        fill_color="navy",
+        line_color="white",
+        alpha=0.7
+    )
+
+    output_file(f"BokehData/{name}.html")
+    if save_plot:
+        save(p)
+    if show_plot:
+        show(p)

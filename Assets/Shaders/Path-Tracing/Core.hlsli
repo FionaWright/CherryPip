@@ -20,7 +20,7 @@ ConstantBuffer<CbvPathTracing> c_pathTracing : register(b0);
     ConstantBuffer<CbvPrimes> c_primes : register(b2);
 #endif
 
-#include "Rand01.hlsli"
+#include "Rand01.h"
 
 RaytracingAccelerationStructure gTLAS : register(t0);
 StructuredBuffer<PtInstanceData> gInstances : register(t1);

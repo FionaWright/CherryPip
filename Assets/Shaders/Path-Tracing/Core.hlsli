@@ -20,7 +20,7 @@ ConstantBuffer<CbvPathTracing> c_pathTracing : register(b0);
     ConstantBuffer<CbvPrimes> c_primes : register(b2);
 #endif
 
-#include "Rand01.h"
+#include "Random.h"
 
 RaytracingAccelerationStructure gTLAS : register(t0);
 StructuredBuffer<PtInstanceData> gInstances : register(t1);
@@ -61,7 +61,7 @@ float4 PSMain(VsOut input) : SV_Target0
         rngInfo.IndependentRngState = PrngSeed((uint2)input.position.xy, rngInfo.SampleIdx, c_pathTracing.NumFrames);
 #ifndef SAMPLING_INDEPENDENT
         rngInfo.GlobalSampleIdx = c_pathTracing.NumFrames * c_pathTracing.SPP + rngInfo.SampleIdx;
-        rngInfo.HashScramble = PrngSeed((uint2)input.position.xy, 0, 0);
+        rngInfo.HashScramble = GetHashScramble((uint2)input.position.xy, rngInfo.SampleIdx, c_pathTracing.NumFrames);
 #endif
 
         float2 pixelUV = input.position.xy;

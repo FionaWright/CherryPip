@@ -165,12 +165,9 @@ void Model_Microfacet(
     specProb = 0.0f;
 #endif
 
-    //float u1 = Rand01_Bounce(DIM_D_BSDF_U1, rngInfo);
-    float u1 = PcgRand01(rngInfo.IndependentRngState);
-    //float u2 = Rand01_Bounce(DIM_D_BSDF_U2, rngInfo);
-    float u2 = PcgRand01(rngInfo.IndependentRngState);
-    //float rSpecProb = Rand01_Bounce(DIM_D_SPECULAR_PROB, rngInfo);
-    float rSpecProb = PcgRand01(rngInfo.IndependentRngState);
+    float u1 = Rand01_Bounce(DIM_D_BSDF_U1, rngInfo);
+    float u2 = Rand01_Bounce(DIM_D_BSDF_U2, rngInfo);
+    float rSpecProb = Rand01_Bounce(DIM_D_SPECULAR_PROB, rngInfo);
 
     bool isSpecular = rSpecProb < specProb;
 

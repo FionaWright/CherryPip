@@ -1,7 +1,12 @@
 #ifndef H_HALTON_H
 #define H_HALTON_H
 
-#if defined(SAMPLING_HALTON_OWEN) || defined(SAMPLING_HALTON) || defined(SAMPLING_HALTON_APPLE)
+#ifdef __cplusplus
+#include "CBV.h"
+static CbvPrimes c_primes;
+#endif
+
+#if defined(SAMPLING_HALTON_OWEN) || defined(SAMPLING_HALTON) || defined(SAMPLING_HALTON_APPLE) || defined(__cplusplus)
 
 // https://github.com/mmp/pbrt-v4/blob/master/src/pbrt/util/math.h
 uint64_t MixBits(uint64_t v)
@@ -70,7 +75,7 @@ float OwenScrambledRadicalInverse(int baseIdx, uint64_t a, uint hash)
         a = next;
 
     }
-    return min(invBaseM * (float)reversedDigits, ONE_MINUS_EPSILON);
+    return glueMin(invBaseM * (float)reversedDigits, (float)ONE_MINUS_EPSILON);
 }
 
 float RadicalInverse(int baseIdx, uint64_t a)
@@ -88,7 +93,7 @@ float RadicalInverse(int baseIdx, uint64_t a)
         invBaseM *= invBase;
         a = next;
     }
-    return min((float)r * invBaseM, ONE_MINUS_EPSILON);
+    return glueMin((float)r * invBaseM, (float)ONE_MINUS_EPSILON);
 }
 
 float AppleRadicalInverse(int baseIdx, uint64_t a)
@@ -105,7 +110,7 @@ float AppleRadicalInverse(int baseIdx, uint64_t a)
         a = a / b;
     }
 
-    return min(r, ONE_MINUS_EPSILON);
+    return glueMin(r, (float)ONE_MINUS_EPSILON);
 }
 
 #endif

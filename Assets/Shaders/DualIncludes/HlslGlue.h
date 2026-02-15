@@ -13,6 +13,10 @@ typedef struct uint2 { uint32_t x; uint32_t y; } uint2;
 typedef struct uint3 { uint32_t x; uint32_t y; uint32_t z; } uint3;
 typedef struct uint4 { uint32_t x; uint32_t y; uint32_t z; uint32_t w; } uint4;
 
+#define GLUE_IN(T)
+#define GLUE_OUT(T) T&
+#define GLUE_INOUT(T) T&
+
 #include <algorithm>
 #include <cmath>
 #define glueMax std::max
@@ -24,8 +28,19 @@ typedef struct uint4 { uint32_t x; uint32_t y; uint32_t z; uint32_t w; } uint4;
 #define glueAtan std::atan
 #define glueAtan2 std::atan2
 #define glueAsin std::asin
+#define glueLog std::log
 
 inline float glueClamp(const float x, const float xmin, const float xmax) { return std::max(xmin, std::min(xmax, x)); }
+inline float3 glueClamp(const float3 v, const float xmin, const float xmax)
+{
+    return float3(
+        std::max(xmin, std::min(xmax, v.x)),
+        std::max(xmin, std::min(xmax, v.y)),
+        std::max(xmin, std::min(xmax, v.z)));
+}
+inline float glueSaturate(const float x) { return glueClamp(x, 0.f, 1.f); }
+inline float3 glueSaturate(const float3 x) { return glueClamp(x, 0.f, 1.f); }
+
 inline float glueFrac(const float x) { return std::fmod(x, 1.0f); }
 inline float3 glueNormalize(const float3 v)
 {
@@ -49,6 +64,12 @@ inline float glueDot(const float3 a, const float3 b) { return a.x*b.x + a.y*b.y 
 #define glueFrac frac
 #define glueNormalize normalize
 #define glueDot dot
+#define glueSaturate saturate
+#define glueLog log
+
+#define GLUE_IN(T) in T
+#define GLUE_OUT(T) out T
+#define GLUE_INOUT(T) inout T
 
 #define const
 

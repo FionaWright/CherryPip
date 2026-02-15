@@ -69,3 +69,5 @@ uint32_t PackColor(XMFLOAT3 color);
 XMFLOAT4 UnpackColor4(uint32_t color);
 
 XMFLOAT3 UnpackColor3(uint32_t color);
+
+void Fill1000Primes(uint32_t* primesArray);

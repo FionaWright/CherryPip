@@ -176,6 +176,7 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
         "Hit Dist Ray 1",
         "Material ID",
         "RNG",
+        "RNG 2D",
         "Self-Intersection",
         "NaN",
         "Albedo Alpha",

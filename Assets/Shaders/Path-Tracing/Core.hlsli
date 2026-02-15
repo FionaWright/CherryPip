@@ -64,7 +64,7 @@ float4 PSMain(VsOut input) : SV_Target0
 #ifdef JITTER_ENABLED
         float rJitterX = Rand01(DIM_JITTER_X, globalSampleIdx, rngState);
         float rJitterY = Rand01(DIM_JITTER_Y, globalSampleIdx, rngState);
-        float2 jitter = float2(rJitterX, rJitterY) - 0.5f; // [0,1] -> [-1,1]
+        float2 jitter = float2(rJitterX, rJitterY) - 0.5f;
         jitter *= c_pathTracing.TexelSize;
         pixelUV += jitter;
 #endif

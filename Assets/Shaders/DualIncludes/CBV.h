@@ -121,6 +121,7 @@ enum class DebugBuffer
 
     eMaterialID,
     eRNG,
+    eRNG2D,
     eSelfIntersection,
     eNaN,
     eAlbedoAlpha,

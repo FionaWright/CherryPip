@@ -298,15 +298,12 @@ void RmseTester::UpdateConvergenceTest(D3D* d3d, const uint32_t currFrame, Heap*
     }
 
     // Plot graph
+    if (m_plotAndShow)
     {
         std::vector<const char*> args = {
-            filePath.c_str()
+            filePath.c_str(),
+            "--show", "--save"
         };
-        if (m_plotAndShow)
-        {
-            args.emplace_back("--show");
-            args.emplace_back("--save");
-        }
         PythonExecutor::ExecutePython("PlotConvergence.py", args);
     }
 

@@ -56,7 +56,8 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         );
 
 #ifdef ALPHA_TESTING_ENABLED
-        float rAlpha = Rand01_Bounce(DIM_D_ALPHA, rngInfo);
+        //float rAlpha = Rand01_Bounce(DIM_D_ALPHA, rngInfo);
+        float rAlpha = PcgRand01(rngInfo.IndependentRngState);
 		bool cutout = albedo.a < 0.001f || rAlpha > albedo.a;
 		if (cutout)
 		{
@@ -132,7 +133,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         {
             float p = saturate(max(throughput.r, max(throughput.g, throughput.b)));
             p = max(p, 0.05f);
-            float rRR = Rand01_PCG(rngState);
+            float rRR = PcgRand01(rngInfo.IndependentRngState);
             if (rRR > p)
                 break;
             throughput /= p;

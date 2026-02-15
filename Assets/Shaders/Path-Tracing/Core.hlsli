@@ -64,15 +64,15 @@ float4 PSMain(VsOut input) : SV_Target0
         rngInfo.HashScramble = PrngSeed((uint2)input.position.xy, 0, 0);
 #endif
 
-        float2 pixelUV = input.uv;
+        float2 pixelUV = input.position.xy;
 
 #ifdef JITTER_ENABLED
         float rJitterX = Rand01(DIM_JITTER_X, rngInfo);
         float rJitterY = Rand01(DIM_JITTER_Y, rngInfo);
         float2 jitter = float2(rJitterX, rJitterY) - 0.5f;
-        jitter *= c_pathTracing.TexelSize;
         pixelUV += jitter;
 #endif
+        pixelUV *= c_pathTracing.TexelSize;
 
         float2 ndc = pixelUV * 2.0f - 1.0f; // [0,1] -> [-1,1]
         ndc.y = -ndc.y;

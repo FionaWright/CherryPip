@@ -42,9 +42,10 @@
 - [ ] Point Lights
 - [x] Firefly threshold
 - [ ] BTDFs (VNDF whitepaper has some good stuff)
+- [ ] Sobel RNG Sampler
 - [ ] Ray pipelines
 - [ ] Spectral Path-Tracing 
-- [ ] Rayleigh scattering
+- [ ] Rayleigh scattering (Mist, See Seb Lague)
 - [x] GBuffer pre-pass
 - [x] Denoising (Box/Gauss/A-Trous)
 - [x] Denoising Median
@@ -83,13 +84,10 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Fix Bistro model transforms
 
 ### Features
-- Mist (Randomly scatter rays depending on distance travelled, see SL video) (Rayleigh scattering! Requires spectral renderer?)
 - PT only build mode that doesn't initialize any raster resources? 
-- Sobel_Owen, Sobel_FastOwen samplers
 
 ### Misc
 - FPS has heavily dropped since I was away, possibly due to all the extra shaders/etc. Make sure they can be deleted properly when not in use. 1000+ FPS with lambert distribution should be possible
-- Get a NICE picture for LinkedIn and post it for fun
 - Class refactor to clean up shader code
 
 ## Raster/Laptop-TODO
@@ -100,47 +98,13 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Irradiance prealiasing, convert discrete to continuous through c = d + 0.5? Does this apply to unjittered PT samples as well?
 - Something wrong with sphere model, makes furnace tests hard
 - Bindless heap sharing
-- Line drawing debug tool (Use for dir light and axes)
+- Line drawing debug tool (Use for dir light and axes) Then use to fix dir light dir
 
-## Spectral Tracing
+## Class Refactor
 
-Surface/Volume interactions stay mostly the same, but you use wavelengths instead of colors
-First test: Do a color roundtrip, reconstruct an srgb image using random samples in the spectral domain. Then convert to CIE and srgb. When the error is less than 1 ppm then it's good.
-Requires rewriting the shaders
-Hero model doesn't work with transmission (Glass, clouds, etc). This is because it assumes scatttering has no wavelength dependency 
-
-Put all spectral notes into a new file, this might get large
-
-See:
-https://github.com/ashpil/moonshine 
-
-## RMSE Tester
-
-GUI Button: Take snapshot into slot {A,B}
-- Copies the inputRTV into a slot {A,B} buffer
-
-GUI Button: Compute RMSE between slots
-- Runs RMSE CS on the two slots
-- Readback RMSE and show on GUI
-
-GUI InputInt: Golden Frame Snapshot (N)
-GUI InputText: Golden File Path (Relative to Data/GoldenImages/)
-GUI Button: Compute Golden Image
-- Runs the path-tracer for N frames and then puts a snapshot into slot A. Then readsback the buffer and saves it into a file
-
-GUI InputInt: Convergence Test Max Frames
-GUI InputInt: Frame Bin Size
-GUI InputText: Test Name
-GUI Button: Run Convergence Test
-- Loads golden image into slot A if not already there
-- for (int i = 0; i < TestMaxFrames; i += FrameBinSize)
--   Set PT max frames to i
--   Wait for PT to pause
--   Copy into slot B
--   Run RMSE CS
--   Readback RMSE and write it alongside i to Data/RMSEs/TestName.txt
-- Run python and give TestName as argument
-- Python copies RMSEs from file and puts into a vector
-- Plot data with Bokeh
-
-Stretch Goal: FLIP model
+- MicrofacetModel Superclass
+- GgxSmith, GgxVCavity_VNDF, GgxSmith_VNDF, Beckmann, Beckmann_VNDF Subclasses
+- RoughnessToAlpha, SampleIso, SampleAniso, D, G1, G, PDF functions
+- Make new MicrofacetModels folder and put Microfacet.hlsli and each subclass into their own .hlsli file
+- Leave anything shared/general in Microfacet.hlsi, maybe rename file once I know what's left in there
+- Goal: Model_Microfacet should be clean af

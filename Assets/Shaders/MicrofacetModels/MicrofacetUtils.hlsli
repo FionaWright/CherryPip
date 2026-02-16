@@ -52,11 +52,6 @@ float SSpaceCosDeltaPhi(float3 A, float3 B)
 //  Alpha
 // ================================
 
-float RoughnessToAlpha_GGX(float roughness)
-{
-    return roughness * roughness;
-}
-
 // Heuristic to have beckmann visually match GGX for the same roughness value
 float RoughnessToAlpha_Beckmann(float roughness)
 {
@@ -102,43 +97,6 @@ float3 SampleH_GGX(float a2, float u1, float u2)
 
     float3 H_s = normalize(float3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta));
     return H_s;
-}
-
-float3 SampleH_GGXAniso(float alphaX, float alphaY, float2 anisoDir, float3 T, float3 B, float3 N, float u1, float u2)
-{
-    float phi = atan(alphaY / alphaX * tan(2.0 * PI * u1));
-    float sinPhi = sin(phi);
-    float cosPhi = cos(phi);
-
-    float alpha2 =
-        1.0 / (cosPhi*cosPhi / (alphaX*alphaX) +
-               sinPhi*sinPhi / (alphaY*alphaY));
-
-    float cosTheta = sqrt((1.0 - u2) / (1.0 + (alpha2 - 1.0) * u2));
-    float sinTheta = sqrt(1.0 - cosTheta*cosTheta);
-
-    return normalize(sinTheta * cosPhi * T +
-        sinTheta * sinPhi * B +
-        cosTheta * N);
-}
-
-// https://inria.hal.science/hal-00996995v2
-// VNDF only works with mathematically well-defined G1 models (V-Cavity + Smith)
-// Ignore this one, get Smith_VNDF working first imo
-float3 SampleH_VCavity_VNDF(float a2, float3 V, float u1, float u2, float u3)
-{
-    float3 H = SampleH_GGX(a2, u1, u2);
-    float3 Hp = float3(-H.x, -H.y, H.z);
-
-    float3 L = normalize(reflect(-V, H));
-
-    float cHdL = saturate(dot(H, L));
-    float cHpdL = saturate(dot(Hp, L));
-
-    if (u3 > cHdL / (cHdL + cHpdL))
-        return Hp;
-    else
-        return H;
 }
 
 float SampleInvC2Neg_GGX(float r1, float theta)
@@ -240,22 +198,6 @@ float3 SampleH_Beckmann(float a2, float u1, float u2)
 //  Normal Distribution Functions
 // ================================
 
-// GGX == Trowbridge-Reitz
-float D_GGX(float NdH, float a2)
-{
-    float denominator = (NdH * NdH * (a2 - 1.0f) + 1.0f);
-    return a2 / max(0.001f, PI * denominator * denominator);
-}
-
-float D_GGXAniso(float3 H, float alphaX, float alphaY)
-{
-    float k = H.x * H.x / (alphaX * alphaX) + H.y * H.y / (alphaY * alphaY) + H.z * H.z;
-    return 1.0f / (PI * alphaX * alphaY * k * k);
-}
-
-// TODO: This gives a different D_GGXAniso
-// https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_materials_anisotropy/README.md
-
 float D_Beckmann(float3 H, float a2)
 {
     float tan2T = SSpaceTan2Theta(H);
@@ -290,26 +232,6 @@ float3 F_Schlick(float VdH, float3 F0)
 // ================================
 //  Geometry Masking Functions
 // ================================
-
-float G1_GGX(float NdX, float a2)
-{
-    float denom = NdX + sqrt(max(0.0f, a2 + (1-a2) * NdX * NdX));
-    return saturate(2 * NdX / max(0.001f, denom));
-}
-
-float G_SmithGGX(float NdL, float NdV, float a2)
-{
-    return G1_GGX(NdL, a2) * G1_GGX(NdV, a2);
-}
-
-float G_SmithGGXAniso(float3 L, float3 V, float alphaX, float alphaY, float3 T, float3 B, float3 N)
-{
-    float3 L_a = ToDefinedSpace(L, T, B, N);
-    float3 V_a = ToDefinedSpace(V, T, B, N);
-    float alphaL = AnisoAlphaToMaskingAlpha(L_a, alphaX, alphaY);
-    float alphaV = AnisoAlphaToMaskingAlpha(V_a, alphaX, alphaY);
-    return G1_GGX(L_a.z, alphaL) * G1_GGX(V_a.z, alphaV);
-}
 
 float Lambda_GGXAniso(float3 W, float alphaX, float alphaY)
 {
@@ -365,38 +287,9 @@ float G_Beckmann(float3 V, float3 L, float alpha)
     return 1.0f / (1.0f + Lambda_Beckmann(V, alpha) + Lambda_Beckmann(L, alpha));
 }
 
-// De-generalized from BSDF to BRDF
-float G1_VCavity(float3 W, float3 H)
-{
-    float WdH = dot(W, H);
-    return min(1, 2.0f * H.z * W.z / max(0.001f, WdH));
-}
-
-// Avoid Keleman simplified model, breaks VNDF
-float G_VCavity(float3 V, float3 L, float3 H)
-{
-    return min(G1_VCavity(V, H), G1_VCavity(L, H));
-}
-
 // ================================
 //  Probability Density Functions
 // ================================
-
-float Pdf_GGX(float D, float NdH, float VdH)
-{
-    return D * NdH / (4.0f * max(0.001f, VdH));
-}
-
-float Pdf_GGXAniso(float D, float NdH, float VdH)
-{
-    return D * NdH / (4.0f * max(0.001f, VdH));
-}
-
-// Nonsense, find actual PDF
-float Pdf_GGX_VNDF(float Dv, float VdH)
-{
-    return Dv / (4.0f * max(0.001f, VdH));
-}
 
 // Needs dividing by (4.0f * max(0.001f, VdH)) after? Is this opertion applied to all PDFs assuming Torrence-Sparrow?
 float Pdf_General(float D, float G1v, float3 V, float3 H, bool vndf)

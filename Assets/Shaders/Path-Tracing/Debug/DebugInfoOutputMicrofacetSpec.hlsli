@@ -6,7 +6,7 @@ else if (c_debug.DebugIdx == DebugInfoOutput::eMicrofacetF)
 else if (c_debug.DebugIdx == DebugInfoOutput::eMicrofacetG)
     debug = G.xxx;
 else if (c_debug.DebugIdx == DebugInfoOutput::eMicrofacetAlpha)
-    debug = alpha.xxx;
+    debug = mm.m_alpha.xxx;
 else if (c_debug.DebugIdx == DebugInfoOutput::eMicrofacetBrdfSpec)
     debug = specularBrdf;
 else if (c_debug.DebugIdx == DebugInfoOutput::eMicrofacetSpecProb)
@@ -31,7 +31,7 @@ else if (c_debug.DebugIdx == DebugInfoOutput::eMicrofacetAnisoDir)
 else if (c_debug.DebugIdx == DebugInfoOutput::eMicrofacetAnisoStrength)
     debug = anisoDirAndStrength.zzz;
 else if (c_debug.DebugIdx == DebugInfoOutput::eMicrofacetAnisoAlpha)
-    debug = float3(alphaX, alphaY, 0);
+    debug = float3(mm.m_alphaX, mm.m_alphaY, 0);
 #else
 else if (c_debug.DebugIdx == DebugInfoOutput::eMicrofacetAnisoDir ||
         c_debug.DebugIdx == DebugInfoOutput::eMicrofacetAnisoStrength ||

@@ -7,18 +7,27 @@ struct MicrofacetModel;
 #   ifdef ANISOTROPY_ENABLED
 #       include "MicrofacetModels/MM_GGX_Smith_Aniso.hlsli"
 #   else
-#       include "MicrofacetModels/MM_GGX_Smith_Iso.hlsli"
+#       ifdef SAMPLE_VISIBLE_NORMALS
+#           include "MicrofacetModels/MM_GGX_VCavity_Iso_VNDF.hlsli"
+#       else
+#           include "MicrofacetModels/MM_GGX_Smith_Iso.hlsli"
+#       endif
 #   endif
 #endif
 
 void InitializeMM(
     inout MicrofacetModel mm,
     float roughness,
-    RngInfo rngInfo // For computing U3
+    RngInfo rngInfo, // For computing U3
+    float3 V
 )
 {
 #ifdef NDF_TYPE_GGX
+#   ifdef SAMPLE_VISIBLE_NORMALS
+    mm.Init(roughness, rngInfo, V);
+#   else
     mm.Init(roughness);
+#   endif
 #endif
 }
 

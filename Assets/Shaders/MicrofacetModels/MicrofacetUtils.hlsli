@@ -389,7 +389,6 @@ float Pdf_GGX(float D, float NdH, float VdH)
 
 float Pdf_GGXAniso(float D, float NdH, float VdH)
 {
-    return 1.0f;
     return D * NdH / (4.0f * max(0.001f, VdH));
 }
 

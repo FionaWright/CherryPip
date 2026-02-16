@@ -40,3 +40,12 @@ Put all spectral notes into a new file, this might get large
 
 See:
 https://github.com/ashpil/moonshine 
+
+## Class Refactor
+
+- MicrofacetModel Superclass
+- GgxSmith, GgxVCavity_VNDF, GgxSmith_VNDF, Beckmann, Beckmann_VNDF Subclasses
+- RoughnessToAlpha, SampleIso, SampleAniso, D, G1, G, PDF functions
+- Make new MicrofacetModels folder and put Microfacet.hlsli and each subclass into their own .hlsli file
+- Leave anything shared/general in Microfacet.hlsi, maybe rename file once I know what's left in there
+- Goal: Model_Microfacet should be clean af

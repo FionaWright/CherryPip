@@ -71,7 +71,9 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ## PT-TODO:
 
 ### Main Tasks
-- Fix Anisotropic issues
+- Fix dir light dir
+- Implement distant light
+- See if aniso works better on Barn Lamp with distant light
 - Fix VNDF issues
 - Fix Firefly Threshold
 
@@ -85,12 +87,9 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Env map rotations not paritied between EA/pano
 - Fix Bistro model transforms
 
-### Features
-- PT only build mode that doesn't initialize any raster resources? 
-
 ### Misc
+- PT only build mode that doesn't initialize any raster resources? 
 - FPS has heavily dropped since I was away, possibly due to all the extra shaders/etc. Make sure they can be deleted properly when not in use. 1000+ FPS with lambert distribution should be possible
-- Class refactor to clean up shader code
 
 ## Raster/Laptop-TODO
 
@@ -101,12 +100,3 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Something wrong with sphere model, makes furnace tests hard
 - Bindless heap sharing
 - Line drawing debug tool (Use for dir light and axes) Then use to fix dir light dir
-
-## Class Refactor
-
-- MicrofacetModel Superclass
-- GgxSmith, GgxVCavity_VNDF, GgxSmith_VNDF, Beckmann, Beckmann_VNDF Subclasses
-- RoughnessToAlpha, SampleIso, SampleAniso, D, G1, G, PDF functions
-- Make new MicrofacetModels folder and put Microfacet.hlsli and each subclass into their own .hlsli file
-- Leave anything shared/general in Microfacet.hlsi, maybe rename file once I know what's left in there
-- Goal: Model_Microfacet should be clean af

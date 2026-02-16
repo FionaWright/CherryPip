@@ -60,8 +60,12 @@ float WaltersTrick(float alpha, float NdL)
 
 float2 AlphaToAnisoAlpha(float alpha, float anisotropyStrength)
 {
-    float aspect = sqrt(1.0f - 0.9 * abs(anisotropyStrength));
-    return float2(alpha / aspect, alpha * aspect);
+    //float strength = clamp(anisotropyStrength, -0.99f, 0.99f);
+    //float aspect = sqrt(1.0f - 0.9 * abs(strength));
+    //return float2(alpha / aspect, alpha * aspect);
+
+    // https://blog.selfshadow.com/publications/s2017-shading-course/imageworks/s2017_pbs_imageworks_slides_v2.pdf
+    return float2(alpha * (1 + anisotropyStrength), alpha * (1 - anisotropyStrength));
 
     // Hack?:
     //float strength2 = anisotropyStrength * anisotropyStrength;
@@ -213,24 +217,6 @@ float3 F_Schlick(float VdH, float3 F0)
 // ================================
 //  Geometry Masking Functions
 // ================================
-
-float Lambda_GGXAniso(float3 W, float alphaX, float alphaY)
-{
-    float aX2 = alphaX * alphaX;
-    float aY2 = alphaY * alphaY;
-    float k = (aX2 * W.x * W.x + aY2 * W.y * W.y) / max(0.0001f, W.z * W.z);
-    return 0.5f * (-1 + sqrt(1 + k));
-}
-
-float G1_GGXAniso(float3 W, float alphaX, float alphaY)
-{
-    return 1.0f / max(0.001f, 1 + Lambda_GGXAniso(W, alphaX, alphaY));
-}
-
-float G_GGXAniso(float3 V, float3 L, float alphaX, float alphaY)
-{
-    return 1.0f / max(0.001f, 1 + Lambda_GGXAniso(V, alphaX, alphaY) + Lambda_GGXAniso(L, alphaX, alphaY));
-}
 
 // Schlick-GGX Approximation. Faster but less accurate
 float G_SmithFast(float NdL, float NdV, float roughness)

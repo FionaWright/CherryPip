@@ -174,7 +174,7 @@ void Model_Microfacet(
     if (isSpecular)
     {
         MicrofacetModel mm;
-        InitializeMM(mm, roughness, rngInfo);
+        InitializeMM(mm, roughness, rngInfo, V_s);
 #ifdef ANISOTROPY_ENABLED
         InitializeMMAniso(mm, T, B, Ns, anisoDirAndStrength);
 #endif

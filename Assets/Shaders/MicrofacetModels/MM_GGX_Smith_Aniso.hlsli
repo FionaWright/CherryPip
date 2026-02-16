@@ -65,6 +65,9 @@ float3 MicrofacetModel::Sample(float u1, float u2)
         cosTheta * m_anisoN);
 }
 
+// TODO: This gives a different D_GGXAniso
+// https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_materials_anisotropy/README.md
+
 float MicrofacetModel::D(float3 H)
 {
     if (m_isAniso)

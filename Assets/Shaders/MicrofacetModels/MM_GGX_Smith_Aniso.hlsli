@@ -1,6 +1,9 @@
 #ifndef H_GGX_SMITH_ANISO_H
 #define H_GGX_SMITH_ANISO_H
 
+// https://github.com/Gforcex/LightingModel/blob/master/Assets/LightingModel/BRDF.cginc
+// https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_materials_anisotropy/README.md
+
 struct MicrofacetModel
 {
 #include "MicrofacetModels/IMicrofacetModel.hlsli"
@@ -24,8 +27,12 @@ void MicrofacetModel::Init(float roughness)
 void MicrofacetModel::InitAniso(float3 T, float3 B, float3 N, float3 anisoDirStrength)
 {
     float2 alphaXY = AlphaToAnisoAlpha(m_alpha, anisoDirStrength.z);
-    m_alphaX = max(1e-3, alphaXY.x);
-    m_alphaY = max(1e-3, alphaXY.y);
+
+    m_alphaX = alphaXY.x;
+    m_alphaY = alphaXY.y;
+
+    m_alphaX = clamp(m_alphaX, 1e-3, 1.0f);
+    m_alphaY = clamp(m_alphaY, 1e-3, 1.0f);
 
     m_isAniso = abs(m_alphaX - m_alphaY) > 0.0001f;
     if (m_isAniso)
@@ -40,8 +47,8 @@ void MicrofacetModel::InitAniso(float3 T, float3 B, float3 N, float3 anisoDirStr
 
 float MicrofacetModel::RoughnessToAlpha(float roughness)
 {
-    //return roughness * roughness;
-    return 0.5f * roughness * roughness + 0.5f * roughness;
+    return roughness * roughness;
+    //return 0.5f * roughness * roughness + 0.5f * roughness;
 }
 
 float3 MicrofacetModel::Sample(float u1, float u2)
@@ -66,9 +73,6 @@ float3 MicrofacetModel::Sample(float u1, float u2)
         cosTheta * m_anisoN);
 }
 
-// TODO: This gives a different D_GGXAniso
-// https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_materials_anisotropy/README.md
-
 float MicrofacetModel::D(float3 H)
 {
     float NdH = H.z;
@@ -76,7 +80,7 @@ float MicrofacetModel::D(float3 H)
     if (m_isAniso)
     {
         float k = H.x * H.x / (m_alphaX * m_alphaX) + H.y * H.y / (m_alphaY * m_alphaY) + H.z * H.z;
-        return 1.0f / (PI * m_alphaX * m_alphaY * k * k);
+        return 1.0f / (PI * m_alphaX * m_alphaY * k*k);
     }
 
     float a2 = m_alpha * m_alpha;
@@ -94,8 +98,17 @@ float G1CustomAlpha(float3 W, float alpha)
     return saturate(2 * NdW / max(0.001f, denom));
 }
 
+float Lambda(float3 W, float alphaX, float alphaY)
+{
+    float aX2 = alphaX * alphaX;
+    float aY2 = alphaY * alphaY;
+    float k = (aX2 * W.x * W.x + aY2 * W.y * W.y) / max(0.0001f, W.z * W.z);
+    return 0.5f * (-1 + sqrt(1 + k));
+}
+
 float MicrofacetModel::G1(float3 W)
 {
+    //return 1.0f / max(0.001f, 1 + Lambda(W, alphaX, alphaY));
     return G1CustomAlpha(W, m_alpha);
 }
 
@@ -103,11 +116,27 @@ float MicrofacetModel::G2(float3 L, float3 V)
 {
     if (m_isAniso)
     {
-        float3 L_a = ToDefinedSpace(L, m_anisoT, m_anisoB, m_anisoN);
-        float3 V_a = ToDefinedSpace(V, m_anisoT, m_anisoB, m_anisoN);
-        float alphaL = AnisoAlphaToMaskingAlpha(L_a, m_alphaX, m_alphaY);
-        float alphaV = AnisoAlphaToMaskingAlpha(V_a, m_alphaX, m_alphaY);
-        return G1CustomAlpha(L_a, alphaL) * G1CustomAlpha(V_a, alphaV);
+        // Changed L_a, idk
+        //float3 L_a = ToDefinedSpace(L, m_anisoT, m_anisoB, m_anisoN);
+        //float3 V_a = ToDefinedSpace(V, m_anisoT, m_anisoB, m_anisoN);
+        //float alphaL = AnisoAlphaToMaskingAlpha(L, m_alphaX, m_alphaY);
+        //float alphaV = AnisoAlphaToMaskingAlpha(V, m_alphaX, m_alphaY);
+        //return G1CustomAlpha(L, alphaL) * G1CustomAlpha(V, alphaV);
+
+        //float NdL = L.z;
+        //float NdV = V.z;
+        //float TdV = dot(m_anisoT, V);
+        //float TdL = dot(m_anisoT, L);
+        //float BdV = dot(m_anisoB, V);
+        //float BdL = dot(m_anisoB, L);
+        //float aT2 = m_alphaX * m_alphaX;
+        //float aB2 = m_alphaY * m_alphaY;
+        //float lambdaV = NdL * sqrt(aT2 * TdV * TdV + aB2 * BdV * BdV + NdV * NdV);
+        //float lambdaL = NdV * sqrt(aT2 * TdL * TdL + aB2 * BdL * BdL + NdL * NdL);
+        //return 0.5f / (lambdaV + lambdaL);
+
+        // Trust in this G
+        return 1.0f / max(0.001f, 1 + Lambda(V, m_alphaX, m_alphaY) + Lambda(L, m_alphaX, m_alphaY));
     }
 
     return G1(L) * G1(V);

@@ -26,7 +26,8 @@ std::vector<std::string> split(const std::string &s, const char delim) {
 
 inline void Config::SetBoolFromArg(bool* variable, const char* key)
 {
-    *variable = ms_argsMap.contains(key) && ms_argsMap.at(key) != "false";
+    if (ms_argsMap.contains(key))
+        *variable = ms_argsMap.at(key) != "false";
 }
 
 inline void Config::SetUIntFromArg(uint32_t* variable, const char* key)

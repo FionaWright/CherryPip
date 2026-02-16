@@ -55,12 +55,18 @@ void Hit(inout RayQuery<RAY_FLAGS> q,
     float3 emissionSample = gTextures[mat.TexIdxEmissive].Sample(c_sampler, uv).rgb;
 
 #ifdef ANISOTROPY_ENABLED
+    float2 anisoRot = float2(1, 0); // default value, unimplemented
+    float2x2 anisoRotMat = float2x2(anisoRot.x,  anisoRot.y,
+                                    -anisoRot.y,  anisoRot.x);
+
     anisoDirAndStrength = gTextures[mat.TexIdxAniso].Sample(c_sampler, uv).rgb;
     anisoDirAndStrength.rg = anisoDirAndStrength.rg * 2.0f - 1.0f; // [0,1] -> [-1,1]. Don't normalize
+    anisoDirAndStrength.rg = mul(anisoRotMat, anisoDirAndStrength.rg);
+
     float len2 = dot(anisoDirAndStrength.rg, anisoDirAndStrength.rg);
     anisoDirAndStrength.rg = (len2 > 1e-6f) ? anisoDirAndStrength.rg * rsqrt(len2) : float2(1, 0); // safe fallback
+
     anisoDirAndStrength.b *= mat.AnisoStrength;
-    anisoDirAndStrength.b = clamp(anisoDirAndStrength.b, -0.99f, 0.99f);
 #endif
 
 #if defined(FURNACE_TEST_HEMI_DIR_REFLECT)

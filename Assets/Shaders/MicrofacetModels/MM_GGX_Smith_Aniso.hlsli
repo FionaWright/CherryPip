@@ -27,11 +27,11 @@ void MicrofacetModel::InitAniso(float3 T, float3 B, float3 N, float3 anisoDirStr
     m_alphaX = max(1e-3, alphaXY.x);
     m_alphaY = max(1e-3, alphaXY.y);
 
-    m_anisoDir = anisoDirStrength.xy;
-
     m_isAniso = abs(m_alphaX - m_alphaY) > 0.0001f;
     if (m_isAniso)
     {
+        m_anisoDir = anisoDirStrength.xy;
+
         m_anisoT = float3(m_anisoDir.xy, 0);
         m_anisoB = float3(-m_anisoDir.y, m_anisoDir.x, 0);
         m_anisoN = float3(0, 0, 1);
@@ -40,7 +40,8 @@ void MicrofacetModel::InitAniso(float3 T, float3 B, float3 N, float3 anisoDirStr
 
 float MicrofacetModel::RoughnessToAlpha(float roughness)
 {
-    return roughness * roughness;
+    //return roughness * roughness;
+    return 0.5f * roughness * roughness + 0.5f * roughness;
 }
 
 float3 MicrofacetModel::Sample(float u1, float u2)
@@ -70,6 +71,8 @@ float3 MicrofacetModel::Sample(float u1, float u2)
 
 float MicrofacetModel::D(float3 H)
 {
+    float NdH = H.z;
+
     if (m_isAniso)
     {
         float k = H.x * H.x / (m_alphaX * m_alphaX) + H.y * H.y / (m_alphaY * m_alphaY) + H.z * H.z;
@@ -77,7 +80,6 @@ float MicrofacetModel::D(float3 H)
     }
 
     float a2 = m_alpha * m_alpha;
-    float NdH = H.z;
 
     float denominator = (NdH * NdH * (a2 - 1.0f) + 1.0f);
     return a2 / max(0.001f, PI * denominator * denominator);

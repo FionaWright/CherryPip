@@ -36,10 +36,11 @@
 - [x] Importance Sampling
 - [ ] MIS
 - [ ] Proper distant light using bounding sphere of plane (No singular sun-point) (PBRT)
-- [ ] Oren-Nayers Lighting Model
+- [ ] Oren-Nayers Lighting Model (https://blog.selfshadow.com/publications/s2012-shading-course/gotanda/s2012_pbs_beyond_blinn_slides_v3.pdf)
 - [ ] Microfacet Beckmann (PBRT)
 - [ ] Microfacet Glass (Beckmann)
 - [ ] Point Lights
+- [ ] SpecularTint, Clearcoat, Sheen PBR parameters
 - [x] Firefly threshold
 - [ ] BTDFs (VNDF whitepaper has some good stuff)
 - [ ] Sobel RNG Sampler
@@ -72,6 +73,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ### Main Tasks
 - Fix Anisotropic issues
 - Fix VNDF issues
+- Fix Firefly Threshold
 
 ### Bugs (Physical Inaccuracies)
 - Fix glass attenuation after, add attenuationDistance field

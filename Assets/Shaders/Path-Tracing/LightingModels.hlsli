@@ -179,12 +179,17 @@ void Model_Microfacet(
         InitializeMMAniso(mm, T, B, Ns, anisoDirAndStrength);
 #endif
 
-        float3 H_s = mm.Sample(u1, u2);
-        float3 L_s = normalize(reflect(-V_s, H_s));
-        wi = InvToDefinedSpace(L_s, T, B, Ns);
+        float3 H_s = normalize(mm.Sample(u1, u2));
+        float3 L_s = NormalizeSafe(reflect(-V_s, H_s), N_s);
 
-        if (L_s.z <= 0.0f) // Can I get rid of this? Only needed for aniso
+        // Terminate ray if wi ends up inside surface
+        if (L_s.z <= 0.0f)
+        {
+            throughput *= 0.0f;
             return;
+        }
+
+        wi = InvToDefinedSpace(L_s, T, B, Ns);
 
         float NdL = SSpaceCosTheta(L_s);
         float NdH = SSpaceCosTheta(H_s);

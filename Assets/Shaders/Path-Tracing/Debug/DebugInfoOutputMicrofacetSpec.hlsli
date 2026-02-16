@@ -6,7 +6,7 @@ else if (c_debug.DebugIdx == DebugInfoOutput::eMicrofacetF)
 else if (c_debug.DebugIdx == DebugInfoOutput::eMicrofacetG)
     debug = G.xxx;
 else if (c_debug.DebugIdx == DebugInfoOutput::eMicrofacetAlpha)
-    debug = mm.m_alpha.xxx;
+    debug = mm.RoughnessToAlpha(roughness).xxx;
 else if (c_debug.DebugIdx == DebugInfoOutput::eMicrofacetBrdfSpec)
     debug = specularBrdf;
 else if (c_debug.DebugIdx == DebugInfoOutput::eMicrofacetSpecProb)

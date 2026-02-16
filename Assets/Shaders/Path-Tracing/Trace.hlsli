@@ -57,7 +57,6 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
 #ifdef ALPHA_TESTING_ENABLED
         float rAlpha = Rand01_Bounce(DIM_D_ALPHA, rngInfo);
-        //float rAlpha = PcgRand01(rngInfo.IndependentRngState);
 		bool cutout = albedo.a < 0.001f || rAlpha > albedo.a;
 		if (cutout)
 		{
@@ -120,6 +119,9 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 #    endif
 
 #endif
+
+        if (throughput.x <= 0 && throughput.y <= 0 && throughput.z <= 0)
+            break;
 
         // TODO: Reimplement firefly threshold
         //float L_lum = Luminance(L_sample);

@@ -12,9 +12,14 @@ bool IsNaN3(float3 x)
     return IsNaN(x.x) || IsNaN(x.y) || IsNaN(x.z);
 }
 
-float3 NormalizeSafe(float3 N, float3 fallback)
+float3 NormalizeSafe(float3 v, float3 fallback)
 {
-    return length(N) == 0 ? fallback : normalize(N);
+    float len2 = dot(v, v);
+
+    if (len2 <= 1e-20f || !isfinite(len2))
+        return fallback;
+
+    return v * rsqrt(len2);
 }
 
 // https://backend.orbit.dtu.dk/ws/files/126824972/onb_frisvad_jgt2012_v2.pdf

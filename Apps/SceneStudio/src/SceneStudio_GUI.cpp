@@ -169,6 +169,7 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
         "Normals (Shaded)",
         "Normals (Geometric)",
         "Base Color",
+        "Ray Direction",
         "HitPos",
         "First Bounce Direction",
         "Miss / Hit",

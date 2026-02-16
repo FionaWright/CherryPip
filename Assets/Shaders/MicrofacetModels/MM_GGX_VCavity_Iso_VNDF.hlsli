@@ -31,9 +31,9 @@ float3 MicrofacetModel::Sample(float u1, float u2)
     float a2 = m_alpha * m_alpha;
 
     float3 H = SampleH_GGX(a2, u1, u2);
-    float3 Hp = float3(-H.x, -H.y, H.z);
+    float3 Hp = normalize(float3(-H.x, -H.y, H.z));
 
-    float3 L = normalize(reflect(-m_V, H));
+    float3 L = NormalizeSafe(reflect(-m_V, H), float3(0,0,1));
 
     float cHdL = saturate(dot(H, L));
     float cHpdL = saturate(dot(Hp, L));
@@ -65,6 +65,7 @@ float MicrofacetModel::G1(float3 W)
 float MicrofacetModel::G2(float3 L, float3 V)
 {
     return min(G1(L), G1(V));
+    //return G1(L) * G1(V);
 }
 
 // Nonsense, find actual PDF

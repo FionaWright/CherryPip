@@ -113,6 +113,7 @@ enum class DebugInfoOutput
     eNormalsShaded,
     eNormalsGeo,
     eBaseColor,
+    eRayDir,
     eHitPos,
     eFirstBounceDirection,
     eMissHit,

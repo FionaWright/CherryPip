@@ -286,6 +286,18 @@ void SceneStudio::loadAssets(D3D* d3d)
     m_sceneConfigs.emplace_back(sceneAnisoDiscs);
 
     t = {};
+    t.SetScale(6.0f);
+    SceneConfig sceneBarnLamp = {
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Barn Lamp",
+        L"BarnLamp/AnisotropyBarnLamp.gltf",
+        t,
+        XMFLOAT3(0.366f, -0.104f, 0.552f),
+        XMFLOAT2(0.135f, 4.012f),
+        true
+    };
+    m_sceneConfigs.emplace_back(sceneBarnLamp);
+
+    t = {};
     SceneConfig sceneWhiteLands = {
         "(" + std::to_string(m_sceneConfigs.size()) +") " + "White Lands",
         L"GitIgnored/WhiteLands/WhiteLands.gltf",

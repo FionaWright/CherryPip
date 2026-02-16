@@ -120,8 +120,10 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
 #endif
 
+#ifndef DEBUG_PT_INFO_OUTPUT
         if (throughput.x <= 0 && throughput.y <= 0 && throughput.z <= 0)
             break;
+#endif
 
         // TODO: Reimplement firefly threshold
         //float L_lum = Luminance(L_sample);

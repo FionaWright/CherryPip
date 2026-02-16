@@ -204,7 +204,6 @@ void Model_Microfacet(
         // Torrence-Sparrow BRDF
         float3 specularBrdf = (D * G * F) / max(0.001f, 4 * NdV * NdL);
         throughput *= specularBrdf * NdL / max(0.001f, pdf) / max(0.001f, specProb);
-        //throughput *= L_s.z < 0;
 
 #ifdef DEBUG_PT_INFO_OUTPUT
 #     include "Debug/DebugInfoOutputMicrofacetSpec.hlsli"

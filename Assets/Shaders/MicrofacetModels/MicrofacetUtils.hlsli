@@ -52,15 +52,6 @@ float SSpaceCosDeltaPhi(float3 A, float3 B)
 //  Alpha
 // ================================
 
-// Heuristic to have beckmann visually match GGX for the same roughness value
-float RoughnessToAlpha_Beckmann(float roughness)
-{
-    roughness = max(1e-3f, roughness);
-    float x = log(roughness);
-    return 1.62142f + 0.819955f * x + 0.1734f * x * x +
-           0.0171201f * x * x * x + 0.000640711f * x * x * x * x;
-}
-
 // Returns alpha', a better alpha for beckmann distributions
 float WaltersTrick(float alpha, float NdL)
 {
@@ -69,11 +60,12 @@ float WaltersTrick(float alpha, float NdL)
 
 float2 AlphaToAnisoAlpha(float alpha, float anisotropyStrength)
 {
-    //float aspect = sqrt(1.0f - 0.9 * abs(anisotropyStrength));
-    //return float2(alpha / aspect, alpha * aspect);
+    float aspect = sqrt(1.0f - 0.9 * abs(anisotropyStrength));
+    return float2(alpha / aspect, alpha * aspect);
 
-    float strength2 = anisotropyStrength * anisotropyStrength;
-    return float2(lerp(alpha, 1.0f, strength2), alpha);
+    // Hack?:
+    //float strength2 = anisotropyStrength * anisotropyStrength;
+    //return float2(lerp(alpha, 1.0f, strength2), alpha);
 }
 
 // Used for anisotropic microfacet models
@@ -183,29 +175,18 @@ float3 SampleH_Smith_VNDF(float alphaX, float alphaY, float3 V, float u1, float 
     return float3(-slope.x * invH, -slope.y * invH, invH);
 }
 
-float3 SampleH_Beckmann(float a2, float u1, float u2)
-{
-    float phi = 2.0 * PI * u2;
-    float tan2Theta = -a2 * log(1.0 - u1);
-    float cosTheta = 1.0 / sqrt(1.0 + tan2Theta);
-    float sinTheta = sqrt(max(0.0, 1.0 - cosTheta * cosTheta));
-
-    float3 H_s = normalize(float3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta));
-    return H_s;
-}
-
 // ================================
 //  Normal Distribution Functions
 // ================================
 
-float D_Beckmann(float3 H, float a2)
+// For raster backends
+float D_GGX(float NdH, float roughness)
 {
-    float tan2T = SSpaceTan2Theta(H);
-    if (IsNaN(1/tan2T)) return 0; // Is infinite
+    float alpha = roughness * roughness;
+    float a2 = alpha * alpha;
 
-    float cos4T = SSpaceCos2Theta(H) * SSpaceCos2Theta(H);
-    float k3 = PI * a2 * cos4T;
-    return exp(-tan2T / a2) / k3;
+    float denominator = (NdH * NdH * (a2 - 1.0f) + 1.0f);
+    return a2 / max(0.001f, PI * denominator * denominator);
 }
 
 float D_BeckmannAniso(float3 H, float alphaX, float alphaY)
@@ -285,19 +266,6 @@ float G1_Beckmann(float3 W, float alpha)
 float G_Beckmann(float3 V, float3 L, float alpha)
 {
     return 1.0f / (1.0f + Lambda_Beckmann(V, alpha) + Lambda_Beckmann(L, alpha));
-}
-
-// ================================
-//  Probability Density Functions
-// ================================
-
-// Needs dividing by (4.0f * max(0.001f, VdH)) after? Is this opertion applied to all PDFs assuming Torrence-Sparrow?
-float Pdf_General(float D, float G1v, float3 V, float3 H, bool vndf)
-{
-    if (!vndf)
-        return D * abs(SSpaceCosTheta(H));
-
-    return D * G1v * abs(dot(V, H)) / abs(SSpaceCosTheta(V));
 }
 
 #endif

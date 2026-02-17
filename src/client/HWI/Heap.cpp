@@ -8,6 +8,7 @@
 #include "../../../Headers/client/Helper.h"
 #include "HWI/Texture.h"
 #include "System/Config.h"
+#include "System/ResourceSharer.h"
 
 void Heap::Init(const char* name, ID3D12Device* device, const size_t numDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE type)
 {
@@ -70,6 +71,11 @@ UINT Heap::GetNextDescriptorBindlessTexture(const char* debugName)
 
 UINT Heap::AddBindlessTexture(ID3D12Device* device, std::shared_ptr<Texture> tex)
 {
+    uint32_t idx;
+    const std::wstring id = tex->GetD12Resource()->GetName();
+    if (ResourceSharer::TryGetFromDatabaseBindless(id, idx))
+        return idx;
+
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     srvDesc.Format = tex->GetFormat();
@@ -78,11 +84,12 @@ UINT Heap::AddBindlessTexture(ID3D12Device* device, std::shared_ptr<Texture> tex
     srvDesc.Texture2D.PlaneSlice = 0;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
-    std::string debugNameStr = Config::GetSystem().DebugHeapEnabled ? wstringToString(tex->GetD12Resource()->GetDebugName()).c_str() : "";
+    std::string debugNameStr = Config::GetSystem().DebugHeapEnabled ? wstringToString(tex->GetD12Resource()->GetName()).c_str() : "";
     const char* debugName = Config::GetSystem().DebugHeapEnabled ? debugNameStr.c_str() : nullptr;
 
-    const UINT idx = GetNextDescriptorBindlessTexture(debugName);
+    idx = GetNextDescriptorBindlessTexture(debugName);
     InitSRV(device, tex->GetD12Resource()->GetResource(), srvDesc, idx);
+    ResourceSharer::AddToDatabaseBindless(id, idx);
 
     return idx - GetBindlessTexBase();
 }

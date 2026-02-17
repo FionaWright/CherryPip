@@ -71,14 +71,13 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ## PT-TODO:
 
 ### Main Tasks
-- Implement distant light
+- Implement distant light (Multiply by sunCos and get rid of conditional. Keep option for original)
 - See if aniso works better on Barn Lamp with distant light
 - Fix VNDF issues
 - Fix Firefly Threshold
 
 ### Bugs (Physical Inaccuracies)
 - Fix glass attenuation after, add attenuationDistance field
-- Dir light is wrong direction, see reflection in metalRough spheres. Disable bounce threshold to see easier. Make only samplable for diffuse rays?
 - Firefly threshold not helping, fix darkness issue first
 
 ### Bugs (Classic)
@@ -98,5 +97,3 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Irradiance prealiasing, convert discrete to continuous through c = d + 0.5? Does this apply to unjittered PT samples as well?
 - Something wrong with sphere model, makes furnace tests hard
 - Bindless heap sharing
-- Put all PT/Raster parts of GUI into their own tabs + Make PT stats visible no matter where you're scrolled
-- Make "R" reset the PT and reset camera to scene start

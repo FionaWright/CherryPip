@@ -22,7 +22,7 @@ void D12Resource::Init(const LPCWSTR name, ID3D12Device* device, const D3D12_RES
     m_desc = resourceDesc;
 
 #ifdef _DEBUG
-    m_debugName = name;
+    m_name = name;
 #endif
 }
 
@@ -43,7 +43,7 @@ void D12Resource::InitBuffer(const LPCWSTR name, ID3D12Device* device, const siz
     m_currentState = D3D12_RESOURCE_STATE_COMMON;
 
 #ifdef _DEBUG
-    m_debugName = name;
+    m_name = name;
 #endif
 }
 
@@ -58,7 +58,7 @@ void D12Resource::InitRTAS(const LPCWSTR name, ID3D12Device* device, const size_
     m_currentState = D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
 
 #ifdef _DEBUG
-    m_debugName = name;
+    m_name = name;
 #endif
 }
 

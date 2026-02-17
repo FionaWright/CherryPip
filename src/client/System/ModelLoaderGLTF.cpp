@@ -365,11 +365,11 @@ std::shared_ptr<Texture> ModelLoaderGLTF::loadTextureResource(const D3D* d3d, ID
         if (jpgIdx != std::string::npos)
             texPath = texPath.replace(jpgIdx, 3, "dds");
 
-        if (ResourceSharer::TryGetFromDatabase(texPath, pTex))
+        if (ResourceSharer::TryGetFromDatabaseTex(texPath, pTex))
             return pTex;
 
         pTex->Init(d3d->GetDevice(), cmdList, texPath, 1);
-        ResourceSharer::AddToDatabase(texPath, pTex);
+        ResourceSharer::AddToDatabaseTex(texPath, pTex);
     }
     else
     {
@@ -467,11 +467,11 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     std::shared_ptr<Texture> anisoTex;
     if (mat.anisotropy)
         anisoTex = loadTextureResource<fastgltf::TextureInfo>(d3d, cmdList, asset, mat.anisotropy->anisotropyTexture, localDirectory, backupPath.c_str());
-    else if (!ResourceSharer::TryGetFromDatabase(backupPath, anisoTex))
+    else if (!ResourceSharer::TryGetFromDatabaseTex(backupPath, anisoTex))
     {
         anisoTex = std::make_shared<Texture>();
         anisoTex->Init(d3d->GetDevice(), cmdList, backupPath);
-        ResourceSharer::AddToDatabase(backupPath, anisoTex);
+        ResourceSharer::AddToDatabaseTex(backupPath, anisoTex);
     }
 
     std::shared_ptr<Material> materialForward = std::make_shared<Material>();

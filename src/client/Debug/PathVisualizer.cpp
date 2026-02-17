@@ -11,6 +11,7 @@ void PathVisualizer::Init(const D3D* d3d, ID3D12GraphicsCommandList* cmdList, co
     m_maxSPP = maxSPP;
     m_bufferSize = sizeof(DebugPathVisualizationStruct) * maxSPP;
     m_structuredBuffer.InitBuffer(L"Path Visualizer Structured Buffer", d3d->GetDevice(), m_bufferSize, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    m_emptyBuffer.InitBuffer(L"Path Visualizer Empty Buffer For Clearing", d3d->GetDevice(), m_bufferSize, D3D12_RESOURCE_FLAG_NONE);
     m_readbackBuffer.InitBuffer(L"Path Visualizer Readback Buffer", d3d->GetDevice(), m_bufferSize, D3D12_RESOURCE_FLAG_NONE, true);
 
     m_structuredBuffer.Transition(cmdList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
@@ -26,9 +27,16 @@ std::vector<DebugPathVisualizationStruct> PathVisualizer::ReadbackData(D3D* d3d)
         m_structuredBuffer.Transition(cmdList.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE);
         m_readbackBuffer.Transition(cmdList.Get(), D3D12_RESOURCE_STATE_COPY_DEST);
         cmdList->CopyBufferRegion(m_readbackBuffer.GetResource(), 0, m_structuredBuffer.GetResource(), 0, m_bufferSize);
-
-        m_structuredBuffer.Transition(cmdList.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
     }
+
+    // Clear StructuredBuffer
+    {
+        m_emptyBuffer.Transition(cmdList.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE);
+        m_structuredBuffer.Transition(cmdList.Get(), D3D12_RESOURCE_STATE_COPY_DEST);
+        cmdList->CopyBufferRegion(m_structuredBuffer.GetResource(), 0, m_emptyBuffer.GetResource(), 0, m_bufferSize);
+    }
+
+    m_structuredBuffer.Transition(cmdList.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
     V(cmdList->Close());
     d3d->ExecuteCommandList(cmdList.Get());

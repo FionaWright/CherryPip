@@ -193,7 +193,7 @@ void SceneStudio::guiPathTracer()
         m_readbackManager.GUI(prevReadbackEnabled, m_studioConfig.PT.ReadbackEveryFrame);
     }
 
-    ImGui::Checkbox("Path Visualization Enabled", &m_studioConfig.PT.DebugPathVisualization);
+    m_shaderDirty |= ImGui::Checkbox("Path Visualization Enabled", &m_studioConfig.PT.DebugPathVisualization);
     if (m_studioConfig.PT.DebugPathVisualization)
     {
         ImGui::Indent(IM_GUI_INDENTATION);
@@ -202,7 +202,6 @@ void SceneStudio::guiPathTracer()
         if (validMousePos)
         {
             m_takePathVisualizationSnapshot |= ImGui::Button("Take Snapshot##xxx");
-            m_shaderDirty |= m_takePathVisualizationSnapshot;
         }
         else
             ImGui::Text("Please select a pixel");

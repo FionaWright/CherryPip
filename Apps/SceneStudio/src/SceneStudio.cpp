@@ -175,20 +175,19 @@ void SceneStudio::OnPostUpdate(D3D* d3d)
         const auto data = m_pathVisualizer.ReadbackData(d3d);
 
         m_pathVisualizationLines.clear();
-        for (int i = 0; i < data.size(); i++)
+        for (int i = 0; i < m_studioConfig.PT.SPP; i++)
         {
-            for (int j = 0; j < data[i].NumPositionsSet; j++)
+            for (int j = 0; j < data[i].NumPositionsSet - 1; j++)
             {
                 const XMFLOAT3 start = data[i].WorldSpacePositionAtBounce[j];
                 const XMFLOAT3 end = data[i].WorldSpacePositionAtBounce[j+1];
-                if (std::isnan(end.x) || std::isnan(end.y) || std::isnan(end.z)) // NaN-Terminated
-                    break;
 
-                const XMFLOAT3 color = XMFLOAT3(1, 0, 0);
+                const float bounceT = j / static_cast<float>(m_studioConfig.PT.NumBounces);
+                const XMFLOAT3 color = XMFLOAT3(1.0f - bounceT, bounceT, 0);
 
                 auto line = std::make_shared<DebugLine>();
                 line->Init(d3d, &m_heap, m_shaderLine);
-                line->Update(d3d, &start, &end, &color); // TODO: Color per bounce
+                line->Update(d3d, &start, &end, &color);
                 m_pathVisualizationLines.emplace_back(line);
             }
         }
@@ -741,12 +740,19 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     {
         GPU_SCOPE(cmdList, "Debug Lines");
 
+        // TODO: Not optimal, take depth from path-tracer probably. Not high priority as its debug
+        // GBuffer Pass for Depth Buffer
+        {
+            if (!m_deferredContext.IsInitialized())
+                m_deferredContext.Init(d3d->GetDevice(), cmdList, &m_heapRTV, &m_heap);
+            m_deferredContext.RenderGBuffer(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, &m_heap, nullptr);
+        }
+
         m_finalRTV->GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
         const UINT rtvIdx = m_finalRTV->GetHeapIdx();
         const auto rtvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_heapRTV.GetCPUHandle(), rtvIdx, m_heapRTV.GetIncrementSize());
         const CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(d3d->GetDsvHeapStart(), d3d->GetFrameIndex(), d3d->GetDsvDescriptorSize());
         cmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
-        cmdList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
         cmdList->SetGraphicsRootSignature(m_rootSigLine.Get());
         const XMMATRIX vp = m_camera.GetViewMatrix() * m_projMatrix;

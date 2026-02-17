@@ -26,7 +26,7 @@ std::time_t getTimestamp(const std::wstring& path)
 
 void HotReloader::AssignShaderVsPs(const std::wstring& vs, const std::wstring& ps, Shader* shader,
                                    const D3D12_INPUT_LAYOUT_DESC& ild, ID3D12RootSignature* rootSig, bool dsvEnabled,
-                                   const std::vector<const WCHAR*>& args, uint32_t numRTVs)
+                                   const std::vector<const WCHAR*>& args, uint32_t numRTVs, D3D12_PRIMITIVE_TOPOLOGY_TYPE topologyType)
 {
     const std::wstring vsPath = FileHelper::GetAssetShaderFullPath(vs.c_str());
     const std::wstring psPath = FileHelper::GetAssetShaderFullPath(ps.c_str());
@@ -42,7 +42,7 @@ void HotReloader::AssignShaderVsPs(const std::wstring& vs, const std::wstring& p
     const std::time_t timeStampPS = getTimestamp(psPath);
 
     HotInfoVsPs info = {
-        vs, vsPath, ps, psPath, shader, ildElements, rootSig, dsvEnabled, args, numRTVs, timeStampVS, timeStampPS
+        vs, vsPath, ps, psPath, shader, ildElements, rootSig, dsvEnabled, args, numRTVs, topologyType, timeStampVS, timeStampPS
     };
     s_shadersVsPs.emplace_back(info);
 }
@@ -63,7 +63,7 @@ void HotReloader::AssignShaderCs(const std::wstring& cs, Shader* shader,
 
 void HotReloader::UpdateShaderVsPs(const std::wstring& vs, const std::wstring& ps, Shader* shader,
                                    const D3D12_INPUT_LAYOUT_DESC& ild, ID3D12RootSignature* rootSig, bool dsvEnabled,
-                                   const std::vector<const WCHAR*>& args, uint32_t numRTVs)
+                                   const std::vector<const WCHAR*>& args, uint32_t numRTVs, D3D12_PRIMITIVE_TOPOLOGY_TYPE topologyType)
 {
     const std::wstring vsPath = FileHelper::GetAssetShaderFullPath(vs.c_str());
     const std::wstring psPath = FileHelper::GetAssetShaderFullPath(ps.c_str());
@@ -91,7 +91,7 @@ void HotReloader::UpdateShaderVsPs(const std::wstring& vs, const std::wstring& p
     const std::time_t timeStampPS = getTimestamp(psPath);
 
     const HotInfoVsPs info = {
-        vs, vsPath, ps, psPath, shader, ildElements, rootSig, dsvEnabled, args, numRTVs, timeStampVS, timeStampPS
+        vs, vsPath, ps, psPath, shader, ildElements, rootSig, dsvEnabled, args, numRTVs, topologyType, timeStampVS, timeStampPS
     };
     s_shadersVsPs[idx] = info;
 }
@@ -159,7 +159,7 @@ void HotReloader::CheckFiles(D3D* d3d)
         };
         s_shadersVsPs[i].ShaderPtr->InitVsPs(s_shadersVsPs[i].VS.c_str(), s_shadersVsPs[i].PS.c_str(), ild,
                                              d3d->GetDevice(),
-                                             s_shadersVsPs[i].RootSig, s_shadersVsPs[i].DsvEnabled, s_shadersVsPs[i].Args, s_shadersVsPs[i].NumRTVs);
+                                             s_shadersVsPs[i].RootSig, s_shadersVsPs[i].DsvEnabled, s_shadersVsPs[i].Args, s_shadersVsPs[i].NumRTVs, s_shadersVsPs[i].TopologyType);
 
         s_shadersVsPs[i].TimeStampVS = timeStampVS;
         s_shadersVsPs[i].TimeStampPS = timeStampPS;

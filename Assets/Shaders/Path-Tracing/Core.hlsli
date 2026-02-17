@@ -43,10 +43,6 @@ SamplerState c_sampler : register(s0);
 
 float4 PSMain(VsOut input) : SV_Target0
 {
-#ifdef DEBUG_PATH_VISUALIZATION
-	//return float4(Approx(c_debug.PathVisualizationSelectedPixelID, input.position.xy, 0.75f), 0, 0, 1);
-#endif
-
     RayQuery<RAY_FLAGS> q;
 
     uint flags = RAY_FLAGS;

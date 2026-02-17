@@ -33,6 +33,18 @@ void SceneStudio::RenderGUI()
             ImGui::EndTabItem();
         }
 
+        if (ImGui::BeginTabItem("Path-Tracer"))
+        {
+            guiPathTracer();
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Raster"))
+        {
+            guiRaster();
+            ImGui::EndTabItem();
+        }
+
         if (ImGui::BeginTabItem("Scene"))
         {
             guiScene();
@@ -53,42 +65,40 @@ void SceneStudio::RenderGUI()
     Gui::EndWindow();
 }
 
-void SceneStudio::GuiPathTracer(const bool resetPT)
+void SceneStudio::guiPathTracer()
 {
-    ImGui::SeparatorText("Path-Tracer Stats##xx");
+    ImGui::SeparatorText("Stats##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
 
     ImGui::Text("%s%i", "Frame Index: ", m_ptContext.GetFrameNum());
     ImGui::Text("%s%i", "Total SPP: ", m_ptContext.GetFrameNum() * m_studioConfig.PT.SPP);
 
-    bool ptNeedsReset = resetPT;
-
     ImGui::Spacing();
     ImGui::Unindent(IM_GUI_INDENTATION);
-    ImGui::SeparatorText("Path-Tracer Settings##xx");
+    ImGui::SeparatorText("Settings##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
 
-    ptNeedsReset |= ImGui::Checkbox("Accumulation Enabled##xx", &m_studioConfig.PT.AccumulationEnabled);
+    m_pathTracerDirty |= ImGui::Checkbox("Accumulation Enabled##xx", &m_studioConfig.PT.AccumulationEnabled);
     m_shaderDirty |= ImGui::Checkbox("Jitter Enabled##xx", &m_studioConfig.PT.JitterEnabled);
     m_shaderDirty |= ImGui::Checkbox("Russian Roulette##xx", &m_studioConfig.PT.RussianRouletteEnabled);
 
     if (m_studioConfig.PT.RussianRouletteEnabled)
-        ptNeedsReset |= ImGuiUtils::FwInputUInt("Russian Roulette Min Bounces##xx", &m_studioConfig.PT.RussianRouletteMinBounces);
+        m_pathTracerDirty |= ImGuiUtils::FwInputUInt("Russian Roulette Min Bounces##xx", &m_studioConfig.PT.RussianRouletteMinBounces);
 
     int spp = static_cast<int>(m_studioConfig.PT.SPP);
-    ptNeedsReset |= ImGuiUtils::FwDragInt("SPP##xx", &spp, 1, 1, 256);
+    m_pathTracerDirty |= ImGuiUtils::FwDragInt("SPP##xx", &spp, 1, 1, 256);
     m_studioConfig.PT.SPP = static_cast<uint32_t>(spp);
 
     int bounces = static_cast<int>(m_studioConfig.PT.NumBounces);
-    ptNeedsReset |= ImGuiUtils::FwDragInt("Ray Bounces##xx", &bounces, 1, 0, 256);
+    m_pathTracerDirty |= ImGuiUtils::FwDragInt("Ray Bounces##xx", &bounces, 1, 0, 256);
     m_studioConfig.PT.NumBounces = static_cast<uint32_t>(bounces);
 
     const uint32_t prevMaxFrames = m_studioConfig.PT.MaxFrameNum;
     if (ImGuiUtils::FwInputUInt("Max Frames##xx", &m_studioConfig.PT.MaxFrameNum))
-        ptNeedsReset |= prevMaxFrames > m_studioConfig.PT.MaxFrameNum || prevMaxFrames == 0;
+        m_pathTracerDirty |= prevMaxFrames > m_studioConfig.PT.MaxFrameNum || prevMaxFrames == 0;
 
     m_shaderDirty |= ImGui::Checkbox("Dir Light Enabled##xx", &m_studioConfig.PT.DirLightEnabled);
-    ptNeedsReset |= ImGuiUtils::FwInputFloat("Dir Light Radius (R)##xx", &m_studioConfig.PT.DirLightCosAngularRadius);
+    m_pathTracerDirty |= ImGuiUtils::FwInputFloat("Dir Light Radius (R)##xx", &m_studioConfig.PT.DirLightCosAngularRadius);
 
     m_shaderDirty |= ImGui::Checkbox("Normal Maps Enabled##xx", &m_studioConfig.PT.NormalMapsEnabled);
     m_shaderDirty |= ImGui::Checkbox("Alpha Testing Enabled##xx", &m_studioConfig.PT.AlphaTestingEnabled);
@@ -105,7 +115,7 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
     }
 
     static int e = m_studioConfig.PT.LightingModel;
-    ImGui::Text("%s", "Path Tracer Lighting Model:");
+    ImGui::Text("%s", "Lighting Model:");
     int idx = 0;
     ImGui::Indent(IM_GUI_INDENTATION);
     m_shaderDirty |= ImGui::RadioButton("Lambert", &e, idx++);
@@ -146,15 +156,15 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
 
     ImGui::Spacing();
     ImGui::Unindent(IM_GUI_INDENTATION);
-    ImGui::SeparatorText("Path-Tracer Tools##xx");
+    ImGui::SeparatorText("Tools##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
 
-    ptNeedsReset |= ImGui::Button("Reset PathTracer##xx");
+    m_pathTracerDirty |= ImGui::Button("Reset PathTracer##xx");
 
 #ifdef _DEBUG
     ImGui::Spacing();
     ImGui::Unindent(IM_GUI_INDENTATION);
-    ImGui::SeparatorText("Path-Tracer Debug##xx");
+    ImGui::SeparatorText("Debug##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
 
     const bool prevReadbackEnabled = m_studioConfig.PT.ReadbackEnabled;
@@ -217,7 +227,7 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
                 if (ImGui::Selectable(c_debugBufferStrMap.at(i), isSelected))
                 {
                     m_studioConfig.PT.DebugInfoOutputMode = static_cast<DebugInfoOutput>(i);
-                    ptNeedsReset = true;
+                    m_pathTracerDirty = true;
                 }
 
                 if (isSelected)
@@ -251,24 +261,25 @@ void SceneStudio::GuiPathTracer(const bool resetPT)
         m_shaderDirty = true;
     }
 
-    ptNeedsReset |= m_shaderDirty;
+    m_pathTracerDirty |= m_shaderDirty;
 
-    if (ptNeedsReset && m_studioConfig.PT.ReadbackEveryFrame)
+    if (m_pathTracerDirty && m_studioConfig.PT.ReadbackEveryFrame)
         m_readbackManager.SetInReadbackProcess(true);
     else if (!m_studioConfig.PT.ReadbackEveryFrame)
         m_readbackManager.SetInReadbackProcess(false);
 #endif
 
-    if (ptNeedsReset)
+    if (m_pathTracerDirty)
     {
         m_ptContext.Reset();
+        m_pathTracerDirty = false;
 #ifdef _DEBUG
         m_readbackManager.ClearReadbackData();
 #endif
     }
 }
 
-void SceneStudio::GuiRaster()
+void SceneStudio::guiRaster()
 {
     ImGui::Spacing();
     ImGui::SeparatorText("Raster Settings##xx");
@@ -322,8 +333,6 @@ void SceneStudio::GuiRaster()
 
 void SceneStudio::guiMain()
 {
-    bool resetPT = false;
-
     ImGui::Spacing();
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Scene##xx");
@@ -370,25 +379,25 @@ void SceneStudio::guiMain()
     ImGui::Indent(IM_GUI_INDENTATION);
     {
         XMFLOAT3 pos = m_camera.GetCamera().GetPosition();
-        resetPT |= ImGuiUtils::FwInputFloat3("Camera Position##xx", reinterpret_cast<float*>(&pos));
+        m_pathTracerDirty |= ImGuiUtils::FwInputFloat3("Camera Position##xx", reinterpret_cast<float*>(&pos));
         m_camera.GetCamera().SetPosition(pos);
 
         float pitch = m_camera.GetCamera().GetPitch();
         float yaw = m_camera.GetCamera().GetYaw();
-        resetPT |= ImGuiUtils::FwDragFloat("Camera Pitch##xx", &pitch, 0.01f);
-        resetPT |= ImGuiUtils::FwDragFloat("Camera Yaw##xx", &yaw, 0.01f);
+        m_pathTracerDirty |= ImGuiUtils::FwDragFloat("Camera Pitch##xx", &pitch, 0.01f);
+        m_pathTracerDirty |= ImGuiUtils::FwDragFloat("Camera Yaw##xx", &yaw, 0.01f);
         m_camera.GetCamera().SetPitchYaw(pitch, yaw);
 
         if (ImGui::Button("Reset Camera to Scene Start##xx"))
         {
             ResetCameraToSceneStart();
-            resetPT = true;
+            m_pathTracerDirty = true;
         }
         if (ImGui::Button("Reset Camera to Origin##xx"))
         {
             m_camera.GetCamera().SetPosition({0, 0, 0});
             m_camera.GetCamera().SetPitchYaw(0, 0);
-            resetPT = true;
+            m_pathTracerDirty = true;
         }
     }
 
@@ -401,7 +410,7 @@ void SceneStudio::guiMain()
         changedDirLight |= ImGuiUtils::FwInputFloat3("Direction##xx", reinterpret_cast<float*>(&m_studioConfig.DirLightDirection));
         changedDirLight |= ImGuiUtils::FwColorEdit3("Colour##xx", reinterpret_cast<float*>(&m_studioConfig.DirLightColor));
         changedDirLight |= ImGuiUtils::FwInputFloat("Intensity##xx", &m_studioConfig.DirLightIntensity);
-        resetPT |= changedDirLight;
+        m_pathTracerDirty |= changedDirLight;
         m_debugLinesDirty |= changedDirLight;
     }
 
@@ -410,10 +419,10 @@ void SceneStudio::guiMain()
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Debug Lines##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
-    resetPT |= ImGui::Checkbox("Enabled##xxxx", &m_debugLinesEnabled);
+    m_pathTracerDirty |= ImGui::Checkbox("Enabled##xxxx", &m_debugLinesEnabled);
     if (m_debugLinesEnabled)
     {
-        resetPT |= ImGui::Checkbox("Dir Light##xxxx", &m_dirLightLineEnabled);
+        m_pathTracerDirty |= ImGui::Checkbox("Dir Light##xxxx", &m_dirLightLineEnabled);
     }
 #endif
 
@@ -512,22 +521,10 @@ void SceneStudio::guiMain()
     }
 
     ImGui::Unindent(IM_GUI_INDENTATION);
-    switch (m_studioConfig.Backend)
-    {
-    case eForward:
-    case eDeferred:
-        GuiRaster();
-        break;
-    case ePathTracer:
-        resetPT |= m_sceneDirty;
-        GuiPathTracer(resetPT);
-        break;
-    default:
-        break;
-    }
 
 #ifdef _DEBUG
-    if (ImGui::TreeNode("RMSE Debug Tool"))
+    ImGui::Spacing();
+    ImGui::SeparatorText("RMSE Debug Tool");
     {
         ImGui::Indent(IM_GUI_INDENTATION);
 
@@ -626,7 +623,6 @@ void SceneStudio::guiMain()
         }
 
         ImGui::Unindent(IM_GUI_INDENTATION);
-        ImGui::TreePop();
     }
 #endif
 }

@@ -145,6 +145,8 @@ private:
     std::shared_ptr<Shader> m_shaderLine;
     DebugLine m_dirLightLine;
     bool m_debugLinesDirty = true;
+    bool m_debugLinesEnabled = true;
+    bool m_dirLightLineEnabled = true;
 #endif
 
     XMMATRIX m_projMatrix = {};

@@ -10,7 +10,7 @@
 class Shader
 {
 public:
-    void InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D12Device* device, ID3D12RootSignature* rootSig, bool dsvEnabled = false, const std::vector<const WCHAR*>& args = {}, uint32_t numRTVs = 1);
+    void InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D12Device* device, ID3D12RootSignature* rootSig, bool dsvEnabled = false, const std::vector<const WCHAR*>& args = {}, uint32_t numRTVs = 1, D3D12_PRIMITIVE_TOPOLOGY_TYPE topology = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
     void InitCs(LPCWSTR cs, ID3D12Device* device, ID3D12RootSignature* rootSig, const std::vector<const WCHAR*>& args = {});
 
     ID3D12PipelineState* GetPSO() const { return m_pso.Get(); }

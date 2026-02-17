@@ -397,10 +397,25 @@ void SceneStudio::guiMain()
     ImGui::SeparatorText("Directional Light##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
     {
-        resetPT |= ImGuiUtils::FwInputFloat3("Direction##xx", reinterpret_cast<float*>(&m_studioConfig.DirLightDirection));
-        resetPT |= ImGuiUtils::FwColorEdit3("Colour##xx", reinterpret_cast<float*>(&m_studioConfig.DirLightColor));
-        resetPT |= ImGuiUtils::FwInputFloat("Intensity##xx", &m_studioConfig.DirLightIntensity);
+        bool changedDirLight = false;
+        changedDirLight |= ImGuiUtils::FwInputFloat3("Direction##xx", reinterpret_cast<float*>(&m_studioConfig.DirLightDirection));
+        changedDirLight |= ImGuiUtils::FwColorEdit3("Colour##xx", reinterpret_cast<float*>(&m_studioConfig.DirLightColor));
+        changedDirLight |= ImGuiUtils::FwInputFloat("Intensity##xx", &m_studioConfig.DirLightIntensity);
+        resetPT |= changedDirLight;
+        m_debugLinesDirty |= changedDirLight;
     }
+
+#ifdef _DEBUG
+    ImGui::Spacing();
+    ImGui::Unindent(IM_GUI_INDENTATION);
+    ImGui::SeparatorText("Debug Lines##xx");
+    ImGui::Indent(IM_GUI_INDENTATION);
+    resetPT |= ImGui::Checkbox("Enabled##xxxx", &m_debugLinesEnabled);
+    if (m_debugLinesEnabled)
+    {
+        resetPT |= ImGui::Checkbox("Dir Light##xxxx", &m_dirLightLineEnabled);
+    }
+#endif
 
     ImGui::Spacing();
     ImGui::Unindent(IM_GUI_INDENTATION);
@@ -547,7 +562,7 @@ void SceneStudio::guiMain()
 
         if (m_rmseTester.IsRunningGolden())
         {
-            ImGui::SameLine(); ImGui::Text("Progress: %.2f/100\%", 100.0f * m_ptContext.GetFrameNum() / static_cast<float>(goldenMaxFrames));
+            ImGui::SameLine(); ImGui::Text("Progress: %.2f/100%%", 100.0f * m_ptContext.GetFrameNum() / static_cast<float>(goldenMaxFrames));
         }
 
         if (ImGui::Button("Load Golden Image"))
@@ -576,7 +591,7 @@ void SceneStudio::guiMain()
 
         if (m_rmseTester.IsRunningConvergence())
         {
-            ImGui::SameLine(); ImGui::Text("Progress: %.2f\%", m_rmseTester.GetConvergenceTestPercent() * 100.0f);
+            ImGui::SameLine(); ImGui::Text("Progress: %.2f%%", m_rmseTester.GetConvergenceTestPercent() * 100.0f);
         }
 
         ImGui::Spacing();

@@ -60,6 +60,7 @@ void DebugLine::Update(D3D* d3d, const XMFLOAT3* start, const XMFLOAT3* end, con
 void DebugLine::Render(ID3D12GraphicsCommandList* cmdList, const XMMATRIX& matrixVP)
 {
     cmdList->SetPipelineState(m_shader->GetPSO());
+    cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
 
     CbvMatrixVP cbv;
     XMStoreFloat4x4(&cbv.VP, matrixVP);

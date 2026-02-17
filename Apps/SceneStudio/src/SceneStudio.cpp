@@ -116,9 +116,19 @@ void SceneStudio::OnPostUpdate(D3D* d3d)
     {
         m_studioConfig.DirLightDirection = m_envMap.GetDirectionOfHighestIntensity(d3d, &m_heap);
         m_recomputeEnvMapDirLight = false;
+        m_debugLinesDirty = true;
     }
 
 #ifdef _DEBUG
+    if (m_debugLinesDirty)
+    {
+        const XMFLOAT3 start = Mult(m_studioConfig.DirLightDirection, 1000.0f);
+        const XMFLOAT3 end = Mult(m_studioConfig.DirLightDirection, -1000.0f);
+        constexpr XMFLOAT3 color = XMFLOAT3(1, 1, 0);
+        m_dirLightLine.Update(d3d, &start, &end, &color);
+        m_debugLinesDirty = false;
+    }
+
     if (m_rmseTester.NeedTakeSnapshot())
     {
         m_rmseTester.TakeSnapshot(d3d, m_rmseTesterSlot, m_finalRTV->GetD12Resource());
@@ -380,6 +390,28 @@ void SceneStudio::loadAssets(D3D* d3d)
                         Config::GetRender().RtvFormat);
 
 #ifdef _DEBUG
+    // Initialize Debug Lines
+    {
+        m_rootSigLine.SmartInit(d3d->GetDevice(), 1, 0);
+
+        const std::vector<D3D12_INPUT_ELEMENT_DESC> ildDesc =
+        {
+            {
+                "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
+                D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+            },
+            {
+                "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
+                D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+            }
+        };
+        const D3D12_INPUT_LAYOUT_DESC ild = { ildDesc.data(), static_cast<uint32_t>(ildDesc.size())};
+        m_shaderLine = std::make_shared<Shader>();
+        m_shaderLine->InitVsPs(L"LineVSPS.hlsl", L"LineVSPS.hlsl", ild, device, m_rootSigLine.Get());
+
+        m_dirLightLine.Init(d3d, &m_heap, m_shaderLine);
+    }
+
     m_readbackManager.Init(d3d, &m_heap, &m_rtvPingPong1);
     m_rmseTester.Init(d3d);
 #endif
@@ -643,6 +675,8 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         copyRtvTex(cmdList, d3d->GetRtv(), m_rtvPingPong1.GetD12Resource());
         return;
     }
+
+    // TODO: Debug lines
 #endif
 
     if (m_studioConfig.Denoising.Enabled)
@@ -696,6 +730,17 @@ void SceneStudio::renderForward(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         const Skybox* skybox = m_studioConfig.EnvMapEnabled ? &m_skybox : nullptr;
         m_rasterContext.Render(d3d, cmdList, m_camera.GetViewMatrix(), m_projMatrix, handle, &m_heap, skybox);
     }
+
+#ifdef _DEBUG
+    // Debug Line Pass
+    if (true) // TODO
+    {
+        cmdList->SetGraphicsRootSignature(m_rootSigLine.Get());
+
+        const XMMATRIX vp = m_camera.GetViewMatrix() * m_projMatrix;
+        m_dirLightLine.Render(cmdList, vp);
+    }
+#endif
 
     m_finalRTV = &m_rtvPingPong1;
 

@@ -82,6 +82,7 @@ set(PROJECT_HEADERS
 if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_CONFIGURATION_TYPES MATCHES "Debug")
     set(PROJECT_SOURCES
             ${PROJECT_SOURCES}
+            src/client/Debug/DebugLine.cpp
             src/client/Debug/GPUEventScoped.cpp
             src/client/Debug/HotReloader.cpp
             src/client/Debug/PythonExecutor.cpp
@@ -92,6 +93,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_CONFIGURATION_TYPES MATCHES "Debug
     set(PROJECT_HEADERS
             ${PROJECT_HEADERS}
             Headers/client/Debug/DebugOutputRedirector.h
+            Headers/client/Debug/DebugLine.h
             Headers/client/Debug/GPUEventScoped.h
             Headers/client/Debug/HotReloader.h
             Headers/client/Debug/PythonExecutor.h

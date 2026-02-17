@@ -11,6 +11,11 @@ struct CbvMatrices
     float4x4 P; // Projection
 };
 
+struct CbvMatrixVP
+{
+    float4x4 VP;
+};
+
 enum RasterDebugMode
 {
     ePosition,

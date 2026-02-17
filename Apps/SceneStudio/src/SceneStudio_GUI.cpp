@@ -180,8 +180,12 @@ void SceneStudio::guiPathTracer()
     {
         ImGui::Indent(IM_GUI_INDENTATION);
 
-        m_takePathVisualizationSnapshot |= ImGui::Button("Take Snapshot##xxx");
-        m_shaderDirty |= m_takePathVisualizationSnapshot;
+        const bool validMousePos = m_mousePosOnClick.x != -1 && m_mousePosOnClick.y != -1;
+        if (validMousePos)
+        {
+            m_takePathVisualizationSnapshot |= ImGui::Button("Take Snapshot##xxx");
+            m_shaderDirty |= m_takePathVisualizationSnapshot;
+        }
 
         ImGui::Unindent(IM_GUI_INDENTATION);
     }

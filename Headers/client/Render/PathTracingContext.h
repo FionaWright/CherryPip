@@ -89,8 +89,10 @@ public:
     void BuildScene(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const Scene* scene, Heap* heap, D12Resource* envMap);
     void Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSig,
                 ID3D12PipelineState* pso,
-                const Camera* camera, Heap* heap, const XMMATRIX& projMatrix, const PtConfig& config, float dirLightIntensity, XMFLOAT3 dirLightColor, XMFLOAT3 dirLightDir,
-                int debugModeIdx = -1);
+                const Camera* camera, Heap* heap, const XMMATRIX& projMatrix,
+                const PtConfig& config,
+                float dirLightIntensity, XMFLOAT3 dirLightColor, XMFLOAT3 dirLightDir,
+                int debugModeIdx = -1, bool takingPathVisSnapshot = false, XMFLOAT2 pathVisSelectedPixel = {});
     void Reset();
 
     uint32_t GetFrameNum() const { return m_frameIdx; }

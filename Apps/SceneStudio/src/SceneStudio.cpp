@@ -87,6 +87,17 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList, double 
         m_shaderDirty = false;
     }
 
+#ifdef _DEBUG
+    if (Input::IsMouseLeftDown())
+    {
+        const XMFLOAT2 mousePos = Input::GetMousePos();
+        const uint32_t minX = Config::GetSystem().WindowAppGuiWidth;
+        const uint32_t maxX = Config::GetSystem().WindowAppGuiWidth + Config::GetSystem().RtvWidth;
+        if (mousePos.x >= minX && mousePos.x < maxX)
+            m_mousePosOnClick = {mousePos.x - minX, mousePos.y};
+    }
+#endif
+
     if (m_studioConfig.PT.DebugPathVisualization)
         m_ptContext.SetMaterialPathVisualizationBuffer(d3d->GetDevice(), &m_heap, m_pathVisualizer.GetStructuredBuffer(), m_pathVisualizer.GetNumElements());
 
@@ -159,7 +170,7 @@ void SceneStudio::OnPostUpdate(D3D* d3d)
         m_rmseTester.UpdateConvergenceTest(d3d, m_ptContext.GetFrameNum(), &m_heap, m_finalRTV->GetD12Resource());
     }
 
-    if (m_takePathVisualizationSnapshot)
+    if (m_completedPathVisualizationSnapshot)
     {
         const auto data = m_pathVisualizer.ReadbackData(d3d);
 
@@ -182,7 +193,7 @@ void SceneStudio::OnPostUpdate(D3D* d3d)
             }
         }
 
-        m_takePathVisualizationSnapshot = false;
+        m_completedPathVisualizationSnapshot = false;
     }
 #endif
 }
@@ -697,9 +708,18 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
                                        ? static_cast<int>(m_studioConfig.PT.DebugInfoOutputMode)
                                        : -1;
 
-        m_ptContext.Render(cmdList, m_rootSig->Get(), m_shader->GetPSO(), &m_camera.GetCamera(), &m_heap, m_projMatrix,
-                           m_studioConfig.PT, m_studioConfig.DirLightIntensity, m_studioConfig.DirLightColor,
-                           m_studioConfig.DirLightDirection, debugBufferIdx);
+        m_ptContext.Render(cmdList, m_rootSig->Get(), m_shader->GetPSO(),
+                            &m_camera.GetCamera(), &m_heap, m_projMatrix,
+                           m_studioConfig.PT,
+                           m_studioConfig.DirLightIntensity, m_studioConfig.DirLightColor, m_studioConfig.DirLightDirection
+#ifdef _DEBUG
+                           , debugBufferIdx, m_takePathVisualizationSnapshot, m_mousePosOnClick
+#endif
+                           );
+
+#ifdef _DEBUG
+        m_completedPathVisualizationSnapshot = true;
+#endif
     }
 
     m_finalRTV = &m_rtvPingPong1;
@@ -708,7 +728,7 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     // Readback Pass (PP1 to RTV)
     if (m_studioConfig.PT.ReadbackEnabled)
     {
-        m_readbackManager.ReadbackPass(d3d, cmdList, &m_rtvPingPong1, m_studioConfig.PT.ReadbackEveryFrame);
+        m_readbackManager.ReadbackPass(d3d, cmdList, &m_rtvPingPong1, m_studioConfig.PT.ReadbackEveryFrame, m_mousePosOnClick);
         copyRtvTex(cmdList, d3d->GetRtv(), m_rtvPingPong1.GetD12Resource());
         return;
     }

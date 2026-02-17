@@ -89,7 +89,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - PT only build mode that doesn't initialize any raster resources? 
 - FPS has heavily dropped since I was away, possibly due to all the extra shaders/etc. Make sure they can be deleted properly when not in use. 1000+ FPS with lambert distribution should be possible
 - New debugging tool which sends readback data for each bounce position, then can visually show using lines. Use highlighted pixel tool to select which pixel rays to debug. Button to do a single simulation. Use SPP to manage amount of sims, not frames. Different colour for each bounce (Use DebugPalette). Use NaN-terminated arrays 
-- Debug lines for PT
+- Debug lines for PT (May need GBuffer? Fine cuz its debug)
 
 ## Raster/Laptop-TODO
 

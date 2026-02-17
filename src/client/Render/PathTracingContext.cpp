@@ -167,7 +167,9 @@ void PathTracingContext::BuildScene(ID3D12Device* device, ID3D12GraphicsCommandL
 
 void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSig,
                                 ID3D12PipelineState* pso, const Camera* camera, Heap* heap,
-                                const XMMATRIX& projMatrix, const PtConfig& config, float dirLightIntensity, XMFLOAT3 dirLightColor, XMFLOAT3 dirLightDir, int debugModeIdx)
+                                const XMMATRIX& projMatrix, const PtConfig& config,
+                                float dirLightIntensity, XMFLOAT3 dirLightColor, XMFLOAT3 dirLightDir,
+                                int debugModeIdx, const bool takingPathVisSnapshot, const XMFLOAT2 pathVisSelectedPixel)
 {
     GPU_SCOPE(cmdList, L"Path Tracing Backend");
 
@@ -229,6 +231,8 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
         {
             CbvPathTracingDebug cbvDebug;
             cbvDebug.DebugIdx = static_cast<DebugInfoOutput>(debugModeIdx);
+            cbvDebug.TakingPathVisualizationSnapshot = takingPathVisSnapshot;
+            cbvDebug.PathVisualizationSelectedPixelID = pathVisSelectedPixel;
             m_material->UpdateCBV(1, &cbvDebug);
         }
 

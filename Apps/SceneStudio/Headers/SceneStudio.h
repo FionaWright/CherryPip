@@ -161,7 +161,9 @@ private:
 
     PathVisualizer m_pathVisualizer;
     bool m_takePathVisualizationSnapshot = false;
+    bool m_completedPathVisualizationSnapshot = false;
     std::vector<DebugLine> m_pathVisualizationLines;
+    XMFLOAT2 m_mousePosOnClick = { -1, -1 };
 #endif
     TextureRTV* m_finalRTV = &m_rtvPingPong1;
 };

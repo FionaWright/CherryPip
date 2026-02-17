@@ -23,7 +23,7 @@ class ReadbackManager
 public:
     void Init(const D3D* d3d, Heap* heap, TextureRTV* ptOut);
 
-    void ReadbackPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList, TextureRTV* inputRTV, bool readbackEveryFrame);
+    void ReadbackPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList, TextureRTV* inputRTV, bool readbackEveryFrame, XMFLOAT2 mousePosOnClick);
     void GUI(bool prevReadbackEnabled, bool& readbackEveryFrame);
 
     void SetInReadbackProcess(const bool inProcess) { m_inReadbackEveryFrameProcess = inProcess; }
@@ -31,7 +31,6 @@ public:
 
 private:
     ReadbackBuffer m_readbackBuffer;
-    XMFLOAT2 m_mousePosOnClick = { -1, -1 };
     bool m_inReadbackEveryFrameProcess = false;
     bool m_finishedReadingBack = true;
     std::shared_ptr<Shader> m_shaderReadbackHighlight;

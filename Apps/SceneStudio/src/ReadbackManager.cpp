@@ -32,26 +32,14 @@ void ReadbackManager::Init(const D3D* d3d, Heap* heap, TextureRTV* ptOut)
     m_materialReadbackHighlight->AddUAV(device, heap, ptOut->GetResource(), ptOut->GetD12Resource()->GetDesc().Format);
 }
 
-void ReadbackManager::ReadbackPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList, TextureRTV* inputRTV, const bool readbackEveryFrame)
+void ReadbackManager::ReadbackPass(D3D* d3d, ID3D12GraphicsCommandList* cmdList, TextureRTV* inputRTV, const bool readbackEveryFrame, XMFLOAT2 mousePosOnClick)
 {
-    if (Input::IsMouseLeftDown())
-    {
-        const XMFLOAT2 mousePos = Input::GetMousePos();
-        const uint32_t minX = Config::GetSystem().WindowAppGuiWidth;
-        const uint32_t maxX = Config::GetSystem().WindowAppGuiWidth + Config::GetSystem().RtvWidth;
-        if (mousePos.x >= minX && mousePos.x < maxX)
-        {
-            m_mousePosOnClick = {mousePos.x - minX, mousePos.y};
-            m_finishedReadingBack = false;
-        }
-    }
-
-    const bool validMousePos = m_mousePosOnClick.x != -1 && m_mousePosOnClick.y != -1;
+    const bool validMousePos = mousePosOnClick.x != -1 && mousePosOnClick.y != -1;
     if (!validMousePos)
         return;
 
-    const auto px = static_cast<uint32_t>(m_mousePosOnClick.x);
-    const auto py = static_cast<uint32_t>(m_mousePosOnClick.y);
+    const auto px = static_cast<uint32_t>(mousePosOnClick.x);
+    const auto py = static_cast<uint32_t>(mousePosOnClick.y);
 
     // Post-Pass: Highlight Selected Pixel
     {

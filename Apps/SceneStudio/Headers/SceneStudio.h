@@ -59,6 +59,7 @@ struct StudioConfig
     DenoisingConfig Denoising = {};
 
     bool EnvMapEnabled = true;
+    bool DebugLinesEnabled = true;
     bool DirLightDebugLineEnabled = true;
     float EnvMapRotation = 0.0f;
     float DirLightIntensity = 100.0f;
@@ -148,8 +149,6 @@ private:
     std::shared_ptr<Shader> m_shaderLine;
     DebugLine m_dirLightLine;
     bool m_debugLinesDirty = true;
-    bool m_debugLinesEnabled = true;
-    bool m_dirLightLineEnabled = true;
 #endif
 
     XMMATRIX m_projMatrix = {};
@@ -162,7 +161,7 @@ private:
     PathVisualizer m_pathVisualizer;
     bool m_takePathVisualizationSnapshot = false;
     bool m_completedPathVisualizationSnapshot = false;
-    std::vector<DebugLine> m_pathVisualizationLines;
+    std::vector<std::shared_ptr<DebugLine>> m_pathVisualizationLines;
     XMFLOAT2 m_mousePosOnClick = { -1, -1 };
 #endif
     TextureRTV* m_finalRTV = &m_rtvPingPong1;

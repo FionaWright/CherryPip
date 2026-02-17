@@ -11,7 +11,7 @@ struct VsOut
 };
 
 ConstantBuffer<CbvPathTracing> c_pathTracing : register(b0);
-#ifdef DEBUG_PT_INFO_OUTPUT
+#if defined(DEBUG_PT_INFO_OUTPUT) || defined(DEBUG_PATH_VISUALIZATION)
     ConstantBuffer<CbvPathTracingDebug> c_debug : register(b1);
 	#include "DebugPalette.hlsli"
     #include "Path-Tracing/MathUtils.hlsli"
@@ -34,7 +34,7 @@ RWTexture2D<float4> gAccum : register(u0);
 
 // One struct per SPP. Only works for a single pixel at a time
 #ifdef DEBUG_PATH_VISUALIZATION
-RWStructuredBuffer<DebugPathVisualization> gDebugPathVisualization : register(u1);
+RWStructuredBuffer<DebugPathVisualizationStruct> gDebugPathVisualization : register(u1);
 #endif
 
 SamplerState c_sampler : register(s0);
@@ -43,6 +43,10 @@ SamplerState c_sampler : register(s0);
 
 float4 PSMain(VsOut input) : SV_Target0
 {
+#ifdef DEBUG_PATH_VISUALIZATION
+	//return float4(Approx(c_debug.PathVisualizationSelectedPixelID, input.position.xy, 0.75f), 0, 0, 1);
+#endif
+
     RayQuery<RAY_FLAGS> q;
 
     uint flags = RAY_FLAGS;
@@ -105,11 +109,10 @@ float4 PSMain(VsOut input) : SV_Target0
                           flags,
                           instanceMask,
                           ray,
-                          i,
                           rngInfo
 #ifdef DEBUG_PATH_VISUALIZATION
                           , i
-                          , (c_debug.TakingPathVisualizationSnapshot && Approx(c_debug.PathVisualizationSelectedPixelID, input.position.xy))
+                          , (c_debug.TakingPathVisualizationSnapshot && Approx(c_debug.PathVisualizationSelectedPixelID, input.position.xy, 0.75f))
 #endif
         );
     }

@@ -35,6 +35,7 @@ void PathTracingContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* c
     m_material->AddCBV(device, heap, sizeof(CbvPathTracingDebug), "CBV Path Tracing Debug");
     m_material->AddCBV(device, heap, sizeof(CbvPrimes), "CBV Primes");
     m_material->AddUAV(device, heap, m_accumTexture);
+    m_material->SetUAV(device, 1, heap, nullptr, {});
 }
 
 void PathTracingContext::BuildScene(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const Scene* scene, Heap* heap, D12Resource* envMap)
@@ -227,14 +228,13 @@ void PathTracingContext::Render(ID3D12GraphicsCommandList* cmdList, ID3D12RootSi
 
         m_material->UpdateCBV(0, &cbv);
 
-        if (debugModeIdx != -1)
-        {
-            CbvPathTracingDebug cbvDebug;
-            cbvDebug.DebugIdx = static_cast<DebugInfoOutput>(debugModeIdx);
-            cbvDebug.TakingPathVisualizationSnapshot = takingPathVisSnapshot;
-            cbvDebug.PathVisualizationSelectedPixelID = pathVisSelectedPixel;
-            m_material->UpdateCBV(1, &cbvDebug);
-        }
+#ifdef _DEBUG
+        CbvPathTracingDebug cbvDebug;
+        cbvDebug.DebugIdx = static_cast<DebugInfoOutput>(debugModeIdx);
+        cbvDebug.TakingPathVisualizationSnapshot = takingPathVisSnapshot;
+        cbvDebug.PathVisualizationSelectedPixelID = pathVisSelectedPixel;
+        m_material->UpdateCBV(1, &cbvDebug);
+#endif
 
         const bool needPrimes = config.SamplingStrat == eHalton || config.SamplingStrat == eHaltonOwen;
         if (needPrimes && !m_primesInitialized)
@@ -271,11 +271,12 @@ void PathTracingContext::SetMaterialPathVisualizationBuffer(ID3D12Device* device
 
     D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{};
     uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
-    uavDesc.Format = DXGI_FORMAT_UNKNOWN;
-    uavDesc.Buffer.StructureByteStride = sizeof(DebugPathVisualization);
+    uavDesc.Buffer.StructureByteStride = sizeof(DebugPathVisualizationStruct);
     uavDesc.Buffer.NumElements = numElements;
-    uavDesc.Buffer.FirstElement = 0;
-    m_material->AddUAV(device, heap, buffer->GetResource(), uavDesc);
+    uavDesc.Buffer.CounterOffsetInBytes = 0;
+    uavDesc.Format = DXGI_FORMAT_UNKNOWN; // structured buffer
+    uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
+    m_material->SetUAV(device, 1, heap, buffer->GetResource(), uavDesc);
 
     m_setPathVisualizationBuffer = true;
 }

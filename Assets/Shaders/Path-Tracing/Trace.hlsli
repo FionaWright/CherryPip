@@ -9,7 +9,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             uint instanceMask,
             RayDesc ray,
             inout RngInfo rngInfo
-#ifdef DEBUG_PT_INFO_OUTPUT
+#ifdef DEBUG_PATH_VISUALIZATION
             , uint sampleIdx
             , bool isPathVisualSelectedPixel
 #endif
@@ -45,6 +45,11 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
 #ifdef DEBUG_PT_INFO_OUTPUT
 #    include "Debug/DebugInfoOutputOnMiss.hlsli"
+#endif
+
+#ifdef DEBUG_PATH_VISUALIZATION
+        if (isPathVisualSelectedPixel)
+		    gDebugPathVisualization[sampleIdx].WorldSpacePositionAtBounce[i+1] = ray.Origin + ray.Direction * 1000.0f;
 #endif
             break;
         }
@@ -170,7 +175,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
 #ifdef DEBUG_PATH_VISUALIZATION
         if (isPathVisualSelectedPixel)
-		    gDebugPathVisualization[sampleIdx].WorldSpacePositionAtBounce[i] = float3(NAN, NAN, NAN); // NaN-Terminated Array
+		    gDebugPathVisualization[sampleIdx].NumPositionsSet = i+1;
 #endif
 
     return Lo;

@@ -54,10 +54,10 @@ struct Vertex
 
 #define PATH_VISUALIZATION_MAX_BOUNCES 21
 
-struct DebugPathVisualization
+struct DebugPathVisualizationStruct
 {
     float3 WorldSpacePositionAtBounce[PATH_VISUALIZATION_MAX_BOUNCES]; // Max 21 bounces
-    float p; // 3 * 21 + 1 = 64
+    int NumPositionsSet;
 };
 
 #endif

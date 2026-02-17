@@ -89,9 +89,10 @@ UINT Heap::AddBindlessTexture(ID3D12Device* device, std::shared_ptr<Texture> tex
 
     idx = GetNextDescriptorBindlessTexture(debugName);
     InitSRV(device, tex->GetD12Resource()->GetResource(), srvDesc, idx);
-    ResourceSharer::AddToDatabaseBindless(id, idx);
 
-    return idx - GetBindlessTexBase();
+    uint32_t normalizedIdx = idx - GetBindlessTexBase();
+    ResourceSharer::AddToDatabaseBindless(id, normalizedIdx);
+    return normalizedIdx;
 }
 
 void Heap::InitCBV(ID3D12Device* device, ID3D12Resource* resource, const size_t size, const UINT idx) const

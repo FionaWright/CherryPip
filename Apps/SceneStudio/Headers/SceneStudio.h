@@ -3,6 +3,7 @@
 
 #include "CBV.h"
 #include "Debug/DebugLine.h"
+#include "Debug/PathVisualizer.h"
 #include "System/App.h"
 #include "HWI/Heap.h"
 #include "HWI/RootSig.h"
@@ -157,6 +158,10 @@ private:
     ReadbackManager m_readbackManager;
     RmseTester m_rmseTester;
     uint32_t m_rmseTesterSlot = 0;
+
+    PathVisualizer m_pathVisualizer;
+    bool m_takePathVisualizationSnapshot = false;
+    std::vector<DebugLine> m_pathVisualizationLines;
 #endif
     TextureRTV* m_finalRTV = &m_rtvPingPong1;
 };

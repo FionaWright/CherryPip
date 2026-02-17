@@ -175,6 +175,17 @@ void SceneStudio::guiPathTracer()
         m_readbackManager.GUI(prevReadbackEnabled, m_studioConfig.PT.ReadbackEveryFrame);
     }
 
+    ImGui::Checkbox("Path Visualization Enabled", &m_studioConfig.PT.DebugPathVisualization);
+    if (m_studioConfig.PT.DebugPathVisualization)
+    {
+        ImGui::Indent(IM_GUI_INDENTATION);
+
+        m_takePathVisualizationSnapshot |= ImGui::Button("Take Snapshot##xxx");
+        m_shaderDirty |= m_takePathVisualizationSnapshot;
+
+        ImGui::Unindent(IM_GUI_INDENTATION);
+    }
+
     static const std::vector<const char*> c_debugBufferStrMap = {
         "Normals (Shaded)",
         "Normals (Geometric)",

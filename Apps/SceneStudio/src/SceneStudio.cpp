@@ -87,6 +87,9 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList, double 
         m_shaderDirty = false;
     }
 
+    if (m_studioConfig.PT.DebugPathVisualization)
+        m_ptContext.SetMaterialPathVisualizationBuffer(d3d->GetDevice(), &m_heap, m_pathVisualizer.GetStructuredBuffer(), m_pathVisualizer.GetNumElements());
+
     m_projMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(Config::GetRender().FoV), m_AspectRatio,
                                             Config::GetRender().NearPlane, Config::GetRender().FarPlane);
 
@@ -155,6 +158,32 @@ void SceneStudio::OnPostUpdate(D3D* d3d)
     {
         m_rmseTester.UpdateConvergenceTest(d3d, m_ptContext.GetFrameNum(), &m_heap, m_finalRTV->GetD12Resource());
     }
+
+    if (m_takePathVisualizationSnapshot)
+    {
+        const auto data = m_pathVisualizer.ReadbackData(d3d);
+
+        m_pathVisualizationLines.clear();
+        for (int i = 0; i < data.size(); i++)
+        {
+            for (int j = 0; j < PATH_VISUALIZATION_MAX_BOUNCES; j++)
+            {
+                const XMFLOAT3 start = data[i].WorldSpacePositionAtBounce[j];
+                const XMFLOAT3 end = data[i].WorldSpacePositionAtBounce[j+1];
+                if (std::isnan(end.x) || std::isnan(end.y) || std::isnan(end.z)) // NaN-Terminated
+                    break;
+
+                const XMFLOAT3 color = XMFLOAT3(1, 0, 0);
+
+                DebugLine line;
+                line.Init(d3d, &m_heap, m_shaderLine);
+                line.Update(d3d, &start, &end, &color); // TODO: Color per bounce
+                m_pathVisualizationLines.emplace_back(std::move(line));
+            }
+        }
+
+        m_takePathVisualizationSnapshot = false;
+    }
 #endif
 }
 
@@ -179,7 +208,7 @@ void SceneStudio::loadAssets(D3D* d3d)
     samplers[0].ShaderRegister = 0;
 
     m_rootSig = std::make_shared<RootSig>();
-    m_rootSig->SmartInit(device, 3, 6, 1, true, samplers, _countof(samplers));
+    m_rootSig->SmartInit(device, 3, 6, 2, true, samplers, _countof(samplers));
 
     SceneConfig customScene = {
         "(" + std::to_string(m_sceneConfigs.size()) +") " + "Custom"
@@ -420,6 +449,8 @@ void SceneStudio::loadAssets(D3D* d3d)
 
     m_readbackManager.Init(d3d, &m_heap, &m_rtvPingPong1);
     m_rmseTester.Init(d3d);
+
+    m_pathVisualizer.Init(d3d, 200);
 #endif
 
     V(cmdList->Close());
@@ -748,6 +779,9 @@ void SceneStudio::renderForward(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 
         if (m_dirLightLineEnabled)
             m_dirLightLine.Render(cmdList, vp);
+
+        for (int i = 0; i < m_pathVisualizationLines.size(); i++)
+            m_pathVisualizationLines[i].Render(cmdList, vp);
     }
 #endif
 
@@ -848,6 +882,9 @@ void SceneStudio::compilePtShader(const D3D* d3d)
         args.push_back(L"-DSAMPLING_HALTON_APPLE");
     else if (m_studioConfig.PT.SamplingStrat == eIndependent)
         args.push_back(L"-DSAMPLING_INDEPENDENT");
+
+    if (m_studioConfig.PT.DebugPathVisualization)
+        args.push_back(L"-DDEBUG_PATH_VISUALIZATION");
 
     if (m_studioConfig.PT.LightingModel == PathTracerLightingModel::eMicrofacet)
     {

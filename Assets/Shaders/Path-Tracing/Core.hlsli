@@ -32,6 +32,11 @@ Texture2D<float4> gTextures[] : register(t6);
 
 RWTexture2D<float4> gAccum : register(u0);
 
+// One struct per SPP. Only works for a single pixel at a time
+#ifdef DEBUG_PATH_VISUALIZATION
+RWStructuredBuffer<DebugPathVisualization> gDebugPathVisualization : register(u1);
+#endif
+
 SamplerState c_sampler : register(s0);
 
 #include "Trace.hlsli"
@@ -100,7 +105,13 @@ float4 PSMain(VsOut input) : SV_Target0
                           flags,
                           instanceMask,
                           ray,
-                          rngInfo);
+                          i,
+                          rngInfo
+#ifdef DEBUG_PATH_VISUALIZATION
+                          , i
+                          , (c_debug.TakingPathVisualizationSnapshot && Approx(c_debug.PathVisualizationSelectedPixelID, input.position.xy))
+#endif
+        );
     }
 
     colorSum /= float(c_pathTracing.SPP);

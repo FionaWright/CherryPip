@@ -1,6 +1,8 @@
 #ifndef H_GGX_SMITH_ISO_H
 #define H_GGX_SMITH_ISO_H
 
+#define MICROFACET_MODEL_CHOSEN
+
 struct MicrofacetModel
 {
 #include "MicrofacetModels/IMicrofacetModel.hlsli"

@@ -22,14 +22,17 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 #    include "Debug/DebugInfoOutputPreTrace.hlsli"
 #endif
 
+#ifdef DEBUG_PATH_VISUALIZATION
+        if (isPathVisualSelectedPixel)
+		{
+			gDebugPathVisualization[sampleIdx].WorldSpacePositionAtBounce[0] = ray.Origin;
+		    gDebugPathVisualization[sampleIdx].NumPositionsSet = 1;
+		}
+#endif
+
     uint i = 0;
     for (i = 0; i <= c_pathTracing.NumBounces; i++)
     {
-#ifdef DEBUG_PATH_VISUALIZATION
-        if (isPathVisualSelectedPixel)
-		    gDebugPathVisualization[sampleIdx].WorldSpacePositionAtBounce[i] = ray.Origin;
-#endif
-
         q.TraceRayInline(gTLAS, flags, instanceMask, ray);
         q.Proceed();
 
@@ -49,7 +52,10 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
 #ifdef DEBUG_PATH_VISUALIZATION
         if (isPathVisualSelectedPixel)
-		    gDebugPathVisualization[sampleIdx].WorldSpacePositionAtBounce[i+1] = ray.Origin + ray.Direction * 1000.0f;
+		{
+			uint bounceIdx = gDebugPathVisualization[sampleIdx].NumPositionsSet;
+		    gDebugPathVisualization[sampleIdx].WorldSpacePositionAtBounce[bounceIdx] = ray.Origin + ray.Direction * 1000.0f;
+		}
 #endif
             break;
         }
@@ -167,15 +173,19 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 #ifdef DEBUG_PT_INFO_OUTPUT
 #    include "Debug/DebugInfoOutputOnHit.hlsli"
 #endif
+
+#ifdef DEBUG_PATH_VISUALIZATION
+        if (isPathVisualSelectedPixel)
+		{
+			uint bounceIdx = gDebugPathVisualization[sampleIdx].NumPositionsSet;
+			gDebugPathVisualization[sampleIdx].WorldSpacePositionAtBounce[bounceIdx] = ray.Origin;
+			gDebugPathVisualization[sampleIdx].NumPositionsSet += 1;
+		}
+#endif
     }
 
 #ifdef DEBUG_PT_INFO_OUTPUT
 #    include "Debug/DebugInfoOutputPostTrace.hlsli"
-#endif
-
-#ifdef DEBUG_PATH_VISUALIZATION
-        if (isPathVisualSelectedPixel)
-		    gDebugPathVisualization[sampleIdx].NumPositionsSet = i+1;
 #endif
 
     return Lo;

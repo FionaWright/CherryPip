@@ -1,6 +1,8 @@
 #ifndef H_GGX_SMITH_ISO_H
 #define H_GGX_SMITH_ISO_H
 
+#define MICROFACET_MODEL_CHOSEN
+
 // Have a look at this:
 // https://blog.selfshadow.com/publications/s2012-shading-course/hoffman/s2012_pbs_physics_math_notebook.pdf
 // See PBRT for Aniso version

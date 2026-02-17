@@ -20,6 +20,7 @@ public:
 
 private:
     D12Resource m_structuredBuffer;
+    D12Resource m_emptyBuffer;
     D12Resource m_readbackBuffer;
     size_t m_bufferSize = 0;
     uint32_t m_maxSPP = 0;

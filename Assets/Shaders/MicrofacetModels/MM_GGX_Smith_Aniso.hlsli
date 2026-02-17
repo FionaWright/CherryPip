@@ -1,6 +1,8 @@
 #ifndef H_GGX_SMITH_ANISO_H
 #define H_GGX_SMITH_ANISO_H
 
+#define MICROFACET_MODEL_CHOSEN
+
 // https://github.com/Gforcex/LightingModel/blob/master/Assets/LightingModel/BRDF.cginc
 // https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_materials_anisotropy/README.md
 

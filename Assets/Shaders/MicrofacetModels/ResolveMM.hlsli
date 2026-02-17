@@ -15,6 +15,10 @@ struct MicrofacetModel;
 #   endif
 #endif
 
+#ifndef MICROFACET_MODEL_CHOSEN
+#	include "MicrofacetModels/MM_GGX_Smith_Iso.hlsli"
+#endif
+
 void InitializeMM(
     inout MicrofacetModel mm,
     float roughness,

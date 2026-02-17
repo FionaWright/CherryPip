@@ -52,4 +52,12 @@ struct Vertex
     float3 binormal;
 };
 
+#define PATH_VISUALIZATION_MAX_BOUNCES 21
+
+struct DebugPathVisualization
+{
+    float3 WorldSpacePositionAtBounce[PATH_VISUALIZATION_MAX_BOUNCES]; // Max 21 bounces
+    float p; // 3 * 21 + 1 = 64
+};
+
 #endif

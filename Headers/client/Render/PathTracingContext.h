@@ -63,6 +63,7 @@ struct PtConfig
     alignas(4) bool DebugInfoOutputEnabled = false;
     alignas(4) bool DebugForceSpecular = false;
     alignas(4) bool DebugForceDiffuse = false;
+    alignas(4) bool DebugPathVisualization = false;
     alignas(4) bool AccumulationEnabled = true;
     alignas(4) bool JitterEnabled = true;
     alignas(4) bool ReadbackEnabled = false;
@@ -99,6 +100,10 @@ public:
     UINT GetNumInstances() const { return m_blasList.size(); }
     static size_t GetInstanceDataSize() { return sizeof(PtInstanceData); }
 
+#ifdef _DEBUG
+    void SetMaterialPathVisualizationBuffer(ID3D12Device* device, Heap* heap, const D12Resource* buffer, uint32_t numElements);
+#endif
+
 private:
     std::shared_ptr<TLAS> m_tlas;
     std::vector<std::shared_ptr<BLAS>> m_blasList;
@@ -116,6 +121,10 @@ private:
 
     CbvPrimes m_cbvPrimes{};
     bool m_primesInitialized = false;
+
+#ifdef _DEBUG
+    bool m_setPathVisualizationBuffer = false;
+#endif
 };
 
 

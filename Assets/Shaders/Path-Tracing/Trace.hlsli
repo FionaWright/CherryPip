@@ -2,12 +2,18 @@
 #include "Path-Tracing/Miss.hlsli"
 
 #include "LightingModels.hlsli"
+#include "MathUtils.hlsli"
 
 float3 Trace(inout RayQuery<RAY_FLAGS> q,
             uint flags,
             uint instanceMask,
             RayDesc ray,
-            inout RngInfo rngInfo)
+            inout RngInfo rngInfo
+#ifdef DEBUG_PT_INFO_OUTPUT
+            , uint sampleIdx
+            , bool isPathVisualSelectedPixel
+#endif
+)
 {
     float3 Lo = float3(0, 0, 0);
     float3 throughput = float3(1, 1, 1);
@@ -16,8 +22,14 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 #    include "Debug/DebugInfoOutputPreTrace.hlsli"
 #endif
 
-    for (uint i = 0; i <= c_pathTracing.NumBounces; i++)
+    uint i = 0;
+    for (i = 0; i <= c_pathTracing.NumBounces; i++)
     {
+#ifdef DEBUG_PATH_VISUALIZATION
+        if (isPathVisualSelectedPixel)
+		    gDebugPathVisualization[sampleIdx].WorldSpacePositionAtBounce[i] = ray.Origin;
+#endif
+
         q.TraceRayInline(gTLAS, flags, instanceMask, ray);
         q.Proceed();
 
@@ -154,6 +166,11 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
 #ifdef DEBUG_PT_INFO_OUTPUT
 #    include "Debug/DebugInfoOutputPostTrace.hlsli"
+#endif
+
+#ifdef DEBUG_PATH_VISUALIZATION
+        if (isPathVisualSelectedPixel)
+		    gDebugPathVisualization[sampleIdx].WorldSpacePositionAtBounce[i] = float3(NAN, NAN, NAN); // NaN-Terminated Array
 #endif
 
     return Lo;

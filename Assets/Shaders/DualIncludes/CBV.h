@@ -161,7 +161,8 @@ enum class DebugInfoOutput
 struct CbvPathTracingDebug
 {
     DebugInfoOutput DebugIdx;
-    uint3 p;
+    float2 PathVisualizationSelectedPixelID;
+    bool TakingPathVisualizationSnapshot;
 };
 
 struct CbvHighlightPixel

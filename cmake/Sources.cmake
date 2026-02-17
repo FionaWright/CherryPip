@@ -85,6 +85,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_CONFIGURATION_TYPES MATCHES "Debug
             src/client/Debug/DebugLine.cpp
             src/client/Debug/GPUEventScoped.cpp
             src/client/Debug/HotReloader.cpp
+            src/client/Debug/PathVisualizer.cpp
             src/client/Debug/PythonExecutor.cpp
             src/client/Debug/Profiler.cpp
             src/client/Debug/ReadbackBuffer.cpp
@@ -96,6 +97,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_CONFIGURATION_TYPES MATCHES "Debug
             Headers/client/Debug/DebugLine.h
             Headers/client/Debug/GPUEventScoped.h
             Headers/client/Debug/HotReloader.h
+            Headers/client/Debug/PathVisualizer.h
             Headers/client/Debug/PythonExecutor.h
             Headers/client/Debug/Profiler.h
             Headers/client/Debug/ReadbackBuffer.h

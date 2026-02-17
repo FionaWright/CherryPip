@@ -259,3 +259,19 @@ void PathTracingContext::Reset()
 {
     m_frameIdx = 0;
 }
+
+void PathTracingContext::SetMaterialPathVisualizationBuffer(ID3D12Device* device, Heap* heap, const D12Resource* buffer, const uint32_t numElements)
+{
+    if (m_setPathVisualizationBuffer)
+        return;
+
+    D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{};
+    uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+    uavDesc.Format = DXGI_FORMAT_UNKNOWN;
+    uavDesc.Buffer.StructureByteStride = sizeof(DebugPathVisualization);
+    uavDesc.Buffer.NumElements = numElements;
+    uavDesc.Buffer.FirstElement = 0;
+    m_material->AddUAV(device, heap, buffer->GetResource(), uavDesc);
+
+    m_setPathVisualizationBuffer = true;
+}

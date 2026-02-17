@@ -1,6 +1,8 @@
 #ifndef H_MATH_UTILS_H
 #define H_MATH_UTILS_H
 
+#define NAN 0.0f/0.0f;
+
 // https://sakibsaikia.github.io/graphics/2022/01/04/Nan-Checks-In-HLSL.html
 bool IsNaN(float x)
 {
@@ -139,6 +141,12 @@ float erf(float x)
 float cot(float x)
 {
     return cos(x) / sin(x);
+}
+
+bool Approx(float2 a, float2 b, float epsilon = 1e-5f)
+{
+    float2 d = a - b;
+    return dot(d, d) <= epsilon * epsilon;
 }
 
 #endif

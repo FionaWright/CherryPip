@@ -39,7 +39,11 @@ void Material::AddCBV(ID3D12Device* device, Heap* heap, const size_t size, const
 
     V(device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &bufferDesc,
                                     D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&cbv.Resource)));
-    V(cbv.Resource->SetName(L"CBV"));
+
+#ifdef _DEBUG
+    const std::wstring name = L"CBV Resource: " + std::wstring(debugName, debugName + strlen(debugName)) + L" - Size=" + std::to_wstring(size);
+    V(cbv.Resource->SetName(name.c_str()));
+#endif
 
     heap->InitCBV(device, cbv.Resource.Get(), alignedSize, idx);
 
@@ -169,10 +173,29 @@ void Material::AddUAV(ID3D12Device* device, Heap* heap, ID3D12Resource* resource
 void Material::AddUAV(ID3D12Device* device, Heap* heap, ID3D12Resource* resource, const D3D12_UNORDERED_ACCESS_VIEW_DESC& desc)
 {
     const UINT idx = heap->GetNextDescriptor("UAV");
-    heap->InitUAV(device, resource, desc, idx);
+    if (resource)
+        heap->InitUAV(device, resource, desc, idx);
 
     const UAV uav = { idx };
     m_uavs.push_back(uav);
+}
+
+void Material::SetUAV(ID3D12Device* device, const uint32_t uavIdx, Heap* heap, ID3D12Resource* resource, const D3D12_UNORDERED_ACCESS_VIEW_DESC& desc)
+{
+    if (uavIdx > m_uavs.size())
+        throw std::exception("Invalid uav index");
+
+    uint32_t heapIdx;
+    if (uavIdx == m_uavs.size())
+    {
+        heapIdx = heap->GetNextDescriptor("UAV");
+        m_uavs.push_back({ heapIdx });
+    }
+    else
+        heapIdx = m_uavs[uavIdx].HeapIndex;
+
+    if (resource)
+        heap->InitUAV(device, resource, desc, heapIdx);
 }
 
 void Material::TransitionSrvsToPS(ID3D12GraphicsCommandList* cmdList) const

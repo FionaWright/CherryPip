@@ -62,6 +62,24 @@ void SceneStudio::RenderGUI()
         ImGui::EndTabBar();
     }
 
+    m_pathTracerDirty |= m_shaderDirty;
+
+#ifdef _DEBUG
+    if (m_pathTracerDirty && m_studioConfig.PT.ReadbackEveryFrame)
+        m_readbackManager.SetInReadbackProcess(true);
+    else if (!m_studioConfig.PT.ReadbackEveryFrame)
+        m_readbackManager.SetInReadbackProcess(false);
+#endif
+
+    if (m_pathTracerDirty)
+    {
+        m_ptContext.Reset();
+        m_pathTracerDirty = false;
+#ifdef _DEBUG
+        m_readbackManager.ClearReadbackData();
+#endif
+    }
+
     Gui::EndWindow();
 }
 
@@ -186,6 +204,8 @@ void SceneStudio::guiPathTracer()
             m_takePathVisualizationSnapshot |= ImGui::Button("Take Snapshot##xxx");
             m_shaderDirty |= m_takePathVisualizationSnapshot;
         }
+        else
+            ImGui::Text("Please select a pixel");
 
         ImGui::Unindent(IM_GUI_INDENTATION);
     }
@@ -275,23 +295,7 @@ void SceneStudio::guiPathTracer()
         m_studioConfig.PT.FurnaceTestHdReflect = false;
         m_shaderDirty = true;
     }
-
-    m_pathTracerDirty |= m_shaderDirty;
-
-    if (m_pathTracerDirty && m_studioConfig.PT.ReadbackEveryFrame)
-        m_readbackManager.SetInReadbackProcess(true);
-    else if (!m_studioConfig.PT.ReadbackEveryFrame)
-        m_readbackManager.SetInReadbackProcess(false);
 #endif
-
-    if (m_pathTracerDirty)
-    {
-        m_ptContext.Reset();
-        m_pathTracerDirty = false;
-#ifdef _DEBUG
-        m_readbackManager.ClearReadbackData();
-#endif
-    }
 }
 
 void SceneStudio::guiRaster()
@@ -426,7 +430,9 @@ void SceneStudio::guiMain()
         changedDirLight |= ImGuiUtils::FwColorEdit3("Colour##xx", reinterpret_cast<float*>(&m_studioConfig.DirLightColor));
         changedDirLight |= ImGuiUtils::FwInputFloat("Intensity##xx", &m_studioConfig.DirLightIntensity);
         m_pathTracerDirty |= changedDirLight;
+#ifdef _DEBUG
         m_debugLinesDirty |= changedDirLight;
+#endif
     }
 
 #ifdef _DEBUG
@@ -434,10 +440,10 @@ void SceneStudio::guiMain()
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Debug Lines##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
-    m_pathTracerDirty |= ImGui::Checkbox("Enabled##xxxx", &m_debugLinesEnabled);
-    if (m_debugLinesEnabled)
+    m_pathTracerDirty |= ImGui::Checkbox("Enabled##xxxx", &m_studioConfig.DebugLinesEnabled);
+    if (m_studioConfig.DebugLinesEnabled)
     {
-        m_pathTracerDirty |= ImGui::Checkbox("Dir Light##xxxx", &m_dirLightLineEnabled);
+        m_pathTracerDirty |= ImGui::Checkbox("Dir Light##xxxx", &m_studioConfig.DirLightDebugLineEnabled);
     }
 #endif
 

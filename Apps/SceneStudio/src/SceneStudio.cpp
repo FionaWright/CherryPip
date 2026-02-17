@@ -140,7 +140,7 @@ void SceneStudio::OnPostUpdate(D3D* d3d)
     }
 
 #ifdef _DEBUG
-    if (m_debugLinesDirty)
+    if (m_studioConfig.DebugLinesEnabled && m_debugLinesDirty)
     {
         const XMFLOAT3 start = Mult(m_studioConfig.DirLightDirection, 1000.0f);
         const XMFLOAT3 end = Mult(m_studioConfig.DirLightDirection, -1000.0f);
@@ -177,7 +177,7 @@ void SceneStudio::OnPostUpdate(D3D* d3d)
         m_pathVisualizationLines.clear();
         for (int i = 0; i < data.size(); i++)
         {
-            for (int j = 0; j < PATH_VISUALIZATION_MAX_BOUNCES; j++)
+            for (int j = 0; j < data[i].NumPositionsSet; j++)
             {
                 const XMFLOAT3 start = data[i].WorldSpacePositionAtBounce[j];
                 const XMFLOAT3 end = data[i].WorldSpacePositionAtBounce[j+1];
@@ -186,10 +186,10 @@ void SceneStudio::OnPostUpdate(D3D* d3d)
 
                 const XMFLOAT3 color = XMFLOAT3(1, 0, 0);
 
-                DebugLine line;
-                line.Init(d3d, &m_heap, m_shaderLine);
-                line.Update(d3d, &start, &end, &color); // TODO: Color per bounce
-                m_pathVisualizationLines.emplace_back(std::move(line));
+                auto line = std::make_shared<DebugLine>();
+                line->Init(d3d, &m_heap, m_shaderLine);
+                line->Update(d3d, &start, &end, &color); // TODO: Color per bounce
+                m_pathVisualizationLines.emplace_back(line);
             }
         }
 
@@ -461,7 +461,7 @@ void SceneStudio::loadAssets(D3D* d3d)
     m_readbackManager.Init(d3d, &m_heap, &m_rtvPingPong1);
     m_rmseTester.Init(d3d);
 
-    m_pathVisualizer.Init(d3d, 200);
+    m_pathVisualizer.Init(d3d, cmdList.Get(), 200);
 #endif
 
     V(cmdList->Close());
@@ -718,7 +718,11 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
                            );
 
 #ifdef _DEBUG
-        m_completedPathVisualizationSnapshot = true;
+        if (m_takePathVisualizationSnapshot)
+        {
+            m_completedPathVisualizationSnapshot = true;
+            m_takePathVisualizationSnapshot = false;
+        }
 #endif
     }
 
@@ -733,7 +737,26 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         return;
     }
 
-    // TODO: Debug lines
+    if (m_studioConfig.DebugLinesEnabled)
+    {
+        GPU_SCOPE(cmdList, "Debug Lines");
+
+        m_finalRTV->GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        const UINT rtvIdx = m_finalRTV->GetHeapIdx();
+        const auto rtvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_heapRTV.GetCPUHandle(), rtvIdx, m_heapRTV.GetIncrementSize());
+        const CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(d3d->GetDsvHeapStart(), d3d->GetFrameIndex(), d3d->GetDsvDescriptorSize());
+        cmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+        cmdList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+
+        cmdList->SetGraphicsRootSignature(m_rootSigLine.Get());
+        const XMMATRIX vp = m_camera.GetViewMatrix() * m_projMatrix;
+
+        if (m_studioConfig.DirLightDebugLineEnabled)
+            m_dirLightLine.Render(cmdList, vp);
+
+        for (int i = 0; i < m_pathVisualizationLines.size(); i++)
+            m_pathVisualizationLines[i]->Render(cmdList, vp);
+    }
 #endif
 
     if (m_studioConfig.Denoising.Enabled)
@@ -790,18 +813,18 @@ void SceneStudio::renderForward(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 
 #ifdef _DEBUG
     // Debug Line Pass
-    if (m_debugLinesEnabled)
+    if (m_studioConfig.DebugLinesEnabled)
     {
         GPU_SCOPE(cmdList, "Debug Lines");
 
         cmdList->SetGraphicsRootSignature(m_rootSigLine.Get());
         const XMMATRIX vp = m_camera.GetViewMatrix() * m_projMatrix;
 
-        if (m_dirLightLineEnabled)
+        if (m_studioConfig.DirLightDebugLineEnabled)
             m_dirLightLine.Render(cmdList, vp);
 
         for (int i = 0; i < m_pathVisualizationLines.size(); i++)
-            m_pathVisualizationLines[i].Render(cmdList, vp);
+            m_pathVisualizationLines[i]->Render(cmdList, vp);
     }
 #endif
 

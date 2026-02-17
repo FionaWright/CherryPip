@@ -78,6 +78,8 @@ public:
     void AddUAV(ID3D12Device* device, Heap* heap, ID3D12Resource* resource, DXGI_FORMAT format);
     void AddUAV(ID3D12Device* device, Heap* heap, ID3D12Resource* resource,
                 const D3D12_UNORDERED_ACCESS_VIEW_DESC& desc);
+    void SetUAV(ID3D12Device* device, uint32_t uavIdx, Heap* heap, ID3D12Resource* resource,
+                const D3D12_UNORDERED_ACCESS_VIEW_DESC& desc);
 
     void TransitionSrvsToPS(ID3D12GraphicsCommandList* cmdList) const;
 

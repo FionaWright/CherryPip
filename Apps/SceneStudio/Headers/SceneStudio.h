@@ -2,6 +2,7 @@
 #define PT_SCENESTUDIO_H
 
 #include "CBV.h"
+#include "Debug/DebugLine.h"
 #include "System/App.h"
 #include "HWI/Heap.h"
 #include "HWI/RootSig.h"
@@ -57,6 +58,7 @@ struct StudioConfig
     DenoisingConfig Denoising = {};
 
     bool EnvMapEnabled = true;
+    bool DirLightDebugLineEnabled = true;
     float EnvMapRotation = 0.0f;
     float DirLightIntensity = 100.0f;
     XMFLOAT3 DirLightDirection = XMFLOAT3(1, -1, 1);
@@ -137,6 +139,13 @@ private:
     RasterContext m_rasterContext;
     std::shared_ptr<Shader> m_shaderRaster;
     Texture m_texBrdfIntegrationMap;
+
+#ifdef _DEBUG
+    RootSig m_rootSigLine;
+    std::shared_ptr<Shader> m_shaderLine;
+    DebugLine m_dirLightLine;
+    bool m_debugLinesDirty = true;
+#endif
 
     XMMATRIX m_projMatrix = {};
 

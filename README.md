@@ -32,6 +32,7 @@ C++, HLSL and Python are the main languages.
 - Microfacet lighting model + Irradiance IBL
 - Rotatable cubemap skybox that has parity with path tracer backend
 - Many different debug view modes (WorldPos, Normals, Tangents, Roughness, UV, Lambert, Albedo, etc) (Over 20)
+- Ability to render lines for debugging directions/axes/etc
 
 ### Path Tracer Render Backend
 - Fully deterministic and seeded
@@ -78,6 +79,7 @@ Progress as of 25/01/26:
 
 Progress as of 29/01/26:  
 <img width="961" height="575" alt="image" src="https://github.com/user-attachments/assets/dc7b6217-9eaa-4a9b-ad21-7b998f25ba47" />
+
 
 
 

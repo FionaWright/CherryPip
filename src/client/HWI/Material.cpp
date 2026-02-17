@@ -83,7 +83,7 @@ void Material::SetTex(ID3D12Device* device, const UINT srvIdx, Heap* heap, std::
 
     m_tempTextureOwnership.push_back(tex);
 
-    std::string debugNameStr = Config::GetSystem().DebugHeapEnabled ? wstringToString(tex->GetD12Resource()->GetDebugName()).c_str() : "";
+    std::string debugNameStr = Config::GetSystem().DebugHeapEnabled ? wstringToString(tex->GetD12Resource()->GetName()).c_str() : "";
     const char* debugName = Config::GetSystem().DebugHeapEnabled ? debugNameStr.c_str() : nullptr;
     SetSRV(device, srvIdx, heap, tex->GetD12Resource(), srvDesc, debugName);
 }
@@ -98,7 +98,7 @@ void Material::SetTex(ID3D12Device* device, const UINT srvIdx, Heap* heap, D12Re
     srvDesc.Texture2D.PlaneSlice = 0;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
-    std::string debugNameStr = Config::GetSystem().DebugHeapEnabled ? wstringToString(d12Resource->GetDebugName()).c_str() : "";
+    std::string debugNameStr = Config::GetSystem().DebugHeapEnabled ? wstringToString(d12Resource->GetName()).c_str() : "";
     const char* debugName = Config::GetSystem().DebugHeapEnabled ? debugNameStr.c_str() : nullptr;
     SetSRV(device, srvIdx, heap, d12Resource, srvDesc, debugName);
 }
@@ -114,7 +114,7 @@ void Material::SetBuffer(ID3D12Device* device, const UINT srvIdx, Heap* heap, st
 
     m_tempResourceOwnership.push_back(resource);
 
-    std::string debugNameStr = Config::GetSystem().DebugHeapEnabled ? wstringToString(resource->GetDebugName()).c_str() : "";
+    std::string debugNameStr = Config::GetSystem().DebugHeapEnabled ? wstringToString(resource->GetName()).c_str() : "";
     const char* debugName = Config::GetSystem().DebugHeapEnabled ? debugNameStr.c_str() : nullptr;
     SetSRV(device, srvIdx, heap, resource.get(), srvDesc, debugName);
 }
@@ -139,7 +139,7 @@ void Material::AddUAV(ID3D12Device* device, Heap* heap, const std::shared_ptr<Te
     uavDesc.Texture2D.MipSlice = 0;
     uavDesc.Texture2D.PlaneSlice = 0;
 
-    std::string debugNameStr = Config::GetSystem().DebugHeapEnabled ? wstringToString(tex->GetD12Resource()->GetDebugName()).c_str() : "";
+    std::string debugNameStr = Config::GetSystem().DebugHeapEnabled ? wstringToString(tex->GetD12Resource()->GetName()).c_str() : "";
     const char* debugName = Config::GetSystem().DebugHeapEnabled ? debugNameStr.c_str() : nullptr;
 
     const UINT idx = heap->GetNextDescriptor(debugName);

@@ -10,11 +10,15 @@ class Texture;
 class ResourceSharer
 {
 public:
-    static void AddToDatabase(const std::string& id, std::shared_ptr<Texture> tex);
-    static bool TryGetFromDatabase(const std::string& id, std::shared_ptr<Texture>& tex);
+    static void AddToDatabaseTex(const std::string& id, std::shared_ptr<Texture> tex);
+    static bool TryGetFromDatabaseTex(const std::string& id, std::shared_ptr<Texture>& tex);
+
+    static void AddToDatabaseBindless(const std::wstring& id, uint32_t idx);
+    static bool TryGetFromDatabaseBindless(const std::wstring& id, uint32_t& idx);
 
 private:
     static std::unordered_map<std::string, std::shared_ptr<Texture>> s_databaseTex;
+    static std::unordered_map<std::wstring, uint32_t> s_databaseBindless;
 };
 
 

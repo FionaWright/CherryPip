@@ -27,7 +27,7 @@ public:
     ID3D12Resource* GetUploadResource() const { return m_uploadResource.Get(); }
     D3D12_RESOURCE_STATES GetCurrentState() const { return m_currentState; }
     D3D12_RESOURCE_DESC GetDesc() const { return m_desc; }
-    [[nodiscard]] const std::wstring& GetDebugName() const { return m_debugName; }
+    [[nodiscard]] const std::wstring& GetName() const { return m_name; }
 
 private:
     ComPtr<ID3D12Resource> m_uploadResource;
@@ -35,7 +35,7 @@ private:
     D3D12_RESOURCE_DESC m_desc = {};
     D3D12_RESOURCE_STATES m_currentState = {};
 
-    std::wstring m_debugName;
+    std::wstring m_name;
 };
 
 #endif //PT_D12RESOURCE_H

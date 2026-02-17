@@ -6,7 +6,7 @@
 struct MaxLumRedSearchStruct
 {
     float Luminance;
-    uint2 UV;
+    float2 UV;
 };
 
 struct SumSquaredErrorStruct

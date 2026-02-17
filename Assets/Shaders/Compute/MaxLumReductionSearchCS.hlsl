@@ -19,7 +19,7 @@ ConstantBuffer<CbvMaxLumRedSearch> cbv : register(b0);
 // Divide DTid.x by 16 to get the buffer idx
 
 groupshared float localMaxLum[WARP_SIZE];
-groupshared uint2 localMaxUV[WARP_SIZE];
+groupshared float2 localMaxUV[WARP_SIZE];
 
 [numthreads(WARP_SIZE_1D, WARP_SIZE_1D, 1)]
 void CSMain(uint3 DTid : SV_DispatchThreadID)
@@ -27,8 +27,8 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
     uint2 threadID = fmod(DTid.xy, WARP_SIZE_1D);
     uint threadIdx = threadID.y * WARP_SIZE_1D + threadID.x;
 
-    float maxLum = 0.f;
-    uint2 maxUV = uint2(0.f, 0.f);
+    float maxLum = -1.0f;
+    float2 maxUV = float2(0.f, 0.f);
 
     [unroll]
     for (int y = 0; y < BLOCK_SIZE; y++)
@@ -43,7 +43,7 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
                 continue;
 
             maxLum = lum;
-            maxUV = DTid.xy + int2(x,y);
+            maxUV = uv;
         }
 
     localMaxLum[threadIdx] = maxLum;

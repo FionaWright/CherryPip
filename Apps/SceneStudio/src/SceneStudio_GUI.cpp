@@ -425,7 +425,13 @@ void SceneStudio::guiMain()
         m_shaderDirty |= ImGui::Checkbox("Enabled##xx", &m_studioConfig.EnvMapEnabled);
         if (m_studioConfig.EnvMapEnabled)
         {
-            m_envMapDirty |= ImGuiUtils::FwInputFloat("Rotation##xx", &m_studioConfig.EnvMapRotation);
+            static float cachedRotation = m_studioConfig.EnvMapRotation;
+            ImGuiUtils::FwInputFloat("Rotation##xx", &cachedRotation);
+            if (ImGui::Button("Apply Rotation"))
+            {
+                m_studioConfig.EnvMapRotation = cachedRotation;
+                m_shaderDirty = true;
+            }
 
             if (m_studioConfig.Backend == RenderBackend::ePathTracer)
             {

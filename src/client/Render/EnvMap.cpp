@@ -271,11 +271,14 @@ XMFLOAT3 EnvMap::GetDirectionOfHighestIntensity(D3D* d3d, Heap* heap)
     }
 
     // Transform uv to direction
-    const auto [x, y] = readbackData[maxIdx].UV;
-    auto fUv = XMFLOAT2(static_cast<float>(x), static_cast<float>(y));
-    fUv.x /= fWidth;
-    fUv.y /= fHeight;
-    const XMFLOAT3 dir = EaSquareToSphere(fUv);
+    CherryPrint("MaxLumRedSearch Luminance=" << readbackData[maxIdx].Luminance << ", UV=(" << readbackData[maxIdx].UV.x << "," << readbackData[maxIdx].UV.y << ")");
+    XMFLOAT3 dir = glueNormalize(EaSquareToSphere(readbackData[maxIdx].UV));
+    dir.x = -dir.x;
+    dir.y = -dir.y;
+    dir.z = -dir.z;
+
+    if (m_rotation == 0)
+        return dir;
 
     // Rotate direction
     float yawRad = XMConvertToRadians(m_rotation);

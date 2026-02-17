@@ -101,8 +101,9 @@ private:
     void renderDeferred(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void compilePtShader(const D3D* d3d);
     void ResetCameraToSceneStart();
-    void GuiPathTracer(bool resetPT);
-    void GuiRaster();
+
+    void guiPathTracer();
+    void guiRaster();
     void guiMain();
     void guiScene();
     void guiHeapDebug();
@@ -120,6 +121,7 @@ private:
     std::vector<std::shared_ptr<Scene>> m_scenes;
     uint32_t m_currentScene = 0;
     bool m_sceneDirty = true;
+    bool m_pathTracerDirty = false;
 
     StudioConfig m_studioConfig = {};
 

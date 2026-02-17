@@ -71,7 +71,6 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ## PT-TODO:
 
 ### Main Tasks
-- Fix dir light dir
 - Implement distant light
 - See if aniso works better on Barn Lamp with distant light
 - Fix VNDF issues
@@ -99,6 +98,5 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Irradiance prealiasing, convert discrete to continuous through c = d + 0.5? Does this apply to unjittered PT samples as well?
 - Something wrong with sphere model, makes furnace tests hard
 - Bindless heap sharing
-- Line drawing debug tool (Use for dir light and axes) Then use to fix dir light dir
 - Put all PT/Raster parts of GUI into their own tabs + Make PT stats visible no matter where you're scrolled
 - Make "R" reset the PT and reset camera to scene start

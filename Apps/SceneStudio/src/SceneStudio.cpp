@@ -119,6 +119,12 @@ void SceneStudio::OnPostUpdate(D3D* d3d)
         m_debugLinesDirty = true;
     }
 
+    if (Input::IsKeyDown(KeyCode::R))
+    {
+        m_ptContext.Reset();
+        ResetCameraToSceneStart();
+    }
+
 #ifdef _DEBUG
     if (m_debugLinesDirty)
     {

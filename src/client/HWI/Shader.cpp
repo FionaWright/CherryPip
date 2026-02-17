@@ -95,7 +95,7 @@ inline ComPtr<IDxcBlob> CompileShaderDXC(
     return vertexShaderBlob;
 }
 
-void Shader::InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D12Device* device, ID3D12RootSignature* rootSig, const bool dsvEnabled, const std::vector<const WCHAR*>& args, const uint32_t numRTVs)
+void Shader::InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D12Device* device, ID3D12RootSignature* rootSig, const bool dsvEnabled, const std::vector<const WCHAR*>& args, const uint32_t numRTVs, const D3D12_PRIMITIVE_TOPOLOGY_TYPE topology)
 {
 #if defined(_DEBUG)
     UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
@@ -128,7 +128,7 @@ void Shader::InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D1
     psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
     psoDesc.DepthStencilState.StencilEnable = dsvEnabled ? TRUE : FALSE;
     psoDesc.SampleMask = UINT_MAX;
-    psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+    psoDesc.PrimitiveTopologyType = topology;
     psoDesc.NumRenderTargets = numRTVs;
     for (int i = 0; i < numRTVs; i++)
         psoDesc.RTVFormats[i] = Config::GetRender().RtvFormat;

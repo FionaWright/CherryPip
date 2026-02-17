@@ -407,7 +407,7 @@ void SceneStudio::loadAssets(D3D* d3d)
         };
         const D3D12_INPUT_LAYOUT_DESC ild = { ildDesc.data(), static_cast<uint32_t>(ildDesc.size())};
         m_shaderLine = std::make_shared<Shader>();
-        m_shaderLine->InitVsPs(L"LineVSPS.hlsl", L"LineVSPS.hlsl", ild, device, m_rootSigLine.Get());
+        m_shaderLine->InitVsPs(L"LineVSPS.hlsl", L"LineVSPS.hlsl", ild, device, m_rootSigLine.Get(), true, {}, 1, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE);
 
         m_dirLightLine.Init(d3d, &m_heap, m_shaderLine);
     }
@@ -733,12 +733,15 @@ void SceneStudio::renderForward(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 
 #ifdef _DEBUG
     // Debug Line Pass
-    if (true) // TODO
+    if (m_debugLinesEnabled)
     {
-        cmdList->SetGraphicsRootSignature(m_rootSigLine.Get());
+        GPU_SCOPE(cmdList, "Debug Lines");
 
+        cmdList->SetGraphicsRootSignature(m_rootSigLine.Get());
         const XMMATRIX vp = m_camera.GetViewMatrix() * m_projMatrix;
-        m_dirLightLine.Render(cmdList, vp);
+
+        if (m_dirLightLineEnabled)
+            m_dirLightLine.Render(cmdList, vp);
     }
 #endif
 

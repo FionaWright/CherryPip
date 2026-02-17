@@ -1,3 +1,5 @@
+#include "CBV.h"
+
 struct VsIn
 {
     float3 Position : POSITION;

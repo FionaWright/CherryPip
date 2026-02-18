@@ -62,7 +62,7 @@ struct StudioConfig
     bool DebugLinesEnabled = true;
     bool DirLightDebugLineEnabled = false;
     float EnvMapRotation = 0.0f;
-    float DirLightIntensity = 100.0f;
+    float DirLightIntensity = 1.0f;
     XMFLOAT3 DirLightDirection = XMFLOAT3(1, -1, 1);
     XMFLOAT3 DirLightColor = XMFLOAT3(1, 1, 1);
 };

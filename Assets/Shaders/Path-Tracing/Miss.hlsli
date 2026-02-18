@@ -27,8 +27,12 @@ float3 Miss(float3 origin, float3 direction, uint bounceIdx)
     if (bounceIdx >= 1)
     {
         float sunCos = dot(direction, -normalize(c_pathTracing.DirLight));
+#    ifdef DIR_LIGHT_DISTANT
+        Li += c_pathTracing.DirLightColor * c_pathTracing.DirLightIntensity * saturate(sunCos);
+#    else
         if (sunCos > c_pathTracing.DirLightCosAngularRadius)
-            Li += c_pathTracing.DirLightColor * c_pathTracing.DirLightIntensity;
+            Li += c_pathTracing.DirLightColor * c_pathTracing.DirLightIntensity * 100.0f;
+#    endif
     }
 #endif
 

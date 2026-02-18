@@ -917,6 +917,8 @@ void SceneStudio::compilePtShader(const D3D* d3d)
         args.push_back(L"-DLIGHTING_GLASS_ENABLED");
     if (m_studioConfig.PT.JitterEnabled)
         args.push_back(L"-DJITTER_ENABLED");
+    if (m_studioConfig.PT.DirLightIsDistant)
+        args.push_back(L"-DDIR_LIGHT_DISTANT");
 
     if (m_studioConfig.PT.FurnaceTestHdReflect)
         args.push_back(L"-DFURNACE_TEST_HEMI_DIR_REFLECT");

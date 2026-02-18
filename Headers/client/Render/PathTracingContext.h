@@ -71,6 +71,7 @@ struct PtConfig
     alignas(4) bool EnvMapIsEqualArea = true;
     alignas(4) bool RussianRouletteEnabled = true;
     alignas(4) bool DirLightEnabled = true;
+    alignas(4) bool DirLightIsDistant = true;
     alignas(4) bool NormalMapsEnabled = true;
     alignas(4) bool SampleVisibleNormals = false;
     alignas(4) bool AnisotropyEnabled = false;

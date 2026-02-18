@@ -88,9 +88,8 @@ Progress as of 25/01/26:
 Progress as of 29/01/26:  
 <img width="961" height="575" alt="image" src="https://github.com/user-attachments/assets/dc7b6217-9eaa-4a9b-ad21-7b998f25ba47" />
 
-
-
-
+Progress as of 18/02/26:
+<img width="1020" height="575" alt="Chess Beauty" src="https://github.com/user-attachments/assets/e3467b67-f8c4-4d19-aa1f-199c96550b2e" />
 
 
 

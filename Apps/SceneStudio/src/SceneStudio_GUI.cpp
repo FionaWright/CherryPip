@@ -117,6 +117,7 @@ void SceneStudio::guiPathTracer()
 
     m_shaderDirty |= ImGui::Checkbox("Dir Light Enabled##xx", &m_studioConfig.PT.DirLightEnabled);
     m_pathTracerDirty |= ImGuiUtils::FwInputFloat("Dir Light Radius (R)##xx", &m_studioConfig.PT.DirLightCosAngularRadius);
+    m_shaderDirty |= ImGui::Checkbox("Dir Light Is Distant", &m_studioConfig.PT.DirLightIsDistant);
 
     m_shaderDirty |= ImGui::Checkbox("Normal Maps Enabled##xx", &m_studioConfig.PT.NormalMapsEnabled);
     m_shaderDirty |= ImGui::Checkbox("Alpha Testing Enabled##xx", &m_studioConfig.PT.AlphaTestingEnabled);

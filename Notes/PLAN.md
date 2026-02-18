@@ -35,7 +35,7 @@
 - [x] Glass model
 - [x] Importance Sampling
 - [ ] MIS
-- [ ] Proper distant light using bounding sphere of plane (No singular sun-point) (PBRT)
+- [x] Proper distant light using bounding sphere of plane (No singular sun-point) (PBRT)
 - [ ] Oren-Nayers Lighting Model (https://blog.selfshadow.com/publications/s2012-shading-course/gotanda/s2012_pbs_beyond_blinn_slides_v3.pdf)
 - [ ] Microfacet Beckmann (PBRT)
 - [ ] Microfacet Glass (Beckmann)
@@ -71,14 +71,12 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ## PT-TODO:
 
 ### Main Tasks
-- Implement distant light (Multiply by sunCos and get rid of conditional. Keep option for original)
 - See if aniso works better on Barn Lamp with distant light
 - Fix VNDF issues
 - Fix Firefly Threshold
 
 ### Bugs (Physical Inaccuracies)
-- Fix glass attenuation after, add attenuationDistance field
-- Firefly threshold not helping, fix darkness issue first
+- Fix glass attenuation, add attenuationDistance field
 
 ### Bugs (Classic)
 - Camera movement gets messed up sometimes
@@ -88,6 +86,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ### Misc
 - PT only build mode that doesn't initialize any raster resources? 
 - FPS has heavily dropped since I was away, possibly due to all the extra shaders/etc. Make sure they can be deleted properly when not in use. 1000+ FPS with lambert distribution should be possible
+- Remove all macros surrounding function args/params. Trust in dead code elimination
 
 ## Raster/Laptop-TODO
 

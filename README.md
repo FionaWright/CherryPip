@@ -37,6 +37,7 @@ C++, HLSL and Python are the main languages.
 ### Path Tracer Render Backend
 - Fully deterministic and seeded
 - Russian Roulette, Firefly Threshold, Cosine Importance Sampling
+- Furnace Tests for debugging
 - Independent, Halton, Apple Halton and Owen-Scrambled Halton RNG sampling strategies
 - Environment maps with support for Panoramic and Octohedral Equal-Area (Rotatable at runtime)
 - Directional lighting + GPU max parallel search on the EA Environment Map to set automatically direction to where luminance is highest
@@ -51,11 +52,18 @@ C++, HLSL and Python are the main languages.
 - GGX VCavity VNDF
 
 #### Debug Tools
-- Readback debug system that allows you to find selected pixel value or collect data every frame
-- Two furnace tests
-- See different internal parts of the path tracer using Debug Buffer system (Normals, Albedo, HitDist, RNG, FirstBounceDirection, etc) (Over 30)
-- Take snapshots of the path-tracer output, generate/save/load golden images and compute RMSE between two snapshots
-- Run convergence test to compute RMSE between path-tracer output and golden image continuously, then plot data using python script
+##### Readback System
+- Click on a pixel and see its RGBA output value in the GUI
+- Automatically collect a pixels value over multiple frames and then plot it in a histogram
+##### Info Output System
+- Output different variables inside the path-tracer for each pixel (Normals, Albedo, HitDist, RNG, FirstBounceDirection, etc) (Over 30)
+##### Convergence System
+- Take snapshots of the path-tracer output into 2 slots and find the RMSE between them with a compute shader
+- Generate golden images, save them as PNGs and load them into slot A
+- Automatically take snapshots into slot B every frame and compute the RMSE. Then plot RMSE convergence graphs using python
+##### Path Visualizer System
+- Click on a pixel to have all rays shot from that pixel next frame store their positions at each bounce
+- That data is then converted into coloured lines so you can follow the rays path
 
 ## History 
 
@@ -79,6 +87,7 @@ Progress as of 25/01/26:
 
 Progress as of 29/01/26:  
 <img width="961" height="575" alt="image" src="https://github.com/user-attachments/assets/dc7b6217-9eaa-4a9b-ad21-7b998f25ba47" />
+
 
 
 

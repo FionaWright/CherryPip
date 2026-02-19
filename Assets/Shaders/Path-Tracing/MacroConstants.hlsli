@@ -1,6 +1,27 @@
 #ifndef H_MACRO_CONSTANTS_H
 #define H_MACRO_CONSTANTS_H
 
+enum class RngSamplingStrategy
+{
+	eInvalid,
+	eIndependent,
+	eHalton,
+	eHaltonApple,
+	eOwenScrambledHalton
+};
+
+#if defined(SAMPLING_INDEPENDENT)
+static const RngSamplingStrategy cRngSamplingStrategy = eIndependent;
+#elif defined(SAMPLING_HALTON)
+static const RngSamplingStrategy cRngSamplingStrategy = eHalton;
+#elif defined(SAMPLING_HALTON_APPLE)
+static const RngSamplingStrategy cRngSamplingStrategy = eHaltonApple;
+#elif defined(SAMPLING_HALTON_OWEN)
+static const RngSamplingStrategy cRngSamplingStrategy = eOwenScrambledHalton;
+#else
+static const RngSamplingStrategy cRngSamplingStrategy = eInvalid;
+#endif
+
 #ifdef JITTER_ENABLED
 static const bool cJitterEnabled = true;
 #else

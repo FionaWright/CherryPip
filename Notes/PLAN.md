@@ -90,6 +90,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Remove all macros surrounding function args/params. Trust in dead code elimination
 - Use the macro -> static const pattern. Make it simple and clean dat code
 - Consider refactoring lighting models into the same structure as the microfacet models. Or at least put them into separate files maybe
+- Remove tangent/bitangent from vertex data. Use frisvad everywhere. And compute T/B in Hit and pass around to everyone
 
 ## Raster/Laptop-TODO
 

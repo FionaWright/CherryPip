@@ -22,19 +22,22 @@ void Model_LambertionDiffuse(
     float u1 = Rand01_Bounce(DIM_D_BSDF_U1, rngInfo);
     float u2 = Rand01_Bounce(DIM_D_BSDF_U2, rngInfo);
 
-#ifdef IMPORTANCE_SAMPLING
-    wi = RandHemisphereCosineWorld(u1, u2, T, B, Ns);
-    // diffuseBrdf = albedo / PI
-    // pdf = NdL / PI
-    // throughput *= diffuseBrdf * NdL / pdf
-    throughput *= albedo; // Terms cancel out
-#else
+    if (cImportanceSamplingEnabled)
+    {
+        wi = RandHemisphereCosineWorld(u1, u2, T, B, Ns);
+        // diffuseBrdf = albedo / PI
+        // pdf = NdL / PI
+        // throughput *= diffuseBrdf * NdL / pdf
+        throughput *= albedo; // Terms cancel out
+        return;
+    }
+
     wi = RandHemisphereUniformWorld(u1, u2, T, B, Ns);
     float NdL = saturate(dot(Ns, wi));
+
     float3 diffuseBrdf = albedo / PI;
     float pdf = 1.0f / (2.0f * PI);
     throughput *= diffuseBrdf * NdL / max(0.001f, pdf);
-#endif
 }
 
 void Model_Glossy(
@@ -130,17 +133,12 @@ void Model_Microfacet(
     float3 Ns,
     float3 Li,
     float3 albedo,
+    float3 anisoDirAndStrength,
     float3 wo,        // V
     out float3 wi,    // L
-    out float3 L_sample
-#ifdef ANISOTROPY_ENABLED
-    , float3 anisoDirAndStrength
-#endif
-#ifdef DEBUG_PT_INFO_OUTPUT
-    , inout float3 debug
-    , inout bool hasDebugOutput
-#endif
-)
+    out float3 L_sample,
+    inout float3 debug,
+    inout bool hasDebugOutput)
 {
     float3 T, B;
     BuildBasisFrisvad(Ns, T, B);

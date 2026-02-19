@@ -22,13 +22,11 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 #    include "Debug/DebugInfoOutputPreTrace.hlsli"
 #endif
 
-#ifdef DEBUG_PATH_VISUALIZATION
-        if (isPathVisualSelectedPixel)
-		{
-			gDebugPathVisualization[sampleIdx].WorldSpacePositionAtBounce[0] = ray.Origin;
-		    gDebugPathVisualization[sampleIdx].NumPositionsSet = 1;
-		}
-#endif
+    if (cDebugPathVisualizationEnabled && isPathVisualSelectedPixel)
+	{
+		gDebugPathVisualization[sampleIdx].WorldSpacePositionAtBounce[0] = ray.Origin;
+		gDebugPathVisualization[sampleIdx].NumPositionsSet = 1;
+	}
 
     uint i = 0;
     for (i = 0; i <= c_pathTracing.NumBounces; i++)
@@ -46,17 +44,16 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
             Lo += L_sample;
 
+            if (cDebugPathVisualizationEnabled && isPathVisualSelectedPixel)
+		    {
+		    	uint bounceIdx = gDebugPathVisualization[sampleIdx].NumPositionsSet;
+		        gDebugPathVisualization[sampleIdx].WorldSpacePositionAtBounce[bounceIdx] = ray.Origin + ray.Direction * 1000.0f;
+		    }
+
 #ifdef DEBUG_PT_INFO_OUTPUT
 #    include "Debug/DebugInfoOutputOnMiss.hlsli"
 #endif
 
-#ifdef DEBUG_PATH_VISUALIZATION
-        if (isPathVisualSelectedPixel)
-		{
-			uint bounceIdx = gDebugPathVisualization[sampleIdx].NumPositionsSet;
-		    gDebugPathVisualization[sampleIdx].WorldSpacePositionAtBounce[bounceIdx] = ray.Origin + ray.Direction * 1000.0f;
-		}
-#endif
             break;
         }
 
@@ -72,21 +69,19 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         float2 uv = -1;
         float3 anisoDirAndStrength = -1;
         Hit(q, albedo, Ng,
-            Ns, Li, mat, uv
-#ifdef ANISOTROPY_ENABLED
-            , anisoDirAndStrength
-#endif
+            Ns, Li, mat, uv, anisoDirAndStrength
         );
 
-#ifdef ALPHA_TESTING_ENABLED
-        float rAlpha = Rand01_Bounce(DIM_D_ALPHA, rngInfo);
-		bool cutout = albedo.a < 0.001f || rAlpha > albedo.a;
-		if (cutout)
-		{
-        	ray.Origin = hitPos + Ng * EPSILON * sign(dot(Ng, ray.Direction));
-			continue;
-		}
-#endif
+        if (cAlphaTestingEnabled)
+        {
+            float rAlpha = Rand01_Bounce(DIM_D_ALPHA, rngInfo);
+		    bool cutout = albedo.a < 0.001f || rAlpha > albedo.a;
+		    if (cutout)
+		    {
+            	ray.Origin = hitPos + Ng * EPSILON * sign(dot(Ng, ray.Direction));
+    			continue;
+    		}
+        }
 
         float2 roughMet = gTextures[mat.TexIdxRoughMet].Sample(c_sampler, uv).gb;
         float roughness = mat.Roughness * roughMet.r;
@@ -101,52 +96,38 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
 #elif defined(LIGHTING_GLOSSY)
 
-#    ifdef LIGHTING_GLASS_ENABLED
-        if (mat.Flags & PtMaterialFlags::eIsGlass)
+        if (cLightingGlassEnabled && mat.Flags & PtMaterialFlags::eIsGlass)
         {
             bool entering = q.CommittedTriangleFrontFace()!=0;
             Model_Glass(rngInfo, throughput, mat.DiffuseProbability, roughness, entering, q.CommittedRayT(), mat.IoR, Ns, Li, albedo.rgb, wo, wi, L_sample);
         }
         else
-#    endif
             Model_Glossy(rngInfo, throughput, mat.DiffuseProbability, roughness, Ns, Li, albedo.rgb, wo, wi, L_sample);
 
 #elif defined(LIGHTING_MICROFACET)
 
-        //if (dot(Ns, wo) <= 0) break;
-        float3 debug = 0; bool hasDebugOutput = false;
+        float3 debug = 0;
+        bool hasDebugOutput = false;
 
-#    ifdef LIGHTING_GLASS_ENABLED
-		if (mat.Flags & PtMaterialFlags::eIsGlass)
+		if (cLightingGlassEnabled && mat.Flags & PtMaterialFlags::eIsGlass)
         {
             bool entering = q.CommittedTriangleFrontFace()!=0;
             Model_Glass(rngInfo, throughput, mat.DiffuseProbability, roughness, entering, q.CommittedRayT(), mat.IoR, Ns, Li, albedo.rgb, wo, wi, L_sample);
         }
 		else
-#    endif
+        {
 			Model_Microfacet(rngInfo, throughput, roughness,
-            	metalness, Ns, Li, albedo.rgb, wo, wi, L_sample
-#    ifdef ANISOTROPY_ENABLED
-                , anisoDirAndStrength
-#    endif
-#    ifdef DEBUG_PT_INFO_OUTPUT
-            	, debug
-            	, hasDebugOutput
-#    endif
-        	);
-        //if (dot(Ns, wi) <= 0) break;
+            	metalness, Ns, Li, albedo.rgb, anisoDirAndStrength, wo, wi, L_sample,
+                debug, hasDebugOutput);
+        }
 
-#    ifdef DEBUG_PT_INFO_OUTPUT
-        if (hasDebugOutput)
+        if (cDebugInfoOutputEnabled && hasDebugOutput)
             return debug;
-#    endif
 
 #endif
 
-#ifndef DEBUG_PT_INFO_OUTPUT
-        if (throughput.x <= 0 && throughput.y <= 0 && throughput.z <= 0)
+        if (!cDebugInfoOutputEnabled && throughput.x <= 0 && throughput.y <= 0 && throughput.z <= 0)
             break;
-#endif
 
         // TODO: Reimplement firefly threshold
         //float L_lum = Luminance(L_sample);
@@ -155,8 +136,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
         Lo += L_sample;
 
-#if defined(RUSSIAN_ROULETTE_ENABLED)
-        if (i >= c_pathTracing.RussianRouletteMinBounces) // Standard is 2-3
+        if (cRussianRouletteEnabled && i >= c_pathTracing.RussianRouletteMinBounces)
         {
             float p = saturate(max(throughput.r, max(throughput.g, throughput.b)));
             p = max(p, 0.05f);
@@ -165,7 +145,6 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
                 break;
             throughput /= p;
         }
-#endif
 
         ray.Direction = wi;
         ray.Origin = hitPos + Ng * EPSILON * sign(dot(Ng, ray.Direction));
@@ -174,14 +153,12 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 #    include "Debug/DebugInfoOutputOnHit.hlsli"
 #endif
 
-#ifdef DEBUG_PATH_VISUALIZATION
-        if (isPathVisualSelectedPixel)
+        if (cDebugPathVisualizationEnabled && isPathVisualSelectedPixel)
 		{
 			uint bounceIdx = gDebugPathVisualization[sampleIdx].NumPositionsSet;
 			gDebugPathVisualization[sampleIdx].WorldSpacePositionAtBounce[bounceIdx] = ray.Origin;
 			gDebugPathVisualization[sampleIdx].NumPositionsSet += 1;
 		}
-#endif
     }
 
 #ifdef DEBUG_PT_INFO_OUTPUT

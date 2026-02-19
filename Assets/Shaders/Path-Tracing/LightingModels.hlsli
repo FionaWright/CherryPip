@@ -120,11 +120,6 @@ void Model_Glass(
 // Read GLTF spec and copy code from there, don't delete any old code
 // Get it working
 
-// Avoid code breaking
-#if !defined(NDF_TYPE_GGX) && !defined(NDF_TYPE_BECKMANN)
-#define NDF_TYPE_GGX
-#endif
-
 void Model_Microfacet(
     inout RngInfo rngInfo,
     inout float3 throughput,
@@ -157,11 +152,10 @@ void Model_Microfacet(
 
     float specProb = clamp(Luminance(F_select), 0.05f, 0.95f); // kS
 
-#if defined(DEBUG_FORCE_SPECULAR)
-    specProb = 1.0f;
-#elif defined(DEBUG_FORCE_DIFFUSE)
-    specProb = 0.0f;
-#endif
+    if (cDebugForceSpecular)
+        specProb = 1.0f;
+    else if (cDebugForceDiffuse)
+        specProb = 0.0f;
 
     float u1 = Rand01_Bounce(DIM_D_BSDF_U1, rngInfo);
     float u2 = Rand01_Bounce(DIM_D_BSDF_U2, rngInfo);
@@ -173,9 +167,8 @@ void Model_Microfacet(
     {
         MicrofacetModel mm;
         InitializeMM(mm, roughness, rngInfo, V_s);
-#ifdef ANISOTROPY_ENABLED
-        InitializeMMAniso(mm, T, B, Ns, anisoDirAndStrength);
-#endif
+        if (cAnisotropyEnabled)
+            InitializeMMAniso(mm, T, B, Ns, anisoDirAndStrength);
 
         float3 H_s = normalize(mm.Sample(u1, u2));
         float3 L_s = NormalizeSafe(reflect(-V_s, H_s), N_s);
@@ -206,34 +199,42 @@ void Model_Microfacet(
 #ifdef DEBUG_PT_INFO_OUTPUT
 #     include "Debug/DebugInfoOutputMicrofacetSpec.hlsli"
 #endif
+        return;
     }
-    else // Lambert
+
+    // Lambertian:
+
+    float pdf;
+    float3 diffuseBrdf;
+    float3 E;
+    if (cImportanceSamplingEnabled)
     {
-#ifdef IMPORTANCE_SAMPLING
         float3 L_s = RandHemisphereCosineSSpace(u1, u2);
         wi = InvToDefinedSpace(L_s, T, B, Ns);
 
         float NdL = SSpaceCosTheta(L_s);
-        float3 pdf = NdL / PI;
-        float3 diffuseBrdf = albedo * (1.0 - metalness) / PI; // Left in for debug view
+        pdf = NdL / PI;
+        diffuseBrdf = albedo * (1.0 - metalness) / PI; // Left in for debug view
         // E = diffuseBrdf * NdL / pdf
-        float3 E = albedo * (1.0 - metalness); // Terms cancel out
-#else
+        E = albedo * (1.0 - metalness); // Terms cancel out
+    }
+    else
+    {
         float3 L_s = RandHemisphereUniformSSpace(u1, u2);
         wi = InvToDefinedSpace(L_s, T, B, Ns);
 
         float NdL = SSpaceCosTheta(L_s);
-        float pdf = 1.0f / (2.0f * PI);
-        float3 diffuseBrdf = albedo * (1.0 - metalness) / PI;
-        float3 E = diffuseBrdf * NdL / max(0.001f, pdf);
-#endif
-        E /= max(0.001f, 1.0 - specProb);
-        throughput *= E;
+        pdf = 1.0f / (2.0f * PI);
+        diffuseBrdf = albedo * (1.0 - metalness) / PI;
+        E = diffuseBrdf * NdL / max(0.001f, pdf);
+    }
+
+    E /= max(0.001f, 1.0 - specProb);
+    throughput *= E;
 
 #ifdef DEBUG_PT_INFO_OUTPUT
 #     include "Debug/DebugInfoOutputMicrofacetDiff.hlsli"
 #endif
-    }
 }
 
 #endif

@@ -109,4 +109,9 @@ static const bool cLightingGlassEnabled = true;
 static const bool cLightingGlassEnabled = false;
 #endif
 
+// Avoid code breaking
+#if !defined(NDF_TYPE_GGX) && !defined(NDF_TYPE_BECKMANN)
+#define NDF_TYPE_GGX
+#endif
+
 #endif

@@ -40,6 +40,7 @@
 - [ ] Microfacet Beckmann (PBRT)
 - [ ] Microfacet Glass (Beckmann)
 - [ ] Point Lights
+- [ ] Ray Bundles / Ray Buffers(?). See Embre? (https://www.jp.square-enix.com/tech/library/pdf/Global%20Illumination%20Using%20Ray-Bundle%20Tracing%20(AFDS2012).pdf)
 - [ ] SpecularTint, Clearcoat, Sheen PBR parameters
 - [x] Firefly threshold
 - [ ] BTDFs (VNDF whitepaper has some good stuff)

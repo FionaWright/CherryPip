@@ -11,11 +11,8 @@ void Hit(inout RayQuery<RAY_FLAGS> q,
         out float3 Ns,
         out float3 Li,
         out PtMaterialData mat,
-        out float2 uv
-#ifdef ANISOTROPY_ENABLED
-        , out float3 anisoDirAndStrength
-#endif
-)
+        out float2 uv,
+        out float3 anisoDirAndStrength)
 {
     PtInstanceData instance = gInstances[q.CommittedInstanceIndex()];
     mat = gMaterials[instance.MaterialIdx];
@@ -36,49 +33,54 @@ void Hit(inout RayQuery<RAY_FLAGS> q,
 	Ng = normalize( cross(p1 - p0, p2 - p0) );
     Ng = q.CommittedTriangleFrontFace() == 0 ? -Ng : Ng;
 
-    float3 N = v0.normal * bary.x + v1.normal * bary.y + v2.normal * bary.z;
-    N = normalize(mul((float3x3)instance.MTI, N));
-#ifdef NORMAL_MAPS_ENABLED
-    float3 T, B;
-    BuildBasisFrisvad(N, T, B);
+    Ns = v0.normal * bary.x + v1.normal * bary.y + v2.normal * bary.z;
+    Ns = normalize(mul((float3x3)instance.MTI, N));
+    if (cNormalMapsEnabled)
+    {
+        float3 T, B;
+        BuildBasisFrisvad(Ns, T, B);
 
-    float3 bumpSample = gTextures[mat.TexIdxNormal].Sample(c_sampler, uv).rgb * 2.0f - 1.0f;
-    bumpSample.y = -bumpSample.y; // DX-convention
-    Ns = normalize(bumpSample.x * T + bumpSample.y * B + bumpSample.z * N);
-#else
-    Ns = N;
-#endif
+        float3 bumpSample = gTextures[mat.TexIdxNormal].Sample(c_sampler, uv).rgb * 2.0f - 1.0f;
+        bumpSample.y = -bumpSample.y; // DX-convention
+        Ns = normalize(bumpSample.x * T + bumpSample.y * B + bumpSample.z * Ns);
+    }
     Ns = q.CommittedTriangleFrontFace() == 0 ? -Ns : Ns;
 
     float4 albedoSample = gTextures[mat.TexIdxAlbedo].Sample(c_sampler, uv);
-    // Does albedo sample need gamma correction?
+    // TODO: Does albedo sample need gamma correction?
     float3 emissionSample = gTextures[mat.TexIdxEmissive].Sample(c_sampler, uv).rgb;
 
-#ifdef ANISOTROPY_ENABLED
-    float2 anisoRot = float2(1, 0); // default value, unimplemented
-    float2x2 anisoRotMat = float2x2(anisoRot.x,  anisoRot.y,
-                                    -anisoRot.y,  anisoRot.x);
+    if (cAnisotropyEnabled)
+    {
+        float2 anisoRot = float2(1, 0); // default value, unimplemented
+        float2x2 anisoRotMat = float2x2(anisoRot.x,  anisoRot.y,
+                                        -anisoRot.y,  anisoRot.x);
 
-    anisoDirAndStrength = gTextures[mat.TexIdxAniso].Sample(c_sampler, uv).rgb;
-    anisoDirAndStrength.rg = anisoDirAndStrength.rg * 2.0f - 1.0f; // [0,1] -> [-1,1]. Don't normalize
-    anisoDirAndStrength.rg = mul(anisoRotMat, anisoDirAndStrength.rg);
+        anisoDirAndStrength = gTextures[mat.TexIdxAniso].Sample(c_sampler, uv).rgb;
+        anisoDirAndStrength.rg = anisoDirAndStrength.rg * 2.0f - 1.0f; // [0,1] -> [-1,1]. Don't normalize
+        anisoDirAndStrength.rg = mul(anisoRotMat, anisoDirAndStrength.rg);
 
-    float len2 = dot(anisoDirAndStrength.rg, anisoDirAndStrength.rg);
-    anisoDirAndStrength.rg = (len2 > 1e-6f) ? anisoDirAndStrength.rg * rsqrt(len2) : float2(1, 0); // safe fallback
+        float len2 = dot(anisoDirAndStrength.rg, anisoDirAndStrength.rg);
+        anisoDirAndStrength.rg = (len2 > 1e-6f) ? anisoDirAndStrength.rg * rsqrt(len2) : float2(1, 0); // safe fallback
+        anisoDirAndStrength.b *= mat.AnisoStrength;
+    }
 
-    anisoDirAndStrength.b *= mat.AnisoStrength;
-#endif
+    if (cFurnaceTestHDR)
+    {
+        albedo = float4(0, 0, 0, 1);
+        Li = float3(1, 1, 1);
+        return;
+    }
 
-#if defined(FURNACE_TEST_HEMI_DIR_REFLECT)
-    albedo = float4(0, 0, 0, 1);
-    Li = float3(1, 1, 1);
-#elif defined(FURNACE_TEST_HEMI_HEMI_EMIT)
-    albedo = float4(1, 1, 1, 1);
-    Li = float3(0, 0, 0);
-#else
+    if (cFurnaceTestHHE)
+    {
+        albedo = float4(1, 1, 1, 1);
+        Li = float3(0, 0, 0);
+        return;
+    }
+
     albedo = float4(mat.BaseColorFactor * albedoSample.rgb, albedoSample.a);
     Li = mat.EmissiveStrength * mat.EmissiveColor * emissionSample;
-#endif
 }
 
 #endif

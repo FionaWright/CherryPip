@@ -1,5 +1,6 @@
 #include "CBV.h"
 #include "PtBuffers.h"
+#include "MacroConstants.hlsli"
 
 #define EPSILON 1e-2
 #define RAY_FLAGS RAY_FLAG_CULL_NON_OPAQUE|RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES
@@ -70,13 +71,13 @@ float4 PSMain(VsOut input) : SV_Target0
 #endif
 
         float2 pixelUV = input.position.xy;
-
-#ifdef JITTER_ENABLED
-        float rJitterX = Rand01(DIM_JITTER_X, rngInfo);
-        float rJitterY = Rand01(DIM_JITTER_Y, rngInfo);
-        float2 jitter = float2(rJitterX, rJitterY) - 0.5f;
-        pixelUV += jitter;
-#endif
+        if (cJitterEnabled)
+        {
+            float rJitterX = Rand01(DIM_JITTER_X, rngInfo);
+            float rJitterY = Rand01(DIM_JITTER_Y, rngInfo);
+            float2 jitter = float2(rJitterX, rJitterY) - 0.5f;
+            pixelUV += jitter;
+        }
         pixelUV *= c_pathTracing.TexelSize;
 
         float2 ndc = pixelUV * 2.0f - 1.0f; // [0,1] -> [-1,1]
@@ -87,19 +88,20 @@ float4 PSMain(VsOut input) : SV_Target0
         float4 world = mul(c_pathTracing.InvV, view);
         ray.Direction = normalize(world.xyz - origin);
 
-#ifdef DEPTH_OF_FIELD_ENABLED
-        float3 camRight = normalize(c_pathTracing.InvV[0].xyz);  // X column
-        float3 camUp    = normalize(c_pathTracing.InvV[1].xyz);  // Y column
-        float3 focalPoint = origin + ray.Direction * c_pathTracing.DofFocalDist;
+        if (cDofEnabled)
+        {
+            float3 camRight = normalize(c_pathTracing.InvV[0].xyz);  // X column
+            float3 camUp    = normalize(c_pathTracing.InvV[1].xyz);  // Y column
+            float3 focalPoint = origin + ray.Direction * c_pathTracing.DofFocalDist;
 
-        float rLensU = Rand01(DIM_LENS_U, rngInfo);
-        float rLensV = Rand01(DIM_LENS_V, rngInfo);
-        float r = sqrt(rLensU) * c_pathTracing.DofLensRadius;
-        float theta = 2.0 * PI * rLensV;
-        float3 lensOffset = r * (camRight * cos(theta) + camUp * sin(theta));
-        ray.Origin = origin + lensOffset;
-        ray.Direction = normalize(focalPoint - ray.Origin);
-#endif
+            float rLensU = Rand01(DIM_LENS_U, rngInfo);
+            float rLensV = Rand01(DIM_LENS_V, rngInfo);
+            float r = sqrt(rLensU) * c_pathTracing.DofLensRadius;
+            float theta = 2.0 * PI * rLensV;
+            float3 lensOffset = r * (camRight * cos(theta) + camUp * sin(theta));
+            ray.Origin = origin + lensOffset;
+            ray.Direction = normalize(focalPoint - ray.Origin);
+        }
 
         colorSum += Trace(q,
                           flags,

@@ -35,15 +35,15 @@ void InitializeMM(
 #endif
 }
 
-#ifdef ANISOTROPY_ENABLED
 void InitializeMMAniso(
     inout MicrofacetModel mm,
     float3 T, float3 B, float3 N,
     float3 anisoDirAndStrength
 )
 {
+#ifdef ANISOTROPY_ENABLED
     mm.InitAniso(T, B, N, anisoDirAndStrength);
-}
 #endif
+}
 
 #endif

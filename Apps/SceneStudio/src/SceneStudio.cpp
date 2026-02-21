@@ -876,14 +876,7 @@ void SceneStudio::compilePtShader(const D3D* d3d)
     if (!d3d->GetRayTracingSupported())
         return;
 
-    const WCHAR* shaderMap[] = {
-        L"Path-Tracing/Entry/LambDiffPS.hlsl",
-        L"Path-Tracing/Entry/GlossyPS.hlsl",
-        L"Path-Tracing/Entry/MicrofacetPS.hlsl"
-    };
-    const WCHAR* shaderPath = shaderMap[m_studioConfig.PT.LightingModel];
-
-    CherryPrint("Loading Shader: " << wstringToString(shaderPath));
+    CherryPrint("Loading Path-Tracing Shader");
 
     std::vector<const WCHAR*> args = {};
     if (m_studioConfig.PT.DebugInfoOutputEnabled)
@@ -934,6 +927,13 @@ void SceneStudio::compilePtShader(const D3D* d3d)
     else if (m_studioConfig.PT.SamplingStrat == eIndependent)
         args.push_back(L"-DSAMPLING_INDEPENDENT");
 
+    if (m_studioConfig.PT.LightingModel == eLambertDiff)
+        args.push_back(L"-DLIGHTING_LAMB_DIFF");
+    else if (m_studioConfig.PT.LightingModel == eGlossy)
+        args.push_back(L"-DLIGHTING_GLOSSY");
+    else if (m_studioConfig.PT.LightingModel == eMicrofacet)
+        args.push_back(L"-DLIGHTING_MICROFACET");
+
     if (m_studioConfig.PT.DebugPathVisualization)
         args.push_back(L"-DDEBUG_PATH_VISUALIZATION");
 
@@ -959,7 +959,7 @@ void SceneStudio::compilePtShader(const D3D* d3d)
     };
     const D3D12_INPUT_LAYOUT_DESC ild = {m_shaderILD.data(), static_cast<UINT>(m_shaderILD.size())};
 
-    m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", shaderPath, ild, d3d->GetDevice(), m_rootSig->Get(), false, args);
+    m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/CorePS.hlsl", ild, d3d->GetDevice(), m_rootSig->Get(), false, args);
 }
 
 void SceneStudio::ResetCameraToSceneStart()

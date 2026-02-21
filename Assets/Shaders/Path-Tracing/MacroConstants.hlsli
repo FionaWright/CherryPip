@@ -1,9 +1,9 @@
 #ifndef H_MACRO_CONSTANTS_H
 #define H_MACRO_CONSTANTS_H
 
-enum class RngSamplingStrategy
+enum RngSamplingStrategy
 {
-	eInvalid,
+	eInvalidRngSampling,
 	eIndependent,
 	eHalton,
 	eHaltonApple,
@@ -19,7 +19,25 @@ static const RngSamplingStrategy cRngSamplingStrategy = eHaltonApple;
 #elif defined(SAMPLING_HALTON_OWEN)
 static const RngSamplingStrategy cRngSamplingStrategy = eOwenScrambledHalton;
 #else
-static const RngSamplingStrategy cRngSamplingStrategy = eInvalid;
+static const RngSamplingStrategy cRngSamplingStrategy = eInvalidRngSampling;
+#endif
+
+enum LightingModel
+{
+    eInvalidLightingModel,
+    eLambert,
+    eGlossy,
+    eMicrofacet
+};
+
+#if defined(LIGHTING_LAMB_DIFF)
+static const LightingModel cLightingModel = eLambert;
+#elif defined(LIGHTING_GLOSSY)
+static const LightingModel cLightingModel = eGlossy;
+#elif defined(LIGHTING_MICROFACET)
+static const LightingModel cLightingModel = eMicrofacet;
+#else
+static const LightingModel cLightingModel = eInvalidLightingModel;
 #endif
 
 #ifdef JITTER_ENABLED

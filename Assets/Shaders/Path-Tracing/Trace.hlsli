@@ -24,8 +24,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 		gDebugPathVisualization[sampleIdx].NumPositionsSet = 1;
 	}
 
-    uint i = 0;
-    for (i = 0; i <= c_pathTracing.NumBounces; i++)
+    for (uint i = 0; i <= c_pathTracing.NumBounces; i++)
     {
         q.TraceRayInline(gTLAS, flags, instanceMask, ray);
         q.Proceed();
@@ -53,9 +52,8 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             break;
         }
 
-#ifndef SAMPLING_INDEPENDENT
-        rngInfo.BounceBaseDimension = GetBaseDim(i);
-#endif
+        if (cRngSamplingStrategy != eIndependent)
+            rngInfo.BounceBaseDimension = GetBaseDim(i);
 
 		float3 hitPos = ray.Origin + ray.Direction * q.CommittedRayT();
 
@@ -64,9 +62,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         float3 Ng = -1, Ns = -1, Li = -1;
         float2 uv = -1;
         float3 anisoDirAndStrength = -1;
-        Hit(q, albedo, Ng,
-            Ns, Li, mat, uv, anisoDirAndStrength
-        );
+        Hit(q, albedo, Ng, Ns, Li, mat, uv, anisoDirAndStrength);
 
         if (cAlphaTestingEnabled)
         {
@@ -86,41 +82,31 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         float3 wo = -ray.Direction;
         float3 wi, L_sample;
 
-#if defined(LIGHTING_LAMB_DIFF)
-
-        Model_LambertionDiffuse(rngInfo, throughput, Ns, Li, albedo.rgb, wi, L_sample);
-
-#elif defined(LIGHTING_GLOSSY)
-
         if (cLightingGlassEnabled && mat.Flags & PtMaterialFlags::eIsGlass)
         {
             bool entering = q.CommittedTriangleFrontFace()!=0;
             Model_Glass(rngInfo, throughput, mat.DiffuseProbability, roughness, entering, q.CommittedRayT(), mat.IoR, Ns, Li, albedo.rgb, wo, wi, L_sample);
         }
-        else
-            Model_Glossy(rngInfo, throughput, mat.DiffuseProbability, roughness, Ns, Li, albedo.rgb, wo, wi, L_sample);
-
-#elif defined(LIGHTING_MICROFACET)
-
-        float3 debug = 0;
-        bool hasDebugOutput = false;
-
-		if (cLightingGlassEnabled && mat.Flags & PtMaterialFlags::eIsGlass)
+        else if (cLightingModel == eLambert)
         {
-            bool entering = q.CommittedTriangleFrontFace()!=0;
-            Model_Glass(rngInfo, throughput, mat.DiffuseProbability, roughness, entering, q.CommittedRayT(), mat.IoR, Ns, Li, albedo.rgb, wo, wi, L_sample);
+            Model_LambertionDiffuse(rngInfo, throughput, Ns, Li, albedo.rgb, wi, L_sample);
         }
-		else
+        else if (cLightingModel == eGlossy)
         {
-			Model_Microfacet(rngInfo, throughput, roughness,
+            Model_Glossy(rngInfo, throughput, mat.DiffuseProbability, roughness, Ns, Li, albedo.rgb, wo, wi, L_sample);
+        }
+        else if (cLightingModel == eMicrofacet)
+        {
+            float3 debug = 0;
+            bool hasDebugOutput = false;
+
+            Model_Microfacet(rngInfo, throughput, roughness,
             	metalness, Ns, Li, albedo.rgb, anisoDirAndStrength, wo, wi, L_sample,
                 debug, hasDebugOutput);
+
+            if (cDebugInfoOutputEnabled && hasDebugOutput)
+                return debug;
         }
-
-        if (cDebugInfoOutputEnabled && hasDebugOutput)
-            return debug;
-
-#endif
 
         if (!cDebugInfoOutputEnabled && throughput.x <= 0 && throughput.y <= 0 && throughput.z <= 0)
             break;

@@ -3,7 +3,6 @@
 
 #ifndef UINT_MAX
 #define UINT_MAX 4294967296.0
-#include "Render/PathTracingContext.h"
 #endif
 
 #ifndef PI
@@ -15,8 +14,8 @@
 #endif
 
 #include "HlslGlue.h"
-
 #include "Halton.h"
+#include "Path-Tracing/MacroConstants.hlsli"
 
 uint wang_hash(uint a) {
     a = (a ^ 61u) ^ (a >> 16);
@@ -110,12 +109,9 @@ float3 RandHemisphereCosineSSpace(float u1, float u2)
 struct RngInfo
 {
     uint SampleIdx;
-#ifndef SAMPLING_INDEPENDENT
     uint GlobalSampleIdx;
     uint HashScramble;
     uint BounceBaseDimension;
-#endif
-
     uint IndependentRngState; // Modified during independent sampling
 };
 

@@ -6,8 +6,6 @@
 static CbvPrimes c_primes;
 #endif
 
-#if defined(SAMPLING_HALTON_OWEN) || defined(SAMPLING_HALTON) || defined(SAMPLING_HALTON_APPLE) || defined(__cplusplus)
-
 // https://github.com/mmp/pbrt-v4/blob/master/src/pbrt/util/math.h
 uint64_t MixBits(uint64_t v)
 {
@@ -52,11 +50,20 @@ uint PermutationElement(uint i, uint l, uint p) {
     return (i + p) % l;
 }
 
+int GetPrime(int idx)
+{
+#if defined(SAMPLING_HALTON_OWEN) || defined(SAMPLING_HALTON) || defined(SAMPLING_HALTON_APPLE) || defined(__cplusplus)
+    return c_primes.Primes[idx]; // TODO: Not a fan of this file knowing about CBVs but...
+#else
+    return 0;
+#endif
+}
+
 // https://pbr-book.org/4ed/Sampling_and_Reconstruction/Halton_Sampler
 // baseIdx is the dimension. Keep it different for each usage per ray sample, but the same across ray samples
 float OwenScrambledRadicalInverse(int baseIdx, uint64_t a, uint hash)
 {
-    int base = c_primes.Primes[baseIdx]; // TODO: Not a fan of this file knowing about CBVs but...
+    int base = GetPrime(baseIdx);
     float invBase = 1.0f / (float)base;
     float invBaseM = 1;
 
@@ -80,7 +87,7 @@ float OwenScrambledRadicalInverse(int baseIdx, uint64_t a, uint hash)
 
 float RadicalInverse(int baseIdx, uint64_t a)
 {
-    uint base = c_primes.Primes[baseIdx];
+    uint base = GetPrime(baseIdx);
     float invBase = 1.0f / (float)base;
     float invBaseM = 1;
 
@@ -98,7 +105,7 @@ float RadicalInverse(int baseIdx, uint64_t a)
 
 float AppleRadicalInverse(int baseIdx, uint64_t a)
 {
-    uint b = c_primes.Primes[baseIdx];
+    uint b = GetPrime(baseIdx);
     float f = 1.0f;
     float invB = 1.0f / b;
 
@@ -112,8 +119,6 @@ float AppleRadicalInverse(int baseIdx, uint64_t a)
 
     return glueMin(r, (float)ONE_MINUS_EPSILON);
 }
-
-#endif
 
 #define DIM_JITTER_X 0
 #define DIM_JITTER_Y 1

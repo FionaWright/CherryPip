@@ -63,6 +63,7 @@ void SceneStudio::RenderGUI()
     }
 
     m_pathTracerDirty |= m_shaderDirty;
+    m_pathTracerDirty |= m_sceneDirty;
 
 #ifdef _DEBUG
     if (m_pathTracerDirty && m_studioConfig.PT.ReadbackEveryFrame)

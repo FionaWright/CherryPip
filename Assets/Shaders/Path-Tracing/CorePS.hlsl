@@ -1,8 +1,8 @@
 #include "CBV.h"
 #include "PtBuffers.h"
-#include "MacroConstants.hlsli"
 #include "DebugPalette.hlsli"
 #include "Path-Tracing/MathUtils.hlsli"
+#include "Path-Tracing/MacroConstants.hlsli"
 
 #define EPSILON 1e-2
 #define RAY_FLAGS RAY_FLAG_CULL_NON_OPAQUE|RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES
@@ -35,7 +35,7 @@ RWStructuredBuffer<DebugPathVisualizationStruct> gDebugPathVisualization : regis
 
 SamplerState c_sampler : register(s0);
 
-#include "Trace.hlsli"
+#include "Path-Tracing/Trace.hlsli"
 
 float4 PSMain(VsOut input) : SV_Target0
 {
@@ -60,10 +60,11 @@ float4 PSMain(VsOut input) : SV_Target0
         rngInfo.SampleIdx = i;
 
         rngInfo.IndependentRngState = PrngSeed((uint2)input.position.xy, rngInfo.SampleIdx, c_pathTracing.FrameIdx);
-#ifndef SAMPLING_INDEPENDENT
-        rngInfo.GlobalSampleIdx = c_pathTracing.FrameIdx * c_pathTracing.SPP + rngInfo.SampleIdx;
-        rngInfo.HashScramble = GetHashScramble((uint2)input.position.xy, rngInfo.SampleIdx, c_pathTracing.FrameIdx);
-#endif
+        if (cRngSamplingStrategy != eIndependent)
+        {
+            rngInfo.GlobalSampleIdx = c_pathTracing.FrameIdx * c_pathTracing.SPP + rngInfo.SampleIdx;
+            rngInfo.HashScramble = GetHashScramble((uint2)input.position.xy, rngInfo.SampleIdx, c_pathTracing.FrameIdx);
+        }
 
         float2 pixelUV = input.position.xy;
         if (cJitterEnabled)

@@ -47,7 +47,8 @@ void Hit(inout RayQuery<RAY_FLAGS> q,
     Ns = q.CommittedTriangleFrontFace() == 0 ? -Ns : Ns;
 
     float4 albedoSample = gTextures[mat.TexIdxAlbedo].Sample(gSampler, uv);
-    albedoSample.xyz = pow(albedoSample.xyz, 2.2f); // Disabling this can give nicer looking images sometimes
+    if (cGammaCorrection)
+        albedoSample.xyz = pow(albedoSample.xyz, 2.2f);
 
     float3 emissionSample = gTextures[mat.TexIdxEmissive].Sample(gSampler, uv).rgb;
 

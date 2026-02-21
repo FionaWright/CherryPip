@@ -104,7 +104,4 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(fastgltf)
 target_link_libraries(client PUBLIC fastgltf)
 
-find_library(DXGUID_LIB dxguid.lib PATHS [HINTS ENV PROGRAMFILES ENV PROGRAMFILES(X86)])
-find_library(UUID_LIB uuid.lib PATHS [HINTS ENV PROGRAMFILES ENV PROGRAMFILES(X86)])
-
-target_link_libraries(client PUBLIC ${DXGUID_LIB} ${UUID_LIB})
+target_link_libraries(client PUBLIC dxguid uuid)

@@ -68,6 +68,9 @@ C++, HLSL and Python are the main languages.
 - Click on a pixel to have all rays shot from that pixel next frame store their positions at each bounce
 - That data is then converted into coloured lines so you can follow the rays path
 
+### (WIP) Spectral Tracer Render Backend
+- Work in progress, currently doing research
+
 ## History 
 
 Progress as of 29/10/25:  
@@ -96,6 +99,7 @@ Progress as of 18/02/26:
 
 Progress as of 21/02/26:
 <img width="1020" height="575" alt="Chess DOF" src="https://github.com/user-attachments/assets/a6b0518d-efac-41c1-a811-cda16036083c" />
+
 
 
 

@@ -72,14 +72,10 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ## PT-TODO:
 
 ### Main Tasks
-- Fix glass attenuation and apply to chess
 - Fix VNDF issues
 - Fix Firefly Threshold
 
-### Bugs (Physical Inaccuracies)
-- Fix glass attenuation, add attenuationDistance field
-
-### Bugs (Classic)
+### Bugs 
 - Camera movement gets messed up sometimes
 - Env map rotations not paritied between EA/pano
 - Fix Bistro model transforms
@@ -87,8 +83,6 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ### Misc
 - PT only build mode that doesn't initialize any raster resources? 
 - FPS has heavily dropped since I was away, possibly due to all the extra shaders/etc. Make sure they can be deleted properly when not in use. 1000+ FPS with lambert distribution should be possible
-- Consider refactoring lighting models into the same structure as the microfacet models. Or at least put them into separate files maybe
-- Gamma correction option in GUI
 - Fix Issue on github
 
 ## Raster/Laptop-TODO

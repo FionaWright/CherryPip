@@ -236,15 +236,15 @@ void ModelLoaderGLTF::loadModel(const D3D* d3d, ID3D12GraphicsCommandList* cmdLi
                                output->Normal.x = -output->Normal.x;
                        });
 
-    loadGLTFVertexData(directory, vertexBuffer, asset, primitive, "TANGENT",
-                       [convertRhToLh](const std::byte* address, VertexInputDataGLTF* output)
-                       {
-                           const auto* data = reinterpret_cast<const XMFLOAT4*>(address);
-                           const float handedness = data->w > 0.0f ? 1.0f : -1.0f;
-                           output->Tangent = Normalize(Mult(XMFLOAT3(data->x, data->y, data->z), handedness));
-                           if (convertRhToLh)
-                               output->Tangent.x = -output->Tangent.x;
-                       });
+    //loadGLTFVertexData(directory, vertexBuffer, asset, primitive, "TANGENT",
+    //                   [convertRhToLh](const std::byte* address, VertexInputDataGLTF* output)
+    //                   {
+    //                       const auto* data = reinterpret_cast<const XMFLOAT4*>(address);
+    //                       const float handedness = data->w > 0.0f ? 1.0f : -1.0f;
+    //                       output->Tangent = Normalize(Mult(XMFLOAT3(data->x, data->y, data->z), handedness));
+    //                       if (convertRhToLh)
+    //                           output->Tangent.x = -output->Tangent.x;
+    //                   });
 
     float boundingRadiusSq = 0;
     struct Double3
@@ -254,12 +254,12 @@ void ModelLoaderGLTF::loadModel(const D3D* d3d, ID3D12GraphicsCommandList* cmdLi
 
     for (size_t j = 0; j < vertexCount; j++)
     {
-        if (Magnitude(vertexBuffer[j].Tangent) < 1e-4)
-        {
-            const XMFLOAT3 up = fabs(vertexBuffer[j].Normal.y) < 0.999f ? XMFLOAT3(0,1,0) : XMFLOAT3(1,0,0);
-            vertexBuffer[j].Tangent = Normalize(Cross(up, vertexBuffer[j].Normal));
-        }
-        vertexBuffer[j].Binormal = Normalize(Cross(vertexBuffer[j].Tangent, vertexBuffer[j].Normal));
+        //if (Magnitude(vertexBuffer[j].Tangent) < 1e-4)
+        //{
+        //    const XMFLOAT3 up = fabs(vertexBuffer[j].Normal.y) < 0.999f ? XMFLOAT3(0,1,0) : XMFLOAT3(1,0,0);
+        //    vertexBuffer[j].Tangent = Normalize(Cross(up, vertexBuffer[j].Normal));
+        //}
+        //vertexBuffer[j].Binormal = Normalize(Cross(vertexBuffer[j].Tangent, vertexBuffer[j].Normal));
 
         rollingCentroidSum.X += vertexBuffer[j].Position.x;
         rollingCentroidSum.Y += vertexBuffer[j].Position.y;

@@ -2,7 +2,7 @@
 #define H_MICROFACET_H
 
 #include "Random.h"
-#include "Path-Tracing/MathUtils.hlsli"
+#include "MathUtils.hlsli"
 
 // https://www.pbr-book.org/3ed-2018/Reflection_Models/Microfacet_Models
 

@@ -48,8 +48,6 @@ struct Vertex
     float3 position;
     float2 uv;
     float3 normal;
-    float3 tangent;
-    float3 binormal;
 };
 
 #define PATH_VISUALIZATION_MAX_BOUNCES 21

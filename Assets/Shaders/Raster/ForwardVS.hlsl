@@ -5,8 +5,6 @@ struct VsIn
     float3 position : POSITION;
     float2 uv : TEXCOORD0;
     float3 normal : NORMAL;
-    float3 tangent : TANGENT;
-    float3 binormal : BINORMAL;
 };
 
 struct VsOut
@@ -14,9 +12,7 @@ struct VsOut
     float4 position : SV_POSITION;
     float2 uv : TEXCOORD0;
     float3 normal : TEXCOORD1;
-    float3 tangent : TEXCOORD2;
-    float3 binormal : TEXCOORD3;
-    float3 viewDir : TEXCOORD4;
+    float3 viewDir : TEXCOORD2;
 };
 
 ConstantBuffer<CbvMatrices> c_matrices : register(b0);
@@ -30,8 +26,8 @@ VsOut VSMain(VsIn input)
     float4 worldPos = mul(c_matrices.M, pos);
 
     output.normal = normalize(mul((float3x3)c_matrices.MTI, (float3)input.normal));
-    output.tangent = normalize(mul((float3x3)c_matrices.MTI, (float3)input.tangent));
-    output.binormal = normalize(mul((float3x3)c_matrices.MTI, (float3)input.binormal));
+    //output.tangent = normalize(mul((float3x3)c_matrices.MTI, (float3)input.tangent));
+    //output.binormal = normalize(mul((float3x3)c_matrices.MTI, (float3)input.binormal));
 
     pos = mul(c_matrices.V, worldPos);
 

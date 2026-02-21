@@ -27,8 +27,8 @@ struct VertexInputDataGLTF
     XMFLOAT3 Position;
 	XMFLOAT2 Texture;
 	XMFLOAT3 Normal;
-	XMFLOAT3 Tangent;
-	XMFLOAT3 Binormal;
+	//XMFLOAT3 Tangent;
+	//XMFLOAT3 Binormal;
 };
 #pragma pack(pop)
 

@@ -498,17 +498,17 @@ void SceneStudio::loadRasterAssets(const D3D* d3d, ID3D12GraphicsCommandList* cm
             "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
             D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
         },
-        {
-            "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
-            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
-        },
-        {
-            "BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
-            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
-        },
+        //{
+        //    "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
+        //    D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+        //},
+        //{
+        //    "BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
+        //    D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+        //},
     };
     m_shaderRaster = std::make_shared<Shader>();
-    m_shaderRaster->InitVsPs(L"Raster/RasterDebugVS.hlsl", L"Raster/RasterDebugPS.hlsl",
+    m_shaderRaster->InitVsPs(L"Raster/ForwardVS.hlsl", L"Raster/ForwardPS.hlsl",
                              {rasterILD, _countof(rasterILD)}, d3d->GetDevice(), m_rootSigRaster->Get(), true);
 
     m_envMap.CreateCubemapResource(d3d->GetDevice());

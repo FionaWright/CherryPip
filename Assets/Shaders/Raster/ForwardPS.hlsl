@@ -1,14 +1,13 @@
 #include "DualIncludes/Cbv.h"
 #include "MicrofacetModels/MicrofacetUtils.hlsli"
+#include "MathUtils.hlsli"
 
 struct VsOut
 {
     float4 position : SV_POSITION;
     float2 uv : TEXCOORD0;
     float3 normal : TEXCOORD1;
-    float3 tangent : TEXCOORD2;
-    float3 binormal : TEXCOORD3;
-    float3 viewDir : TEXCOORD4;
+    float3 viewDir : TEXCOORD2;
 };
 
 Texture2D<float2> gBrdfInt : register(t0);
@@ -38,9 +37,9 @@ float4 PSMain(VsOut input) : SV_TARGET
     float2 roughMet = gTextures[c_mat.TexIdxRoughMet].Sample(gSampler, input.uv).gb;
     float3 emission = gTextures[c_mat.TexIdxEmissive].Sample(gSampler, input.uv).rgb;
 
-    float3 T = normalize(input.tangent);
-    float3 B = normalize(input.binormal);
     float3 N = normalize(input.normal);
+    float3 T, B;
+    BuildBasisFrisvad(N, T, B);
     float3 N_w = normalize(bumpSample.x * T + bumpSample.y * B + bumpSample.z * N);
 
     float3 irradianceIblSample = gIrradiance.SampleLevel(gSampler, N_w, 0).rgb;
@@ -99,9 +98,9 @@ float4 PSMain(VsOut input) : SV_TARGET
     case eNormalsBumped:
         return float4(N_w, 1);
     case eTangent:
-        return float4(input.tangent, 1);
+        return float4(T, 1);
     case eBinormal:
-        return float4(input.binormal, 1);
+        return float4(B, 1);
     case eUV:
         return float4(input.uv, 0, 1);
     case eDirLighting:

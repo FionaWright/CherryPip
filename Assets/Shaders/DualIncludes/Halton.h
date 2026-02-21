@@ -3,7 +3,7 @@
 
 #ifdef __cplusplus
 #include "CBV.h"
-static CbvPrimes c_primes;
+static CbvPrimes cbvPrimes;
 #endif
 
 // https://github.com/mmp/pbrt-v4/blob/master/src/pbrt/util/math.h

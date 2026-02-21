@@ -38,7 +38,7 @@
 - [x] Proper distant light using bounding sphere of plane (No singular sun-point) (PBRT)
 - [ ] Oren-Nayers Lighting Model (https://blog.selfshadow.com/publications/s2012-shading-course/gotanda/s2012_pbs_beyond_blinn_slides_v3.pdf)
 - [ ] Microfacet Beckmann (PBRT)
-- [ ] Microfacet Glass (Beckmann)
+- [ ] Microfacet Glass
 - [ ] Point Lights
 - [ ] Ray Bundles / Ray Buffers(?). See Embre? (https://www.jp.square-enix.com/tech/library/pdf/Global%20Illumination%20Using%20Ray-Bundle%20Tracing%20(AFDS2012).pdf)
 - [ ] SpecularTint, Clearcoat, Sheen PBR parameters
@@ -72,9 +72,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ## PT-TODO:
 
 ### Main Tasks
-- Fix VNDF issues
-- Fix Firefly Threshold
-- Try make Halton work better, reimplement for bounces
+- SPECTRAL RENDERING TIME! 
 
 ### Bugs 
 - Camera movement gets messed up sometimes
@@ -85,6 +83,8 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - PT only build mode that doesn't initialize any raster resources? 
 - FPS has heavily dropped since I was away, possibly due to all the extra shaders/etc. Make sure they can be deleted properly when not in use. 1000+ FPS with lambert distribution should be possible
 - Build basis with N and V when not aligned instead of using frisvad? 
+- Try make Halton work better, reimplement for bounces
+- Fix firefly threshold when I start noticing actual fireflies, none yet. Maybe after MIS or NEE?
 
 ## Raster/Laptop-TODO
 
@@ -93,3 +93,4 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Refactor PtMaterialData to just MaterialData and share between backends
 - Irradiance prealiasing, convert discrete to continuous through c = d + 0.5? Does this apply to unjittered PT samples as well?
 - Something wrong with sphere model, makes furnace tests hard
+- Refactor some of the debug classes into the SceneStudio app

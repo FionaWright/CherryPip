@@ -96,10 +96,11 @@ void Model_Microfacet(
 
     float pdf;
     float3 diffuseBrdf;
+    float3 L_s;
     float3 E;
     if (cImportanceSamplingEnabled)
     {
-        float3 L_s = RandHemisphereCosineSSpace(u1, u2);
+        L_s = RandHemisphereCosineSSpace(u1, u2);
         wi = InvToDefinedSpace(L_s, T, B, Ns);
 
         float NdL = SSpaceCosTheta(L_s);
@@ -110,7 +111,7 @@ void Model_Microfacet(
     }
     else
     {
-        float3 L_s = RandHemisphereUniformSSpace(u1, u2);
+        L_s = RandHemisphereUniformSSpace(u1, u2);
         wi = InvToDefinedSpace(L_s, T, B, Ns);
 
         float NdL = SSpaceCosTheta(L_s);

@@ -508,6 +508,14 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
 
     MaterialData materialData = {};
     memcpy(&materialData.BaseColorFactor, &mat.pbrData.baseColorFactor, sizeof(float) * 3);
+    if (mat.volume)
+    {
+        XMFLOAT3 attenuationColor;
+        memcpy(&attenuationColor, &mat.volume->attenuationColor, sizeof(XMFLOAT3));
+        materialData.GlassSigmaA.x = -std::log(std::max(attenuationColor.x, 0.0001f)) / std::max(mat.volume->thicknessFactor, 0.0001f);
+        materialData.GlassSigmaA.y = -std::log(std::max(attenuationColor.y, 0.0001f)) / std::max(mat.volume->thicknessFactor, 0.0001f);
+        materialData.GlassSigmaA.z = -std::log(std::max(attenuationColor.z, 0.0001f)) / std::max(mat.volume->thicknessFactor, 0.0001f);
+    }
     memcpy(&materialData.EmissiveColor, &mat.emissiveFactor, sizeof(float) * 3);
     materialData.EmissiveStrength = mat.emissiveStrength;
     materialData.Roughness = mat.pbrData.roughnessFactor;
@@ -646,6 +654,8 @@ void ModelLoaderGLTF::LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
             fastgltf::Extensions::KHR_materials_iridescence |
             fastgltf::Extensions::KHR_materials_ior |
             fastgltf::Extensions::KHR_materials_anisotropy |
+            fastgltf::Extensions::KHR_materials_transmission |
+            fastgltf::Extensions::KHR_materials_volume |
             fastgltf::Extensions::KHR_texture_transform | // Not actually implemented yet, breaks WhiteLands?
             fastgltf::Extensions::KHR_materials_emissive_strength);
         ms_initialisedParser = true;

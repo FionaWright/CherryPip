@@ -8,12 +8,8 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             uint flags,
             uint instanceMask,
             RayDesc ray,
-            inout RngInfo rngInfo
-#ifdef DEBUG_PATH_VISUALIZATION
-            , uint sampleIdx
-            , bool isPathVisualSelectedPixel
-#endif
-)
+            inout RngInfo rngInfo,
+            uint sampleIdx, bool isPathVisualSelectedPixel)
 {
     float3 Lo = float3(0, 0, 0);
     float3 throughput = float3(1, 1, 1);

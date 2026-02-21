@@ -1,7 +1,7 @@
 #include "Path-Tracing/Hit.hlsli"
 #include "Path-Tracing/Miss.hlsli"
 
-#include "LightingModels.hlsli"
+#include "LightingModels/AllModels.hlsli"
 #include "MathUtils.hlsli"
 
 float3 Trace(inout RayQuery<RAY_FLAGS> q,

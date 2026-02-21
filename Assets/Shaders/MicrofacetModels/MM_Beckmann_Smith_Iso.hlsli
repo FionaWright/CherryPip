@@ -7,6 +7,11 @@
 // https://blog.selfshadow.com/publications/s2012-shading-course/hoffman/s2012_pbs_physics_math_notebook.pdf
 // See PBRT for Aniso version
 
+// Not very useful
+// https://graphicrants.blogspot.com/2013/08/specular-brdf-reference.html
+
+// https://www.cs.cornell.edu/~srm/publications/EGSR07-btdf.pdf
+
 struct MicrofacetModel
 {
 #include "MicrofacetModels/IMicrofacetModel.hlsli"

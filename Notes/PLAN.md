@@ -48,6 +48,7 @@
 - [ ] Ray pipelines
 - [ ] Spectral Path-Tracing 
 - [ ] Rayleigh scattering (Mist, See Seb Lague)
+- [ ] BSSDFs (Subsurface Scattering)
 - [x] GBuffer pre-pass
 - [x] Denoising (Box/Gauss/A-Trous)
 - [x] Denoising Median

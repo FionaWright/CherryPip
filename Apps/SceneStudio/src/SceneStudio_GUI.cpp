@@ -167,6 +167,15 @@ void SceneStudio::guiPathTracer()
         ImGui::Unindent(IM_GUI_INDENTATION);
         m_studioConfig.PT.NdfType = static_cast<MicrofacetNdfType>(e2);
 
+        ImGui::Text("%s", "Microfacet Masking Function:");
+        static int e4 = m_studioConfig.PT.MaskingType;
+        idx = 0;
+        ImGui::Indent(IM_GUI_INDENTATION);
+        m_shaderDirty |= ImGui::RadioButton("Smith", &e4, idx++);
+        m_shaderDirty |= ImGui::RadioButton("V-Cavity", &e4, idx++);
+        ImGui::Unindent(IM_GUI_INDENTATION);
+        m_studioConfig.PT.MaskingType = static_cast<MicrofacetMaskingType>(e4);
+
         m_shaderDirty |= ImGui::Checkbox("Anisotropy Enabled", &m_studioConfig.PT.AnisotropyEnabled);
         m_shaderDirty |= ImGui::Checkbox("Sample Visible Normals", &m_studioConfig.PT.SampleVisibleNormals);
     }
@@ -639,10 +648,13 @@ void SceneStudio::guiMain()
         else if (!testNames[lastIdx].empty())
             testNames.emplace_back("");
 
+        static bool logPlot = false;
+        ImGui::Checkbox("Logarithmic Y-Axis", &logPlot);
+
         if (ImGui::Button("Compare Tests"))
         {
             testNames.erase(testNames.end() - 1);
-            m_rmseTester.CompareTests(testNames);
+            m_rmseTester.CompareTests(testNames, logPlot);
         }
 
         ImGui::Unindent(IM_GUI_INDENTATION);

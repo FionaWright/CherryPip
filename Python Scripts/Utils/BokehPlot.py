@@ -55,8 +55,13 @@ def plot_line(data: list[float], name: str, show_plot: bool, save_plot: bool):
     if show_plot:
         show(p)
 
-def plot_multiple_lines(data_lists: list[list[float]], names: list[str], show_plot: bool, save_plot: bool):
-    p = figure(title="Convergence Graph against Golden Image", x_axis_label="Frame", y_axis_label="RMSE")
+def plot_multiple_lines(data_lists: list[list[float]], names: list[str], show_plot: bool, save_plot: bool, use_log_y: bool):
+    p = figure(
+        title="Convergence Graph against Golden Image",
+        x_axis_label="Frame",
+        y_axis_label="RMSE",
+        y_axis_type="log" if use_log_y else "linear"
+    )
 
     palette = Category10[10]  # Up to 10 distinct colors
     for i, (data, name) in enumerate(zip(data_lists, names)):

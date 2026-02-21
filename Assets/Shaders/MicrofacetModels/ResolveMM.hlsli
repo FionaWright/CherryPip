@@ -3,20 +3,25 @@
 
 struct MicrofacetModel;
 
-#ifdef NDF_TYPE_GGX
+// Missing:
+// VNDF Aniso
+
+#if defined(NDF_TYPE_GGX)
 #   ifdef ANISOTROPY_ENABLED
 #       include "MicrofacetModels/MM_GGX_Smith_Aniso.hlsli"
 #   else
 #       ifdef SAMPLE_VISIBLE_NORMALS
-#           ifdef MASKING_VCAVITY
+#           if defined(MASKING_VCAVITY)
 #               include "MicrofacetModels/MM_GGX_VCavity_Iso_VNDF.hlsli"
-#           else
+#           elif defined(MASKING_SMITH)
 #               include "MicrofacetModels/MM_GGX_Smith_Iso_VNDF.hlsli"
 #           endif
 #       else
 #           include "MicrofacetModels/MM_GGX_Smith_Iso.hlsli"
 #       endif
 #   endif
+#elif defined(NDF_TYPE_BECKMANN)
+#    include "MicrofacetModels/MM_Beckmann_Smith_Iso.hlsli"
 #endif
 
 #ifndef MICROFACET_MODEL_CHOSEN

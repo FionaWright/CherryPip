@@ -8,7 +8,11 @@ struct MicrofacetModel;
 #       include "MicrofacetModels/MM_GGX_Smith_Aniso.hlsli"
 #   else
 #       ifdef SAMPLE_VISIBLE_NORMALS
-#           include "MicrofacetModels/MM_GGX_VCavity_Iso_VNDF.hlsli"
+#           ifdef MASKING_VCAVITY
+#               include "MicrofacetModels/MM_GGX_VCavity_Iso_VNDF.hlsli"
+#           else
+#               include "MicrofacetModels/MM_GGX_Smith_Iso_VNDF.hlsli"
+#           endif
 #       else
 #           include "MicrofacetModels/MM_GGX_Smith_Iso.hlsli"
 #       endif

@@ -3,6 +3,7 @@
 
 #ifndef UINT_MAX
 #define UINT_MAX 4294967296.0
+#include "Render/PathTracingContext.h"
 #endif
 
 #ifndef PI
@@ -120,53 +121,50 @@ struct RngInfo
 
 uint GetHashScramble(uint2 pos, uint sampleIdx, uint frameIdx)
 {
-#if defined(SAMPLING_HALTON)
-    return PrngSeed(pos, 0, 0);
-#elif defined(SAMPLING_HALTON_APPLE)
-    return PrngSeed(pos, 0, 0);
-#elif defined(SAMPLING_HALTON_OWEN)
-    return PrngSeed(pos, 0, 0);
-#else
+    if (cRngSamplingStrategy == eHalton || cRngSamplingStrategy == eHaltonApple)
+        return PrngSeed(pos, 0, 0);
+
+    if (cRngSamplingStrategy == eOwenScrambledHalton)
+        return PrngSeed(pos, 0, 0);
+
     return 0;
-#endif
 }
 
 float Rand01(int dimension, GLUE_INOUT(RngInfo) rngInfo)
 {
-#if defined(SAMPLING_INDEPENDENT)
+    if (cRngSamplingStrategy == eIndependent)
+        return PcgRand01(rngInfo.IndependentRngState);
 
-    return PcgRand01(rngInfo.IndependentRngState);
+    if (cRngSamplingStrategy == eHalton)
+    {
+        uint64_t extraHash = rngInfo.HashScramble + rngInfo.GlobalSampleIdx;
+        return RadicalInverse(dimension, extraHash);
+    }
 
-#elif defined(SAMPLING_HALTON)
+    if (cRngSamplingStrategy == eHaltonApple)
+    {
+        uint64_t extraHash = rngInfo.HashScramble + rngInfo.GlobalSampleIdx;
+        return AppleRadicalInverse(dimension, extraHash);
+    }
 
-    uint64_t extraHash = rngInfo.HashScramble + rngInfo.GlobalSampleIdx;
-    return RadicalInverse(dimension, extraHash);
+    if (cRngSamplingStrategy == eOwenScrambledHalton)
+    {
+        uint64_t extraHash = rngInfo.HashScramble + rngInfo.GlobalSampleIdx;
+        return OwenScrambledRadicalInverse(dimension, extraHash, rngInfo.HashScramble);
+    }
 
-#elif defined(SAMPLING_HALTON_APPLE)
-
-    uint64_t extraHash = rngInfo.HashScramble + rngInfo.GlobalSampleIdx;
-    return AppleRadicalInverse(dimension, extraHash);
-
-#elif defined(SAMPLING_HALTON_OWEN)
-
-    uint64_t extraHash = rngInfo.HashScramble + rngInfo.GlobalSampleIdx;
-    return OwenScrambledRadicalInverse(dimension, extraHash, rngInfo.HashScramble);
-
-#else
     return 0;
-#endif
 }
 
 float Rand01_Bounce(int dimension, GLUE_INOUT(RngInfo) rngInfo)
 {
-// Non-scambled Halton breaks at high dimensionality
-#if defined(SAMPLING_HALTON) || defined(SAMPLING_HALTON_APPLE) || defined(SAMPLING_INDEPENDENT)
-    return PcgRand01(rngInfo.IndependentRngState);
-#endif
+    // Non-scambled Halton breaks at high dimensionality
+    if (cRngSamplingStrategy == eIndependent || cRngSamplingStrategy == eHalton || cRngSamplingStrategy == eHaltonApple)
+        return PcgRand01(rngInfo.IndependentRngState);
 
-#if defined(SAMPLING_HALTON_OWEN)
-    dimension += rngInfo.BounceBaseDimension;
-#endif
+    if (cRngSamplingStrategy == eOwenScrambledHalton)
+        dimension += rngInfo.BounceBaseDimension;
+
     return Rand01(dimension, rngInfo);
 }
 

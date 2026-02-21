@@ -40,7 +40,10 @@ struct PtMaterialData
 
     PtMaterialFlags Flags;
     float AnisoStrength;
-    float2 p;
+    float2 p2;
+
+    float3 GlassSigmaA;
+    float p;
 };
 
 struct Vertex

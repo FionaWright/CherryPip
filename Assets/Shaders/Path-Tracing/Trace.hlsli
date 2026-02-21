@@ -85,7 +85,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         if (cLightingGlassEnabled && mat.Flags & PtMaterialFlags::eIsGlass)
         {
             bool entering = q.CommittedTriangleFrontFace()!=0;
-            Model_Glass(rngInfo, throughput, mat.DiffuseProbability, roughness, entering, q.CommittedRayT(), mat.IoR, Ns, Li, albedo.rgb, wo, wi, L_sample);
+            Model_Glass(rngInfo, throughput, mat.DiffuseProbability, roughness, entering, q.CommittedRayT(), mat.IoR, mat.GlassSigmaA, Ns, Li, albedo.rgb, wo, wi, L_sample);
         }
         else if (cLightingModel == eLambert)
         {

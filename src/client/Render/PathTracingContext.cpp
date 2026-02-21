@@ -79,6 +79,7 @@ void PathTracingContext::BuildScene(ID3D12Device* device, ID3D12GraphicsCommandL
         ptMaterialData.IoR = objectMaterialData->IoR;
         ptMaterialData.Flags = objectMaterialData->Flags;
         ptMaterialData.EmissiveColor = objectMaterialData->EmissiveColor;
+        ptMaterialData.GlassSigmaA = objectMaterialData->GlassSigmaA;
         materialData.emplace_back(ptMaterialData);
     }
 

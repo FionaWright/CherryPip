@@ -35,9 +35,9 @@ struct UAV
 
 struct MaterialData
 {
-    DirectX::XMFLOAT3 BaseColorFactor = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
+    XMFLOAT3 BaseColorFactor = XMFLOAT3(1.0f, 1.0f, 1.0f);
     float EmissiveStrength = 0.0f;
-    DirectX::XMFLOAT3 EmissiveColor = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
+    XMFLOAT3 EmissiveColor = XMFLOAT3(1.0f, 1.0f, 1.0f);
     float Roughness = 1.0f;
     float Metalness = 0.0f;
 
@@ -51,6 +51,7 @@ struct MaterialData
 
     float AnisoStrength = 0.0f;
     float AnisoRotation = 0.0f; // Unimplemented
+    float3 GlassSigmaA = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
     float DiffuseProbability = 1.0f; // TODO: Compute in shader using luminance/F0/etc
 };

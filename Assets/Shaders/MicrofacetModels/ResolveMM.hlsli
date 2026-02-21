@@ -8,7 +8,11 @@ struct MicrofacetModel;
 
 #if defined(NDF_TYPE_GGX)
 #   ifdef ANISOTROPY_ENABLED
-#       include "MicrofacetModels/MM_GGX_Smith_Aniso.hlsli"
+#       ifdef SAMPLE_VISIBLE_NORMALS
+#           include "MicrofacetModels/MM_GGX_Smith_Aniso_VNDF.hlsli"
+#       else
+#           include "MicrofacetModels/MM_GGX_Smith_Aniso.hlsli"
+#       endif
 #   else
 #       ifdef SAMPLE_VISIBLE_NORMALS
 #           if defined(MASKING_VCAVITY)

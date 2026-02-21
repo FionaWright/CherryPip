@@ -81,6 +81,7 @@ struct PtConfig
     alignas(4) bool AlphaTestingEnabled = true;
     alignas(4) bool ImportanceSamplingEnabled = true;
     alignas(4) bool GlassModelEnabled = false;
+    alignas(4) bool GammaCorrection = true;
 };
 
 class PathTracingContext

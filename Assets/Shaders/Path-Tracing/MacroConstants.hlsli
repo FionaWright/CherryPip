@@ -148,6 +148,12 @@ static const bool cLightingGlassEnabled = true;
 static const bool cLightingGlassEnabled = false;
 #endif
 
+#ifdef GAMMA_CORRECTION
+static const bool cGammaCorrection = true;
+#else
+static const bool cGammaCorrection = false;
+#endif
+
 // Avoid code breaking
 #if !defined(NDF_TYPE_GGX) && !defined(NDF_TYPE_BECKMANN)
 #define NDF_TYPE_GGX

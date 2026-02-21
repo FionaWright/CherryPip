@@ -40,15 +40,16 @@ void Hit(inout RayQuery<RAY_FLAGS> q,
         float3 T, B;
         BuildBasisFrisvad(Ns, T, B);
 
-        float3 bumpSample = gTextures[mat.TexIdxNormal].Sample(c_sampler, uv).rgb * 2.0f - 1.0f;
+        float3 bumpSample = gTextures[mat.TexIdxNormal].Sample(gSampler, uv).rgb * 2.0f - 1.0f;
         bumpSample.y = -bumpSample.y; // DX-convention
         Ns = normalize(bumpSample.x * T + bumpSample.y * B + bumpSample.z * Ns);
     }
     Ns = q.CommittedTriangleFrontFace() == 0 ? -Ns : Ns;
 
-    float4 albedoSample = gTextures[mat.TexIdxAlbedo].Sample(c_sampler, uv);
-    // TODO: Does albedo sample need gamma correction?
-    float3 emissionSample = gTextures[mat.TexIdxEmissive].Sample(c_sampler, uv).rgb;
+    float4 albedoSample = gTextures[mat.TexIdxAlbedo].Sample(gSampler, uv);
+    albedoSample.xyz = pow(albedoSample.xyz, 2.2f); // Disabling this can give nicer looking images sometimes
+
+    float3 emissionSample = gTextures[mat.TexIdxEmissive].Sample(gSampler, uv).rgb;
 
     if (cAnisotropyEnabled)
     {
@@ -56,7 +57,7 @@ void Hit(inout RayQuery<RAY_FLAGS> q,
         float2x2 anisoRotMat = float2x2(anisoRot.x,  anisoRot.y,
                                         -anisoRot.y,  anisoRot.x);
 
-        anisoDirAndStrength = gTextures[mat.TexIdxAniso].Sample(c_sampler, uv).rgb;
+        anisoDirAndStrength = gTextures[mat.TexIdxAniso].Sample(gSampler, uv).rgb;
         anisoDirAndStrength.rg = anisoDirAndStrength.rg * 2.0f - 1.0f; // [0,1] -> [-1,1]. Don't normalize
         anisoDirAndStrength.rg = mul(anisoRotMat, anisoDirAndStrength.rg);
 

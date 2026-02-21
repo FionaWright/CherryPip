@@ -122,6 +122,7 @@ void SceneStudio::guiPathTracer()
 
     m_shaderDirty |= ImGui::Checkbox("Normal Maps Enabled##xx", &m_studioConfig.PT.NormalMapsEnabled);
     m_shaderDirty |= ImGui::Checkbox("Alpha Testing Enabled##xx", &m_studioConfig.PT.AlphaTestingEnabled);
+    m_shaderDirty |= ImGui::Checkbox("Gamma Correction Enabled##xx", &m_studioConfig.PT.GammaCorrection);
 
     m_shaderDirty |= ImGuiUtils::FwInputFloat("Firefly Threshold", &m_studioConfig.PT.FireflyThreshold);
 

@@ -1,22 +1,22 @@
-if (c_debug.DebugIdx == DebugInfoOutput::eNormalsShaded)
+if (cbvDebug.DebugIdx == DebugInfoOutput::eNormalsShaded)
     return Ns;
-else if (c_debug.DebugIdx == DebugInfoOutput::eNormalsGeo)
+else if (cbvDebug.DebugIdx == DebugInfoOutput::eNormalsGeo)
     return Ng;
-else if (c_debug.DebugIdx == DebugInfoOutput::eFirstBounceDirection)
+else if (cbvDebug.DebugIdx == DebugInfoOutput::eFirstBounceDirection)
     return ray.Direction;
-else if (c_debug.DebugIdx == DebugInfoOutput::eHitPos)
+else if (cbvDebug.DebugIdx == DebugInfoOutput::eHitPos)
     return hitPos;
-else if (c_debug.DebugIdx == DebugInfoOutput::eBaseColor)
+else if (cbvDebug.DebugIdx == DebugInfoOutput::eBaseColor)
     return albedo.rgb;
-else if (c_debug.DebugIdx == DebugInfoOutput::eMissHit)
+else if (cbvDebug.DebugIdx == DebugInfoOutput::eMissHit)
     return float3(1, 1, 1);
-else if (c_debug.DebugIdx == DebugInfoOutput::eHitDistRay0)
+else if (cbvDebug.DebugIdx == DebugInfoOutput::eHitDistRay0)
     return float(q.CommittedRayT()).xxx / 10.0;
-else if (i == 1 && c_debug.DebugIdx == DebugInfoOutput::eHitDistRay1)
+else if (i == 1 && cbvDebug.DebugIdx == DebugInfoOutput::eHitDistRay1)
     return float(q.CommittedRayT()).xxx;
-else if (c_debug.DebugIdx == DebugInfoOutput::eMaterialID)
+else if (cbvDebug.DebugIdx == DebugInfoOutput::eMaterialID)
     return Palette(gInstances[q.CommittedInstanceIndex()].MaterialIdx).rgb;
-else if (c_debug.DebugIdx == DebugInfoOutput::eSelfIntersection)
+else if (cbvDebug.DebugIdx == DebugInfoOutput::eSelfIntersection)
 {
     uint instanceID = q.CommittedInstanceIndex();
     uint primID = q.CommittedPrimitiveIndex();
@@ -25,11 +25,11 @@ else if (c_debug.DebugIdx == DebugInfoOutput::eSelfIntersection)
     prevPrimID = primID;
     prevInstanceID = instanceID;
 }
-else if (c_debug.DebugIdx == DebugInfoOutput::eRoughness)
+else if (cbvDebug.DebugIdx == DebugInfoOutput::eRoughness)
     return float3(roughness.rrr);
-else if (c_debug.DebugIdx == DebugInfoOutput::eMetalness)
+else if (cbvDebug.DebugIdx == DebugInfoOutput::eMetalness)
     return float3(metalness.rrr);
-else if (c_debug.DebugIdx == DebugInfoOutput::eAlbedoAlpha)
+else if (cbvDebug.DebugIdx == DebugInfoOutput::eAlbedoAlpha)
     return float3(albedo.aaa);
-//else if (c_debug.DebugIdx == DebugInfoOutput::eFireflyThresholdHit && L_lum > c_pathTracing.FireflyThreshold)
+//else if (cbvDebug.DebugIdx == DebugInfoOutput::eFireflyThresholdHit && L_lum > c_pathTracing.FireflyThreshold)
 //    return float3(1, 0, 0);

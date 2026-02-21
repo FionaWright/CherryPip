@@ -53,7 +53,7 @@ uint PermutationElement(uint i, uint l, uint p) {
 int GetPrime(int idx)
 {
 #if defined(SAMPLING_HALTON_OWEN) || defined(SAMPLING_HALTON) || defined(SAMPLING_HALTON_APPLE) || defined(__cplusplus)
-    return c_primes.Primes[idx]; // TODO: Not a fan of this file knowing about CBVs but...
+    return cbvPrimes.Primes[idx]; // TODO: Not a fan of this file knowing about CBVs but...
 #else
     return 0;
 #endif

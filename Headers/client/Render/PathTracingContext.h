@@ -31,6 +31,12 @@ enum MicrofacetNdfType : uint32_t
     eBeckmann
 };
 
+enum MicrofacetMaskingType : uint32_t
+{
+    eSmith,
+    eVCavity
+};
+
 enum PathTracerLightingModel : uint32_t
 {
     eLambertDiff,
@@ -54,6 +60,7 @@ struct PtConfig
     uint32_t RussianRouletteMinBounces = 4;
     PathTracerLightingModel LightingModel = eMicrofacet;
     MicrofacetNdfType NdfType = eGGX;
+    MicrofacetMaskingType MaskingType = eSmith;
     DebugInfoOutput DebugInfoOutputMode = DebugInfoOutput::eNormalsShaded;
     PathTracerSamplingStrategy SamplingStrat = eIndependent;
     float DirLightCosAngularRadius = 0.00465f;

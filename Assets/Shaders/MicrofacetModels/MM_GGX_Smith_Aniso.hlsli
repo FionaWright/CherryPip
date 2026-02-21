@@ -33,8 +33,10 @@ void MicrofacetModel::InitAniso(float3 T, float3 B, float3 N, float3 anisoDirStr
     m_alphaX = alphaXY.x;
     m_alphaY = alphaXY.y;
 
-    m_alphaX = clamp(m_alphaX, 1e-3, 1.0f);
-    m_alphaY = clamp(m_alphaY, 1e-3, 1.0f);
+    //m_alphaX = clamp(m_alphaX, 1e-3, 1.0f);
+    m_alphaX = max(m_alphaX, 1e-3);
+    //m_alphaY = clamp(m_alphaY, 1e-3, 1.0f);
+    m_alphaY = max(m_alphaY, 1e-3);
 
     m_isAniso = abs(m_alphaX - m_alphaY) > 0.0001f;
     if (m_isAniso)

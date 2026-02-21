@@ -45,7 +45,7 @@ public:
     void UpdateConvergenceTest(D3D* d3d, const uint32_t currFrame, Heap* heap, D12Resource* finalRTV);
     [[nodiscard]] float GetConvergenceTestPercent() const { return m_lastFrameConvergenceTested / static_cast<float>(m_maxFrames);}
 
-    void CompareTests(const std::vector<std::string>& testNames);
+    void CompareTests(const std::vector<std::string>& testNames, bool logPlot);
 
 private:
     Texture m_slotA, m_slotB;

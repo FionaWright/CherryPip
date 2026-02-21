@@ -310,7 +310,7 @@ void RmseTester::UpdateConvergenceTest(D3D* d3d, const uint32_t currFrame, Heap*
     m_runningConvergenceTest = false;
 }
 
-void RmseTester::CompareTests(const std::vector<std::string>& testNames)
+void RmseTester::CompareTests(const std::vector<std::string>& testNames, const bool logPlot)
 {
     // Plot graph
     {
@@ -320,6 +320,8 @@ void RmseTester::CompareTests(const std::vector<std::string>& testNames)
             const std::string filePath = "\"" + wstringToString(ASSETS_SOURCE_DIR) + "/../Data/RMSEs/" + testNames[i] + ".csv\"";
             args.push_back(_strdup(filePath.c_str()));
         }
+        if (logPlot)
+            args.push_back("--log");
         PythonExecutor::ExecutePython("PlotMultiConvergence.py", args);
     }
 }

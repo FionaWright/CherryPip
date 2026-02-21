@@ -11,6 +11,8 @@ rmseDataLists = []
 testNames = []
 
 for testName in sys.argv[1:]:
+    if testName == "--log":
+        continue  # skip the flag itself
     rmseData = []
     testNames.append(os.path.splitext(os.path.basename(testName))[0])
     with open(testName, newline='') as csvfile:
@@ -22,4 +24,6 @@ for testName in sys.argv[1:]:
 show_plot = True
 save_plot = True
 
-plot_multiple_lines(rmseDataLists, testNames, show_plot=show_plot, save_plot=save_plot)
+use_log_y = "--log" in sys.argv
+
+plot_multiple_lines(rmseDataLists, testNames, show_plot=show_plot, save_plot=save_plot, use_log_y=use_log_y)

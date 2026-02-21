@@ -946,6 +946,12 @@ void SceneStudio::compilePtShader(const D3D* d3d)
             L"-DNDF_TYPE_BECKMANN"
         };
         args.push_back(c_mapNdfType.at(m_studioConfig.PT.NdfType));
+
+        static const std::vector<const WCHAR*> c_mapMaskingType = {
+            L"-DMASKING_SMITH",
+            L"-DMASKING_VCAVITY"
+        };
+        args.push_back(c_mapMaskingType.at(m_studioConfig.PT.MaskingType));
     }
 
     m_shaderILD =

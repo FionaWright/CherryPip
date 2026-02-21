@@ -86,9 +86,9 @@ float4 PSMain(VsOut input) : SV_Target0
 
         if (cDofEnabled)
         {
-            float3 camRight = normalize(cbvPathTracing.InvV[0].xyz);  // X column
-            float3 camUp    = normalize(cbvPathTracing.InvV[1].xyz);  // Y column
-            float3 focalPoint = origin + ray.Direction * cbvPathTracing.DofFocalDist;
+            float3 camRight = normalize(float3(cbvPathTracing.InvV[0][0], cbvPathTracing.InvV[1][0], cbvPathTracing.InvV[2][0]));
+            float3 camUp = normalize(float3(cbvPathTracing.InvV[0][1], cbvPathTracing.InvV[1][1], cbvPathTracing.InvV[2][1]));
+            float3 focalPoint = origin + normalize(ray.Direction) * cbvPathTracing.DofFocalDist;
 
             float rLensU = Rand01(DIM_LENS_U, rngInfo);
             float rLensV = Rand01(DIM_LENS_V, rngInfo);
@@ -107,8 +107,7 @@ float4 PSMain(VsOut input) : SV_Target0
                           ray,
                           rngInfo,
                           i,
-                          isPathVisualPixel
-        );
+                          isPathVisualPixel);
     }
 
     colorSum /= float(cbvPathTracing.SPP);

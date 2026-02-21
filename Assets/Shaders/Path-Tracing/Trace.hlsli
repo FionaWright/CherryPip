@@ -24,7 +24,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 		gDebugPathVisualization[sampleIdx].NumPositionsSet = 1;
 	}
 
-    for (uint i = 0; i <= c_pathTracing.NumBounces; i++)
+    for (uint i = 0; i <= cbvPathTracing.NumBounces; i++)
     {
         q.TraceRayInline(gTLAS, flags, instanceMask, ray);
         q.Proceed();
@@ -34,8 +34,8 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             float3 L_sample = throughput * Miss(ray.Origin, ray.Direction, i);
 
             //float L_lum = Luminance(L_sample);
-            //if (L_lum > c_pathTracing.FireflyThreshold)
-            //    L_sample *= c_pathTracing.FireflyThreshold / L_lum;
+            //if (L_lum > cbvPathTracing.FireflyThreshold)
+            //    L_sample *= cbvPathTracing.FireflyThreshold / L_lum;
 
             Lo += L_sample;
 
@@ -75,7 +75,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
     		}
         }
 
-        float2 roughMet = gTextures[mat.TexIdxRoughMet].Sample(c_sampler, uv).gb;
+        float2 roughMet = gTextures[mat.TexIdxRoughMet].Sample(gSampler, uv).gb;
         float roughness = mat.Roughness * roughMet.r;
         float metalness = mat.Metalness * roughMet.g;
 
@@ -113,12 +113,12 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
         // TODO: Reimplement firefly threshold
         //float L_lum = Luminance(L_sample);
-        //if (L_lum > c_pathTracing.FireflyThreshold)
-        //    L_sample *= c_pathTracing.FireflyThreshold / L_lum;
+        //if (L_lum > cbvPathTracing.FireflyThreshold)
+        //    L_sample *= cbvPathTracing.FireflyThreshold / L_lum;
 
         Lo += L_sample;
 
-        if (cRussianRouletteEnabled && i >= c_pathTracing.RussianRouletteMinBounces)
+        if (cRussianRouletteEnabled && i >= cbvPathTracing.RussianRouletteMinBounces)
         {
             float p = saturate(max(throughput.r, max(throughput.g, throughput.b)));
             p = max(p, 0.05f);

@@ -1,30 +1,30 @@
 hasDebugOutput = true;
-if (c_debug.DebugIdx == DebugInfoOutput::eMicrofacetBrdfDiff)
+if (cbvDebug.DebugIdx == DebugInfoOutput::eMicrofacetBrdfDiff)
     debug = diffuseBrdf;
-else if (c_debug.DebugIdx == DebugInfoOutput::eMicrofacetPdfDiff)
+else if (cbvDebug.DebugIdx == DebugInfoOutput::eMicrofacetPdfDiff)
     debug = pdf.xxx;
-else if (c_debug.DebugIdx == DebugInfoOutput::eMicrofacetSpecProb)
+else if (cbvDebug.DebugIdx == DebugInfoOutput::eMicrofacetSpecProb)
     debug = specProb.xxx;
-else if (c_debug.DebugIdx == DebugInfoOutput::eMicrofacetVecViewSSpace)
+else if (cbvDebug.DebugIdx == DebugInfoOutput::eMicrofacetVecViewSSpace)
     debug = V_s;
-else if (c_debug.DebugIdx == DebugInfoOutput::eMicrofacetVecViewWSpace)
+else if (cbvDebug.DebugIdx == DebugInfoOutput::eMicrofacetVecViewWSpace)
     debug = wo;
-else if (c_debug.DebugIdx == DebugInfoOutput::eMicrofacetVecLightSSpace)
+else if (cbvDebug.DebugIdx == DebugInfoOutput::eMicrofacetVecLightSSpace)
     debug = L_s;
-else if (c_debug.DebugIdx == DebugInfoOutput::eMicrofacetTangent)
+else if (cbvDebug.DebugIdx == DebugInfoOutput::eMicrofacetTangent)
     debug = T;
-else if (c_debug.DebugIdx == DebugInfoOutput::eMircofacetBinormal)
+else if (cbvDebug.DebugIdx == DebugInfoOutput::eMircofacetBinormal)
     debug = B;
-else if (c_debug.DebugIdx == DebugInfoOutput::eMicrofacetVecHalf ||
-        c_debug.DebugIdx == DebugInfoOutput::eMicrofacetD ||
-        c_debug.DebugIdx == DebugInfoOutput::eMicrofacetF ||
-        c_debug.DebugIdx == DebugInfoOutput::eMicrofacetG ||
-        c_debug.DebugIdx == DebugInfoOutput::eMicrofacetBrdfSpec ||
-        c_debug.DebugIdx == DebugInfoOutput::eMicrofacetAlpha ||
-        c_debug.DebugIdx == DebugInfoOutput::eMicrofacetAnisoDir ||
-        c_debug.DebugIdx == DebugInfoOutput::eMicrofacetAnisoStrength ||
-        c_debug.DebugIdx == DebugInfoOutput::eMicrofacetAnisoAlpha ||
-        c_debug.DebugIdx == DebugInfoOutput::eMicrofacetPdfSpec)
+else if (cbvDebug.DebugIdx == DebugInfoOutput::eMicrofacetVecHalf ||
+        cbvDebug.DebugIdx == DebugInfoOutput::eMicrofacetD ||
+        cbvDebug.DebugIdx == DebugInfoOutput::eMicrofacetF ||
+        cbvDebug.DebugIdx == DebugInfoOutput::eMicrofacetG ||
+        cbvDebug.DebugIdx == DebugInfoOutput::eMicrofacetBrdfSpec ||
+        cbvDebug.DebugIdx == DebugInfoOutput::eMicrofacetAlpha ||
+        cbvDebug.DebugIdx == DebugInfoOutput::eMicrofacetAnisoDir ||
+        cbvDebug.DebugIdx == DebugInfoOutput::eMicrofacetAnisoStrength ||
+        cbvDebug.DebugIdx == DebugInfoOutput::eMicrofacetAnisoAlpha ||
+        cbvDebug.DebugIdx == DebugInfoOutput::eMicrofacetPdfSpec)
     debug = 0;
 else
 {

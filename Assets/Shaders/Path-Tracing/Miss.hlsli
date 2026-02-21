@@ -20,16 +20,16 @@ float3 Miss(float3 origin, float3 direction, uint bounceIdx)
         else
             uv = PanoSphereToSquare(direction);
 
-        Li += saturate(gEnvMap.Sample(c_sampler, uv).rgb);
+        Li += saturate(gEnvMap.Sample(gSampler, uv).rgb);
     }
 
     if (cDirLightEnabled && bounceIdx >= 1)
     {
-        float sunCos = dot(direction, -normalize(c_pathTracing.DirLight));
+        float sunCos = dot(direction, -normalize(cbvPathTracing.DirLight));
         if (cDirLightIsDistant)
-            Li += c_pathTracing.DirLightColor * c_pathTracing.DirLightIntensity * saturate(sunCos);
-        else if (sunCos > c_pathTracing.DirLightCosAngularRadius)
-            Li += c_pathTracing.DirLightColor * c_pathTracing.DirLightIntensity * 100.0f;
+            Li += cbvPathTracing.DirLightColor * cbvPathTracing.DirLightIntensity * saturate(sunCos);
+        else if (sunCos > cbvPathTracing.DirLightCosAngularRadius)
+            Li += cbvPathTracing.DirLightColor * cbvPathTracing.DirLightIntensity * 100.0f;
     }
 
     return Li;

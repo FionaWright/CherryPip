@@ -1,12 +1,11 @@
 #include "CBV.h"
+#include "MathUtils.hlsli"
 
 struct VsOut
 {
     float4 position : SV_POSITION;
     float2 uv : TEXCOORD0;
     float3 normal : TEXCOORD1;
-    float3 tangent : TEXCOORD2;
-    float3 binormal : TEXCOORD3;
 };
 
 Texture2D<float4> gTextures[] : register(t0);
@@ -32,9 +31,9 @@ GBufferOut PSMain(VsOut input)
 	float3 bumpSample = gTextures[c_mat.TexIdxNormal].SampleLevel(gSampler, input.uv, 0).rgb * 2.0f - 1.0f;
 	bumpSample.y = -bumpSample.y; // DX convention
 
-	float3 T = normalize(input.tangent);
-	float3 B = normalize(input.binormal);
-	float3 N = normalize(input.normal);
+    float3 N = normalize(input.normal);
+    float3 T, B;
+    BuildBasisFrisvad(N, T, B);
 	float3 N_w = normalize(bumpSample.x * T + bumpSample.y * B + bumpSample.z * N);
 
     output.RgbNormal_ADepth.rgb = N_w * 0.5f + 0.5f; // [-1,1] -> [0,1]

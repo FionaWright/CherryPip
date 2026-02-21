@@ -56,14 +56,14 @@ void DeferredContext::Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdL
                 "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
                 D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
             },
-            {
-                "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
-                D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
-            },
-            {
-                "BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
-                D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
-            },
+            //{
+            //    "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
+            //    D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+            //},
+            //{
+            //    "BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
+            //    D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+            //},
         };
         m_shaderGBuffer.InitVsPs(L"Raster/Deferred/GBufferVS.hlsl", L"Raster/Deferred/GBufferPS.hlsl", {ildDesc, _countof(ildDesc)}, device, m_rootSigGBuffer.Get(), true, {}, m_rtvHandles.size());
     }

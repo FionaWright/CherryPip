@@ -1,7 +1,7 @@
 #include "CBV.h"
 #include "PtBuffers.h"
 #include "DebugPalette.hlsli"
-#include "Path-Tracing/MathUtils.hlsli"
+#include "MathUtils.hlsli"
 #include "Path-Tracing/MacroConstants.hlsli"
 
 #define EPSILON 1e-2

@@ -59,7 +59,7 @@ struct StudioConfig
     DenoisingConfig Denoising = {};
 
     bool EnvMapEnabled = true;
-    bool DebugLinesEnabled = true;
+    bool DebugLinesEnabled = false;
     bool DirLightDebugLineEnabled = false;
     float EnvMapRotation = 0.0f;
     float DirLightIntensity = 1.0f;

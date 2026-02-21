@@ -34,7 +34,7 @@ void Hit(inout RayQuery<RAY_FLAGS> q,
     Ng = q.CommittedTriangleFrontFace() == 0 ? -Ng : Ng;
 
     Ns = v0.normal * bary.x + v1.normal * bary.y + v2.normal * bary.z;
-    Ns = normalize(mul((float3x3)instance.MTI, N));
+    Ns = normalize(mul((float3x3)instance.MTI, Ns));
     if (cNormalMapsEnabled)
     {
         float3 T, B;

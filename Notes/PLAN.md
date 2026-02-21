@@ -64,7 +64,6 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 - Frustum Culling
 - Descriptor heap sharing (Wait to see if it's worth it)
-- Consider dropping tangent/bitangent from attribute data (Needs CI test to see if it's faster)
 - Check for memory leaks, there's probably a lot 
 - Add support for root constants in Material and RootSig and apply to ATrous filter
 - Temporary heap which gets cleared at the end of each frame? Or maybe just clear all unused data from heaps every few frames
@@ -74,6 +73,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ### Main Tasks
 - Fix VNDF issues
 - Fix Firefly Threshold
+- Try make Halton work better, reimplement for bounces
 
 ### Bugs 
 - Camera movement gets messed up sometimes
@@ -83,7 +83,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ### Misc
 - PT only build mode that doesn't initialize any raster resources? 
 - FPS has heavily dropped since I was away, possibly due to all the extra shaders/etc. Make sure they can be deleted properly when not in use. 1000+ FPS with lambert distribution should be possible
-- Fix Issue on github
+- Build basis with N and V when not aligned instead of using frisvad? 
 
 ## Raster/Laptop-TODO
 

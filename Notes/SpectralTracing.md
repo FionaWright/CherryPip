@@ -17,6 +17,7 @@ This is an extension you can add later that allows rays to hold multiple wavelen
 
 ## TODO:
 
+- Make spectral tracer only run single frame at a time based on GUI input, or select checkbox to run forever
 - Get basic lambertian working while using wavelengths per path (Use new build config thing to switch between easily)
 - You may need to clean up SceneStudio a good bit to make it tidy
 - Start re-implementing parts from the PT one by one
@@ -50,3 +51,7 @@ I'll need to specify a whitepoint as well as the primaries, this is determined b
 Suspicious of multiplication between spectra being simple component-wise but...idk?
 
 Is using wavelength-per-path only for hero sampling? I don't see a place to use wavelength so far
+
+## CIE XYZ Output:
+
+![alt text](image-1.png)

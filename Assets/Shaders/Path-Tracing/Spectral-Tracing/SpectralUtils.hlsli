@@ -20,6 +20,7 @@
 Spectrum BlackSpectrum()
 {
     Spectrum spectrum;
+    [unroll]
     for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
         spectrum.Samples[i] = 0.0f;
     return spectrum;
@@ -29,6 +30,7 @@ Spectrum BlackSpectrum()
 Spectrum WhiteSpectrum()
 {
     Spectrum spectrum;
+    [unroll]
     for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
         spectrum.Samples[i] = 1.0f;
     return spectrum;

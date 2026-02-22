@@ -38,6 +38,25 @@ SamplerState gSampler : register(s0);
 
 float4 PSMain(VsOut input) : SV_Target0
 {
+    float2 uv = (input.uv + 1.0f) * 0.5f;
+    Spectrum white = WhiteSpectrum();
+    //float3 r = cCIE_X[220];
+    float fIdx = 16.0f;
+    //float lambda = (float)VISIBLE_LIGHT_SPECTRUM_MIN + fIdx * (float)SPECTRUM_DELTA_LAMBDA;
+    //float lambda = 586.4f;
+    float lambda = (float)VISIBLE_LIGHT_SPECTRUM_MIN + (saturate(input.uv.x) * (float)VISIBLE_LIGHT_SPECTRUM_SIZE);
+    float sample = white.Samples[fIdx];
+    //float3 r = SampleCIE(lambda, cCIE_X);
+    float3 cie = float3(SampleCIE(lambda, cCIE_X), SampleCIE(lambda, cCIE_Y), SampleCIE(lambda, cCIE_Z));
+    float3 r = cie;
+    //r = float3(1, 0, 1);
+    //float3 r = SpectrumToXYZ(white);
+    if (input.uv.y > 0.5f && lambda >= 780) r += 1;
+    if (input.uv.y > 0.5f && lambda <= 380) r += float3(1, 0, 0);
+    if (VISIBLE_LIGHT_SPECTRUM_SIZE > 999) r = float3(1, 1, 0);
+    //r = (lambda - 380) / 780.0f;
+    return float4(r, 1);
+
     RayQuery<RAY_FLAGS> q;
 
     uint flags = RAY_FLAGS;

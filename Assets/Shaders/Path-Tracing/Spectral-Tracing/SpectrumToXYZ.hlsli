@@ -22,7 +22,9 @@ static const float cCIE_Y_integral = 106.856895f;
 float3 SpectrumToXYZ(Spectrum spectrum)
 {
     float3 xyz = 0.0f;
-    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+    [unroll]
+    //for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+    for (int i = 0; i < 1; i++)
     {
         float lambda = (float)VISIBLE_LIGHT_SPECTRUM_MIN + (float)i * (float)SPECTRUM_DELTA_LAMBDA;
 
@@ -32,9 +34,11 @@ float3 SpectrumToXYZ(Spectrum spectrum)
         float3 cie = float3(X_lambda, Y_lambda, Z_lambda);
 
         float sample = spectrum.Samples[i];
-        xyz += sample * cie * (float)SPECTRUM_DELTA_LAMBDA;
+        xyz += sample * cie;
+        //xyz += sample * cie * (float)SPECTRUM_DELTA_LAMBDA;
     }
-    return xyz / cCIE_Y_integral;
+    //return xyz / cCIE_Y_integral;
+    return xyz;
 }
 
 #endif

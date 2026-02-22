@@ -51,7 +51,7 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList, double 
     {
         m_envMap.Init(d3d->GetDevice(), cmdList, m_envMapList.at(m_selectedEnvMapIdx), m_studioConfig.EnvMapRotation,
                       &m_heap);
-        if (m_studioConfig.Backend != ePathTracer || GBufferPassNeededForDenoiser())
+        if (m_studioConfig.Backend == eForward || m_studioConfig.Backend == eDeferred || GBufferPassNeededForDenoiser())
         {
             m_envMap.InitCubemap(d3d->GetDevice(), cmdList, &m_heap);
             m_skybox.UpdateCubemap(d3d->GetDevice(), m_envMap.GetCubemap());
@@ -113,6 +113,7 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList, double 
         renderDeferred(d3d, cmdList);
         break;
     case ePathTracer:
+    case eSpectralTracer:
         renderPathTracer(d3d, cmdList);
         break;
     default:
@@ -967,7 +968,8 @@ void SceneStudio::compilePtShader(const D3D* d3d)
     };
     const D3D12_INPUT_LAYOUT_DESC ild = {m_shaderILD.data(), static_cast<UINT>(m_shaderILD.size())};
 
-    m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", L"Path-Tracing/CorePS.hlsl", ild, d3d->GetDevice(), m_rootSig->Get(), false, args);
+    const wchar_t* psName = m_studioConfig.Backend == ePathTracer ? L"Path-Tracing/CorePS.hlsl" : L"Path-Tracing/Spectral-Tracing/CorePS.hlsl";
+    m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", psName, ild, d3d->GetDevice(), m_rootSig->Get(), false, args);
 }
 
 void SceneStudio::ResetCameraToSceneStart()

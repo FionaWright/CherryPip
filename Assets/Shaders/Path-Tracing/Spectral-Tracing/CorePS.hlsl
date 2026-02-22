@@ -4,6 +4,10 @@
 #include "MathUtils.hlsli"
 #include "Path-Tracing/MacroConstants.hlsli"
 
+#include "Spectrum.h"
+#include "Path-Tracing/Spectral-Tracing/SpectralUtils.hlsli"
+#include "RgbToSpectrum.h"
+
 #define EPSILON 1e-2
 #define RAY_FLAGS RAY_FLAG_CULL_NON_OPAQUE|RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES
 
@@ -29,6 +33,8 @@ Texture2D<float4> gTextures[] : register(t6);
 RWTexture2D<float4> gAccum : register(u0);
 
 SamplerState gSampler : register(s0);
+
+#include "Path-Tracing/Spectral-Tracing/Trace.hlsli"
 
 float4 PSMain(VsOut input) : SV_Target0
 {
@@ -63,6 +69,9 @@ float4 PSMain(VsOut input) : SV_Target0
         view /= view.w;
         float4 world = mul(cbvPathTracing.InvV, view);
         ray.Direction = normalize(world.xyz - origin);
+
+        // TODO:
+        //float lambda = SampleVisibleWavelength(rngInfo.IndependentRngState);
 
         colorSum += Trace(q,
                           flags,

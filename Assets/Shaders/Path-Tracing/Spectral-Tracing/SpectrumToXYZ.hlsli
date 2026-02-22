@@ -7,7 +7,7 @@
 float SampleCIE(float lambda, float curve[471])
 {
     float fIdx = lambda - CIE_LAMBDA_MIN;
-    int i0 = (int)floorf(fIdx);
+    int i0 = (int)floor(fIdx);
     int i1 = min(i0+1, 470);
     float t = fIdx - i0;
 

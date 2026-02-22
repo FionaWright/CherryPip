@@ -1,3 +1,7 @@
+#ifndef H_TRACE_H
+#define H_TRACE_H
+
+#include "Path-Tracing/Spectral-Tracing/Hit.hlsli"
 #include "MathUtils.hlsli"
 
 float3 Trace(inout RayQuery<RAY_FLAGS> q,
@@ -23,7 +27,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
 		float3 hitPos = ray.Origin + ray.Direction * q.CommittedRayT();
 
-        StMaterialData mat;
+        PtMaterialData mat;
 		Spectrum albedo;
         Spectrum Li;
         float3 Ng = -1, Ns = -1;
@@ -31,11 +35,13 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         Hit(q, albedo, Ng, Ns, Li, mat, uv);
 
         float3 wo = -ray.Direction;
-        float3 wi, L_sample;
+        float3 wi;
+
+        Spectrum L_sample;
 
         //Model_LambertionDiffuse(rngInfo, throughput, Ns, Li, albedo.rgb, wi, L_sample);
         {
-            L_sample = throughput * Li;
+            L_sample = Mul(throughput, Li);
 
             float3 T, B;
             BuildBasisFrisvad(Ns, T, B);
@@ -47,14 +53,16 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             // diffuseBrdf = albedo / PI
             // pdf = NdL / PI
             // throughput *= diffuseBrdf * NdL / pdf
-            throughput *= albedo; // Terms cancel out
+            throughput.Mul(albedo); // Terms cancel out
         }
 
-        Lo += L_sample;
+        Lo.Add(L_sample);
 
         ray.Direction = wi;
         ray.Origin = hitPos + Ng * EPSILON * sign(dot(Ng, ray.Direction));
     }
 
-    return Lo;
+    return SpectrumToRGB(Lo);
 }
+
+#endif

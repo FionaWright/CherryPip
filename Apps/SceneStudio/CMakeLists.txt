@@ -26,34 +26,27 @@ add_executable(SceneStudio WIN32
         ${CHERRYPIP_ASSETS_DIR}/Resources/Resources.h
 )
 
-target_include_directories(SceneStudio PRIVATE
-        "${CHERRYPIP_ASSETS_DIR}/ThirdParty"
-        "${CHERRYPIP_ASSETS_DIR}/ThirdParty/imgui"
-        "${CHERRYPIP_ASSETS_DIR}/ThirdParty/spng"
-        "${CHERRYPIP_ASSETS_DIR}/ThirdParty/zlib"
-        "${CHERRYPIP_ASSETS_DIR}/ThirdParty/WinPixEventRuntime.1.0.240308001/Include/"
-)
-
 target_link_libraries(SceneStudio PRIVATE client)
-
-add_custom_command(TARGET SceneStudio POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${CMAKE_BINARY_DIR}/WinPixEventRuntime.dll"
-        $<TARGET_FILE_DIR:SceneStudio>
+set_target_properties(SceneStudio PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
 )
 
-add_custom_command(TARGET SceneStudio POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${CMAKE_BINARY_DIR}/dxcompiler.dll"
-        $<TARGET_FILE_DIR:SceneStudio>
-)
-
-add_custom_command(TARGET SceneStudio POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${CMAKE_BINARY_DIR}/dxil.dll"
-        $<TARGET_FILE_DIR:SceneStudio>
-)
-
-include_directories(
+target_include_directories(SceneStudio PRIVATE
         ${CMAKE_SOURCE_DIR}
 )
+
+# copy .dlls to output directory
+add_custom_command(TARGET SceneStudio POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:WinPixEventRuntime>
+        $<TARGET_FILE_DIR:SceneStudio>
+)
+add_custom_command(TARGET SceneStudio POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${DXC_DLLS}
+        $<TARGET_FILE_DIR:SceneStudio>
+)
+
+wis_install_dx_win32(SceneStudio)

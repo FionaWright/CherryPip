@@ -6,7 +6,7 @@
 #include <bit>
 
 #include "Helper.h"
-#include "ThirdParty/imgui/imgui.h"
+#include "imgui.h"
 #include "Apps/SceneStudio/Headers/SceneStudio.h"
 #include "Render/Object.h"
 #include "Render/Scene.h"

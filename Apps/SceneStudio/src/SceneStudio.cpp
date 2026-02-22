@@ -2,7 +2,7 @@
 #include "Apps/SceneStudio/Headers/SceneStudio.h"
 #include "System/Win32App.h"
 
-#include "ThirdParty/imgui/imgui.h"
+#include "imgui.h"
 #include "Debug/GPUEventScoped.h"
 #include "Helper.h"
 #include "HWI/D3D.h"

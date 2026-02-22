@@ -1,107 +1,96 @@
-include(fetchContent)
+include(FetchContent)
+set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
+set(CPM_DONT_UPDATE_MODULE_PATH ON)
+set(GET_CPM_FILE "${CMAKE_CURRENT_LIST_DIR}/Dependencies/get_cpm.cmake")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-FetchContent_Declare(
-        d3d12agility
-        URL https://www.nuget.org/api/v2/package/Microsoft.Direct3D.D3D12/1.616.1
+# Set CPM source cache
+if (NOT CPM_SOURCE_CACHE)
+    set(CPM_SOURCE_CACHE "${CMAKE_CURRENT_BINARY_DIR}/_deps_cache")
+endif ()
+
+# Get CPM
+if (NOT EXISTS ${GET_CPM_FILE})
+    file(DOWNLOAD
+            https://github.com/cpm-cmake/CPM.cmake/releases/latest/download/get_cpm.cmake
+            "${GET_CPM_FILE}"
+    )
+endif ()
+include(${GET_CPM_FILE})
+
+if (WIN32)
+    include(${CMAKE_CURRENT_LIST_DIR}/Dependencies/DepsWin.cmake)
+endif()
+
+# Download DXC if needed
+include(${CMAKE_CURRENT_LIST_DIR}/Dependencies/DXC.cmake)
+
+# CPM dependencies
+
+# ImGui
+CPMAddPackage(
+    NAME imgui
+    GITHUB_REPOSITORY ocornut/imgui
+    GIT_TAG v1.92.6
+    DOWLOAD_ONLY TRUE
 )
 
-FetchContent_MakeAvailable(d3d12agility)
-set(D3D12_AGILITY_DIR ${d3d12agility_SOURCE_DIR})
-include_directories(${D3D12_AGILITY_DIR}/build/native/include)
-include_directories(${D3D12_AGILITY_DIR}/build/native/include/d3dx12)
-set(D3D12_LIBS
-        d3d12.lib
-        dxgi.lib   # comes from Windows SDK
+# Manually make ImGui available as a target
+add_library(imgui STATIC
+    ${imgui_SOURCE_DIR}/imgui.cpp
+    ${imgui_SOURCE_DIR}/imgui_draw.cpp
+    ${imgui_SOURCE_DIR}/imgui_tables.cpp
+    ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+
+    # Backends for Win32 and DirectX 12
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_win32.cpp
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_dx12.cpp
+)
+target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends)
+target_compile_definitions(imgui PUBLIC IMGUI_IMPL_WIN32_DISABLE_GAMEPAD)
+
+# fastgltf
+CPMAddPackage( 
+    NAME fastgltf
+    GITHUB_REPOSITORY spnda/fastgltf
+    GIT_TAG v0.9.0
 )
 
-target_link_libraries(client PRIVATE ${D3D12_LIBS})
+# Zlib
+CPMADDPACKAGE(
+    NAME zlib
+    GITHUB_REPOSITORY madler/zlib
+    GIT_TAG v1.3.2
 
-add_custom_command(TARGET client POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-        ${D3D12_AGILITY_DIR}/build/native/bin/x64/D3D12Core.dll
-        $<TARGET_FILE_DIR:client>/D3D12/D3D12Core.dll
-)
-add_custom_command(TARGET client POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-        ${D3D12_AGILITY_DIR}/build/native/bin/x64/D3D12SDKLayers.dll
-        $<TARGET_FILE_DIR:client>/D3D12/D3D12SDKLayers.dll
+    OPTIONS
+    "ZLIB_BUILD_SHARED OFF"
+    "ZLIB_BUILD_TESTING OFF"
 )
 
-FetchContent_Declare(
-        dxc
-        URL https://github.com/microsoft/DirectXShaderCompiler/releases/download/v1.8.2505.1/dxc_2025_07_14.zip
+
+# TODO: Replace with DirectXTex
+
+# SPNG
+add_library(spng STATIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/spng/spng.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/spng/spng.h
 )
-FetchContent_MakeAvailable(dxc)
-
-set(DXC_DIR ${dxc_SOURCE_DIR})
-
-target_link_libraries(client PRIVATE ${DXC_DIR}/lib/x64/dxil.lib)
-target_link_libraries(client PRIVATE ${DXC_DIR}/lib/x64/dxcompiler.lib)
-include_directories(${DXC_DIR}/inc)
-
-add_custom_command(TARGET client POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-        ${DXC_DIR}/bin/x64/dxcompiler.dll
-        $<TARGET_FILE_DIR:client>
+target_include_directories(spng 
+    PUBLIC 
+        ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/spng
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty
 )
+target_compile_definitions(spng PUBLIC SPNG_STATIC)
+target_link_libraries(spng PUBLIC ZLIB::ZLIBSTATIC)
 
-add_custom_command(TARGET client POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-        ${DXC_DIR}/bin/x64/dxil.dll
-        $<TARGET_FILE_DIR:client>
-)
+# tinyddsloader
+add_library(tinyddsloader STATIC)
 
-file(GLOB THIRD_PARTY_SOURCES CONFIGURE_DEPENDS
-        "${CMAKE_SOURCE_DIR}/ThirdParty/imgui/*.cpp"
-        "${CMAKE_SOURCE_DIR}/ThirdParty/imgui/*.h"
-        "${CMAKE_SOURCE_DIR}/ThirdParty/spng/*"
-        "${CMAKE_SOURCE_DIR}/ThirdParty/zlib/*"
-        "${CMAKE_SOURCE_DIR}/ThirdParty/tinyddsloader/tinyddsloader.h"
-        "${CMAKE_SOURCE_DIR}/ThirdParty/WinPixEventRuntime.1.0.240308001/Include/WinPixEventRuntime/*"
-)
-target_sources(client PUBLIC
-        ${THIRD_PARTY_SOURCES}
-        "${CMAKE_SOURCE_DIR}/ThirdParty/imgui/backends/imgui_impl_dx12.h"
-        "${CMAKE_SOURCE_DIR}/ThirdParty/imgui/backends/imgui_impl_dx12.cpp"
-        "${CMAKE_SOURCE_DIR}/ThirdParty/imgui/backends/imgui_impl_win32.cpp"
-        "${CMAKE_SOURCE_DIR}/ThirdParty/imgui/backends/imgui_impl_win32.h"
-)
-target_include_directories(client PUBLIC
-        "${CMAKE_SOURCE_DIR}/ThirdParty"
-        "${CMAKE_SOURCE_DIR}/ThirdParty/imgui"
-        "${CMAKE_SOURCE_DIR}/ThirdParty/spng"
-        "${CMAKE_SOURCE_DIR}/ThirdParty/zlib"
-        "${CMAKE_SOURCE_DIR}/ThirdParty/tinyddsloader"
-        "${CMAKE_SOURCE_DIR}/ThirdParty/WinPixEventRuntime.1.0.240308001/Include/"
-)
+# generate tinyddsloader.cpp as simple #include "tinyddsloader.h"
+target_compile_definitions(tinyddsloader PRIVATE TINYDDSLOADER_IMPLEMENTATION)
+target_include_directories(tinyddsloader PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/tinyddsloader)
 
-target_compile_definitions(client PUBLIC TINYDDSLOADER_IMPLEMENTATION)
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/tinyddsloader.cpp "#include \"tinyddsloader.h\"\n")
 
-add_custom_command(TARGET client POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-        "${CMAKE_SOURCE_DIR}/ThirdParty/WinPixEventRuntime.1.0.240308001/bin/x64/WinPixEventRuntime.dll"
-        $<TARGET_FILE_DIR:client>
-)
-target_link_libraries(client PUBLIC "${CMAKE_SOURCE_DIR}/ThirdParty/WinPixEventRuntime.1.0.240308001/bin/x64/WinPixEventRuntime.lib")
-
-set(FASTGLTF_USE_CUSTOM_SMALLVECTOR OFF CACHE BOOL "" FORCE)
-set(FASTGLTF_ENABLE_TESTS OFF CACHE BOOL "" FORCE)
-set(FASTGLTF_ENABLE_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(FASTGLTF_ENABLE_DOCS OFF CACHE BOOL "" FORCE)
-set(FASTGLTF_ENABLE_GLTF_RS OFF CACHE BOOL "" FORCE)
-set(FASTGLTF_ENABLE_ASSIMP OFF CACHE BOOL "" FORCE)
-set(FASTGLTF_ENABLE_DEPRECATED_EXT ON CACHE BOOL "" FORCE)
-set(FASTGLTF_DISABLE_CUSTOM_MEMORY_POOL OFF CACHE BOOL "" FORCE)
-set(FASTGLTF_USE_64BIT_FLOAT OFF CACHE BOOL "" FORCE)
-set(FASTGLTF_COMPILE_AS_CPP20 OFF CACHE BOOL "" FORCE)
-set(FASTGLTF_ENABLE_CPP_MODULES OFF CACHE BOOL "" FORCE)
-set(FASTGLTF_USE_STD_MODULE OFF CACHE BOOL "" FORCE)
-
-FetchContent_Declare(
-        fastgltf
-        URL https://github.com/spnda/fastgltf/archive/refs/tags/v0.9.0.zip
-)
-FetchContent_MakeAvailable(fastgltf)
-target_link_libraries(client PUBLIC fastgltf)
-
-target_link_libraries(client PUBLIC dxguid uuid)
+target_sources(tinyddsloader PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/tinyddsloader.cpp)

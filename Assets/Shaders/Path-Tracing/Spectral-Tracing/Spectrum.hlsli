@@ -1,14 +1,12 @@
 #ifndef H_SPECTRUM_H
 #define H_SPECTRUM_H
 
-#include "HlslGlue.h"
-
 // Higher is better, consider going up to 64/128
 #define NUM_SPECTRUM_SAMPLES 32
 
 #define VISIBLE_LIGHT_SPECTRUM_MIN 380
 #define VISIBLE_LIGHT_SPECTRUM_MAX 780
-#define VISIBLE_LIGHT_SPECTRUM_SIZE 400
+#define VISIBLE_LIGHT_SPECTRUM_SIZE (VISIBLE_LIGHT_SPECTRUM_MAX - VISIBLE_LIGHT_SPECTRUM_MIN)
 #define SPECTRUM_DELTA_LAMBDA (VISIBLE_LIGHT_SPECTRUM_SIZE / float(NUM_SPECTRUM_SAMPLES-1)) // 12.9
 
 enum SpectrumType
@@ -32,6 +30,7 @@ struct Spectrum
 
     void Sqrt();
     void Clamp(float lo, float hi);
+    void Normalize();
 
     void FmaCurve(float curve[32], float mult);
     void ReflectanceRgbToSpectrum(float3 rgb);
@@ -40,6 +39,11 @@ struct Spectrum
 
 void Spectrum::InitFromRGB(float3 rgb, SpectrumType type)
 {
+    // Initialize samples to 0
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+        Samples[i] = 0.0f;
+
     if (type == eReflectance)
         ReflectanceRgbToSpectrum(rgb);
     else if (type == eIlluminant)
@@ -146,7 +150,7 @@ void Spectrum::Sqrt()
 {
     [unroll]
     for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
-        Samples[i] = glueSqrt(Samples[i]);
+        Samples[i] = sqrt(Samples[i]);
 }
 
 Spectrum Sqrt(Spectrum spectrum)
@@ -162,7 +166,7 @@ void Spectrum::Clamp(float lo, float hi)
 {
     [unroll]
     for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
-        Samples[i] = glueClamp(Samples[i], lo, hi);
+        Samples[i] = clamp(Samples[i], lo, hi);
 }
 
 Spectrum Clamp(Spectrum spectrum, float lo, float hi)
@@ -170,7 +174,35 @@ Spectrum Clamp(Spectrum spectrum, float lo, float hi)
     Spectrum newSpectrum;
     [unroll]
     for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
-        newSpectrum.Samples[i] = glueClamp(spectrum.Samples[i], lo, hi);
+        newSpectrum.Samples[i] = clamp(spectrum.Samples[i], lo, hi);
+    return newSpectrum;
+}
+
+void Spectrum::Normalize()
+{
+    float maxVal = 0.0f;
+
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+        maxVal = max(maxVal, Samples[i]);
+
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+        Samples[i] /= maxVal;
+}
+
+Spectrum Normalize(Spectrum spectrum)
+{
+    Spectrum newSpectrum;
+    float maxVal = 0.0f;
+
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+        maxVal = max(maxVal, spectrum.Samples[i]);
+
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+        newSpectrum.Samples[i] = spectrum.Samples[i] / maxVal;
     return newSpectrum;
 }
 

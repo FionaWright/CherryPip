@@ -48,6 +48,23 @@ float SampleAverageCIE(float lambdaStart, float lambdaEnd, float curve[471])
     return sum / (lambdaEnd - lambdaStart);
 }
 
+float ComputeCIE_Y_Integral()
+{
+    float sum = 0.0f;
+
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES-1; i++)
+    {
+        float lambda0 = IndexToLambda(i);
+        float lambda1 = IndexToLambda(i+1);
+
+        float avgY = SampleAverageCIE(lambda0, lambda1, cCIE_Y);
+
+        sum += avgY;
+    }
+
+    return sum * SPECTRUM_DELTA_LAMBDA;
+}
+
 static const float cCIE_Y_integral = 106.856895f; // TODO: WRONG?
 
 // Reimann Sum Approximation
@@ -58,13 +75,18 @@ float3 SpectrumToXYZ(Spectrum spectrum)
     [unroll]
     for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
     {
-        float lambda = IndexToLambda((float)i);
+        float lambda0 = IndexToLambda((float)i);
+        //float lambda1 = IndexToLambda((float)i+1);
 
-        float X_lambda = SampleCIE(lambda, cCIE_X);
-        float Y_lambda = SampleCIE(lambda, cCIE_Y);
-        float Z_lambda = SampleCIE(lambda, cCIE_Z);
+        //float X_lambda = SampleAverageCIE(lambda0, lambda1, cCIE_X);
+        //float Y_lambda = SampleAverageCIE(lambda0, lambda1, cCIE_Y);
+        //float Z_lambda = SampleAverageCIE(lambda0, lambda1, cCIE_Z);
+        float X_lambda = SampleCIE(lambda0, cCIE_X);
+        float Y_lambda = SampleCIE(lambda0, cCIE_Y);
+        float Z_lambda = SampleCIE(lambda0, cCIE_Z);
         float3 cie = float3(X_lambda, Y_lambda, Z_lambda);
 
+        //float sample = 0.5f * (spectrum.Samples[i] + spectrum.Samples[i+1]);
         float sample = spectrum.Samples[i];
         xyz += sample * cie;
     }
@@ -72,6 +94,7 @@ float3 SpectrumToXYZ(Spectrum spectrum)
     // Normalization
     xyz *= (float)SPECTRUM_DELTA_LAMBDA;
     xyz /= cCIE_Y_integral;
+    //xyz /= ComputeCIE_Y_Integral();
 
     return xyz;
 }

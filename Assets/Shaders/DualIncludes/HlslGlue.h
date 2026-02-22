@@ -48,6 +48,10 @@ inline float3 glueNormalize(const float3 v)
     return {v.x / mag, v.y / mag, v.z / mag};
 }
 inline float glueDot(const float3 a, const float3 b) { return a.x*b.x + a.y*b.y + a.z*b.z; }
+inline float glueLerp(const float s0, const float s1, const float t)
+{
+    return (1.0f - t) * s0 + t * s1;
+}
 
 #else
 
@@ -66,6 +70,7 @@ inline float glueDot(const float3 a, const float3 b) { return a.x*b.x + a.y*b.y 
 #define glueDot dot
 #define glueSaturate saturate
 #define glueLog log
+#define glueLerp lerp
 
 #define GLUE_IN(T) in T
 #define GLUE_OUT(T) out T

@@ -2,6 +2,7 @@
 #define H_STBUFFERS_H
 
 #include "HlslGlue.h"
+#include "Spectrum.h"
 
 struct StInstanceData
 {
@@ -20,20 +21,12 @@ enum StMaterialFlags : uint
     eIsGlass = 1
 };
 
-// Higher is better, consider going up to 64/128
-#define NUM_SPECTRUM_SAMPLES 32
-
-struct Spectrum
-{
-    float Samples[NUM_SPECTRUM_SAMPLES]; // Energy indexed by Wavelength (380nm-780nm)
-};
-
 struct StMaterialData
 {
-    Spectrum BaseColorFactor;
+    float3 BaseColorFactor;
 //    float EmissiveStrength;
 //
-//    Spectrum EmissiveColor;
+//    float3 EmissiveColor;
 //    uint TexIdxAlbedo;
 //
 //    uint TexIdxNormal;

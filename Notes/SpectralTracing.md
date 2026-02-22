@@ -18,8 +18,10 @@ This is an extension you can add later that allows rays to hold multiple wavelen
 ## TODO:
 
 - Make spectral tracer only run single frame at a time based on GUI input, or select checkbox to run forever
-- Get basic lambertian working while using wavelengths per path (Use new build config thing to switch between easily)
+- Get basic lambertian working
 - You may need to clean up SceneStudio a good bit to make it tidy
+- Figure out how to use wavelength-per-path instead of working on entire spectrums
+- See if you can optimize/pre-compute anything to boost speed
 - Start re-implementing parts from the PT one by one
 - Try create some rainbows/mist or something ST-exclusive 
 
@@ -28,10 +30,6 @@ This is an extension you can add later that allows rays to hold multiple wavelen
 What is up/down sampling? 
     Upsampling is converting RGB -> Spectrum
     Downsampling is converting Spectrum -> RGB
-
-Is a spectrum holding energy at wavelength i or is it holding an unordered list of wavelengths with strong impulses?
-
-How do I convert between RGB and Spectrum? How does XYZ and CIE come into this? (Look over research notes)
 
 How do SPDs come into this? I think thats in my research somewhere 
     An SPD is just a radiant flux per wavelength spectrum. What I have already
@@ -49,8 +47,6 @@ If you have the XYZ color you can convert straight to RGB using a simple matrix
 I'll need to specify a whitepoint as well as the primaries, this is determined by the D65 illuminant 
 
 Suspicious of multiplication between spectra being simple component-wise but...idk?
-
-Is using wavelength-per-path only for hero sampling? I don't see a place to use wavelength so far
 
 ## CIE XYZ Output:
 

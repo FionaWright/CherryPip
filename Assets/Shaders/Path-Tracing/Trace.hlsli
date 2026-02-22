@@ -1,3 +1,6 @@
+#ifndef H_TRACE_H
+#define H_TRACE_H
+
 #include "Path-Tracing/Hit.hlsli"
 #include "Path-Tracing/Miss.hlsli"
 
@@ -149,3 +152,5 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
     return Lo;
 }
+
+#endif

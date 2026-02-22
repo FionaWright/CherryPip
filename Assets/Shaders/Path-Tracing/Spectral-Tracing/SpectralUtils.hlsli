@@ -13,8 +13,9 @@
 
 // Is controlling the temperature of the scene something I can use?
 
-#include "STBuffers.h"
-#include "Spectral-Tracing/SpectrumToXYZ.hlsli"
+#include "Spectrum.h"
+#include "Path-Tracing/Spectral-Tracing/SpectrumToXYZ.hlsli"
+#include "Random.h"
 
 Spectrum BlackSpectrum()
 {

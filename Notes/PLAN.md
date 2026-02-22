@@ -78,6 +78,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Camera movement gets messed up sometimes
 - Env map rotations not paritied between EA/pano
 - Fix Bistro model transforms
+- Release mode is probably broken, fix
 
 ### Misc
 - PT only build mode that doesn't initialize any raster resources? 

@@ -397,9 +397,10 @@ void SceneStudio::guiMain()
     {
         static int e = m_studioConfig.Backend;
         int c = 0;
-        m_envMapDirty |= ImGui::RadioButton("Forward", &e, c++); ImGui::SameLine();
-        m_envMapDirty |= ImGui::RadioButton("Deferred", &e, c++); ImGui::SameLine();
-        ImGui::RadioButton("Path Tracer", &e, c++);
+        m_envMapDirty |= ImGui::RadioButton("Forward", &e, c++);
+        m_envMapDirty |= ImGui::RadioButton("Deferred", &e, c++);
+        m_shaderDirty |= ImGui::RadioButton("Path Tracer", &e, c++);
+        m_shaderDirty |= ImGui::RadioButton("Spectral Tracer", &e, c++);
         m_studioConfig.Backend = static_cast<RenderBackend>(e);
     }
 
@@ -474,7 +475,7 @@ void SceneStudio::guiMain()
                 m_shaderDirty = true;
             }
 
-            if (m_studioConfig.Backend == RenderBackend::ePathTracer)
+            if (m_studioConfig.Backend == ePathTracer || m_studioConfig.Backend == eSpectralTracer)
             {
                 const bool envMapEAChanged = ImGui::Checkbox("Equal-Area Map##xx", &m_studioConfig.PT.EnvMapIsEqualArea);
                 m_sceneDirty |= envMapEAChanged;

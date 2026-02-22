@@ -47,4 +47,6 @@ If you have the XYZ color you can convert straight to RGB using a simple matrix
 
 I'll need to specify a whitepoint as well as the primaries, this is determined by the D65 illuminant 
 
-Addition between spectra is simple component-wise. Multiplication is not. How do I multiply? 
+Suspicious of multiplication between spectra being simple component-wise but...idk?
+
+Is using wavelength-per-path only for hero sampling? I don't see a place to use wavelength so far

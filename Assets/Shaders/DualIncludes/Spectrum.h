@@ -22,8 +22,7 @@ struct Spectrum
 {
     float Samples[NUM_SPECTRUM_SAMPLES]; // Energy indexed by Wavelength (380nm-780nm)
 
-    Spectrum();
-    Spectrum(float3 rgb, SpectrumType type);
+    void InitFromRGB(float3 rgb, SpectrumType type);
 
     void Add(Spectrum spectrum);
     void Sub(Spectrum spectrum);
@@ -40,9 +39,7 @@ struct Spectrum
     void IlluminantRgbToSpectrum(float3 rgb);
 };
 
-Spectrum::Spectrum() {}
-
-Spectrum::Spectrum(float3 rgb, SpectrumType type)
+void Spectrum::InitFromRGB(float3 rgb, SpectrumType type)
 {
     if (type == eReflectance)
         ReflectanceRgbToSpectrum(rgb);
@@ -52,50 +49,130 @@ Spectrum::Spectrum(float3 rgb, SpectrumType type)
 
 void Spectrum::Add(Spectrum spectrum)
 {
+    [unroll]
     for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
         Samples[i] += spectrum.Samples[i];
 }
 
+Spectrum Add(Spectrum spectrumA, Spectrum spectrumB)
+{
+    Spectrum newSpectrum;
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+        newSpectrum.Samples[i] = spectrumA.Samples[i] + spectrumB.Samples[i];
+    return newSpectrum;
+}
+
 void Spectrum::Sub(Spectrum spectrum)
 {
+    [unroll]
     for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
         Samples[i] -= spectrum.Samples[i];
 }
 
+Spectrum Sub(Spectrum spectrumA, Spectrum spectrumB)
+{
+    Spectrum newSpectrum;
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+        newSpectrum.Samples[i] = spectrumA.Samples[i] - spectrumB.Samples[i];
+    return newSpectrum;
+}
+
 void Spectrum::Mul(Spectrum spectrum) // TODO: ?
 {
+    [unroll]
     for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
         Samples[i] *= spectrum.Samples[i];
 }
 
+Spectrum Mul(Spectrum spectrumA, Spectrum spectrumB)
+{
+    Spectrum newSpectrum;
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+        newSpectrum.Samples[i] = spectrumA.Samples[i] * spectrumB.Samples[i];
+    return newSpectrum;
+}
+
 void Spectrum::Mul(float scalar)
 {
+    [unroll]
     for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
         Samples[i] *= scalar;
 }
 
+Spectrum Mul(Spectrum spectrumA, float scalar)
+{
+    Spectrum newSpectrum;
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+        newSpectrum.Samples[i] = spectrumA.Samples[i] + scalar;
+    return newSpectrum;
+}
+
 void Spectrum::Div(Spectrum spectrum) // TODO: ?
 {
+    [unroll]
     for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
         Samples[i] /= spectrum.Samples[i];
 }
 
+Spectrum Div(Spectrum spectrumA, Spectrum spectrumB)
+{
+    Spectrum newSpectrum;
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+        newSpectrum.Samples[i] = spectrumA.Samples[i] / spectrumB.Samples[i];
+    return newSpectrum;
+}
+
 void Spectrum::Div(float scalar)
 {
+    [unroll]
     for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
         Samples[i] /= scalar;
 }
 
+Spectrum Div(Spectrum spectrumA, float scalar)
+{
+    Spectrum newSpectrum;
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+        newSpectrum.Samples[i] = spectrumA.Samples[i] / scalar;
+    return newSpectrum;
+}
+
 void Spectrum::Sqrt()
 {
+    [unroll]
     for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
         Samples[i] = glueSqrt(Samples[i]);
 }
 
+Spectrum Sqrt(Spectrum spectrum)
+{
+    Spectrum newSpectrum;
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+        newSpectrum.Samples[i] = sqrt(spectrum.Samples[i]);
+    return newSpectrum;
+}
+
 void Spectrum::Clamp(float lo, float hi)
 {
+    [unroll]
     for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
         Samples[i] = glueClamp(Samples[i], lo, hi);
+}
+
+Spectrum Clamp(Spectrum spectrum, float lo, float hi)
+{
+    Spectrum newSpectrum;
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+        newSpectrum.Samples[i] = glueClamp(spectrum.Samples[i], lo, hi);
+    return newSpectrum;
 }
 
 #endif

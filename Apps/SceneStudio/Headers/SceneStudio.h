@@ -37,6 +37,7 @@ enum RenderBackend : uint32_t
     eForward,
     eDeferred,
     ePathTracer,
+    eSpectralTracer,
     MAX_COUNT,
 };
 

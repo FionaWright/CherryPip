@@ -96,3 +96,5 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Irradiance prealiasing, convert discrete to continuous through c = d + 0.5? Does this apply to unjittered PT samples as well?
 - Something wrong with sphere model, makes furnace tests hard
 - Refactor some of the debug classes into the SceneStudio app
+- Make every third-party thing fetched using cmake
+- Make new test which renders nothing to the screen. Should be able to achieve 1000+ FPS. If not then optimize CPU side using profiling. (Plus test which renders white to the screen for each pixel but still uses each draw call)

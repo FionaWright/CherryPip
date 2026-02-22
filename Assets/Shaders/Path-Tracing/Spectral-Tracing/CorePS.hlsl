@@ -55,7 +55,18 @@ float4 PSMain(VsOut input) : SV_Target0
     //float3 r = SpectrumToRGB(s);
     //return float4(r, 1);
 
-    // Round-Trip Test
+    // Spectrum to RGB Test 2
+    //Spectrum s = WhiteSpectrum();
+    //float3 r = SpectrumToRGB(s);
+    //if (input.uv.x < 0.33f)
+    //    r = 1.0f;
+    //else if (input.uv.x < 0.66f)
+    //    r = 1.0f - r;
+    //else if (r.y < 1.0f)
+    //    r = float3(1, 0, 0);
+    //return float4(r, 1);
+
+    // Round-Trip Test (FAILING!)
     float3 color = float3(input.uv.y, 0, 0);
     Spectrum s;
     s.InitFromRGB(color, eReflectance);

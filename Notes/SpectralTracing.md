@@ -25,8 +25,26 @@ This is an extension you can add later that allows rays to hold multiple wavelen
 ## Thoughts:
 
 What is up/down sampling? 
+    Upsampling is converting RGB -> Spectrum
+    Downsampling is converting Spectrum -> RGB
+
 Is a spectrum holding energy at wavelength i or is it holding an unordered list of wavelengths with strong impulses?
+
 How do I convert between RGB and Spectrum? How does XYZ and CIE come into this? (Look over research notes)
+
 How do SPDs come into this? I think thats in my research somewhere 
+    An SPD is just a radiant flux per wavelength spectrum. What I have already
+
 What are refractive index spectra and how do I get them for each material?
-Spend a lot more time just reading shtuff, lots to look through still
+
+I think you might need to divide by the wavelength PDF as well as the usual direction PDF
+
+Remember that colors are photometric whereas spectra are radiometric, converting between them requires information about the observer (camera/eyeball/etc)
+
+To convert from spectrum to XYZ color space, I integrate its product with the spectral matching curved X(l), Y(l), Z(l). I'll need a PDF and the integral of the Y(l) curve as well 
+I might get the R(l), G(l), B(l) curves from the display? Need to extract info from the monitor? 
+If you have the XYZ color you can convert straight to RGB using a simple matrix
+
+I'll need to specify a whitepoint as well as the primaries, this is determined by the D65 illuminant 
+
+Addition between spectra is simple component-wise. Multiplication is not. How do I multiply? 

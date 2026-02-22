@@ -15,10 +15,6 @@
 
 #include "STBuffers.h"
 
-#define VISIBLE_LIGHT_SPECTRUM_MIN 380
-#define VISIBLE_LIGHT_SPECTRUM_MAX 780
-#define VISIBLE_LIGHT_SPECTRUM_SIZE VISIBLE_LIGHT_SPECTRUM_MAX-VISIBLE_LIGHT_SPECTRUM_MIN
-
 Spectrum BlackSpectrum()
 {
     Spectrum spectrum;
@@ -53,28 +49,12 @@ float ExtractFromSpectrum(Spectrum spectrum, float wavelength)
     return lerp(lowerSample, upperSample, t);
 }
 
-Spectrum RGBToSpectrum(float3 color)
-{
-    // These Spectrums are pre-computed
-    // TODO
-    return color.x * RedSpectrum() + color.y * GreenSpectrum() + color.z * BlueSpectrum();
-}
-
 float3 SpectrumToRGB(Spectrum spectrum)
 {
-    return 0; // TODO
-}
-
-void Sqrt(inout Spectrum spectrum)
-{
-    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
-        spectrum.Samples[i] = sqrt(spectrum.Samples[i]);
-}
-
-void Clamp(inout Spectrum spectrum, float lo, float hi)
-{
-    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
-        spectrum.Samples[i] = clamp(spectrum.Samples[i], lo, hi);
+    // Convert to XYZ using CIE curves and DeltaLambda
+    // CIE 1931 recommended
+    // Multiply by the XYZ->sRGB matrix
+    // Apply gamma correction for sRGB -> Display RGB
 }
 
 float BlackbodyRadiance(float lambda, float temp)

@@ -1,9 +1,8 @@
 #ifndef H_RGB_TO_SPECTRUM_H
 #define H_RGB_TO_SPECTRUM_H
 
-#include "HlslGlue.h"
-#include "Spectrum.h"
-#include "Spectra.h"
+#include "Path-Tracing/Spectral-Tracing/Spectrum.hlsli"
+#include "Path-Tracing/Spectral-Tracing/Spectra.hlsli"
 
 // Reflectance Spectrum:
 // Incoming light reflected at each wavelength [0, 1]
@@ -18,17 +17,21 @@
 // Multiply curve by mult, then add to spectrum
 void Spectrum::FmaCurve(float curve[32], float mult)
 {
+    [unroll]
     for (int i = 0; i < 32; i++)
     {
         float lambda = cRGB2SpectLambda[i];
         float energy = curve[i] * mult;
+        //float energy = curve[i] * mult * SPECTRUM_DELTA_LAMBDA;
 
-        float fIdx = (lambda - VISIBLE_LIGHT_SPECTRUM_MIN) / SPECTRUM_DELTA_LAMBDA;
-        int i0 = (int)floor(fIdx);
+        float fIdx = LambdaToIndex(lambda);
+        int i0 = floor(fIdx);
         int i1 = i0 + 1;
 
         if (i0 < 0 || i1 >= NUM_SPECTRUM_SAMPLES)
             continue;
+        //i0 = max(i0, 0);
+        //i1 = min(i1, NUM_SPECTRUM_SAMPLES-1);
 
         float t = fIdx - i0;
 

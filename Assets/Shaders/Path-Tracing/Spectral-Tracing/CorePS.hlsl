@@ -4,9 +4,9 @@
 #include "MathUtils.hlsli"
 #include "Path-Tracing/MacroConstants.hlsli"
 
-#include "Spectrum.h"
+#include "Path-Tracing/Spectral-Tracing/Spectrum.hlsli"
 #include "Path-Tracing/Spectral-Tracing/SpectralUtils.hlsli"
-#include "RgbToSpectrum.h"
+#include "Path-Tracing/Spectral-Tracing/RgbToSpectrum.hlsli"
 
 #define EPSILON 1e-2
 #define RAY_FLAGS RAY_FLAG_CULL_NON_OPAQUE|RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES
@@ -38,23 +38,32 @@ SamplerState gSampler : register(s0);
 
 float4 PSMain(VsOut input) : SV_Target0
 {
-    float2 uv = (input.uv + 1.0f) * 0.5f;
-    Spectrum white = WhiteSpectrum();
-    //float3 r = cCIE_X[220];
-    float fIdx = 16.0f;
-    //float lambda = (float)VISIBLE_LIGHT_SPECTRUM_MIN + fIdx * (float)SPECTRUM_DELTA_LAMBDA;
-    //float lambda = 586.4f;
-    float lambda = (float)VISIBLE_LIGHT_SPECTRUM_MIN + (saturate(input.uv.x) * (float)VISIBLE_LIGHT_SPECTRUM_SIZE);
-    float sample = white.Samples[fIdx];
-    //float3 r = SampleCIE(lambda, cCIE_X);
-    float3 cie = float3(SampleCIE(lambda, cCIE_X), SampleCIE(lambda, cCIE_Y), SampleCIE(lambda, cCIE_Z));
-    float3 r = cie;
-    //r = float3(1, 0, 1);
-    //float3 r = SpectrumToXYZ(white);
-    if (input.uv.y > 0.5f && lambda >= 780) r += 1;
-    if (input.uv.y > 0.5f && lambda <= 380) r += float3(1, 0, 0);
-    if (VISIBLE_LIGHT_SPECTRUM_SIZE > 999) r = float3(1, 1, 0);
-    //r = (lambda - 380) / 780.0f;
+    // CIE Test
+    //Spectrum white = WhiteSpectrum();
+    //float lambda = (float)VISIBLE_LIGHT_SPECTRUM_MIN + (saturate(input.uv.x) * (float)VISIBLE_LIGHT_SPECTRUM_SIZE);
+    //float3 cie = float3(SampleCIE(lambda, cCIE_X), SampleCIE(lambda, cCIE_Y), SampleCIE(lambda, cCIE_Z));
+    //return float4(cie, 1);
+
+    // Spectrum to RGB Test
+    //Spectrum s = BlackSpectrum();
+    //for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+    //{
+    //    float lambda = VISIBLE_LIGHT_SPECTRUM_MIN + (i * SPECTRUM_DELTA_LAMBDA);
+    //    bool inRange = lambda >= 380.0f && lambda <= 450.0f;
+    //    s.Samples[i] = inRange ? 1.0f : 0.0f;
+    //}
+    //float3 r = SpectrumToRGB(s);
+    //return float4(r, 1);
+
+    // Round-Trip Test
+    float3 color = float3(input.uv.y, 0, 0);
+    Spectrum s;
+    s.InitFromRGB(color, eReflectance);
+    float3 r = SpectrumToRGB(s);
+    if (input.uv.x < 0.5f)
+        r = color;
+    if (r.x >= 1.0f)
+        r = 1.0f;
     return float4(r, 1);
 
     RayQuery<RAY_FLAGS> q;

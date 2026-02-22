@@ -13,27 +13,21 @@
 
 // Is controlling the temperature of the scene something I can use?
 
-#include "Spectrum.h"
-#include "Path-Tracing/Spectral-Tracing/SpectrumToXYZ.hlsli"
+#include "Path-Tracing/Spectral-Tracing/Spectrum.hlsli"
 #include "Random.h"
 
-Spectrum BlackSpectrum()
+#include "Path-Tracing/Spectral-Tracing/ColorSpectrums.hlsli"
+
+float LambdaToIndex(float lambda)
 {
-    Spectrum spectrum;
-    [unroll]
-    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
-        spectrum.Samples[i] = 0.0f;
-    return spectrum;
+    float fIdx = (lambda - VISIBLE_LIGHT_SPECTRUM_MIN) / VISIBLE_LIGHT_SPECTRUM_SIZE;
+    fIdx *= (NUM_SPECTRUM_SAMPLES-1);
+    return fIdx;
 }
 
-// Doesn't have to be 1.0f, just uniform to be white
-Spectrum WhiteSpectrum()
+float IndexToLambda(float idx)
 {
-    Spectrum spectrum;
-    [unroll]
-    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
-        spectrum.Samples[i] = 1.0f;
-    return spectrum;
+    return VISIBLE_LIGHT_SPECTRUM_MIN + (idx * SPECTRUM_DELTA_LAMBDA);
 }
 
 float SampleVisibleWavelength(inout float rngState)
@@ -51,26 +45,6 @@ float ExtractFromSpectrum(Spectrum spectrum, float wavelength)
     float upperSample = spectrum.Samples[min(floorIdx+1, NUM_SPECTRUM_SAMPLES - 1)];
     float t = idx - (float)floorIdx;
     return lerp(lowerSample, upperSample, t);
-}
-
-float3 SpectrumToRGB(Spectrum spectrum)
-{
-    // Convert to XYZ using CIE curves and DeltaLambda
-    // CIE 1931 recommended
-    // Multiply by the XYZ->RGB matrix
-    // Apply gamma correction for RGB -> sRGB
-
-    static const float3x3 cMatXyzToRgb =
-    {
-        3.240479f, -1.537150f, -0.498535f,
-        -0.969256f, 1.875991f, 0.041556f,
-        0.055648f, -0.204043f, 1.057311f
-    };
-
-    float3 xyz = SpectrumToXYZ(spectrum);
-    float3 rgb = mul(cMatXyzToRgb, xyz);
-    //float3 sRGB = pow(rgb, 1.0f / 2.2f);
-    return rgb;
 }
 
 float BlackbodyRadiance(float lambda, float temp)

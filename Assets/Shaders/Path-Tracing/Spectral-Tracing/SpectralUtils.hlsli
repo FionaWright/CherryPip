@@ -14,6 +14,7 @@
 // Is controlling the temperature of the scene something I can use?
 
 #include "STBuffers.h"
+#include "Spectral-Tracing/SpectrumToXYZ.hlsli"
 
 Spectrum BlackSpectrum()
 {
@@ -53,8 +54,20 @@ float3 SpectrumToRGB(Spectrum spectrum)
 {
     // Convert to XYZ using CIE curves and DeltaLambda
     // CIE 1931 recommended
-    // Multiply by the XYZ->sRGB matrix
-    // Apply gamma correction for sRGB -> Display RGB
+    // Multiply by the XYZ->RGB matrix
+    // Apply gamma correction for RGB -> sRGB
+
+    static const float3x3 cMatXyzToRgb =
+    {
+        3.240479f, -1.537150f, -0.498535f,
+        -0.969256f, 1.875991f, 0.041556f,
+        0.055648f, -0.204043f, 1.057311f
+    };
+
+    float3 xyz = SpectrumToXYZ(spectrum);
+    float3 rgb = mul(cMatXyzToRgb, xyz);
+    //float3 sRGB = pow(rgb, 1.0f / 2.2f);
+    return rgb;
 }
 
 float BlackbodyRadiance(float lambda, float temp)

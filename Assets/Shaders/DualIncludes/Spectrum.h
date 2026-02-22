@@ -22,6 +22,7 @@ struct Spectrum
 {
     float Samples[NUM_SPECTRUM_SAMPLES]; // Energy indexed by Wavelength (380nm-780nm)
 
+    Spectrum();
     Spectrum(float3 rgb, SpectrumType type);
 
     void Add(Spectrum spectrum);
@@ -38,6 +39,8 @@ struct Spectrum
     void ReflectanceRgbToSpectrum(float3 rgb);
     void IlluminantRgbToSpectrum(float3 rgb);
 };
+
+Spectrum::Spectrum() {}
 
 Spectrum::Spectrum(float3 rgb, SpectrumType type)
 {

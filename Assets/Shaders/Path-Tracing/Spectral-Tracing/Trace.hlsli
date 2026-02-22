@@ -16,8 +16,8 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
         if (q.CommittedStatus() != COMMITTED_TRIANGLE_HIT)
         {
-            Spectrum L_sample = throughput * Miss(ray.Origin, ray.Direction, i);
-            Lo += L_sample;
+            //Spectrum L_sample = throughput * Miss(ray.Origin, ray.Direction, i);
+            //Lo += L_sample;
             break;
         }
 

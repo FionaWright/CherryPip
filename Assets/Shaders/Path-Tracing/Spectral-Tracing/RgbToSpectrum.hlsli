@@ -4,6 +4,12 @@
 #include "Path-Tracing/Spectral-Tracing/Spectrum.hlsli"
 #include "Path-Tracing/Spectral-Tracing/Spectra.hlsli"
 
+// TODO: Implement this and see if that works
+// https://graphics.geometrian.com/research/spectral-primaries.html
+//float srgbToSpectrum(vec3 color, float wavelength) {
+//    return dot(color, texelFetch(CIE_BT709_Basis, int(clamp(wavelength - 390.0, 0.0, 390.0)), 0).rgb);
+//}
+
 // Reflectance Spectrum:
 // Incoming light reflected at each wavelength [0, 1]
 // Independent of lighting

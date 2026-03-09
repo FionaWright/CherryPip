@@ -3,8 +3,6 @@
 
 // https://registry.color.org/colorimetry-data/
 
-// https://graphics.geometrian.com/research/spectral-primaries.html
-
 #define WHITE_D65_LAMBDA_MIN 300
 #define WHITE_D65_LAMBDA_MAX 830
 #define WHITE_D65_LAMBDA_SIZE (WHITE_D65_LAMBDA_MAX-WHITE_D65_LAMBDA_MIN)

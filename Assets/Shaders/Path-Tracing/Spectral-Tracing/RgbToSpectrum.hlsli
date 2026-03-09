@@ -24,19 +24,21 @@ void Spectrum::FmaCurve(float curve[32], float mult)
         float energy = curve[i] * mult;
         //float energy = curve[i] * mult * SPECTRUM_DELTA_LAMBDA;
 
-        float fIdx = LambdaToIndex(lambda);
-        int i0 = floor(fIdx);
-        int i1 = i0 + 1;
+		Samples[i] += energy;
 
-        if (i0 < 0 || i1 >= NUM_SPECTRUM_SAMPLES)
-            continue;
-        //i0 = max(i0, 0);
-        //i1 = min(i1, NUM_SPECTRUM_SAMPLES-1);
-
-        float t = fIdx - i0;
-
-        Samples[i0] += (1.0f - t) * energy;
-        Samples[i1] += t * energy;
+//        float fIdx = LambdaToIndex(lambda);
+//        int i0 = floor(fIdx);
+//        int i1 = i0 + 1;
+//
+//        if (i0 < 0 || i1 >= NUM_SPECTRUM_SAMPLES)
+//            continue;
+//        //i0 = max(i0, 0);
+//        //i1 = min(i1, NUM_SPECTRUM_SAMPLES-1);
+//
+//        float t = fIdx - i0;
+//
+//        Samples[i0] += (1.0f - t) * energy;
+//        Samples[i1] += t * energy;
     }
 }
 

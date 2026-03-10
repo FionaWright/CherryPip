@@ -51,3 +51,6 @@ Suspicious of multiplication between spectra being simple component-wise but...i
 ## CIE XYZ Output:
 
 ![alt text](image-1.png)
+
+## Round-Trip Test 2 Output:
+![alt text]({D75A2529-B0DA-4693-9228-F8412FE83DEF}.png)

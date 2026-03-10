@@ -12,7 +12,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             inout RngInfo rngInfo)
 {
     Spectrum Lo = BlackSpectrum();
-    Spectrum throughput = WhiteSpectrum_D65();
+    Spectrum throughput = WhiteSpectrum_E();
 
     for (uint i = 0; i <= cbvPathTracing.NumBounces; i++)
     {

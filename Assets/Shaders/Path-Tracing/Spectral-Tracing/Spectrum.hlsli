@@ -2,7 +2,7 @@
 #define H_SPECTRUM_H
 
 // Higher is better, consider going up to 64/128
-#define NUM_SPECTRUM_SAMPLES 32
+#define NUM_SPECTRUM_SAMPLES 64
 
 #define VISIBLE_LIGHT_SPECTRUM_MIN 390
 #define VISIBLE_LIGHT_SPECTRUM_MAX 720
@@ -32,7 +32,6 @@ struct Spectrum
     void Clamp(float lo, float hi);
     void Normalize();
 
-    void FmaCurve(float curve[32], float mult);
     void ReflectanceRgbToSpectrum(float3 rgb);
     void IlluminantRgbToSpectrum(float3 rgb);
 };

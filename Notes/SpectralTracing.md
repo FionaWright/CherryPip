@@ -48,6 +48,12 @@ I'll need to specify a whitepoint as well as the primaries, this is determined b
 
 Suspicious of multiplication between spectra being simple component-wise but...idk?
 
+## The Cleanup Zone:
+
+- Preprocess all spectral data tables into `NUM_SPECTRAL_SAMPLES` Spectrums and pass them by CBV
+- Remove all now unused/outdated code (Or move it to a junk folder?)
+- Figure out how to use one wavelength per ray instead of the entire spectrum
+
 ## CIE XYZ Output:
 
 ![alt text](image-1.png)

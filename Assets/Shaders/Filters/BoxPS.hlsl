@@ -11,18 +11,8 @@ ConstantBuffer<CbvFilterBoxAndGauss> c_box : register(b0);
 Texture2D    gTex  : register(t0);
 SamplerState gSampler : register(s0);
 
-// Temp:
-#include "DebugWindow.hlsli"
-#include "Path-Tracing/Spectral-Tracing/Spectrum.hlsli"
-#include "Path-Tracing/Spectral-Tracing/ColorSpectrums.hlsli"
-#include "Path-Tracing/Spectral-Tracing/SpectralUtils.hlsli"
-#include "Path-Tracing/Spectral-Tracing/RgbToSpectrum.hlsli"
-#include "Path-Tracing/Spectral-Tracing/SpectrumToRGB.hlsli"
-
 float4 PSMain(VsOut input) : SV_Target
 {
-#include "Path-Tracing/Spectral-Tracing/Tests.hlsli"
-
     float3 sum = 0.0;
     int kernelSize = (c_box.Radius * 2 + 1);
     int sampleCount = kernelSize * kernelSize;

@@ -1,6 +1,7 @@
 #include "CBV.h"
 #include "PtBuffers.h"
 #include "DebugPalette.hlsli"
+#include "DebugWindow.hlsli"
 #include "MathUtils.hlsli"
 #include "Path-Tracing/MacroConstants.hlsli"
 
@@ -39,53 +40,8 @@ SamplerState gSampler : register(s0);
 
 float4 PSMain(VsOut input) : SV_Target0
 {
-    // CIE Test
-    //Spectrum white = WhiteSpectrum_D65();
-    //float lambda = (float)VISIBLE_LIGHT_SPECTRUM_MIN + (saturate(input.uv.x) * (float)VISIBLE_LIGHT_SPECTRUM_SIZE);
-    //float3 cie = float3(SampleCIE(lambda, cCIE_X), SampleCIE(lambda, cCIE_Y), SampleCIE(lambda, cCIE_Z));
-    //return float4(cie, 1);
 
-    // Spectrum to RGB Test
-    //Spectrum s = BlackSpectrum();
-    //for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
-    //{
-    //    float lambda = VISIBLE_LIGHT_SPECTRUM_MIN + (i * SPECTRUM_DELTA_LAMBDA);
-    //    bool inRange = lambda >= 380.0f && lambda <= 450.0f;
-    //    s.Samples[i] = inRange ? 1.0f : 0.0f;
-    //}
-    //float3 r = SpectrumToRGB(s);
-    //return float4(r, 1);
-
-    // Spectrum to RGB Test 2
-    //Spectrum s = WhiteSpectrum_D65();
-	//s.Mul(input.uv.y);
-    //float3 r;
-    //if (input.uv.x < 0.5f)
-    //    r = input.uv.y;
-	//else
-	//	r = SpectrumToRGB(s);
-    //return float4(r, 1);
-
-    // Spectrum To RGB Test 3
-    //Spectrum s = RedSpectrum();
-	//s.Mul(input.uv.y);
-    //float3 r;
-    //if (input.uv.x < 0.5f)
-    //    r = input.uv.y * float3(1,0,0);
-	//else
-	//	r = SpectrumToRGB(s);
-    //return float4(r, 1);
-
-    // Round-Trip Test
-    float3 color = float3(input.uv.yyy);
-    Spectrum s;
-    s.InitFromRGB(color, eReflectance);
-    float3 r = SpectrumToRGB(s);
-    if (input.uv.x < 0.5f)
-        r = color;
-    if (r.x >= 1.0f)
-        r = float3(1, 0, 1);
-    return float4(r, 1);
+#include "Path-Tracing/Spectral-Tracing/Tests.hlsli"
 
     RayQuery<RAY_FLAGS> q;
 

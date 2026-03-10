@@ -50,9 +50,11 @@ Suspicious of multiplication between spectra being simple component-wise but...i
 
 ## The Cleanup Zone:
 
-- Preprocess all spectral data tables into `NUM_SPECTRAL_SAMPLES` Spectrums and pass them by CBV
+- Fix Illuminant / D65 blue-tint issue (Gamma? Temperature? D65 2006?)
+- Preprocess all spectral data tables into `NUM_SPECTRAL_SAMPLES` Spectrums and pass them by CBV (Leave option for hardcoded!!! Easier debugging)
 - Remove all now unused/outdated code (Or move it to a junk folder?)
 - Figure out how to use one wavelength per ray instead of the entire spectrum
+- Fix gamma correction conversions, see Mallet 
 
 ## CIE XYZ Output:
 

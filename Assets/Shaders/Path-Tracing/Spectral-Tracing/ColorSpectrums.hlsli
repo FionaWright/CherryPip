@@ -37,8 +37,8 @@ Spectrum WhiteSpectrum_D65()
         float lambda = IndexToLambda((float)i);
 
         float fIdx = (lambda - WHITE_D65_LAMBDA_MIN) / WHITE_D65_LAMBDA_DELTA;
-        int i0 = (int)floor(fIdx);
-        int i1 = min(i0+1, 531);
+        int i0 = (int)clamp(floor(fIdx), 0, WHITE_D65_COUNT-1);
+        int i1 = min(i0+1, WHITE_D65_COUNT-1);
         float t = fIdx - i0;
 
         spectrum.Samples[i] = lerp(cWhiteD65[i0], cWhiteD65[i1], t) * 0.01f; // Normalize

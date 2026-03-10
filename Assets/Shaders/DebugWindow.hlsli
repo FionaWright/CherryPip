@@ -4,23 +4,37 @@
 struct DebugWindow
 {
 // public:
-    DebugWindow(float2 topLeft, float2 bottomRight);
-    DebugWindow(float top, float left, float bottom, float right);
+    void Init(float2 topLeft, float2 bottomRight);
+    void Init(float top, float left, float bottom, float right);
     bool Select(float2 uv);
 
-    float2 m_UV = float2(-1, -1);
+    float2 m_UV;
 
 // private:
     float2 m_topLeft, m_bottomRight;
 };
 
-DebugWindow::DebugWindow(float2 topLeft, float2 bottomRight)
+DebugWindow CreateDebugWindow(float2 topLeft, float2 bottomRight)
+{
+    DebugWindow window;
+    window.Init(topLeft, bottomRight);
+    return window;
+}
+
+DebugWindow CreateDebugWindow(float top, float left, float bottom, float right)
+{
+    DebugWindow window;
+    window.Init(top, left, bottom, right);
+    return window;
+}
+
+void DebugWindow::Init(float2 topLeft, float2 bottomRight)
 {
     m_topLeft = topLeft;
     m_bottomRight = bottomRight;
 }
 
-DebugWindow::DebugWindow(float top, float left, float bottom, float right)
+void DebugWindow::Init(float top, float left, float bottom, float right)
 {
     m_topLeft = float2(top, left);
     m_bottomRight = float2(bottom, right);

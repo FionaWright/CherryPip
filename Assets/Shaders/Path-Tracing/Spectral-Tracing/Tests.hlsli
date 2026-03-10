@@ -82,16 +82,16 @@ return float4(r, 1);
 #ifdef SPECTRAL_TEST_ROUND_TRIP_2
 
 // Round-Trip Test 2
-DebugWindow wRed(0, 0, 0.083, 1.0);
-DebugWindow wRedRT(0.083, 0, 0.083*2, 1.0);
-DebugWindow wGreen(0.083*2, 0, 0.083*3, 1.0);
-DebugWindow wGreenRT(0.083*3, 0, 0.083*4, 1.0);
-DebugWindow wWhite(0.083*4, 0, 0.083*5, 1.0);
-DebugWindow wWhiteRT(0.083*5, 0, 0.083*6, 1.0);
-DebugWindow wColors(0.5, 0, 1.0, 0.5);
-DebugWindow wColorsRT(0.5, 0.5, 1.0, 1.0);
+DebugWindow wRed      = CreateDebugWindow(0, 0, 0.083, 1.0);
+DebugWindow wRedRT    = CreateDebugWindow(0.083, 0, 0.083*2, 1.0);
+DebugWindow wGreen    = CreateDebugWindow(0.083*2, 0, 0.083*3, 1.0);
+DebugWindow wGreenRT  = CreateDebugWindow(0.083*3, 0, 0.083*4, 1.0);
+DebugWindow wWhite    = CreateDebugWindow(0.083*4, 0, 0.083*5, 1.0);
+DebugWindow wWhiteRT  = CreateDebugWindow(0.083*5, 0, 0.083*6, 1.0);
+DebugWindow wColors   = CreateDebugWindow(0.5, 0, 1.0, 0.5);
+DebugWindow wColorsRT = CreateDebugWindow(0.5, 0.5, 1.0, 1.0);
 Spectrum s;
-float3 r;
+float3 r = float3(0, 0, 0);
 if (wRed.Select(input.uv))
     r = float3(1, 0, 0) * wRed.m_UV.y;
 else if (wRedRT.Select(input.uv))
@@ -124,6 +124,8 @@ else if (wColorsRT.Select(input.uv))
     s.InitFromRGB(WavelengthToRGB(lambda), eReflectance);
     r = SpectrumToRGB(s);
 }
+if (r.x >= 1.0f && r.y >= 1.0f && r.z >= 1.0f)
+    r = float3(0, 1, 1);
 return float4(r, 1);
 
 #endif

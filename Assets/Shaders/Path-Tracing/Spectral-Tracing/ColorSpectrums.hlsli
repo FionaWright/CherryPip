@@ -1,6 +1,9 @@
 #ifndef H_COLOR_SPECTRUMS_H
 #define H_COLOR_SPECTRUMS_H
 
+#include "Path-Tracing/Spectral-Tracing/Spectra.hlsli"
+#include "Path-Tracing/Spectral-Tracing/SpectralUtils.hlsli"
+
 Spectrum BlackSpectrum()
 {
     Spectrum spectrum;
@@ -11,12 +14,30 @@ Spectrum BlackSpectrum()
 }
 
 // Doesn't have to be 1.0f, just uniform to be white
-Spectrum WhiteSpectrum()
+Spectrum WhiteSpectrum_E()
 {
     Spectrum spectrum;
     [unroll]
     for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
         spectrum.Samples[i] = 1.0f;
+    return spectrum;
+}
+
+Spectrum WhiteSpectrum_D65()
+{
+    Spectrum spectrum;
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+    {
+        float lambda = IndexToLambda((float)i);
+
+        float fIdx = (lambda - WHITE_D65_LAMBDA_MIN) / WHITE_D65_LAMBDA_DELTA;
+        int i0 = (int)floor(fIdx);
+        int i1 = min(i0+1, 531);
+        float t = fIdx - i0;
+
+        spectrum.Samples[i] = lerp(cWhiteD65[i0], cWhiteD65[i1], t) * 0.01f; // Normalize
+    }
     return spectrum;
 }
 

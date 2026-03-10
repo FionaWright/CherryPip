@@ -31,10 +31,10 @@
 - [x] EA Mapping
 - [x] Raster skyboxes
 - [x] Directional Lighting
+- [ ] MIS
 - [ ] NEE 
 - [x] Glass model
 - [x] Importance Sampling
-- [ ] MIS
 - [x] Proper distant light using bounding sphere of plane (No singular sun-point) (PBRT)
 - [ ] Oren-Nayers Lighting Model (https://blog.selfshadow.com/publications/s2012-shading-course/gotanda/s2012_pbs_beyond_blinn_slides_v3.pdf)
 - [ ] Microfacet Beckmann (PBRT)
@@ -49,6 +49,7 @@
 - [ ] Spectral Path-Tracing 
 - [ ] Rayleigh scattering (Mist, See Seb Lague)
 - [ ] BSSDFs (Subsurface Scattering)
+- [ ] Water
 - [x] GBuffer pre-pass
 - [x] Denoising (Box/Gauss/A-Trous)
 - [x] Denoising Median

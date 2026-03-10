@@ -6,6 +6,7 @@
 
 #include "../../../Headers/client/Debug/HotReloader.h"
 
+#include "Helper.h"
 #include "System/FileHelper.h"
 
 std::vector<HotReloader::HotInfoVsPs> HotReloader::s_shadersVsPs;
@@ -147,7 +148,7 @@ void HotReloader::CheckFiles(D3D* d3d)
             TimeStampPS)
             continue;
 
-        std::cout << "Hot reloading shader" << std::endl;
+        std::cout << "Hot reloading shader: " << wstringToString(vsPath) << ", " << wstringToString(psPath) << std::endl;
 
         d3d->Flush();
         d3d->DestroyAllCmdListsAndAllocators();
@@ -180,7 +181,7 @@ void HotReloader::CheckFiles(D3D* d3d)
         if (!m_pendingFullReload && timeStampCS == s_shadersCs[i].TimeStampCS)
             continue;
 
-        std::cout << "Hot reloading shader" << std::endl;
+        std::cout << "Hot reloading shader: " << wstringToString(csPath) << std::endl;
 
         d3d->Flush();
         d3d->DestroyAllCmdListsAndAllocators();

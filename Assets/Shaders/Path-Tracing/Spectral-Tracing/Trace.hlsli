@@ -2,7 +2,7 @@
 #define H_TRACE_H
 
 #include "Path-Tracing/Spectral-Tracing/Hit.hlsli"
-#include "Path-Tracing/Spectral-Tracing/SpectrumToRGB.hlsli"
+#include "Path-Tracing/Spectral-Tracing/SpectrumToRGB2019.hlsli"
 #include "MathUtils.hlsli"
 
 float3 Trace(inout RayQuery<RAY_FLAGS> q,

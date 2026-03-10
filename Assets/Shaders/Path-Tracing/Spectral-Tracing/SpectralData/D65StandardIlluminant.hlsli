@@ -1,3 +1,6 @@
+#ifndef H_D65SI_H
+#define H_D65SI_H
+
 // https://registry.color.org/colorimetry-data/
 
 #define WHITE_D65_LAMBDA_MIN 300
@@ -116,3 +119,5 @@ static const float cWhiteD65[531] =
     58.876500000f, 59.163700000f, 59.450900000f, 59.738100000f, 60.025300000f,
     60.312500000f
 };
+
+#endif

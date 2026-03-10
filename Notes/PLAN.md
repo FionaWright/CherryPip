@@ -102,4 +102,6 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 ## Notes
 
-Do I need to apply gamma correction after converting SpectrumToRGB? Or Inverse Gamma Correction? 
+Remember that gamma correction is more complicated than a simple power. See Color.hpp from Mattel+Yuksel or whatever
+
+Convert hard-coded spectral data to CBVs. It's slowing down hot reloading a ton.

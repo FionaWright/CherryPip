@@ -45,7 +45,7 @@ void Spectrum::ReflectanceRgbToSpectrum(float3 rgb)
 void Spectrum::IlluminantRgbToSpectrum(float3 rgb)
 {
     ReflectanceRgbToSpectrum(rgb);
-    //Mul(WhiteSpectrum_D65());
+    Mul(WhiteSpectrum_D65());
 }
 
 #endif

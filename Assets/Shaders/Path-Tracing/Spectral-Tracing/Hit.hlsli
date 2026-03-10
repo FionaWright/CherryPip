@@ -52,10 +52,6 @@ void Hit(inout RayQuery<RAY_FLAGS> q,
     float3 emissionSample = gTextures[mat.TexIdxEmissive].Sample(gSampler, uv).rgb;
     float3 emissionRGB = mat.EmissiveStrength * mat.EmissiveColor * emissionSample;
     Li.InitFromRGB(emissionRGB, eIlluminant);
-
-    // TEST:
-    Li = WhiteSpectrum_D65();
-    Li.Mul(mat.EmissiveStrength);
 }
 
 #endif

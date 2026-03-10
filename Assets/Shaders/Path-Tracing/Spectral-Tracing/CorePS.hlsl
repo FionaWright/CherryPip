@@ -21,6 +21,7 @@ struct VsOut
 
 ConstantBuffer<CbvPathTracing> cbvPathTracing : register(b0);
 ConstantBuffer<CbvPathTracingDebug> cbvDebug : register(b1);
+ConstantBuffer<CbvSpectralData> cbvSpectralData : register(b2);
 
 #include "Random.h"
 
@@ -41,7 +42,7 @@ SamplerState gSampler : register(s0);
 float4 PSMain(VsOut input) : SV_Target0
 {
 
-#include "Path-Tracing/Spectral-Tracing/Tests.hlsli"
+//#include "Path-Tracing/Spectral-Tracing/Tests.hlsli"
 
     RayQuery<RAY_FLAGS> q;
 

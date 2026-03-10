@@ -63,6 +63,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         ray.Origin = hitPos + Ng * EPSILON * sign(dot(Ng, ray.Direction));
     }
 
+    Lo.Mul(WhiteSpectrum_D65());
     return SpectrumToRGB(Lo);
 }
 

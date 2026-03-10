@@ -22,11 +22,6 @@
 // Light energy emitted at each wavelength [0, infinity)
 // Used for lamps, env maps, emissive materials, etc
 
-void Spectrum::FmaCurve(float curve[32], float mult)
-{
-    // Unused
-}
-
 void Spectrum::ReflectanceRgbToSpectrum(float3 rgb)
 {
     [unroll]
@@ -49,7 +44,7 @@ void Spectrum::ReflectanceRgbToSpectrum(float3 rgb)
 
 void Spectrum::IlluminantRgbToSpectrum(float3 rgb)
 {
-
+    ReflectanceRgbToSpectrum(rgb);
 }
 
 #endif

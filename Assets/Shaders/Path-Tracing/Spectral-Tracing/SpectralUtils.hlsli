@@ -20,6 +20,10 @@ float IndexToLambda(float idx);
 
 #include "Path-Tracing/Spectral-Tracing/ColorSpectrums.hlsli"
 
+#define CONSTANT_BOLTZMANN 1.38064852e-23f
+#define CONSTANT_PLANK 6.62607015e-34f
+#define CONSTANT_SPEED_OF_LIGHT 299792458.0f
+
 float LambdaToIndex(float lambda)
 {
     float fIdx = (lambda - VISIBLE_LIGHT_SPECTRUM_MIN) / VISIBLE_LIGHT_SPECTRUM_SIZE;
@@ -54,11 +58,11 @@ float BlackbodyRadiance(float lambda, float temp)
     if (temp <= 0)
         return 0;
 
-    const float c = 299792458.f; // Speed of light
-    const float h = 6.62606957e-34f; // Planks Constant
-    const float kb = 1.3806488e-23f; // Boltzmann Constant
+    const float c = CONSTANT_SPEED_OF_LIGHT;
+    const float h = CONSTANT_PLANK;
+    const float kb = CONSTANT_BOLTZMANN;
 
-    float l = lambda * 1e-9f; // Convert nm to meters
+    float l = lambda * 1e-9f; // nm -> m
     float l5 = pow(l, 5);
     float e = exp(h * c / (l * kb * temp));
     float Le = 2 * h * c * c / (l5 * (e - 1));
@@ -124,10 +128,6 @@ float3 WavelengthToRGB(float wavelength)
     return float3(r,g,b) * factor;
 }
 
-#define CONSTANT_BOLTZMANN 1.38064852e-23f
-#define CONSTANT_PLANK 6.62607015e-34f
-#define CONSTANT_SPEED_OF_LIGHT 299792458.0f
-
 float PlanksLaw(float lambda, float temp)
 {
 	float lambda_m = lambda * 1.0e-9f;
@@ -147,10 +147,6 @@ float3 RoundTripTest(float3 lrgb)
     Spectrum s;
 
     Spectrum whiteD65 = WhiteSpectrum_D65();
-
-    float kelvinD65 = 6500.0f;
-    kelvinD65 *= (CONSTANT_PLANK * CONSTANT_SPEED_OF_LIGHT / CONSTANT_BOLTZMANN) / 1.438e-2f;
-    //whiteD65.Mul(0.001f * PlanksLaw(560, kelvinD65)); // Original -> Radiance
 
     s.InitFromRGB(lrgb, eReflectance);
     s.Mul(whiteD65); // Reflectance -> Radiance

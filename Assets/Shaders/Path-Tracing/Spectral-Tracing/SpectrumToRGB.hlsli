@@ -1,9 +1,13 @@
 #ifndef H_SPECTRUM_TO_XYZ_H
 #define H_SPECTRUM_TO_XYZ_H
 
+float3 SpectrumToXYZ(Spectrum spectrum);
+float3 SpectrumToRGB(Spectrum spectrum);
+
 #include "Path-Tracing/Spectral-Tracing/Spectrum.hlsli"
-#include "Path-Tracing/Spectral-Tracing/Spectra.hlsli"
 #include "Path-Tracing/Spectral-Tracing/SpectralUtils.hlsli"
+
+#include "Path-Tracing/Spectral-Tracing/SpectralData/CIE1931.hlsli"
 
 float SampleCIE(float lambda, float curve[471])
 {

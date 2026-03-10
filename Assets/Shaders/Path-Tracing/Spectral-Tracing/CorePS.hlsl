@@ -8,7 +8,7 @@
 #include "Path-Tracing/Spectral-Tracing/Spectrum.hlsli"
 #include "Path-Tracing/Spectral-Tracing/ColorSpectrums.hlsli"
 #include "Path-Tracing/Spectral-Tracing/SpectralUtils.hlsli"
-#include "Path-Tracing/Spectral-Tracing/RgbToSpectrum.hlsli"
+#include "Path-Tracing/Spectral-Tracing/RgbToSpectrum2019.hlsli"
 
 #define EPSILON 1e-2
 #define RAY_FLAGS RAY_FLAG_CULL_NON_OPAQUE|RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES

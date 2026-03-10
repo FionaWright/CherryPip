@@ -1,8 +1,13 @@
 #ifndef H_COLOR_SPECTRUMS_H
 #define H_COLOR_SPECTRUMS_H
 
-#include "Path-Tracing/Spectral-Tracing/Spectra.hlsli"
+Spectrum BlackSpectrum();
+Spectrum WhiteSpectrum_E();
+Spectrum WhiteSpectrum_D65();
+
 #include "Path-Tracing/Spectral-Tracing/SpectralUtils.hlsli"
+
+#include "Path-Tracing/Spectral-Tracing/SpectralData/D65StandardIlluminant.hlsli"
 
 Spectrum BlackSpectrum()
 {

@@ -11,9 +11,11 @@
 // https://github.com/mmp/pbrt-v3/blob/master/src/core/spectrum.cpp
 // https://github.com/mmp/pbrt-v3/blob/master/src/core/spectrum.h
 
-// Is controlling the temperature of the scene something I can use?
+float LambdaToIndex(float lambda);
+float IndexToLambda(float idx);
 
 #include "Path-Tracing/Spectral-Tracing/Spectrum.hlsli"
+#include "Path-Tracing/Spectral-Tracing/SpectrumToRGB2019.hlsli"
 #include "Random.h"
 
 #include "Path-Tracing/Spectral-Tracing/ColorSpectrums.hlsli"
@@ -120,6 +122,40 @@ float3 WavelengthToRGB(float wavelength)
         factor = 0.3 + 0.7*(780-wavelength)/(780-700);
 
     return float3(r,g,b) * factor;
+}
+
+#define CONSTANT_BOLTZMANN 1.38064852e-23f
+#define CONSTANT_PLANK 6.62607015e-34f
+#define CONSTANT_SPEED_OF_LIGHT 299792458.0f
+
+float PlanksLaw(float lambda, float temp)
+{
+	float lambda_m = lambda * 1.0e-9f;
+
+	//First radiation constant "2 h c²"
+	float c_1L = 2.0f * CONSTANT_PLANK * CONSTANT_SPEED_OF_LIGHT*CONSTANT_SPEED_OF_LIGHT;
+	//Second radiation constant "h c / k_B"
+	float c_2  =  CONSTANT_PLANK * CONSTANT_SPEED_OF_LIGHT / CONSTANT_BOLTZMANN;
+
+	float denom = pow(lambda_m, 5.0f) * (exp( c_2 / (lambda_m*temp) ) - 1.0f);
+	float value = c_1L / denom;
+	return value * 1.0e-9f; // m -> km
+}
+
+float3 RoundTripTest(float3 lrgb)
+{
+    Spectrum s;
+
+    Spectrum whiteD65 = WhiteSpectrum_D65();
+
+    float kelvinD65 = 6500.0f;
+    kelvinD65 *= (CONSTANT_PLANK * CONSTANT_SPEED_OF_LIGHT / CONSTANT_BOLTZMANN) / 1.438e-2f;
+    //whiteD65.Mul(0.001f * PlanksLaw(560, kelvinD65)); // Original -> Radiance
+
+    s.InitFromRGB(lrgb, eReflectance);
+    s.Mul(whiteD65); // Reflectance -> Radiance
+
+    return SpectrumToRGB(s);
 }
 
 #endif

@@ -1,17 +1,10 @@
 #ifndef H_RGB_TO_SPECTRUM_H
 #define H_RGB_TO_SPECTRUM_H
 
+// Outdated
+
 #include "Path-Tracing/Spectral-Tracing/Spectrum.hlsli"
-#include "Path-Tracing/Spectral-Tracing/Spectra.hlsli"
-
-// TODO: Implement this and see if that works
-// https://graphics.geometrian.com/research/spectral-primaries.html
-// https://github.com/geometrian/simple-spectral
-//float srgbToSpectrum(vec3 color, float wavelength) {
-//    return dot(color, texelFetch(CIE_BT709_Basis, int(clamp(wavelength - 390.0, 0.0, 390.0)), 0).rgb);
-//}
-
-// https://rgl.epfl.ch/publications/Jakob2019Spectral
+#include "Path-Tracing/Spectral-Tracing/SpectralData/RGB2Spect.hlsli"
 
 // Reflectance Spectrum:
 // Incoming light reflected at each wavelength [0, 1]

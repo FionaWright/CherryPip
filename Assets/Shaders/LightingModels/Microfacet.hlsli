@@ -1,3 +1,5 @@
+#include "MicrofacetModels/AllModels.hlsli"
+
 // TODO:
 // 3. Get Aniso GGX working
 // 2. Get VNDF GGX working (see also https://arxiv.org/pdf/2306.05044)

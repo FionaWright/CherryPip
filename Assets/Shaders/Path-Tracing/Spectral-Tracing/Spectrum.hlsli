@@ -33,6 +33,7 @@ struct Spectrum
     void Sqrt();
     void Clamp(float lo, float hi);
     void Normalize();
+    void Exp();
 
     void ReflectanceRgbToSpectrum(float3 rgb);
     void IlluminantRgbToSpectrum(float3 rgb);
@@ -214,6 +215,22 @@ Spectrum Normalize(Spectrum spectrum)
     [unroll]
     for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
         newSpectrum.Samples[i] = spectrum.Samples[i] / maxVal;
+    return newSpectrum;
+}
+
+void Spectrum::Exp()
+{
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+        Samples[i] = exp(Samples[i]);
+}
+
+Spectrum Exp(Spectrum spectrum)
+{
+    Spectrum newSpectrum;
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+        newSpectrum.Samples[i] = exp(spectrum.Samples[i]);
     return newSpectrum;
 }
 

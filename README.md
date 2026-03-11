@@ -100,11 +100,8 @@ Progress as of 18/02/26:
 Progress as of 21/02/26:
 <img width="1020" height="575" alt="Chess DOF" src="https://github.com/user-attachments/assets/a6b0518d-efac-41c1-a811-cda16036083c" />
 
-
-
-
-
-
+Progress as of 11/03/26 (Spectral-tracing working! This is after 30 frames):
+<img width="1016" height="574" alt="image" src="https://github.com/user-attachments/assets/6e10fb11-948b-412c-bfe2-33774b99ac34" />
 
 
 

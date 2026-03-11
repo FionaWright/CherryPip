@@ -55,7 +55,6 @@ struct DenoisingConfig
 struct StudioConfig
 {
     RenderBackend Backend = ePathTracer;
-    PtConfig PT = {};
     RasterConfig Raster = {};
     DenoisingConfig Denoising = {};
 
@@ -102,7 +101,6 @@ private:
     void renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void renderForward(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void renderDeferred(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
-    void compilePtShader(const D3D* d3d);
     void ResetCameraToSceneStart();
 
     void guiPathTracer();
@@ -111,13 +109,13 @@ private:
     void guiScene();
     void guiHeapDebug();
 
+    PathTracer m_pathTracer;
+
     Heap m_heap, m_heapRTV;
     CameraController m_camera;
 
-    std::shared_ptr<Shader> m_shader;
-    std::shared_ptr<RootSig> m_rootSig, m_rootSigRaster;
+    std::shared_ptr<RootSig> m_rootSigRaster;
 
-    std::vector<D3D12_INPUT_ELEMENT_DESC> m_shaderILD;
     bool m_shaderDirty = true;
 
     std::vector<SceneConfig> m_sceneConfigs;
@@ -128,7 +126,6 @@ private:
 
     StudioConfig m_studioConfig = {};
 
-    PathTracingContext m_ptContext;
     DenoisingManager m_denoisingManager;
     TextureRTV m_rtvPingPong1, m_rtvPingPong2;
 
@@ -153,19 +150,9 @@ private:
 #endif
 
     XMMATRIX m_projMatrix = {};
-
-#ifdef _DEBUG
-    ReadbackManager m_readbackManager;
-    RmseTester m_rmseTester;
-    uint32_t m_rmseTesterSlot = 0;
-
-    PathVisualizer m_pathVisualizer;
-    bool m_takePathVisualizationSnapshot = false;
-    bool m_completedPathVisualizationSnapshot = false;
-    std::vector<std::shared_ptr<DebugLine>> m_pathVisualizationLines;
-    XMFLOAT2 m_mousePosOnClick = { -1, -1 };
-#endif
     TextureRTV* m_finalRTV = &m_rtvPingPong1;
+
+    XMFLOAT2 m_mousePosOnClick = { -1, -1 };
 };
 
 

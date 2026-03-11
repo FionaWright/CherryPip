@@ -1,6 +1,7 @@
 set(PROJECT_SOURCES
         src/SceneStudio.cpp
         src/SceneStudio_GUI.cpp
+        src/SceneStudio_Scenes.cpp
         src/PathTracer.cpp
         src/PathTracer_GUI.cpp
 )

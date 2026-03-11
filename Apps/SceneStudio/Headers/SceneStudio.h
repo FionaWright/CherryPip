@@ -91,11 +91,11 @@ public:
     void RenderGUI() override;
 
     [[nodiscard]] const char* GetName() const override { return "Scene Studio"; }
+    void InitializeScenes();
 
     float m_AspectRatio = 0;
 
 private:
-    void loadAssets(D3D* d3d);
     void loadRasterAssets(const D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void initScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList, uint32_t configIdx);
     void initCustomScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList);

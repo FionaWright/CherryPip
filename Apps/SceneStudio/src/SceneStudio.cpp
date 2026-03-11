@@ -38,7 +38,67 @@ void SceneStudio::OnInit(D3D* d3d)
 
     m_rmseTester.Init(d3d);
 
-    loadAssets(d3d);
+    ID3D12Device* device = d3d->GetDevice();
+    const ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
+
+    // TODO: Only set high heap if Bistro initial scene, don't allow changing scene after?
+    m_heap.Init("SRV/CBV/UAV Heap", device, 20000, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    m_heapRTV.Init("RTV Heap", device, 20, D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+    loadRasterAssets(d3d, cmdList.Get());
+
+    InitializeScenes();
+
+    m_envMapList = {
+        L"Env Maps/autumn_field_puresky_4k.hdr",
+        L"Env Maps/shanghai_bund_4k.hdr",
+        L"Env Maps/sunny_rose_garden_4k.hdr",
+    };
+    m_selectedEnvMapIdx = 0;
+
+    m_currentScene = Config::GetSystem().DefaultSceneIdx;
+
+    auto currScene = m_sceneConfigs.at(m_currentScene);
+    if (m_currentScene != 0)
+    {
+        ResetCameraToSceneStart();
+    }
+
+    m_rtvPingPong1.Init(L"Ping Pong 1", device, &m_heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight,
+                        Config::GetRender().RtvFormat);
+    m_rtvPingPong2.Init(L"Ping Pong 2", device, &m_heapRTV, Config::GetSystem().RtvWidth,
+                        Config::GetSystem().RtvHeight,
+                        Config::GetRender().RtvFormat);
+
+    m_pathTracer.Init(d3d, cmdList.Get(), &m_heap, &m_rtvPingPong1);
+
+#ifdef _DEBUG
+    // Initialize Debug Lines
+    {
+        m_rootSigLine.SmartInit(d3d->GetDevice(), 1, 0);
+
+        const std::vector<D3D12_INPUT_ELEMENT_DESC> ildDesc =
+        {
+            {
+                "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
+                D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+            },
+            {
+                "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
+                D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+            }
+        };
+        const D3D12_INPUT_LAYOUT_DESC ild = { ildDesc.data(), static_cast<uint32_t>(ildDesc.size())};
+        m_shaderLine = std::make_shared<Shader>();
+        m_shaderLine->InitVsPs(L"LineVSPS.hlsl", L"LineVSPS.hlsl", ild, device, m_rootSigLine.Get(), true, {}, 1, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE);
+
+        m_dirLightLine.Init(d3d, &m_heap, m_shaderLine);
+    }
+#endif
+
+    V(cmdList->Close());
+    d3d->ExecuteCommandList(cmdList.Get());
+    d3d->Flush();
 }
 
 void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList, double deltaTime)
@@ -159,269 +219,6 @@ void SceneStudio::OnPostUpdate(D3D* d3d)
 #endif
 
     m_pathTracer.PostUpdate(d3d, &m_heap, m_shaderLine);
-}
-
-void SceneStudio::loadAssets(D3D* d3d)
-{
-    ID3D12Device* device = d3d->GetDevice();
-    const ComPtr<ID3D12GraphicsCommandList> cmdList = d3d->GetAvailableCmdList(D3D12_COMMAND_LIST_TYPE_DIRECT);
-
-    // TODO: Only set high heap if Bistro initial scene, don't allow changing scene after?
-    m_heap.Init("SRV/CBV/UAV Heap", device, 70000, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-    m_heapRTV.Init("RTV Heap", device, 20, D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-
-    loadRasterAssets(d3d, cmdList.Get());
-
-    D3D12_STATIC_SAMPLER_DESC samplers[1];
-    samplers[0] = {};
-    samplers[0].Filter = D3D12_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
-    samplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-    samplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-    samplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-    samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-    samplers[0].ShaderRegister = 0;
-
-    SceneConfig customScene = {
-        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Custom"
-    };
-    m_sceneConfigs.emplace_back(customScene);
-
-    Transform t = {};
-
-    t.SetScale(2.0f);
-    SceneConfig sceneCornell = {
-        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Cornell Box",
-        L"Cornell/scene.gltf",
-        t,
-        XMFLOAT3(0, 1.5f, 4.5f),
-        XMFLOAT2(0, PI),
-        true
-    };
-    m_sceneConfigs.emplace_back(sceneCornell);
-
-    t = {};
-    SceneConfig sceneSphere = {
-        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Sphere",
-        L"Sphere/Sphere.gltf",
-        t,
-        XMFLOAT3(0, 0, -4.3f),
-        XMFLOAT2(0, 0),
-        true
-    };
-    m_sceneConfigs.emplace_back(sceneSphere);
-
-    t = {};
-    SceneConfig scenePlane = {
-        "(" + std::to_string(m_sceneConfigs.size()) +") " + "FloatPlane",
-        L"floatplane.glb",
-        t,
-        XMFLOAT3(0, 0, -4.3f),
-        XMFLOAT2(0, PI),
-        true
-    };
-    m_sceneConfigs.emplace_back(scenePlane);
-
-    t = {};
-    t.SetScale(0.3f);
-    SceneConfig sceneTeapot = {
-        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Utah Teapot",
-        L"Utah Teapot/scene.gltf",
-        t,
-        XMFLOAT3(0, 0, -4.3f),
-        XMFLOAT2(0, PI),
-        true
-    };
-    m_sceneConfigs.emplace_back(sceneTeapot);
-
-    t = {};
-    t.SetScale(5.0f);
-    SceneConfig sceneChess = {
-        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Chess",
-        L"Chess/Chess.gltf",
-        t,
-        XMFLOAT3(0.45f, 0.919f, -1.434f),
-        XMFLOAT2(0.66f, -0.36f),
-        false
-    };
-    m_sceneConfigs.emplace_back(sceneChess);
-
-    t = {};
-    t.SetScale(2.0f);
-    SceneConfig sceneLantern = {
-        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Lantern",
-        L"Lantern/Lantern.gltf",
-        t,
-        XMFLOAT3(0.967f, 11.963f, 50.213f),
-        XMFLOAT2(0, PI),
-        true
-    };
-    m_sceneConfigs.emplace_back(sceneLantern);
-
-    t = {};
-    SceneConfig sceneBistro = {
-        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Bistro",
-        L"GitIgnored/Bistro/bistro.gltf",
-        t,
-        XMFLOAT3(0.967f, 11.963f, 50.213f),
-        XMFLOAT2(0, PI),
-        false
-    };
-    m_sceneConfigs.emplace_back(sceneBistro);
-
-    t = {};
-    SceneConfig sceneSponza = {
-        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Sponza",
-        L"GitIgnored/Sponza/sponza.gltf",
-        t,
-        XMFLOAT3(1.753f, 1.274f, -0.23f),
-        XMFLOAT2(0.105f, 4.747f),
-        false
-    };
-    m_sceneConfigs.emplace_back(sceneSponza);
-
-    t = {};
-    SceneConfig sceneMrSpheres = {
-        "(" + std::to_string(m_sceneConfigs.size()) +") " + "MetalRough Spheres",
-        L"MetalRoughSpheres/MetalRoughSpheres.gltf",
-        t,
-        XMFLOAT3(-0.5f, -0.25f, 8.5f),
-        XMFLOAT2(0, PI),
-        true
-    };
-    m_sceneConfigs.emplace_back(sceneMrSpheres);
-
-    t = {};
-    SceneConfig sceneAnisoDiscs = {
-        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Aniso Discs",
-        L"AnisoDiscs/AnisotropyDiscTest.gltf",
-        t,
-        XMFLOAT3(0.17f, 1.471f, 3.542f),
-        XMFLOAT2(0.0f, PI),
-        true
-    };
-    m_sceneConfigs.emplace_back(sceneAnisoDiscs);
-
-    t = {};
-    t.SetScale(6.0f);
-    SceneConfig sceneBarnLamp = {
-        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Barn Lamp",
-        L"BarnLamp/AnisotropyBarnLamp.gltf",
-        t,
-        XMFLOAT3(0.366f, -0.104f, 0.552f),
-        XMFLOAT2(0.135f, 4.012f),
-        true
-    };
-    m_sceneConfigs.emplace_back(sceneBarnLamp);
-
-    t = {};
-    SceneConfig sceneWhiteLands = {
-        "(" + std::to_string(m_sceneConfigs.size()) +") " + "White Lands",
-        L"GitIgnored/WhiteLands/WhiteLands.gltf",
-        t,
-        XMFLOAT3(0,0,0),
-        XMFLOAT2(0, PI),
-        false
-    };
-    m_sceneConfigs.emplace_back(sceneWhiteLands);
-
-    t = {};
-    t.SetScale(3.0f);
-    SceneConfig sceneCozyKitchen = {
-        "(" + std::to_string(m_sceneConfigs.size()) +") " + "CozyKitchen",
-        L"GitIgnored/CozyKitchen/CozyKitchen.gltf",
-        t,
-        XMFLOAT3(1.339f, 1.728f, 0.989f),
-        XMFLOAT2(0.12f, 3.997f),
-        false
-    };
-    m_sceneConfigs.emplace_back(sceneCozyKitchen);
-
-    t = {};
-    t.SetScale(2.0f);
-    SceneConfig sceneAutumn = {
-        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Autumn",
-        L"GitIgnored/Autumn/Autumn.gltf",
-        t,
-        XMFLOAT3(1.339f, 1.728f, 0.989f),
-        XMFLOAT2(0.12f, 3.997f),
-        false
-    };
-    m_sceneConfigs.emplace_back(sceneAutumn);
-
-    t = {};
-    t.SetScale(2.0f);
-    SceneConfig sceneJunkshop = {
-        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Junkshop",
-        L"GitIgnored/Junkshop/Junkshop.gltf",
-        t,
-        XMFLOAT3(1.339f, 1.728f, 0.989f),
-        XMFLOAT2(0.12f, 3.997f),
-        false
-    };
-    m_sceneConfigs.emplace_back(sceneJunkshop);
-
-    t = {};
-    t.SetScale(2.0f);
-    SceneConfig sceneLoneMonk = {
-        "(" + std::to_string(m_sceneConfigs.size()) +") " + "LoneMonk",
-        L"GitIgnored/LoneMonk/LoneMonk.gltf",
-        t,
-        XMFLOAT3(1.339f, 1.728f, 0.989f),
-        XMFLOAT2(0.12f, 3.997f),
-        false
-    };
-    m_sceneConfigs.emplace_back(sceneLoneMonk);
-
-    m_envMapList = {
-        L"Env Maps/autumn_field_puresky_4k.hdr",
-        L"Env Maps/shanghai_bund_4k.hdr",
-        L"Env Maps/sunny_rose_garden_4k.hdr",
-    };
-    m_selectedEnvMapIdx = 0;
-
-    m_currentScene = Config::GetSystem().DefaultSceneIdx;
-
-    auto currScene = m_sceneConfigs.at(m_currentScene);
-    if (m_currentScene != 0)
-    {
-        ResetCameraToSceneStart();
-    }
-
-    m_rtvPingPong1.Init(L"Ping Pong 1", device, &m_heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight,
-                        Config::GetRender().RtvFormat);
-    m_rtvPingPong2.Init(L"Ping Pong 2", device, &m_heapRTV, Config::GetSystem().RtvWidth,
-                        Config::GetSystem().RtvHeight,
-                        Config::GetRender().RtvFormat);
-
-    m_pathTracer.Init(d3d, cmdList.Get(), &m_heap, &m_rtvPingPong1);
-
-#ifdef _DEBUG
-    // Initialize Debug Lines
-    {
-        m_rootSigLine.SmartInit(d3d->GetDevice(), 1, 0);
-
-        const std::vector<D3D12_INPUT_ELEMENT_DESC> ildDesc =
-        {
-            {
-                "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
-                D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
-            },
-            {
-                "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
-                D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
-            }
-        };
-        const D3D12_INPUT_LAYOUT_DESC ild = { ildDesc.data(), static_cast<uint32_t>(ildDesc.size())};
-        m_shaderLine = std::make_shared<Shader>();
-        m_shaderLine->InitVsPs(L"LineVSPS.hlsl", L"LineVSPS.hlsl", ild, device, m_rootSigLine.Get(), true, {}, 1, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE);
-
-        m_dirLightLine.Init(d3d, &m_heap, m_shaderLine);
-    }
-#endif
-
-    V(cmdList->Close());
-    d3d->ExecuteCommandList(cmdList.Get());
-    d3d->Flush();
 }
 
 void SceneStudio::loadRasterAssets(const D3D* d3d, ID3D12GraphicsCommandList* cmdList)

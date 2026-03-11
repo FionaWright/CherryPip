@@ -50,7 +50,7 @@ Suspicious of multiplication between spectra being simple component-wise but...i
 
 ## The Cleanup Zone:
 
-- Figure out how to use one wavelength per ray instead of the entire spectrum
+- Improve SpectralValue system, remove all ifdefs
 - Fix gamma correction conversions, see Mallet 
 
 ## CIE XYZ Output:

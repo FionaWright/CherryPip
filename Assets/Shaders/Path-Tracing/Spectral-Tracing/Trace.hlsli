@@ -6,6 +6,8 @@
 #include "Path-Tracing/Spectral-Tracing/SpectrumToRGB2019.hlsli"
 #include "MathUtils.hlsli"
 
+#include "LightingModels/AllSpectralModels.hlsli"
+
 float3 Trace(inout RayQuery<RAY_FLAGS> q,
             uint flags,
             uint instanceMask,
@@ -41,31 +43,24 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         float2 uv = -1;
         Hit(q, lambda, albedo, Ng, Ns, Li, mat, uv);
 
+        float2 roughMet = gTextures[mat.TexIdxRoughMet].Sample(gSampler, uv).gb;
+        float roughness = mat.Roughness * roughMet.r;
+        float metalness = mat.Metalness * roughMet.g;
+
         float3 wo = -ray.Direction;
         float3 wi;
 
         SpectralValue L_sample;
 
-        //Model_LambertionDiffuse(rngInfo, throughput, Ns, Li, albedo.rgb, wi, L_sample);
+        if (cLightingGlassEnabled && mat.Flags & PtMaterialFlags::eIsGlass)
         {
-            L_sample = Mul(throughput, Li);
-
-            float3 T, B;
-            BuildBasisFrisvad(Ns, T, B);
-
-            float u1 = Rand01_Bounce(DIM_D_BSDF_U1, rngInfo);
-            float u2 = Rand01_Bounce(DIM_D_BSDF_U2, rngInfo);
-
-            wi = RandHemisphereCosineWorld(u1, u2, T, B, Ns);
-            // diffuseBrdf = albedo / PI
-            // pdf = NdL / PI
-            // throughput *= diffuseBrdf * NdL / pdf
-#ifdef SINGLE_LAMBDA_RENDERING // TODO: Make SpectralValue a struct with the same pattern as Spectrum maybe? Use polymorphism technique
-            throughput *= albedo;
-#else
-            throughput.Mul(albedo); // Terms cancel out
-#endif
+            bool entering = q.CommittedTriangleFrontFace()!=0;
+            Model_Glass_Spectral(rngInfo, throughput, mat.DiffuseProbability,
+                    roughness, entering, q.CommittedRayT(), mat.IoR,
+                    mat.GlassSigmaA, Ns, Li, albedo, wo, wi, L_sample);
         }
+        else
+            Model_LambertionDiffuse_Spectral(rngInfo, throughput, Ns, Li, albedo, wi, L_sample);
 
 #ifdef SINGLE_LAMBDA_RENDERING
         Lo += L_sample;

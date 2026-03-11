@@ -100,7 +100,7 @@ void PathTracer::PostUpdate(D3D* d3d, Heap* heap, TextureRTV* rtv)
 #endif
 }
 
-void PathTracer::Render(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, Camera* camera, const XMMATRIX& projMatrix, CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle, TextureRTV* rtvTex, XMFLOAT2 mousePosOnClick)
+void PathTracer::Render(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, Camera* camera, const XMMATRIX& projMatrix, CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle, TextureRTV* rtvTex, XMFLOAT2 mousePosOnClick, const DirLightConfig& dirLightConfig)
 {
     if (!d3d->GetRayTracingSupported())
     {
@@ -129,7 +129,7 @@ void PathTracer::Render(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap
         m_ptContext.Render(cmdList, m_rootSig->Get(), m_shader->GetPSO(),
                             camera, heap, projMatrix,
                            m_config,
-                           m_studioConfig.DirLightIntensity, m_studioConfig.DirLightColor, m_studioConfig.DirLightDirection
+                           dirLightConfig.DirLightIntensity, dirLightConfig.DirLightColor, dirLightConfig.DirLightDirection
 #ifdef _DEBUG
                            , debugBufferIdx, m_takePathVisualizationSnapshot, mousePosOnClick
 #endif

@@ -117,7 +117,7 @@ void SceneStudio::OnPostUpdate(D3D* d3d)
 {
     if (m_recomputeEnvMapDirLight)
     {
-        m_studioConfig.DirLightDirection = m_envMap.GetDirectionOfHighestIntensity(d3d, &m_heap);
+        m_studioConfig.DirLight.DirLightDirection = m_envMap.GetDirectionOfHighestIntensity(d3d, &m_heap);
         m_recomputeEnvMapDirLight = false;
         m_debugLinesDirty = true;
     }
@@ -131,8 +131,8 @@ void SceneStudio::OnPostUpdate(D3D* d3d)
 #ifdef _DEBUG
     if (m_studioConfig.DebugLinesEnabled && m_debugLinesDirty)
     {
-        const XMFLOAT3 start = Mult(m_studioConfig.DirLightDirection, 1000.0f);
-        const XMFLOAT3 end = Mult(m_studioConfig.DirLightDirection, -1000.0f);
+        const XMFLOAT3 start = Mult(m_studioConfig.DirLight.DirLightDirection, 1000.0f);
+        const XMFLOAT3 end = Mult(m_studioConfig.DirLight.DirLightDirection, -1000.0f);
         constexpr XMFLOAT3 color = XMFLOAT3(1, 1, 0);
         m_dirLightLine.Update(d3d, &start, &end, &color);
         m_debugLinesDirty = false;
@@ -646,7 +646,7 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         cmdList->SetGraphicsRootSignature(m_rootSigLine.Get());
         const XMMATRIX vp = m_camera.GetViewMatrix() * m_projMatrix;
 
-        if (m_studioConfig.DirLightDebugLineEnabled)
+        if (m_studioConfig.DirLight.DirLightDebugLineEnabled)
             m_dirLightLine.Render(cmdList, vp);
 
         m_pathTracer.RenderLines(d3d, cmdList, vp);
@@ -677,7 +677,7 @@ void SceneStudio::renderForward(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         cbvRasterDebug.Mode = m_studioConfig.Raster.Mode;
 
         CbvForwardLighting cbvForwardLighting{};
-        cbvForwardLighting.DirLightDir = m_studioConfig.DirLightDirection;
+        cbvForwardLighting.DirLightDir = m_studioConfig.DirLight.DirLightDirection;
         cbvForwardLighting.MaxCubemapMipMaps = m_envMap.GetCubemap()->GetDesc().MipLevels;
 
         const int sceneIdx = m_sceneConfigs.at(m_currentScene).SceneIdx;
@@ -714,7 +714,7 @@ void SceneStudio::renderForward(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         cmdList->SetGraphicsRootSignature(m_rootSigLine.Get());
         const XMMATRIX vp = m_camera.GetViewMatrix() * m_projMatrix;
 
-        if (m_studioConfig.DirLightDebugLineEnabled)
+        if (m_studioConfig.DirLight.DirLightDebugLineEnabled)
             m_dirLightLine.Render(cmdList, vp);
 
         for (int i = 0; i < m_pathVisualizationLines.size(); i++)
@@ -749,7 +749,7 @@ void SceneStudio::renderDeferred(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
             m_denoisingManager.Init(d3d->GetDevice(), cmdList, &m_heap);
 
         m_deferredContext.RenderLighting(d3d, cmdList, &m_heap, m_projMatrix, &m_rtvPingPong1,
-                                         m_studioConfig.DirLightDirection, m_envMap.GetCubemap(),
+                                         m_studioConfig.DirLight.DirLightDirection, m_envMap.GetCubemap(),
                                          m_skybox.GetIrradianceMap(), m_texBrdfIntegrationMap.GetD12Resource(),
                                          m_studioConfig.Raster.Mode, &m_denoisingManager);
     }

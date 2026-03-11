@@ -40,8 +40,6 @@ void SceneStudio::OnInit(D3D* d3d)
     Config::SetBoolFromArg(&m_studioConfig.PT.DirLightEnabled, "--dirLight");
     Config::SetBoolFromArg(&m_studioConfig.PT.RussianRouletteEnabled, "--russianRoulette");
 
-    m_shader = std::make_shared<Shader>();
-
     loadAssets(d3d);
 }
 
@@ -72,19 +70,9 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList, double 
         m_rasterContext.SetScene(currScene);
         m_deferredContext.SetScene(currScene);
 
-        if (d3d->GetRayTracingSupported())
-        {
-            D12Resource* envMap = m_studioConfig.PT.EnvMapIsEqualArea ? m_envMap.GetEA() : m_envMap.GetPano();
-            m_ptContext.BuildScene(d3d->GetDevice(), cmdList, currScene, &m_heap, envMap);
-        }
+        m_pathTracer.BuildScene(d3d, cmdList, &m_envMap, currScene, &m_heap);
 
         m_sceneDirty = false;
-    }
-
-    if (m_shaderDirty)
-    {
-        compilePtShader(d3d);
-        m_shaderDirty = false;
     }
 
 #ifdef _DEBUG
@@ -97,9 +85,6 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList, double 
             m_mousePosOnClick = {mousePos.x - minX, mousePos.y};
     }
 #endif
-
-    if (m_studioConfig.PT.DebugPathVisualization)
-        m_ptContext.SetMaterialPathVisualizationBuffer(d3d->GetDevice(), &m_heap, m_pathVisualizer.GetStructuredBuffer(), m_pathVisualizer.GetNumElements());
 
     m_projMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(Config::GetRender().FoV), m_AspectRatio,
                                             Config::GetRender().NearPlane, Config::GetRender().FarPlane);
@@ -114,7 +99,10 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList, double 
         break;
     case ePathTracer:
     case eSpectralTracer:
-        renderPathTracer(d3d, cmdList);
+        m_pathTracer.Update(d3d, &m_heap, m_shaderDirty, m_studioConfig.Backend == eSpectralTracer);
+        m_shaderDirty = false;
+
+        m_pathTracer.Render(d3d, cmdList);
         break;
     default:
         break;
@@ -122,7 +110,7 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList, double 
 
     const bool moved = m_camera.UpdateCamera(deltaTime);
     if (moved)
-        m_ptContext.Reset();
+        m_pathTracer.Reset();
 }
 
 void SceneStudio::OnPostUpdate(D3D* d3d)
@@ -136,7 +124,7 @@ void SceneStudio::OnPostUpdate(D3D* d3d)
 
     if (Input::IsKeyDown(KeyCode::R))
     {
-        m_ptContext.Reset();
+        m_pathTracer.Reset();
         ResetCameraToSceneStart();
     }
 
@@ -149,53 +137,9 @@ void SceneStudio::OnPostUpdate(D3D* d3d)
         m_dirLightLine.Update(d3d, &start, &end, &color);
         m_debugLinesDirty = false;
     }
-
-    if (m_rmseTester.NeedTakeSnapshot())
-    {
-        m_rmseTester.TakeSnapshot(d3d, m_rmseTesterSlot, m_finalRTV->GetD12Resource());
-    }
-    else if (m_rmseTester.NeedComputeRMSE())
-    {
-        m_rmseTester.ComputeRMSE(d3d, &m_heap);
-    }
-    else if (m_rmseTester.IsRunningGolden())
-    {
-        m_rmseTester.UpdateComputeGolden(d3d, m_ptContext.GetFrameNum(), m_finalRTV->GetD12Resource());
-    }
-    else if (m_rmseTester.NeedLoadGolden())
-    {
-        m_rmseTester.LoadGolden(d3d, m_rmseTesterSlot);
-    }
-    else if (m_rmseTester.IsRunningConvergence())
-    {
-        m_rmseTester.UpdateConvergenceTest(d3d, m_ptContext.GetFrameNum(), &m_heap, m_finalRTV->GetD12Resource());
-    }
-
-    if (m_completedPathVisualizationSnapshot)
-    {
-        const auto data = m_pathVisualizer.ReadbackData(d3d);
-
-        m_pathVisualizationLines.clear();
-        for (int i = 0; i < m_studioConfig.PT.SPP; i++)
-        {
-            for (int j = 0; j < data[i].NumPositionsSet - 1; j++)
-            {
-                const XMFLOAT3 start = data[i].WorldSpacePositionAtBounce[j];
-                const XMFLOAT3 end = data[i].WorldSpacePositionAtBounce[j+1];
-
-                const float bounceT = j / static_cast<float>(m_studioConfig.PT.NumBounces);
-                const XMFLOAT3 color = XMFLOAT3(1.0f - bounceT, bounceT, 0);
-
-                auto line = std::make_shared<DebugLine>();
-                line->Init(d3d, &m_heap, m_shaderLine);
-                line->Update(d3d, &start, &end, &color);
-                m_pathVisualizationLines.emplace_back(line);
-            }
-        }
-
-        m_completedPathVisualizationSnapshot = false;
-    }
 #endif
+
+    m_pathTracer.PostUpdate(d3d, &m_heap, m_finalRTV);
 }
 
 void SceneStudio::loadAssets(D3D* d3d)
@@ -217,9 +161,6 @@ void SceneStudio::loadAssets(D3D* d3d)
     samplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
     samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     samplers[0].ShaderRegister = 0;
-
-    m_rootSig = std::make_shared<RootSig>();
-    m_rootSig->SmartInit(device, 3, 6, 2, true, samplers, _countof(samplers));
 
     SceneConfig customScene = {
         "(" + std::to_string(m_sceneConfigs.size()) +") " + "Custom"
@@ -427,8 +368,6 @@ void SceneStudio::loadAssets(D3D* d3d)
         ResetCameraToSceneStart();
     }
 
-    m_ptContext.Init(device, cmdList.Get(), &m_heap);
-
     m_rtvPingPong1.Init(L"Ping Pong 1", device, &m_heapRTV, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight,
                         Config::GetRender().RtvFormat);
     m_rtvPingPong2.Init(L"Ping Pong 2", device, &m_heapRTV, Config::GetSystem().RtvWidth,
@@ -457,11 +396,6 @@ void SceneStudio::loadAssets(D3D* d3d)
 
         m_dirLightLine.Init(d3d, &m_heap, m_shaderLine);
     }
-
-    m_readbackManager.Init(d3d, &m_heap, &m_rtvPingPong1);
-    m_rmseTester.Init(d3d);
-
-    m_pathVisualizer.Init(d3d, cmdList.Get(), 200);
 #endif
 
     V(cmdList->Close());
@@ -679,64 +613,18 @@ TextureRTV* SceneStudio::denoisingPass(const D3D* d3d, ID3D12GraphicsCommandList
 
 void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 {
-    if (!d3d->GetRayTracingSupported())
-    {
-        std::cout << "ERROR: Ray-Tracing not supported!!!" << std::endl;
-        return;
-    }
-
-    const float fRtvWidth = static_cast<float>(Config::GetSystem().RtvWidth);
-    const float fRtvHeight = static_cast<float>(Config::GetSystem().RtvHeight);
-
-    const CD3DX12_VIEWPORT viewport(0.0f, 0.0f, fRtvWidth, fRtvHeight);
-    const CD3DX12_RECT scissorRect(0, 0, Config::GetSystem().RtvWidth, Config::GetSystem().RtvHeight);
-
-    cmdList->RSSetViewports(1, &viewport);
-    cmdList->RSSetScissorRects(1, &scissorRect);
-
     m_heap.SetHeap(cmdList);
+    
+    m_rtvPingPong1.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    const UINT rtvIdx = m_rtvPingPong1.GetHeapIdx();
+    const auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_heapRTV.GetCPUHandle(), rtvIdx,
+                                                        m_heapRTV.GetIncrementSize());
 
-    // Main Pass (Into PP1)
-    {
-        m_rtvPingPong1.GetD12Resource()->Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
-        const UINT rtvIdx = m_rtvPingPong1.GetHeapIdx();
-        const auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_heapRTV.GetCPUHandle(), rtvIdx,
-                                                          m_heapRTV.GetIncrementSize());
-        cmdList->OMSetRenderTargets(1, &handle, FALSE, nullptr);
-
-        const int debugBufferIdx = m_studioConfig.PT.DebugInfoOutputEnabled
-                                       ? static_cast<int>(m_studioConfig.PT.DebugInfoOutputMode)
-                                       : -1;
-
-        m_ptContext.Render(cmdList, m_rootSig->Get(), m_shader->GetPSO(),
-                            &m_camera.GetCamera(), &m_heap, m_projMatrix,
-                           m_studioConfig.PT,
-                           m_studioConfig.DirLightIntensity, m_studioConfig.DirLightColor, m_studioConfig.DirLightDirection
-#ifdef _DEBUG
-                           , debugBufferIdx, m_takePathVisualizationSnapshot, m_mousePosOnClick
-#endif
-                           );
-
-#ifdef _DEBUG
-        if (m_takePathVisualizationSnapshot)
-        {
-            m_completedPathVisualizationSnapshot = true;
-            m_takePathVisualizationSnapshot = false;
-        }
-#endif
-    }
+    m_pathTracer.Render(d3d, cmdList, &m_camera.GetCamera(), m_projMatrix, handle);
 
     m_finalRTV = &m_rtvPingPong1;
 
 #ifdef _DEBUG
-    // Readback Pass (PP1 to RTV)
-    if (m_studioConfig.PT.ReadbackEnabled)
-    {
-        m_readbackManager.ReadbackPass(d3d, cmdList, &m_rtvPingPong1, m_studioConfig.PT.ReadbackEveryFrame, m_mousePosOnClick);
-        copyRtvTex(cmdList, d3d->GetRtv(), m_rtvPingPong1.GetD12Resource());
-        return;
-    }
-
     if (m_studioConfig.DebugLinesEnabled)
     {
         GPU_SCOPE(cmdList, "Debug Lines");
@@ -761,8 +649,7 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         if (m_studioConfig.DirLightDebugLineEnabled)
             m_dirLightLine.Render(cmdList, vp);
 
-        for (int i = 0; i < m_pathVisualizationLines.size(); i++)
-            m_pathVisualizationLines[i]->Render(cmdList, vp);
+        m_pathTracer.RenderLines(d3d, cmdList, vp);
     }
 #endif
 
@@ -870,106 +757,6 @@ void SceneStudio::renderDeferred(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     m_finalRTV = &m_rtvPingPong1;
 
     copyRtvTex(cmdList, d3d->GetRtv(), m_finalRTV->GetD12Resource());
-}
-
-void SceneStudio::compilePtShader(const D3D* d3d)
-{
-    if (!d3d->GetRayTracingSupported())
-        return;
-
-    CherryPrint("Loading Path-Tracing Shader");
-
-    std::vector<const WCHAR*> args = {};
-    if (m_studioConfig.PT.DebugInfoOutputEnabled)
-        args.push_back(L"-DDEBUG_PT_INFO_OUTPUT");
-    if (m_studioConfig.PT.DebugForceSpecular)
-        args.push_back(L"-DDEBUG_FORCE_SPECULAR");
-    if (m_studioConfig.PT.DebugForceDiffuse)
-        args.push_back(L"-DDEBUG_FORCE_DIFFUSE");
-
-    if (m_studioConfig.EnvMapEnabled)
-        args.push_back(L"-DENV_MAP_ENABLED");
-    if (m_studioConfig.PT.EnvMapIsEqualArea)
-        args.push_back(L"-DENV_MAP_EA");
-    if (m_studioConfig.PT.DirLightEnabled)
-        args.push_back(L"-DDIR_LIGHT_ENABLED");
-    if (m_studioConfig.PT.NormalMapsEnabled)
-        args.push_back(L"-DNORMAL_MAPS_ENABLED");
-    if (m_studioConfig.PT.AlphaTestingEnabled)
-        args.push_back(L"-DALPHA_TESTING_ENABLED");
-    if (m_studioConfig.PT.RussianRouletteEnabled)
-        args.push_back(L"-DRUSSIAN_ROULETTE_ENABLED");
-    if (m_studioConfig.PT.SampleVisibleNormals)
-        args.push_back(L"-DSAMPLE_VISIBLE_NORMALS");
-    if (m_studioConfig.PT.AnisotropyEnabled)
-        args.push_back(L"-DANISOTROPY_ENABLED");
-    if (m_studioConfig.PT.DepthOfFieldEnabled)
-        args.push_back(L"-DDEPTH_OF_FIELD_ENABLED");
-    if (m_studioConfig.PT.ImportanceSamplingEnabled)
-        args.push_back(L"-DIMPORTANCE_SAMPLING");
-    if (m_studioConfig.PT.GlassModelEnabled)
-        args.push_back(L"-DLIGHTING_GLASS_ENABLED");
-    if (m_studioConfig.PT.JitterEnabled)
-        args.push_back(L"-DJITTER_ENABLED");
-    if (m_studioConfig.PT.DirLightIsDistant)
-        args.push_back(L"-DDIR_LIGHT_DISTANT");
-    if (m_studioConfig.PT.GammaCorrection)
-        args.push_back(L"-DGAMMA_CORRECTION");
-
-    if (m_studioConfig.PT.FurnaceTestHdReflect)
-        args.push_back(L"-DFURNACE_TEST_HEMI_DIR_REFLECT");
-    else if (m_studioConfig.PT.FurnaceTestHhEmit)
-        args.push_back(L"-DFURNACE_TEST_HEMI_HEMI_EMIT");
-
-    if (m_studioConfig.PT.SamplingStrat == eHaltonOwen)
-        args.push_back(L"-DSAMPLING_HALTON_OWEN");
-    else if (m_studioConfig.PT.SamplingStrat == eHalton)
-        args.push_back(L"-DSAMPLING_HALTON");
-    else if (m_studioConfig.PT.SamplingStrat == eHaltonApple)
-        args.push_back(L"-DSAMPLING_HALTON_APPLE");
-    else if (m_studioConfig.PT.SamplingStrat == eIndependent)
-        args.push_back(L"-DSAMPLING_INDEPENDENT");
-
-    if (m_studioConfig.PT.LightingModel == eLambertDiff)
-        args.push_back(L"-DLIGHTING_LAMB_DIFF");
-    else if (m_studioConfig.PT.LightingModel == eGlossy)
-        args.push_back(L"-DLIGHTING_GLOSSY");
-    else if (m_studioConfig.PT.LightingModel == eMicrofacet)
-        args.push_back(L"-DLIGHTING_MICROFACET");
-
-    if (m_studioConfig.PT.DebugPathVisualization)
-        args.push_back(L"-DDEBUG_PATH_VISUALIZATION");
-
-    if (m_studioConfig.PT.LightingModel == PathTracerLightingModel::eMicrofacet)
-    {
-        static const std::vector<const WCHAR*> c_mapNdfType = {
-            L"-DNDF_TYPE_GGX",
-            L"-DNDF_TYPE_BECKMANN"
-        };
-        args.push_back(c_mapNdfType.at(m_studioConfig.PT.NdfType));
-
-        static const std::vector<const WCHAR*> c_mapMaskingType = {
-            L"-DMASKING_SMITH",
-            L"-DMASKING_VCAVITY"
-        };
-        args.push_back(c_mapMaskingType.at(m_studioConfig.PT.MaskingType));
-    }
-
-    m_shaderILD =
-    {
-        {
-            "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
-            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
-        },
-        {
-            "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,
-            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
-        }
-    };
-    const D3D12_INPUT_LAYOUT_DESC ild = {m_shaderILD.data(), static_cast<UINT>(m_shaderILD.size())};
-
-    const wchar_t* psName = m_studioConfig.Backend == ePathTracer ? L"Path-Tracing/CorePS.hlsl" : L"Path-Tracing/Spectral-Tracing/CorePS.hlsl";
-    m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", psName, ild, d3d->GetDevice(), m_rootSig->Get(), false, args);
 }
 
 void SceneStudio::ResetCameraToSceneStart()

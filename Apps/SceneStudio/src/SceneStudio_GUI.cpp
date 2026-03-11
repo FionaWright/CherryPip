@@ -35,7 +35,7 @@ void SceneStudio::RenderGUI()
 
         if (ImGui::BeginTabItem("Path-Tracer"))
         {
-            guiPathTracer();
+            m_pathTracer(m_pathTracerDirty, m_shaderDirty, m_sceneDirty);
             ImGui::EndTabItem();
         }
 
@@ -66,247 +66,19 @@ void SceneStudio::RenderGUI()
     m_pathTracerDirty |= m_sceneDirty;
 
 #ifdef _DEBUG
-    if (m_pathTracerDirty && m_studioConfig.PT.ReadbackEveryFrame)
-        m_readbackManager.SetInReadbackProcess(true);
-    else if (!m_studioConfig.PT.ReadbackEveryFrame)
-        m_readbackManager.SetInReadbackProcess(false);
+    if (m_pathTracerDirty && m_pathTracer.GetConfig().ReadbackEveryFrame)
+        m_pathTracer.GetReadbackManager->SetInReadbackProcess(true);
+    else if (!m_pathTracer.GetConfig().ReadbackEveryFrame)
+        m_pathTracer.GetReadbackManager->SetInReadbackProcess(false);
 #endif
 
     if (m_pathTracerDirty)
     {
-        m_ptContext.Reset();
+        m_pathTracer.Reset();
         m_pathTracerDirty = false;
-#ifdef _DEBUG
-        m_readbackManager.ClearReadbackData();
-#endif
     }
 
     Gui::EndWindow();
-}
-
-void SceneStudio::guiPathTracer()
-{
-    ImGui::SeparatorText("Stats##xx");
-    ImGui::Indent(IM_GUI_INDENTATION);
-
-    ImGui::Text("%s%i", "Frame Index: ", m_ptContext.GetFrameNum());
-    ImGui::Text("%s%i", "Total SPP: ", m_ptContext.GetFrameNum() * m_studioConfig.PT.SPP);
-
-    ImGui::Spacing();
-    ImGui::Unindent(IM_GUI_INDENTATION);
-    ImGui::SeparatorText("Settings##xx");
-    ImGui::Indent(IM_GUI_INDENTATION);
-
-    m_pathTracerDirty |= ImGui::Checkbox("Accumulation Enabled##xx", &m_studioConfig.PT.AccumulationEnabled);
-    m_shaderDirty |= ImGui::Checkbox("Jitter Enabled##xx", &m_studioConfig.PT.JitterEnabled);
-    m_shaderDirty |= ImGui::Checkbox("Russian Roulette##xx", &m_studioConfig.PT.RussianRouletteEnabled);
-
-    if (m_studioConfig.PT.RussianRouletteEnabled)
-        m_pathTracerDirty |= ImGuiUtils::FwInputUInt("Russian Roulette Min Bounces##xx", &m_studioConfig.PT.RussianRouletteMinBounces);
-
-    int spp = static_cast<int>(m_studioConfig.PT.SPP);
-    m_pathTracerDirty |= ImGuiUtils::FwDragInt("SPP##xx", &spp, 1, 1, 256);
-    m_studioConfig.PT.SPP = static_cast<uint32_t>(spp);
-
-    int bounces = static_cast<int>(m_studioConfig.PT.NumBounces);
-    m_pathTracerDirty |= ImGuiUtils::FwDragInt("Ray Bounces##xx", &bounces, 1, 0, 256);
-    m_studioConfig.PT.NumBounces = static_cast<uint32_t>(bounces);
-
-    const uint32_t prevMaxFrames = m_studioConfig.PT.MaxFrameNum;
-    if (ImGuiUtils::FwInputUInt("Max Frames##xx", &m_studioConfig.PT.MaxFrameNum))
-        m_pathTracerDirty |= prevMaxFrames > m_studioConfig.PT.MaxFrameNum || prevMaxFrames == 0;
-
-    m_shaderDirty |= ImGui::Checkbox("Dir Light Enabled##xx", &m_studioConfig.PT.DirLightEnabled);
-    m_pathTracerDirty |= ImGuiUtils::FwInputFloat("Dir Light Radius (R)##xx", &m_studioConfig.PT.DirLightCosAngularRadius);
-    m_shaderDirty |= ImGui::Checkbox("Dir Light Is Distant", &m_studioConfig.PT.DirLightIsDistant);
-
-    m_shaderDirty |= ImGui::Checkbox("Normal Maps Enabled##xx", &m_studioConfig.PT.NormalMapsEnabled);
-    m_shaderDirty |= ImGui::Checkbox("Alpha Testing Enabled##xx", &m_studioConfig.PT.AlphaTestingEnabled);
-    m_shaderDirty |= ImGui::Checkbox("Gamma Correction Enabled##xx", &m_studioConfig.PT.GammaCorrection);
-
-    m_shaderDirty |= ImGuiUtils::FwInputFloat("Firefly Threshold", &m_studioConfig.PT.FireflyThreshold);
-
-    m_shaderDirty |= ImGui::Checkbox("Depth Of Field Enabled", &m_studioConfig.PT.DepthOfFieldEnabled);
-    if (m_studioConfig.PT.DepthOfFieldEnabled)
-    {
-        ImGui::Indent(IM_GUI_INDENTATION);
-        m_shaderDirty |= ImGuiUtils::FwDragFloat("Focal Distance", &m_studioConfig.PT.DofFocalDist, 0.03f);
-        m_shaderDirty |= ImGuiUtils::FwDragFloat("Lens Radius", &m_studioConfig.PT.DofLensRadius, 0.01f);
-        ImGui::Unindent(IM_GUI_INDENTATION);
-    }
-
-    static int e = m_studioConfig.PT.LightingModel;
-    ImGui::Text("%s", "Lighting Model:");
-    int idx = 0;
-    ImGui::Indent(IM_GUI_INDENTATION);
-    m_shaderDirty |= ImGui::RadioButton("Lambert", &e, idx++);
-    m_shaderDirty |= ImGui::RadioButton("Glossy", &e, idx++);
-    m_shaderDirty |= ImGui::RadioButton("Microfacet", &e, idx++);
-    ImGui::Unindent(IM_GUI_INDENTATION);
-    m_studioConfig.PT.LightingModel = static_cast<PathTracerLightingModel>(e);
-
-    ImGui::Text("%s", "RNG Sampling Strategy:");
-    static int e3 = m_studioConfig.PT.SamplingStrat;
-    idx = 0;
-    ImGui::Indent(IM_GUI_INDENTATION);
-    m_shaderDirty |= ImGui::RadioButton("Independent", &e3, idx++);
-    m_shaderDirty |= ImGui::RadioButton("Halton", &e3, idx++);
-    m_shaderDirty |= ImGui::RadioButton("Apple Halton", &e3, idx++);
-    m_shaderDirty |= ImGui::RadioButton("Owen Scrambled Halton", &e3, idx++);
-    ImGui::Unindent(IM_GUI_INDENTATION);
-    m_studioConfig.PT.SamplingStrat = static_cast<PathTracerSamplingStrategy>(e3);
-
-    if (m_studioConfig.PT.LightingModel == eMicrofacet)
-    {
-        ImGui::Text("%s", "Microfacet Normal Distribution Function:");
-        static int e2 = m_studioConfig.PT.NdfType;
-        idx = 0;
-        ImGui::Indent(IM_GUI_INDENTATION);
-        m_shaderDirty |= ImGui::RadioButton("GGX", &e2, idx++);
-        m_shaderDirty |= ImGui::RadioButton("Beckmann", &e2, idx++);
-        ImGui::Unindent(IM_GUI_INDENTATION);
-        m_studioConfig.PT.NdfType = static_cast<MicrofacetNdfType>(e2);
-
-        ImGui::Text("%s", "Microfacet Masking Function:");
-        static int e4 = m_studioConfig.PT.MaskingType;
-        idx = 0;
-        ImGui::Indent(IM_GUI_INDENTATION);
-        m_shaderDirty |= ImGui::RadioButton("Smith", &e4, idx++);
-        m_shaderDirty |= ImGui::RadioButton("V-Cavity", &e4, idx++);
-        ImGui::Unindent(IM_GUI_INDENTATION);
-        m_studioConfig.PT.MaskingType = static_cast<MicrofacetMaskingType>(e4);
-
-        m_shaderDirty |= ImGui::Checkbox("Anisotropy Enabled", &m_studioConfig.PT.AnisotropyEnabled);
-        m_shaderDirty |= ImGui::Checkbox("Sample Visible Normals", &m_studioConfig.PT.SampleVisibleNormals);
-    }
-
-    if (m_studioConfig.PT.LightingModel != eLambertDiff)
-        m_shaderDirty |= ImGui::Checkbox("Glass Model Enabled##xx", &m_studioConfig.PT.GlassModelEnabled);
-    m_shaderDirty |= ImGui::Checkbox("Importance Sampling Enabled##xx", &m_studioConfig.PT.ImportanceSamplingEnabled);
-
-    ImGui::Spacing();
-    ImGui::Unindent(IM_GUI_INDENTATION);
-    ImGui::SeparatorText("Tools##xx");
-    ImGui::Indent(IM_GUI_INDENTATION);
-
-    m_pathTracerDirty |= ImGui::Button("Reset PathTracer##xx");
-
-#ifdef _DEBUG
-    ImGui::Spacing();
-    ImGui::Unindent(IM_GUI_INDENTATION);
-    ImGui::SeparatorText("Debug##xx");
-    ImGui::Indent(IM_GUI_INDENTATION);
-
-    const bool prevReadbackEnabled = m_studioConfig.PT.ReadbackEnabled;
-    ImGui::Checkbox("Enable Readback##xx", &m_studioConfig.PT.ReadbackEnabled);
-
-    if (m_studioConfig.PT.ReadbackEnabled)
-    {
-        m_readbackManager.GUI(prevReadbackEnabled, m_studioConfig.PT.ReadbackEveryFrame);
-    }
-
-    m_shaderDirty |= ImGui::Checkbox("Path Visualization Enabled", &m_studioConfig.PT.DebugPathVisualization);
-    if (m_studioConfig.PT.DebugPathVisualization)
-    {
-        ImGui::Indent(IM_GUI_INDENTATION);
-
-        const bool validMousePos = m_mousePosOnClick.x != -1 && m_mousePosOnClick.y != -1;
-        if (validMousePos)
-        {
-            m_takePathVisualizationSnapshot |= ImGui::Button("Take Snapshot##xxx");
-        }
-        else
-            ImGui::Text("Please select a pixel");
-
-        ImGui::Unindent(IM_GUI_INDENTATION);
-    }
-
-    static const std::vector<const char*> c_debugBufferStrMap = {
-        "Normals (Shaded)",
-        "Normals (Geometric)",
-        "Base Color",
-        "Ray Direction",
-        "HitPos",
-        "First Bounce Direction",
-        "Miss / Hit",
-        "Hit Dist Ray 0",
-        "Hit Dist Ray 1",
-        "Material ID",
-        "RNG",
-        "RNG 2D",
-        "Self-Intersection",
-        "NaN",
-        "Albedo Alpha",
-        "Firefly Threshold Hit",
-        "Roughness",
-        "Metalness",
-        "Microfacet: Tangent",
-        "Microfacet: Binormal",
-        "Microfacet: View Vector (WS)",
-        "Microfacet: View Vector (SS)",
-        "Microfacet: Light Vector (SS)",
-        "Microfacet: Half Vector (SS)",
-        "Microfacet: Aniso Dir (AS)",
-        "Microfacet: Aniso Strength",
-        "Microfacet: Alpha",
-        "Microfacet: Aniso Alpha",
-        "Microfacet: Specular Probability",
-        "Microfacet: D",
-        "Microfacet: F",
-        "Microfacet: G",
-        "Microfacet: BRDF Diffuse",
-        "Microfacet: BRDF Specular",
-        "Microfacet: PDF Diffuse",
-        "Microfacet: PDF Specular",
-    };
-
-    m_shaderDirty |= ImGui::Checkbox("Info Output Enabled##xx", &m_studioConfig.PT.DebugInfoOutputEnabled);
-    if (m_studioConfig.PT.DebugInfoOutputEnabled)
-    {
-        ImGui::Indent(IM_GUI_INDENTATION);
-        const char* curSelection = c_debugBufferStrMap.at(static_cast<uint32_t>(m_studioConfig.PT.DebugInfoOutputMode));
-        if (ImGuiUtils::BeginComboWithTooltip("Info Output Mode##xx", curSelection))
-        {
-            for (size_t i = 0; i < c_debugBufferStrMap.size(); i++)
-            {
-                const bool isSelected = static_cast<uint32_t>(m_studioConfig.PT.DebugInfoOutputMode) == i;
-                if (ImGui::Selectable(c_debugBufferStrMap.at(i), isSelected))
-                {
-                    m_studioConfig.PT.DebugInfoOutputMode = static_cast<DebugInfoOutput>(i);
-                    m_pathTracerDirty = true;
-                }
-
-                if (isSelected)
-                    ImGui::SetItemDefaultFocus();
-            }
-
-            ImGui::EndCombo();
-        }
-        ImGui::Unindent(IM_GUI_INDENTATION);
-    }
-
-    if (ImGui::Checkbox("Force Specular", &m_studioConfig.PT.DebugForceSpecular))
-    {
-        m_studioConfig.PT.DebugForceDiffuse = false;
-        m_shaderDirty = true;
-    }
-    if (ImGui::Checkbox("Force Diffuse", &m_studioConfig.PT.DebugForceDiffuse))
-    {
-        m_studioConfig.PT.DebugForceSpecular = false;
-        m_shaderDirty = true;
-    }
-
-    if (ImGui::Checkbox("Furnace Test (HDR)", &m_studioConfig.PT.FurnaceTestHdReflect))
-    {
-        m_studioConfig.PT.FurnaceTestHhEmit = false;
-        m_shaderDirty = true;
-    }
-    if (ImGui::Checkbox("Furnace Test (HHE)", &m_studioConfig.PT.FurnaceTestHhEmit))
-    {
-        m_studioConfig.PT.FurnaceTestHdReflect = false;
-        m_shaderDirty = true;
-    }
-#endif
 }
 
 void SceneStudio::guiRaster()
@@ -473,13 +245,6 @@ void SceneStudio::guiMain()
             {
                 m_studioConfig.EnvMapRotation = cachedRotation;
                 m_shaderDirty = true;
-            }
-
-            if (m_studioConfig.Backend == ePathTracer || m_studioConfig.Backend == eSpectralTracer)
-            {
-                const bool envMapEAChanged = ImGui::Checkbox("Equal-Area Map##xx", &m_studioConfig.PT.EnvMapIsEqualArea);
-                m_sceneDirty |= envMapEAChanged;
-                m_shaderDirty |= envMapEAChanged;
             }
 
             const auto currMap = wstringToString(m_envMapList.at(m_selectedEnvMapIdx));

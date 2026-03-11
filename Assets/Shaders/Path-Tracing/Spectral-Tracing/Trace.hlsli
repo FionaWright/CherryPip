@@ -2,6 +2,7 @@
 #define H_TRACE_H
 
 #include "Path-Tracing/Spectral-Tracing/Hit.hlsli"
+#include "Path-Tracing/Spectral-Tracing/Miss.hlsli"
 #include "Path-Tracing/Spectral-Tracing/SpectrumToRGB2019.hlsli"
 #include "MathUtils.hlsli"
 
@@ -22,8 +23,12 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
         if (q.CommittedStatus() != COMMITTED_TRIANGLE_HIT)
         {
-            //Spectrum L_sample = throughput * Miss(ray.Origin, ray.Direction, i);
-            //Lo += L_sample;
+            SpectralValue L_sample = Mul(throughput, Miss(ray.Origin, ray.Direction, i, lambda));
+#ifdef SINGLE_LAMBDA_RENDERING
+            Lo += L_sample;
+#else
+            Lo.Add(L_sample);
+#endif
             break;
         }
 

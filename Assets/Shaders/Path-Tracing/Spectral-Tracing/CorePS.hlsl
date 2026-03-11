@@ -65,6 +65,13 @@ float4 PSMain(VsOut input) : SV_Target0
         rngInfo.IndependentRngState = PrngSeed((uint2)input.position.xy, rngInfo.SampleIdx, cbvPathTracing.FrameIdx);
 
         float2 pixelUV = input.position.xy;
+        if (cJitterEnabled)
+        {
+            float rJitterX = Rand01(DIM_JITTER_X, rngInfo);
+            float rJitterY = Rand01(DIM_JITTER_Y, rngInfo);
+            float2 jitter = float2(rJitterX, rJitterY) - 0.5f;
+            pixelUV += jitter;
+        }
         pixelUV *= cbvPathTracing.TexelSize;
 
         float2 ndc = pixelUV * 2.0f - 1.0f; // [0,1] -> [-1,1]
@@ -74,6 +81,21 @@ float4 PSMain(VsOut input) : SV_Target0
         view /= view.w;
         float4 world = mul(cbvPathTracing.InvV, view);
         ray.Direction = normalize(world.xyz - origin);
+
+        if (cDofEnabled)
+        {
+            float3 camRight = normalize(float3(cbvPathTracing.InvV[0][0], cbvPathTracing.InvV[1][0], cbvPathTracing.InvV[2][0]));
+            float3 camUp = normalize(float3(cbvPathTracing.InvV[0][1], cbvPathTracing.InvV[1][1], cbvPathTracing.InvV[2][1]));
+            float3 focalPoint = origin + normalize(ray.Direction) * cbvPathTracing.DofFocalDist;
+
+            float rLensU = Rand01(DIM_LENS_U, rngInfo);
+            float rLensV = Rand01(DIM_LENS_V, rngInfo);
+            float r = sqrt(rLensU) * cbvPathTracing.DofLensRadius;
+            float theta = 2.0 * PI * rLensV;
+            float3 lensOffset = r * (camRight * cos(theta) + camUp * sin(theta));
+            ray.Origin = origin + lensOffset;
+            ray.Direction = normalize(focalPoint - ray.Origin);
+        }
 
         float lambda = SampleVisibleWavelength(rngInfo.IndependentRngState);
 

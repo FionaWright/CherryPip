@@ -14,6 +14,11 @@
 struct DirLightConfig;
 class D3D;
 
+struct SpectralConfig
+{
+    bool SingleLambdaRendering = true; // Turn to enum when I introduce hero sampling
+};
+
 class PathTracer
 {
 public:
@@ -27,7 +32,7 @@ public:
                 const XMMATRIX& projMatrix, CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle, TextureRTV* rtvTex,
                 XMFLOAT2 mousePosOnClick, const DirLightConfig& dirLightConfig);
     void RenderLines(D3D* d3d, ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vpMatrix);
-    void RenderGUI(bool& outPtDirty, bool& outShaderDirty, bool& outSceneDirty, XMFLOAT2 mousePosOnClick);
+    void RenderGUI(bool& outPtDirty, bool& outShaderDirty, bool& outSceneDirty, XMFLOAT2 mousePosOnClick, bool isSpectral);
 
     ReadbackManager* GetReadbackManager() { return &m_readbackManager; }
     PtConfig& GetConfig() { return m_config; }
@@ -45,6 +50,7 @@ private:
     std::shared_ptr<RootSig> m_rootSig;
 
     PtConfig m_config = {};
+    SpectralConfig m_spectralConfig = {};
 
 #ifdef _DEBUG
     PathVisualizer m_pathVisualizer;

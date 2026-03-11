@@ -4,6 +4,8 @@
 #define NAN 0.0f/0.0f;
 
 // https://sakibsaikia.github.io/graphics/2022/01/04/Nan-Checks-In-HLSL.html
+
+// WARNING: This may be giving false positives? See mul(cMatXyzToRgb, float3(0.04491435,4.6650298,2.231335))
 bool IsNaN(float x)
 {
     return (int(x) & 0x7fffffff) > 0x7f800000;
@@ -12,6 +14,26 @@ bool IsNaN(float x)
 bool IsNaN3(float3 x)
 {
     return IsNaN(x.x) || IsNaN(x.y) || IsNaN(x.z);
+}
+
+bool IsInf(float x)
+{
+    return (int(x) & 0x7fffffff) == 0x7f800000;
+}
+
+bool IsInf3(float3 x)
+{
+    return IsInf(x.x) || IsInf(x.y) || IsInf(x.z);
+}
+
+float3 DebugInfoColor(float x)
+{
+    return IsInf(x) ? float3(0, 1, 1) : (IsNaN(x) ? float3(1, 0, 1) : x.xxx);
+}
+
+float3 DebugInfoColor(float3 x)
+{
+    return IsInf3(x) ? float3(0, 1, 1) : (IsNaN3(x) ? float3(1, 0, 1) : x);
 }
 
 float3 NormalizeSafe(float3 v, float3 fallback)

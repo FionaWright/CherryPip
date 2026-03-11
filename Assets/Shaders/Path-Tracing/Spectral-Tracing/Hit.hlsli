@@ -3,11 +3,12 @@
 
 #include "MathUtils.hlsli"
 
-void Hit(inout RayQuery<RAY_FLAGS> q,
-        out Spectrum albedo,
+void Hit(inout RayQuery<RAY_FLAGS> q, // TODO: Why inout?
+        float lambda,
+        out SpectralValue albedo,
         out float3 Ng,
         out float3 Ns,
-        out Spectrum Li,
+        out SpectralValue Li,
         out PtMaterialData mat,
         out float2 uv)
 {
@@ -47,11 +48,19 @@ void Hit(inout RayQuery<RAY_FLAGS> q,
     float4 albedoSRGB = gTextures[mat.TexIdxAlbedo].Sample(gSampler, uv);
     float3 albedoRGB = pow(albedoSRGB.xyz, 2.2f); // TODO: WRONG
     albedoRGB *= mat.BaseColorFactor;
+#ifdef SINGLE_LAMBDA_RENDERING
+    albedo = RgbToSpectrumSample(albedoRGB, eReflectance, lambda);
+#else
     albedo.InitFromRGB(albedoRGB, eReflectance);
+#endif
 
     float3 emissionSample = gTextures[mat.TexIdxEmissive].Sample(gSampler, uv).rgb;
     float3 emissionRGB = mat.EmissiveStrength * mat.EmissiveColor * emissionSample;
+#ifdef SINGLE_LAMBDA_RENDERING
+    Li = RgbToSpectrumSample(emissionRGB, eIlluminant, lambda);
+#else
     Li.InitFromRGB(emissionRGB, eIlluminant);
+#endif
 }
 
 #endif

@@ -6,6 +6,7 @@
 #include "Path-Tracing/MacroConstants.hlsli"
 
 #include "Path-Tracing/Spectral-Tracing/Spectrum.hlsli"
+#include "Path-Tracing/Spectral-Tracing/SpectralValue.hlsli"
 #include "Path-Tracing/Spectral-Tracing/ColorSpectrums.hlsli"
 #include "Path-Tracing/Spectral-Tracing/SpectralUtils.hlsli"
 #include "Path-Tracing/Spectral-Tracing/RgbToSpectrum2019.hlsli"
@@ -21,7 +22,6 @@ struct VsOut
 
 ConstantBuffer<CbvPathTracing> cbvPathTracing : register(b0);
 ConstantBuffer<CbvPathTracingDebug> cbvDebug : register(b1);
-ConstantBuffer<CbvSpectralData> cbvSpectralData : register(b2);
 
 RaytracingAccelerationStructure gTLAS : register(t0);
 StructuredBuffer<PtInstanceData> gInstances : register(t1);
@@ -40,8 +40,7 @@ SamplerState gSampler : register(s0);
 
 float4 PSMain(VsOut input) : SV_Target0
 {
-
-#include "Path-Tracing/Spectral-Tracing/Tests.hlsli"
+//#include "Path-Tracing/Spectral-Tracing/Tests.hlsli"
 
     RayQuery<RAY_FLAGS> q;
 
@@ -57,10 +56,11 @@ float4 PSMain(VsOut input) : SV_Target0
     ray.TMin = 0.001;
     ray.TMax = 1000.0;
 
+    RngInfo rngInfo;
+
     float3 colorSum = float3(0,0,0);
     for (uint i = 0; i < cbvPathTracing.SPP; i++)
     {
-        RngInfo rngInfo;
         rngInfo.SampleIdx = i;
         rngInfo.IndependentRngState = PrngSeed((uint2)input.position.xy, rngInfo.SampleIdx, cbvPathTracing.FrameIdx);
 
@@ -75,13 +75,13 @@ float4 PSMain(VsOut input) : SV_Target0
         float4 world = mul(cbvPathTracing.InvV, view);
         ray.Direction = normalize(world.xyz - origin);
 
-        // TODO:
-        //float lambda = SampleVisibleWavelength(rngInfo.IndependentRngState);
+        float lambda = SampleVisibleWavelength(rngInfo.IndependentRngState);
 
         colorSum += Trace(q,
                           flags,
                           instanceMask,
                           ray,
+                          lambda,
                           rngInfo);
     }
 
@@ -93,8 +93,9 @@ float4 PSMain(VsOut input) : SV_Target0
     uint2 pixelCoord = uint2(input.position.xy);
 
     float3 accumColor = gAccum.Load(pixelCoord).rgb;
-    if (IsNaN3(accumColor))
-        return float4(1, 0, 1, 1);
+    if (IsNaN3(accumColor) && false) // Disabled due to false positives
+        //return float4(1, 0, 1, 1);
+        return float4(PcgRand01(rngInfo.IndependentRngState), PcgRand01(rngInfo.IndependentRngState), PcgRand01(rngInfo.IndependentRngState), 1);
 
     float3 newSum = accumColor + colorSum;
 

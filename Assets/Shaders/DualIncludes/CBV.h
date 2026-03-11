@@ -197,15 +197,4 @@ struct CbvMaxLumRedSearch
     float2 p;
 };
 
-#define MAX_SPECTRUM_NUM_SAMPLES 64
-struct CbvSpectralData
-{
-    // Values filled in [0, SPECTRUM_NUM_SAMPLES]
-    // Downsampled from large tables
-    float3 CIE_XYZBar[MAX_SPECTRUM_NUM_SAMPLES];
-    float WhiteD65StandardIlluminant[MAX_SPECTRUM_NUM_SAMPLES];
-
-    float3 CIE_BT709_Basis[MAX_SPECTRUM_NUM_SAMPLES];
-};
-
 #endif

@@ -50,7 +50,6 @@ Suspicious of multiplication between spectra being simple component-wise but...i
 
 ## The Cleanup Zone:
 
-- Preprocess all spectral data tables into `NUM_SPECTRAL_SAMPLES` Spectrums and pass them by CBV (Leave option for hardcoded!!! Easier debugging)
 - Figure out how to use one wavelength per ray instead of the entire spectrum
 - Fix gamma correction conversions, see Mallet 
 

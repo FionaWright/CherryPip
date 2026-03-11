@@ -52,19 +52,24 @@ struct DenoisingConfig
     float ATrousPhiP = 1.0f; // Tune this second
 };
 
+struct DirLightConfig
+{
+    bool DirLightDebugLineEnabled = false;
+    float DirLightIntensity = 1.0f;
+    XMFLOAT3 DirLightDirection = XMFLOAT3(1, -1, 1);
+    XMFLOAT3 DirLightColor = XMFLOAT3(1, 1, 1);
+};
+
 struct StudioConfig
 {
     RenderBackend Backend = ePathTracer;
     RasterConfig Raster = {};
     DenoisingConfig Denoising = {};
+    DirLightConfig DirLight = {};
 
     bool EnvMapEnabled = true;
     bool DebugLinesEnabled = false;
-    bool DirLightDebugLineEnabled = false;
     float EnvMapRotation = 0.0f;
-    float DirLightIntensity = 1.0f;
-    XMFLOAT3 DirLightDirection = XMFLOAT3(1, -1, 1);
-    XMFLOAT3 DirLightColor = XMFLOAT3(1, 1, 1);
 };
 
 struct SceneConfig
@@ -98,12 +103,10 @@ private:
     void initCustomScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     bool GBufferPassNeededForDenoiser() const;
     TextureRTV* denoisingPass(const D3D* d3d, ID3D12GraphicsCommandList* cmdList);
-    void renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void renderForward(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void renderDeferred(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void ResetCameraToSceneStart();
 
-    void guiPathTracer();
     void guiRaster();
     void guiMain();
     void guiScene();

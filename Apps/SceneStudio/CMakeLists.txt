@@ -1,10 +1,13 @@
 set(PROJECT_SOURCES
         src/SceneStudio.cpp
         src/SceneStudio_GUI.cpp
+        src/PathTracer.cpp
+        src/PathTracer_GUI.cpp
 )
 
 set(PROJECT_HEADERS
         Headers/SceneStudio.h
+        Headers/PathTracer.h
 )
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_CONFIGURATION_TYPES MATCHES "Debug")

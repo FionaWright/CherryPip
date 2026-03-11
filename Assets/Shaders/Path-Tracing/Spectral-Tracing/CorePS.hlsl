@@ -1,6 +1,6 @@
 #include "CBV.h"
 #include "PtBuffers.h"
-#include "DebugPalette.hlsli"
+//#include "DebugPalette.hlsli"
 #include "DebugWindow.hlsli"
 #include "MathUtils.hlsli"
 #include "Path-Tracing/MacroConstants.hlsli"
@@ -23,8 +23,6 @@ ConstantBuffer<CbvPathTracing> cbvPathTracing : register(b0);
 ConstantBuffer<CbvPathTracingDebug> cbvDebug : register(b1);
 ConstantBuffer<CbvSpectralData> cbvSpectralData : register(b2);
 
-#include "Random.h"
-
 RaytracingAccelerationStructure gTLAS : register(t0);
 StructuredBuffer<PtInstanceData> gInstances : register(t1);
 StructuredBuffer<Vertex> gVertexMegaBuffer : register(t2);
@@ -37,12 +35,13 @@ RWTexture2D<float4> gAccum : register(u0);
 
 SamplerState gSampler : register(s0);
 
+#include "Random.h"
 #include "Path-Tracing/Spectral-Tracing/Trace.hlsli"
 
 float4 PSMain(VsOut input) : SV_Target0
 {
 
-//#include "Path-Tracing/Spectral-Tracing/Tests.hlsli"
+#include "Path-Tracing/Spectral-Tracing/Tests.hlsli"
 
     RayQuery<RAY_FLAGS> q;
 

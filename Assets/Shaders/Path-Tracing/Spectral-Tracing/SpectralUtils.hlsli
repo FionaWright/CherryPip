@@ -142,6 +142,7 @@ float PlanksLaw(float lambda, float temp)
 	return value * 1.0e-9f; // m -> km
 }
 
+[noinline] // Prevent inlining as it would otherwise explode compile time
 float3 RoundTripTest(float3 lrgb)
 {
     Spectrum s;

@@ -35,7 +35,7 @@ void SceneStudio::RenderGUI()
 
         if (ImGui::BeginTabItem("Path-Tracer"))
         {
-            m_pathTracer(m_pathTracerDirty, m_shaderDirty, m_sceneDirty);
+            m_pathTracer.RenderGUI(m_pathTracerDirty, m_shaderDirty, m_sceneDirty, m_mousePosOnClick);
             ImGui::EndTabItem();
         }
 
@@ -67,9 +67,9 @@ void SceneStudio::RenderGUI()
 
 #ifdef _DEBUG
     if (m_pathTracerDirty && m_pathTracer.GetConfig().ReadbackEveryFrame)
-        m_pathTracer.GetReadbackManager->SetInReadbackProcess(true);
+        m_pathTracer.GetReadbackManager()->SetInReadbackProcess(true);
     else if (!m_pathTracer.GetConfig().ReadbackEveryFrame)
-        m_pathTracer.GetReadbackManager->SetInReadbackProcess(false);
+        m_pathTracer.GetReadbackManager()->SetInReadbackProcess(false);
 #endif
 
     if (m_pathTracerDirty)
@@ -210,9 +210,9 @@ void SceneStudio::guiMain()
     ImGui::Indent(IM_GUI_INDENTATION);
     {
         bool changedDirLight = false;
-        changedDirLight |= ImGuiUtils::FwInputFloat3("Direction##xx", reinterpret_cast<float*>(&m_studioConfig.DirLightDirection));
-        changedDirLight |= ImGuiUtils::FwColorEdit3("Colour##xx", reinterpret_cast<float*>(&m_studioConfig.DirLightColor));
-        changedDirLight |= ImGuiUtils::FwInputFloat("Intensity##xx", &m_studioConfig.DirLightIntensity);
+        changedDirLight |= ImGuiUtils::FwInputFloat3("Direction##xx", reinterpret_cast<float*>(&m_studioConfig.DirLight.DirLightDirection));
+        changedDirLight |= ImGuiUtils::FwColorEdit3("Colour##xx", reinterpret_cast<float*>(&m_studioConfig.DirLight.DirLightColor));
+        changedDirLight |= ImGuiUtils::FwInputFloat("Intensity##xx", &m_studioConfig.DirLight.DirLightIntensity);
         m_pathTracerDirty |= changedDirLight;
 #ifdef _DEBUG
         m_debugLinesDirty |= changedDirLight;
@@ -227,7 +227,7 @@ void SceneStudio::guiMain()
     m_pathTracerDirty |= ImGui::Checkbox("Enabled##xxxx", &m_studioConfig.DebugLinesEnabled);
     if (m_studioConfig.DebugLinesEnabled)
     {
-        m_pathTracerDirty |= ImGui::Checkbox("Dir Light##xxxx", &m_studioConfig.DirLightDebugLineEnabled);
+        m_pathTracerDirty |= ImGui::Checkbox("Dir Light##xxxx", &m_studioConfig.DirLight.DirLightDebugLineEnabled);
     }
 #endif
 
@@ -357,13 +357,13 @@ void SceneStudio::guiMain()
         if (ImGui::Button("Compute Golden"))
         {
             m_rmseTester.BeginComputeGolden(goldenMaxFrames, path);
-            m_ptContext.Reset();
+            m_pathTracer.Reset();
             ResetCameraToSceneStart();
         }
 
         if (m_rmseTester.IsRunningGolden())
         {
-            ImGui::SameLine(); ImGui::Text("Progress: %.2f/100%%", 100.0f * m_ptContext.GetFrameNum() / static_cast<float>(goldenMaxFrames));
+            ImGui::SameLine(); ImGui::Text("Progress: %.2f/100%%", 100.0f * m_pathTracer.GetContext().GetFrameNum() / static_cast<float>(goldenMaxFrames));
         }
 
         if (ImGui::Button("Load Golden Image"))
@@ -386,7 +386,7 @@ void SceneStudio::guiMain()
         if (ImGui::Button("Convergence Test"))
         {
             m_rmseTester.BeginConvergenceTest(convergenceMaxFrames, testName, frameInc, plotAndShow);
-            m_ptContext.Reset();
+            m_pathTracer.Reset();
             ResetCameraToSceneStart();
         }
 
@@ -496,12 +496,7 @@ void SceneStudio::guiScene()
     }
 
     if (m_sceneDirty)
-    {
-        m_ptContext.Reset();
-#ifdef _DEBUG
-        m_readbackManager.ClearReadbackData();
-#endif
-    }
+        m_pathTracer.Reset();
 }
 
 void SceneStudio::guiHeapDebug()

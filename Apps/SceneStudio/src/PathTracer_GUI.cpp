@@ -1,8 +1,11 @@
-#include "pch.h"
+#include "System/pch.h"
 
-#include "PathTracer.h"
+#include "Apps/SceneStudio/Headers/PathTracer.h"
+#include "System/ImGuiUtils.h"
 
-void PathTracer::RenderGUI(bool& outPtDirty, bool& outShaderDirty, bool& outSceneDirty)
+#define IM_GUI_INDENTATION 20 // Temp
+
+void PathTracer::RenderGUI(bool& outPtDirty, bool& outShaderDirty, bool& outSceneDirty, XMFLOAT2 mousePosOnClick)
 {    
     ImGui::SeparatorText("Stats##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
@@ -132,7 +135,7 @@ void PathTracer::RenderGUI(bool& outPtDirty, bool& outShaderDirty, bool& outScen
     {
         ImGui::Indent(IM_GUI_INDENTATION);
 
-        const bool validMousePos = m_mousePosOnClick.x != -1 && m_mousePosOnClick.y != -1;
+        const bool validMousePos = mousePosOnClick.x != -1 && mousePosOnClick.y != -1;
         if (validMousePos)
         {
             m_takePathVisualizationSnapshot |= ImGui::Button("Take Snapshot##xxx");

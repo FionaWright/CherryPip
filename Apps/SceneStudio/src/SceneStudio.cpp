@@ -34,11 +34,9 @@ void SceneStudio::OnInit(D3D* d3d)
 
     m_studioConfig.Backend = d3d->GetRayTracingSupported() ? RenderBackend::ePathTracer : RenderBackend::eForward;
     Config::SetUIntFromArg(reinterpret_cast<uint32_t*>(&m_studioConfig.Backend), "--backend");
-    Config::SetUIntFromArg(reinterpret_cast<uint32_t*>(&m_studioConfig.PT.LightingModel), "--lightingModel");
-    Config::SetUIntFromArg(&m_studioConfig.PT.SPP, "--spp");
     Config::SetBoolFromArg(&m_studioConfig.EnvMapEnabled, "--envMapEnabled");
-    Config::SetBoolFromArg(&m_studioConfig.PT.DirLightEnabled, "--dirLight");
-    Config::SetBoolFromArg(&m_studioConfig.PT.RussianRouletteEnabled, "--russianRoulette");
+
+    m_rmseTester.Init(d3d);
 
     loadAssets(d3d);
 }
@@ -99,10 +97,10 @@ void SceneStudio::OnUpdate(D3D* d3d, ID3D12GraphicsCommandList* cmdList, double 
         break;
     case ePathTracer:
     case eSpectralTracer:
-        m_pathTracer.Update(d3d, &m_heap, m_shaderDirty, m_studioConfig.Backend == eSpectralTracer);
+        m_pathTracer.Update(d3d, &m_heap, m_shaderDirty, m_studioConfig.Backend == eSpectralTracer, m_studioConfig.EnvMapEnabled);
         m_shaderDirty = false;
 
-        m_pathTracer.Render(d3d, cmdList);
+        renderPathTracer(d3d, cmdList);
         break;
     default:
         break;
@@ -129,6 +127,27 @@ void SceneStudio::OnPostUpdate(D3D* d3d)
     }
 
 #ifdef _DEBUG
+    if (m_rmseTester.NeedTakeSnapshot())
+    {
+        m_rmseTester.TakeSnapshot(d3d, m_rmseTesterSlot, m_finalRTV->GetD12Resource());
+    }
+    else if (m_rmseTester.NeedComputeRMSE())
+    {
+        m_rmseTester.ComputeRMSE(d3d, &m_heap);
+    }
+    else if (m_rmseTester.IsRunningGolden())
+    {
+        m_rmseTester.UpdateComputeGolden(d3d, m_pathTracer.GetContext().GetFrameNum(), m_finalRTV->GetD12Resource());
+    }
+    else if (m_rmseTester.NeedLoadGolden())
+    {
+        m_rmseTester.LoadGolden(d3d, m_rmseTesterSlot);
+    }
+    else if (m_rmseTester.IsRunningConvergence())
+    {
+        m_rmseTester.UpdateConvergenceTest(d3d, m_pathTracer.GetContext().GetFrameNum(), &m_heap, m_finalRTV->GetD12Resource());
+    }
+
     if (m_studioConfig.DebugLinesEnabled && m_debugLinesDirty)
     {
         const XMFLOAT3 start = Mult(m_studioConfig.DirLight.DirLightDirection, 1000.0f);
@@ -139,7 +158,7 @@ void SceneStudio::OnPostUpdate(D3D* d3d)
     }
 #endif
 
-    m_pathTracer.PostUpdate(d3d, &m_heap, m_finalRTV);
+    m_pathTracer.PostUpdate(d3d, &m_heap, m_shaderLine);
 }
 
 void SceneStudio::loadAssets(D3D* d3d)
@@ -373,6 +392,8 @@ void SceneStudio::loadAssets(D3D* d3d)
     m_rtvPingPong2.Init(L"Ping Pong 2", device, &m_heapRTV, Config::GetSystem().RtvWidth,
                         Config::GetSystem().RtvHeight,
                         Config::GetRender().RtvFormat);
+
+    m_pathTracer.Init(d3d, cmdList.Get(), &m_heap, &m_rtvPingPong1);
 
 #ifdef _DEBUG
     // Initialize Debug Lines
@@ -620,7 +641,7 @@ void SceneStudio::renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     const auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_heapRTV.GetCPUHandle(), rtvIdx,
                                                         m_heapRTV.GetIncrementSize());
 
-    m_pathTracer.Render(d3d, cmdList, &m_camera.GetCamera(), m_projMatrix, handle);
+    m_pathTracer.Render(d3d, cmdList, &m_heap, &m_camera.GetCamera(), m_projMatrix, handle, &m_rtvPingPong1, m_mousePosOnClick, m_studioConfig.DirLight);
 
     m_finalRTV = &m_rtvPingPong1;
 
@@ -716,9 +737,6 @@ void SceneStudio::renderForward(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
 
         if (m_studioConfig.DirLight.DirLightDebugLineEnabled)
             m_dirLightLine.Render(cmdList, vp);
-
-        for (int i = 0; i < m_pathVisualizationLines.size(); i++)
-            m_pathVisualizationLines[i]->Render(cmdList, vp);
     }
 #endif
 

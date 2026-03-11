@@ -1,28 +1,42 @@
 #ifndef H_PATH_TRACER_H
 #define H_PATH_TRACER_H
 
+#ifdef _DEBUG
+#include "ReadbackManager.h"
+#include "Debug/DebugLine.h"
+#include "Debug/PathVisualizer.h"
+#endif
+
+#include "Render/EnvMap.h"
+#include "Render/PathTracingContext.h"
+#include "Render/Scene.h"
+
+struct DirLightConfig;
 class D3D;
 
 class PathTracer
 {
 public:
-    void Init(D3D* d3d);
+    void Init(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, TextureRTV* rtvForReadback);
     void BuildScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList, EnvMap* envMap, Scene* scene, Heap* heap);
 
-    void Update(D3D* d3d);
-    void PostUpdate(D3D* d3d);
+    void Update(D3D* d3d, Heap* heap, bool shaderDirty, bool isSpectral, bool envMapEnabled);
+    void PostUpdate(D3D* d3d, Heap* heap, const std::shared_ptr<Shader>& shaderLine);
 
-    void Render(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
+    void Render(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, const Camera* camera,
+                const XMMATRIX& projMatrix, CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle, TextureRTV* rtvTex,
+                XMFLOAT2 mousePosOnClick, const DirLightConfig& dirLightConfig);
     void RenderLines(D3D* d3d, ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vpMatrix);
-    void RenderGUI();
+    void RenderGUI(bool& outPtDirty, bool& outShaderDirty, bool& outSceneDirty, XMFLOAT2 mousePosOnClick);
 
-    ReadbackManager* GetReadbackManager() const { return &m_readbackManager; }
-    PtConfig& GetConfig() const { return m_config; }
+    ReadbackManager* GetReadbackManager() { return &m_readbackManager; }
+    PtConfig& GetConfig() { return m_config; }
+    PathTracingContext& GetContext() { return m_ptContext; }
 
     void Reset();
 
 private:
-    void compilePtShader(const D3D* d3d, bool isSpectral);
+    void compilePtShader(const D3D* d3d, bool isSpectral, bool envMapEnabled);
 
     PathTracingContext m_ptContext;
 
@@ -39,9 +53,7 @@ private:
     std::vector<std::shared_ptr<DebugLine>> m_pathVisualizationLines;
 
     ReadbackManager m_readbackManager;
-    RmseTester m_rmseTester;
-    uint32_t m_rmseTesterSlot = 0;
 #endif
-}
+};
 
 #endif

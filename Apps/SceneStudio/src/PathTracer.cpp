@@ -1,10 +1,19 @@
-#include "pch.h"
+#include "System/pch.h"
 
-#include "PathTracer.h"
+#include "Apps/SceneStudio/Headers/PathTracer.h"
+
+#include "Helper.h"
+#include "Apps/SceneStudio/Headers/SceneStudio.h"
 #include "HWI/D3D.h"
+#include "Render/TextureRTV.h"
 
 void PathTracer::Init(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, TextureRTV* rtvForReadback)
 {
+    Config::SetUIntFromArg(&m_config.SPP, "--spp");
+    Config::SetBoolFromArg(&m_config.DirLightEnabled, "--dirLight");
+    Config::SetBoolFromArg(&m_config.RussianRouletteEnabled, "--russianRoulette");
+    Config::SetUIntFromArg(reinterpret_cast<uint32_t*>(&m_config.LightingModel), "--lightingModel");
+
     m_shader = std::make_shared<Shader>();
 
     ID3D12Device* device = d3d->GetDevice();
@@ -27,7 +36,6 @@ void PathTracer::Init(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, 
     m_pathVisualizer.Init(d3d, cmdList, 200);
 
     m_readbackManager.Init(d3d, heap, rtvForReadback);
-    m_rmseTester.Init(d3d);
 #endif
 }
 
@@ -35,44 +43,24 @@ void PathTracer::BuildScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList, EnvMap
 {
     if (d3d->GetRayTracingSupported())
     {
-        D12Resource* envMap = m_config.EnvMapIsEqualArea ? envMap->GetEA() : envMap->GetPano();
-        m_ptContext.BuildScene(d3d->GetDevice(), cmdList, scene, heap, envMap);
+        D12Resource* envMapResource = m_config.EnvMapIsEqualArea ? envMap->GetEA() : envMap->GetPano();
+        m_ptContext.BuildScene(d3d->GetDevice(), cmdList, scene, heap, envMapResource);
     }
 }
 
-void PathTracer::Update(D3D* d3d, Heap* heap, bool shaderDirty, bool isSpectral)
+void PathTracer::Update(D3D* d3d, Heap* heap, bool shaderDirty, bool isSpectral, bool envMapEnabled)
 {
     if (shaderDirty)
-        compilePtShader(d3d);
+        compilePtShader(d3d, isSpectral, envMapEnabled);
 
     if (m_config.DebugPathVisualization)
-        m_ptContext.SetMaterialPathVisualizationBuffer(d3d->GetDevice(), heap, m_pathVisualizer.GetStructuredBuffer(), m_pathVisualizer.GetNumElements());
+        m_ptContext.SetMaterialPathVisualizationBuffer(d3d->GetDevice(), heap, m_pathVisualizer.GetStructuredBuffer(),
+                                                       m_pathVisualizer.GetNumElements());
 }
 
-void PathTracer::PostUpdate(D3D* d3d, Heap* heap, TextureRTV* rtv)
+void PathTracer::PostUpdate(D3D* d3d, Heap* heap,  const std::shared_ptr<Shader>& shaderLine)
 {
 #ifdef _DEBUG
-    if (m_rmseTester.NeedTakeSnapshot())
-    {
-        m_rmseTester.TakeSnapshot(d3d, m_rmseTesterSlot, rtv->GetD12Resource());
-    }
-    else if (m_rmseTester.NeedComputeRMSE())
-    {
-        m_rmseTester.ComputeRMSE(d3d, heap);
-    }
-    else if (m_rmseTester.IsRunningGolden())
-    {
-        m_rmseTester.UpdateComputeGolden(d3d, m_ptContext.GetFrameNum(), rtv->GetD12Resource());
-    }
-    else if (m_rmseTester.NeedLoadGolden())
-    {
-        m_rmseTester.LoadGolden(d3d, m_rmseTesterSlot);
-    }
-    else if (m_rmseTester.IsRunningConvergence())
-    {
-        m_rmseTester.UpdateConvergenceTest(d3d, m_ptContext.GetFrameNum(), heap, rtv->GetD12Resource());
-    }
-
     if (m_completedPathVisualizationSnapshot)
     {
         const auto data = m_pathVisualizer.ReadbackData(d3d);
@@ -83,13 +71,13 @@ void PathTracer::PostUpdate(D3D* d3d, Heap* heap, TextureRTV* rtv)
             for (int j = 0; j < data[i].NumPositionsSet - 1; j++)
             {
                 const XMFLOAT3 start = data[i].WorldSpacePositionAtBounce[j];
-                const XMFLOAT3 end = data[i].WorldSpacePositionAtBounce[j+1];
+                const XMFLOAT3 end = data[i].WorldSpacePositionAtBounce[j + 1];
 
                 const float bounceT = j / static_cast<float>(m_config.NumBounces);
                 const XMFLOAT3 color = XMFLOAT3(1.0f - bounceT, bounceT, 0);
 
                 auto line = std::make_shared<DebugLine>();
-                line->Init(d3d, &m_heap, m_shaderLine);
+                line->Init(d3d, heap, shaderLine);
                 line->Update(d3d, &start, &end, &color);
                 m_pathVisualizationLines.emplace_back(line);
             }
@@ -100,7 +88,9 @@ void PathTracer::PostUpdate(D3D* d3d, Heap* heap, TextureRTV* rtv)
 #endif
 }
 
-void PathTracer::Render(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, Camera* camera, const XMMATRIX& projMatrix, CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle, TextureRTV* rtvTex, XMFLOAT2 mousePosOnClick, const DirLightConfig& dirLightConfig)
+void PathTracer::Render(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap, const Camera* camera,
+                        const XMMATRIX& projMatrix, CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle, TextureRTV* rtvTex,
+                        XMFLOAT2 mousePosOnClick, const DirLightConfig& dirLightConfig)
 {
     if (!d3d->GetRayTracingSupported())
     {
@@ -119,7 +109,6 @@ void PathTracer::Render(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap
 
     // Main Pass (Into PP1)
     {
-        
         cmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
         const int debugBufferIdx = m_config.DebugInfoOutputEnabled
@@ -127,13 +116,14 @@ void PathTracer::Render(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap
                                        : -1;
 
         m_ptContext.Render(cmdList, m_rootSig->Get(), m_shader->GetPSO(),
-                            camera, heap, projMatrix,
+                           camera, heap, projMatrix,
                            m_config,
-                           dirLightConfig.DirLightIntensity, dirLightConfig.DirLightColor, dirLightConfig.DirLightDirection
+                           dirLightConfig.DirLightIntensity, dirLightConfig.DirLightColor,
+                           dirLightConfig.DirLightDirection
 #ifdef _DEBUG
                            , debugBufferIdx, m_takePathVisualizationSnapshot, mousePosOnClick
 #endif
-                           );
+        );
     }
 
 #ifdef _DEBUG
@@ -154,7 +144,7 @@ void PathTracer::Render(D3D* d3d, ID3D12GraphicsCommandList* cmdList, Heap* heap
 #endif
 }
 
-void RenderLines(D3D* d3d, ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vpMatrix)
+void PathTracer::RenderLines(D3D* d3d, ID3D12GraphicsCommandList* cmdList, const XMMATRIX& vpMatrix)
 {
     for (int i = 0; i < m_pathVisualizationLines.size(); i++)
         m_pathVisualizationLines[i]->Render(cmdList, vpMatrix);
@@ -168,7 +158,7 @@ void PathTracer::Reset()
 #endif
 }
 
-void PathTracer::compilePtShader(const D3D* d3d, bool isSpectral)
+void PathTracer::compilePtShader(const D3D* d3d, bool isSpectral, bool envMapEnabled)
 {
     if (!d3d->GetRayTracingSupported())
         return;
@@ -183,7 +173,7 @@ void PathTracer::compilePtShader(const D3D* d3d, bool isSpectral)
     if (m_config.DebugForceDiffuse)
         args.push_back(L"-DDEBUG_FORCE_DIFFUSE");
 
-    if (m_studioConfig.EnvMapEnabled)
+    if (envMapEnabled)
         args.push_back(L"-DENV_MAP_ENABLED");
     if (m_config.EnvMapIsEqualArea)
         args.push_back(L"-DENV_MAP_EA");

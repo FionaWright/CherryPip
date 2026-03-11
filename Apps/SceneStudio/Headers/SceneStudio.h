@@ -2,8 +2,7 @@
 #define PT_SCENESTUDIO_H
 
 #include "CBV.h"
-#include "Debug/DebugLine.h"
-#include "Debug/PathVisualizer.h"
+#include "PathTracer.h"
 #include "System/App.h"
 #include "HWI/Heap.h"
 #include "HWI/RootSig.h"
@@ -20,7 +19,6 @@
 #include "Render/Transform.h"
 
 #ifdef _DEBUG
-#include "ReadbackManager.h"
 #include "Debug/RmseTester.h"
 #endif
 
@@ -103,6 +101,7 @@ private:
     void initCustomScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     bool GBufferPassNeededForDenoiser() const;
     TextureRTV* denoisingPass(const D3D* d3d, ID3D12GraphicsCommandList* cmdList);
+    void renderPathTracer(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void renderForward(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void renderDeferred(D3D* d3d, ID3D12GraphicsCommandList* cmdList);
     void ResetCameraToSceneStart();
@@ -117,13 +116,17 @@ private:
     Heap m_heap, m_heapRTV;
     CameraController m_camera;
 
+    RasterContext m_rasterContext;
+    std::shared_ptr<Shader> m_shaderRaster;
+    Texture m_texBrdfIntegrationMap;
+    DeferredContext m_deferredContext;
     std::shared_ptr<RootSig> m_rootSigRaster;
-
-    bool m_shaderDirty = true;
 
     std::vector<SceneConfig> m_sceneConfigs;
     std::vector<std::shared_ptr<Scene>> m_scenes;
     uint32_t m_currentScene = 0;
+
+    bool m_shaderDirty = true;
     bool m_sceneDirty = true;
     bool m_pathTracerDirty = false;
 
@@ -132,8 +135,6 @@ private:
     DenoisingManager m_denoisingManager;
     TextureRTV m_rtvPingPong1, m_rtvPingPong2;
 
-    DeferredContext m_deferredContext;
-
     EnvMap m_envMap;
     Skybox m_skybox;
     std::vector<const wchar_t*> m_envMapList;
@@ -141,15 +142,14 @@ private:
     bool m_envMapDirty = true;
     bool m_recomputeEnvMapDirLight = false;
 
-    RasterContext m_rasterContext;
-    std::shared_ptr<Shader> m_shaderRaster;
-    Texture m_texBrdfIntegrationMap;
-
 #ifdef _DEBUG
     RootSig m_rootSigLine;
     std::shared_ptr<Shader> m_shaderLine;
     DebugLine m_dirLightLine;
     bool m_debugLinesDirty = true;
+
+    RmseTester m_rmseTester;
+    uint32_t m_rmseTesterSlot = 0;
 #endif
 
     XMMATRIX m_projMatrix = {};

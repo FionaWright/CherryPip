@@ -21,6 +21,8 @@ struct Spectrum
 
     void InitFromRGB(float3 rgb, SpectrumType type);
 
+    float Sample(float lambda);
+
     void Add(Spectrum spectrum);
     void Sub(Spectrum spectrum);
     void Mul(Spectrum spectrum);
@@ -47,6 +49,16 @@ void Spectrum::InitFromRGB(float3 rgb, SpectrumType type)
         ReflectanceRgbToSpectrum(rgb);
     else if (type == eIlluminant)
         IlluminantRgbToSpectrum(rgb);
+}
+
+float Spectrum::Sample(float lambda)
+{
+    float fIdx = (lambda - VISIBLE_LIGHT_SPECTRUM_MIN) / SPECTRUM_DELTA_LAMBDA;
+    fIdx = clamp(fIdx, 0, NUM_SPECTRUM_SAMPLES-1);
+    int i0 = (int)floor(fIdx);
+    int i1 = min(i0+1, NUM_SPECTRUM_SAMPLES-1);
+    float t = fIdx - i0;
+    return lerp(Samples[i0], Samples[i1], t);
 }
 
 void Spectrum::Add(Spectrum spectrum)

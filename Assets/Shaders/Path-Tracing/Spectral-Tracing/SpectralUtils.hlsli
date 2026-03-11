@@ -15,6 +15,7 @@ float LambdaToIndex(float lambda);
 float IndexToLambda(float idx);
 
 #include "Path-Tracing/Spectral-Tracing/Spectrum.hlsli"
+#include "Path-Tracing/Spectral-Tracing/RgbToSpectrum2019.hlsli"
 #include "Path-Tracing/Spectral-Tracing/SpectrumToRGB2019.hlsli"
 #include "Random.h"
 
@@ -39,18 +40,18 @@ float IndexToLambda(float idx)
 float SampleVisibleWavelength(inout float rngState)
 {
     // TODO: Importance Sampling? Halton?
-    return VISIBLE_LIGHT_SPECTRUM_MIN + PcgRand01(rngState) * VISIBLE_LIGHT_SPECTRUM_SIZE;
+    float u = min(PcgRand01(rngState), 0.999999f);
+    return lerp((float)VISIBLE_LIGHT_SPECTRUM_MIN, (float)VISIBLE_LIGHT_SPECTRUM_MAX, u);
 }
 
-float ExtractFromSpectrum(Spectrum spectrum, float wavelength)
+float RgbToSpectrumSample(float3 rgb, SpectrumType type, float lambda)
 {
-    float lambda01 = (wavelength - VISIBLE_LIGHT_SPECTRUM_MIN) / VISIBLE_LIGHT_SPECTRUM_SIZE;
-    float idx = lambda01 * (NUM_SPECTRUM_SAMPLES - 1);
-    uint floorIdx = floor(idx);
-    float lowerSample = spectrum.Samples[floorIdx];
-    float upperSample = spectrum.Samples[min(floorIdx+1, NUM_SPECTRUM_SAMPLES - 1)];
-    float t = idx - (float)floorIdx;
-    return lerp(lowerSample, upperSample, t);
+    if (type == eReflectance)
+        return ReflectanceRgbToSpectrumSample(rgb, lambda);
+    else if (type == eIlluminant)
+        return IlluminantRgbToSpectrumSample(rgb, lambda);
+
+    return -1;
 }
 
 float BlackbodyRadiance(float lambda, float temp)

@@ -226,6 +226,9 @@ void PathTracer::compilePtShader(const D3D* d3d, bool isSpectral, bool envMapEna
     if (m_config.DebugPathVisualization)
         args.push_back(L"-DDEBUG_PATH_VISUALIZATION");
 
+    if (m_spectralConfig.SingleLambdaRendering)
+        args.push_back(L"-DSINGLE_LAMBDA_RENDERING");
+
     if (m_config.LightingModel == PathTracerLightingModel::eMicrofacet)
     {
         static const std::vector<const WCHAR*> c_mapNdfType = {

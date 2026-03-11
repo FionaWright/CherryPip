@@ -35,7 +35,7 @@ void SceneStudio::RenderGUI()
 
         if (ImGui::BeginTabItem("Path-Tracer"))
         {
-            m_pathTracer.RenderGUI(m_pathTracerDirty, m_shaderDirty, m_sceneDirty, m_mousePosOnClick);
+            m_pathTracer.RenderGUI(m_pathTracerDirty, m_shaderDirty, m_sceneDirty, m_mousePosOnClick, m_studioConfig.Backend == eSpectralTracer);
             ImGui::EndTabItem();
         }
 

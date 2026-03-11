@@ -9,10 +9,11 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             uint flags,
             uint instanceMask,
             RayDesc ray,
+            float lambda,
             inout RngInfo rngInfo)
 {
-    Spectrum Lo = BlackSpectrum();
-    Spectrum throughput = WhiteSpectrum_E();
+    SpectralValue Lo = BlackSpectralValue();
+    SpectralValue throughput = WhiteSpectralValue();
 
     for (uint i = 0; i <= cbvPathTracing.NumBounces; i++)
     {
@@ -29,16 +30,16 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 		float3 hitPos = ray.Origin + ray.Direction * q.CommittedRayT();
 
         PtMaterialData mat;
-		Spectrum albedo;
-        Spectrum Li;
+		SpectralValue albedo;
+        SpectralValue Li;
         float3 Ng = -1, Ns = -1;
         float2 uv = -1;
-        Hit(q, albedo, Ng, Ns, Li, mat, uv);
+        Hit(q, lambda, albedo, Ng, Ns, Li, mat, uv);
 
         float3 wo = -ray.Direction;
         float3 wi;
 
-        Spectrum L_sample;
+        SpectralValue L_sample;
 
         //Model_LambertionDiffuse(rngInfo, throughput, Ns, Li, albedo.rgb, wi, L_sample);
         {
@@ -54,16 +55,29 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             // diffuseBrdf = albedo / PI
             // pdf = NdL / PI
             // throughput *= diffuseBrdf * NdL / pdf
+#ifdef SINGLE_LAMBDA_RENDERING // TODO: Make SpectralValue a struct with the same pattern as Spectrum maybe? Use polymorphism technique
+            throughput *= albedo;
+#else
             throughput.Mul(albedo); // Terms cancel out
+#endif
         }
 
+#ifdef SINGLE_LAMBDA_RENDERING
+        Lo += L_sample;
+#else
         Lo.Add(L_sample);
+#endif
 
         ray.Direction = wi;
         ray.Origin = hitPos + Ng * EPSILON * sign(dot(Ng, ray.Direction));
     }
 
+#ifdef SINGLE_LAMBDA_RENDERING
+    float pdf = 1.0f / (float)VISIBLE_LIGHT_SPECTRUM_SIZE; // Assuming uniform sampling
+    return SpectrumSampleToRGB(Lo, lambda, pdf);
+#else
     return SpectrumToRGB(Lo);
+#endif
 }
 
 #endif

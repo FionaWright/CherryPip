@@ -5,7 +5,7 @@
 
 #define IM_GUI_INDENTATION 20 // Temp
 
-void PathTracer::RenderGUI(bool& outPtDirty, bool& outShaderDirty, bool& outSceneDirty, XMFLOAT2 mousePosOnClick)
+void PathTracer::RenderGUI(bool& outPtDirty, bool& outShaderDirty, bool& outSceneDirty, XMFLOAT2 mousePosOnClick, bool isSpectral)
 {    
     ImGui::SeparatorText("Stats##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
@@ -17,6 +17,18 @@ void PathTracer::RenderGUI(bool& outPtDirty, bool& outShaderDirty, bool& outScen
     ImGui::Unindent(IM_GUI_INDENTATION);
     ImGui::SeparatorText("Settings##xx");
     ImGui::Indent(IM_GUI_INDENTATION);
+
+    if (isSpectral)
+    {
+        ImGui::Spacing();
+        ImGui::SeparatorText("Spectral Settings##xx");
+        ImGui::Indent(IM_GUI_INDENTATION);
+
+        outShaderDirty |= ImGui::Checkbox("Single Lambda Rendering", &m_spectralConfig.SingleLambdaRendering);
+
+        ImGui::Unindent(IM_GUI_INDENTATION);
+        ImGui::Spacing();
+    }
 
     outPtDirty |= ImGui::Checkbox("Accumulation Enabled##xx", &m_config.AccumulationEnabled);
     outShaderDirty |= ImGui::Checkbox("Jitter Enabled##xx", &m_config.JitterEnabled);

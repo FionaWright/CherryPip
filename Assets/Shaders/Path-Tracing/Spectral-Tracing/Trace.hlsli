@@ -57,7 +57,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             bool entering = q.CommittedTriangleFrontFace()!=0;
             Model_Glass_Spectral(rngInfo, throughput, mat.DiffuseProbability,
                     roughness, entering, q.CommittedRayT(), mat.IoR,
-                    mat.GlassSigmaA, Ns, Li, albedo, wo, wi, L_sample);
+                    mat.GlassSigmaA, Ns, Li, albedo, lambda, wo, wi, L_sample);
         }
         else
             Model_LambertionDiffuse_Spectral(rngInfo, throughput, Ns, Li, albedo, wi, L_sample);

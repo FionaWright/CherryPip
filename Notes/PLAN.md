@@ -46,7 +46,7 @@
 - [ ] BTDFs (VNDF whitepaper has some good stuff)
 - [ ] Sobel RNG Sampler
 - [ ] Ray pipelines
-- [ ] Spectral Path-Tracing 
+- [x] Spectral Path-Tracing 
 - [ ] Rayleigh scattering (Mist, See Seb Lague)
 - [ ] BSSDFs (Subsurface Scattering)
 - [ ] Water

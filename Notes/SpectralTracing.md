@@ -48,11 +48,6 @@ I'll need to specify a whitepoint as well as the primaries, this is determined b
 
 Suspicious of multiplication between spectra being simple component-wise but...idk?
 
-## The Cleanup Zone:
-
-- Improve SpectralValue system, remove all ifdefs
-- Fix gamma correction conversions, see Mallet 
-
 ## CIE XYZ Output:
 
 ![alt text](image-1.png)

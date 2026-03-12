@@ -10,6 +10,7 @@ void Model_Glass_Spectral(
     float3 Ns,
     SpectralValue Li,
     SpectralValue albedo,
+    float lambda,
     float3 wo,
     out float3 wi,
     out SpectralValue L_sample)
@@ -49,9 +50,18 @@ void Model_Glass_Spectral(
     bool reflect = rSpecProb <= res.reflectWeight;
     wi = reflect ? res.reflectDir : res.refractDir;
 
+#ifdef SINGLE_LAMBDA_RENDERING // TODO: Make SpectralValue a struct with the same pattern as Spectrum maybe? Use polymorphism technique
+    if (!reflect)
+        throughput *= albedo;
+#else
     if (!reflect)
         throughput.Mul(albedo);
+#endif
 
     L_sample = BlackSpectralValue();
+#ifdef SINGLE_LAMBDA_RENDERING // TODO: Make SpectralValue a struct with the same pattern as Spectrum maybe? Use polymorphism technique
+    throughput *= reflect ? res.reflectWeight : (1.0 - res.reflectWeight);
+#else
     throughput.Mul(reflect ? res.reflectWeight : (1.0 - res.reflectWeight));
+#endif
 }

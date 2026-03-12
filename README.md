@@ -4,7 +4,7 @@ by Fiona Wright
 
 ## Info
 
-D3D12 Graphics Engine with a focus on Path-Tracing using RayQuery.  
+D3D12 Graphics Engine with a focus on Path-Tracing / Spectral-Tracing using RayQuery.  
 Built for fun and to further my skills in the graphics programming field.  
 Trying to work on it when I have free time from college.  
 
@@ -68,8 +68,11 @@ C++, HLSL and Python are the main languages.
 - Click on a pixel to have all rays shot from that pixel next frame store their positions at each bounce
 - That data is then converted into coloured lines so you can follow the rays path
 
-### (WIP) Spectral Tracer Render Backend
-- Work in progress, currently doing research
+### Spectral Tracer Render Backend
+- CIE2006 + Mallet&Yuksel2019 spectral primary decomposition
+- Many different spectra tests
+- Zero round-trip error
+- Full spectrum or Wavelength-per-ray modes
 
 ## History 
 
@@ -102,6 +105,7 @@ Progress as of 21/02/26:
 
 Progress as of 11/03/26 (Spectral-tracing working!):
 <img width="1019" height="574" alt="image" src="https://github.com/user-attachments/assets/04f6d1d7-9451-4115-bd07-c17b5f6730f0" />
+
 
 
 

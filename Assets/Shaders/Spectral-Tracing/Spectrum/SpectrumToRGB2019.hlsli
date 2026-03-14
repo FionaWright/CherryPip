@@ -4,10 +4,9 @@
 float3 SpectrumToXYZ(Spectrum spectrum);
 float3 SpectrumToRGB(Spectrum spectrum);
 
-#include "Path-Tracing/Spectral-Tracing/Spectrum.hlsli"
-#include "Path-Tracing/Spectral-Tracing/SpectralUtils.hlsli"
-
-#include "Path-Tracing/Spectral-Tracing/SpectralData/CIE2006.hlsli"
+#include "Spectral-Tracing/Spectrum/Spectrum.hlsli"
+#include "Spectral-Tracing/Spectrum/SpectralUtils.hlsli"
+#include "Spectral-Tracing/SpectralData/CIE2006.hlsli"
 
 float3 SampleCIE(float lambda)
 {

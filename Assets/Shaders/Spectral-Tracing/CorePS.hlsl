@@ -4,12 +4,13 @@
 #include "DebugWindow.hlsli"
 #include "MathUtils.hlsli"
 #include "Path-Tracing/MacroConstants.hlsli"
+#include "Spectral-Tracing/MacroConstants.hlsli"
 
-#include "Path-Tracing/Spectral-Tracing/Spectrum.hlsli"
-#include "Path-Tracing/Spectral-Tracing/SpectralValue.hlsli"
-#include "Path-Tracing/Spectral-Tracing/ColorSpectrums.hlsli"
-#include "Path-Tracing/Spectral-Tracing/SpectralUtils.hlsli"
-#include "Path-Tracing/Spectral-Tracing/RgbToSpectrum2019.hlsli"
+#include "Spectral-Tracing/Spectrum/Spectrum.hlsli"
+#include "Spectral-Tracing/SpectralValue/SpectralValue.hlsli"
+#include "Spectral-Tracing/Spectrum/ColorSpectrums.hlsli"
+#include "Spectral-Tracing/Spectrum/SpectralUtils.hlsli"
+#include "Spectral-Tracing/Spectrum/RgbToSpectrum2019.hlsli"
 
 #define EPSILON 1e-2
 #define RAY_FLAGS RAY_FLAG_CULL_NON_OPAQUE|RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES
@@ -36,11 +37,11 @@ RWTexture2D<float4> gAccum : register(u0);
 SamplerState gSampler : register(s0);
 
 #include "Random.h"
-#include "Path-Tracing/Spectral-Tracing/Trace.hlsli"
+#include "Spectral-Tracing/Trace.hlsli"
 
 float4 PSMain(VsOut input) : SV_Target0
 {
-//#include "Path-Tracing/Spectral-Tracing/Tests.hlsli"
+//#include "Spectral-Tracing/Tests.hlsli"
 
     RayQuery<RAY_FLAGS> q;
 

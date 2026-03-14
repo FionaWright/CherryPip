@@ -21,11 +21,7 @@ void Model_LambertionDiffuse_Spectral(
         // diffuseBrdf = albedo / PI
         // pdf = NdL / PI
         // throughput *= diffuseBrdf * NdL / pdf
-#ifdef SINGLE_LAMBDA_RENDERING // TODO: Make SpectralValue a struct with the same pattern as Spectrum maybe? Use polymorphism technique
-        throughput *= albedo;
-#else
         throughput.Mul(albedo); // Terms cancel out
-#endif
         return;
     }
 
@@ -34,10 +30,5 @@ void Model_LambertionDiffuse_Spectral(
 
     SpectralValue diffuseBrdf = Div(albedo, PI);
     float pdf = 1.0f / (2.0f * PI);
-#ifdef SINGLE_LAMBDA_RENDERING // TODO: Make SpectralValue a struct with the same pattern as Spectrum maybe? Use polymorphism technique
-    throughput *= diffuseBrdf * NdL / max(0.001f, pdf);
-#else
-    diffuseBrdf.Mul(NdL / max(0.001f, pdf));
-    throughput.Mul(diffuseBrdf); // Terms cancel out
-#endif
+    throughput.Mul(Mul(diffuseBrdf, NdL / max(0.001f, pdf)));
 }

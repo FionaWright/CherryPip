@@ -1,0 +1,78 @@
+#ifndef H_SPECTRAL_VALUE_SPECTRUM_H
+#define H_SPECTRAL_VALUE_SPECTRUM_H
+
+#include "Spectral-Tracing/Spectrum/RgbToSpectrum2019.hlsli"
+#include "Spectral-Tracing/Spectrum/SpectrumToRGB2019.hlsli"
+
+struct SpectralValue
+{
+    void Init(Spectrum v);
+
+#include "Spectral-Tracing/SpectralValue/ISpectralValue.hlsli"
+
+    Spectrum Value;
+};
+
+SpectralValue CreateSpectralValue(Spectrum v)
+{
+    SpectralValue s;
+    s.Value = v;
+    return s;
+}
+
+SpectralValue CreateBlackSpectralValue()
+{
+    return CreateSpectralValue(BlackSpectrum());
+}
+
+SpectralValue CreateWhiteSpectralValue()
+{
+    return CreateSpectralValue(WhiteSpectrum_E());
+}
+
+void SpectralValue::Init(Spectrum v) { Value = v; }
+void SpectralValue::InitBlack() { Value = BlackSpectrum(); }
+void SpectralValue::InitWhite() { Value = WhiteSpectrum_E(); }
+
+void SpectralValue::FromRGB(float3 rgb, SpectrumType type, float _)
+{
+    Value.InitFromRGB(rgb, type);
+}
+
+void SpectralValue::AddRGB(float3 rgb, SpectrumType type, float _)
+{
+    Spectrum s;
+    s.InitFromRGB(rgb, type);
+    Value.Add(s);
+}
+
+float3 SpectralValue::ToRGB(float _)
+{
+    return SpectrumToRGB(Value);
+}
+
+void SpectralValue::Add(SpectralValue v) { Value.Add(v.Value); }
+void SpectralValue::Sub(SpectralValue v) { Value.Sub(v.Value); }
+void SpectralValue::Mul(SpectralValue v) { Value.Mul(v.Value); }
+void SpectralValue::Mul(float scalar) { Value.Mul(scalar); }
+void SpectralValue::Div(SpectralValue v) { Value.Div(v.Value); }
+void SpectralValue::Div(float scalar) { Value.Div(scalar); }
+
+void SpectralValue::Sqrt() { Value.Sqrt(); }
+void SpectralValue::Clamp(float lo, float hi) { Value.Clamp(lo, hi); }
+void SpectralValue::Normalize() { Value.Normalize(); }
+void SpectralValue::Exp() { Value.Exp(); }
+
+SpectralValue Add(SpectralValue a, SpectralValue b) { return CreateSpectralValue(Add(a.Value, b.Value)); }
+SpectralValue Sub(SpectralValue a, SpectralValue b) { return CreateSpectralValue(Sub(a.Value, b.Value)); }
+SpectralValue Mul(SpectralValue a, SpectralValue b) { return CreateSpectralValue(Mul(a.Value, b.Value)); }
+SpectralValue Mul(SpectralValue a, float scalar) { return CreateSpectralValue(Mul(a.Value, scalar)); }
+SpectralValue Div(SpectralValue a, SpectralValue b) { return CreateSpectralValue(Div(a.Value, b.Value)); }
+SpectralValue Div(SpectralValue a, float scalar) { return CreateSpectralValue(Div(a.Value, scalar)); }
+
+SpectralValue Clamp(SpectralValue a, float lo, float hi) { return CreateSpectralValue(Clamp(a.Value, lo, hi)); }
+SpectralValue Sqrt(SpectralValue a) { return CreateSpectralValue(Sqrt(a.Value)); }
+SpectralValue Normalize(SpectralValue a) { return CreateSpectralValue(Normalize(a.Value)); }
+SpectralValue Exp(SpectralValue a) { return CreateSpectralValue(Exp(a.Value)); }
+
+#endif

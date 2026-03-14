@@ -257,6 +257,6 @@ void PathTracer::compilePtShader(const D3D* d3d, bool isSpectral, bool envMapEna
     };
     const D3D12_INPUT_LAYOUT_DESC ild = {m_shaderILD.data(), static_cast<UINT>(m_shaderILD.size())};
 
-    const wchar_t* psName = isSpectral ? L"Path-Tracing/Spectral-Tracing/CorePS.hlsl" : L"Path-Tracing/CorePS.hlsl";
+    const wchar_t* psName = isSpectral ? L"Spectral-Tracing/CorePS.hlsl" : L"Path-Tracing/CorePS.hlsl";
     m_shader->InitVsPs(L"FullScreenTriangleVS.hlsl", psName, ild, d3d->GetDevice(), m_rootSig->Get(), false, args);
 }

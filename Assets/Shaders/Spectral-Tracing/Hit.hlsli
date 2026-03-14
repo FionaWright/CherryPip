@@ -48,19 +48,11 @@ void Hit(inout RayQuery<RAY_FLAGS> q, // TODO: Why inout?
     float4 albedoSRGB = gTextures[mat.TexIdxAlbedo].Sample(gSampler, uv);
     float3 albedoRGB = pow(albedoSRGB.xyz, 2.2f); // TODO: WRONG
     albedoRGB *= mat.BaseColorFactor;
-#ifdef SINGLE_LAMBDA_RENDERING
-    albedo = RgbToSpectrumSample(albedoRGB, eReflectance, lambda);
-#else
-    albedo.InitFromRGB(albedoRGB, eReflectance);
-#endif
+    albedo.FromRGB(albedoRGB, eReflectance, lambda);
 
     float3 emissionSample = gTextures[mat.TexIdxEmissive].Sample(gSampler, uv).rgb;
     float3 emissionRGB = mat.EmissiveStrength * mat.EmissiveColor * emissionSample;
-#ifdef SINGLE_LAMBDA_RENDERING
-    Li = RgbToSpectrumSample(emissionRGB, eIlluminant, lambda);
-#else
-    Li.InitFromRGB(emissionRGB, eIlluminant);
-#endif
+    Li.FromRGB(emissionRGB, eIlluminant, lambda);
 }
 
 #endif

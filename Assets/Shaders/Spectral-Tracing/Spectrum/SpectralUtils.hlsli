@@ -14,12 +14,11 @@
 float LambdaToIndex(float lambda);
 float IndexToLambda(float idx);
 
-#include "Path-Tracing/Spectral-Tracing/Spectrum.hlsli"
-#include "Path-Tracing/Spectral-Tracing/RgbToSpectrum2019.hlsli"
-#include "Path-Tracing/Spectral-Tracing/SpectrumToRGB2019.hlsli"
+#include "Spectral-Tracing/Spectrum/Spectrum.hlsli"
+#include "Spectral-Tracing/Spectrum/RgbToSpectrum2019.hlsli"
+#include "Spectral-Tracing/Spectrum/SpectrumToRGB2019.hlsli"
+#include "Spectral-Tracing/Spectrum/ColorSpectrums.hlsli"
 #include "Random.h"
-
-#include "Path-Tracing/Spectral-Tracing/ColorSpectrums.hlsli"
 
 #define CONSTANT_BOLTZMANN 1.38064852e-23f
 #define CONSTANT_PLANK 6.62607015e-34f

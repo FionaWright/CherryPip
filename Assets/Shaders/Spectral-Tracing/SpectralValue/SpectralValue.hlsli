@@ -23,8 +23,8 @@ SpectralValue Normalize(SpectralValue a);
 SpectralValue Exp(SpectralValue a);
 
 SpectralValue Lerp(SpectralValue a, SpectralValue b, float t);
-SpectralValue LerpToEnd(SpectralValue a, float end, float t);
-SpectralValue LerpFromStart(float start, SpectralValue a, float t);
+SpectralValue Lerp(SpectralValue a, float end, float t);
+SpectralValue Lerp(float start, SpectralValue a, float t);
 
 float Luminance(SpectralValue a, float lambda);
 

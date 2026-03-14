@@ -27,6 +27,11 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         {
             SpectralValue L_sample = Mul(throughput, Miss(ray.Origin, ray.Direction, i, lambda));
             Lo.Add(L_sample);
+
+#ifdef DEBUG_PT_INFO_OUTPUT
+#    include "Spectral-Tracing/Debug/DebugInfoOutputOnMiss.hlsli"
+#endif
+
             break;
         }
 
@@ -61,7 +66,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         }
         else if (cLightingModel == eMicrofacet)
         {
-            SpectralValue debug = CreateBlackSpectralValue();
+            float3 debug = 0;
             bool hasDebugOutput = false;
 
             float3 anisoDirAndStrength = 0;
@@ -70,8 +75,8 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             	metalness, Ns, Li, albedo, lambda, anisoDirAndStrength, wo, wi, L_sample,
                 debug, hasDebugOutput);
 
-            //if (cDebugInfoOutputEnabled && hasDebugOutput)
-            //    return debug;
+            if (cDebugInfoOutputEnabled && hasDebugOutput)
+                return debug;
         }
 
         // TODO:
@@ -82,6 +87,10 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
         ray.Direction = wi;
         ray.Origin = hitPos + Ng * EPSILON * sign(dot(Ng, ray.Direction));
+
+#ifdef DEBUG_PT_INFO_OUTPUT
+#    include "Spectral-Tracing/Debug/DebugInfoOutputOnHit.hlsli"
+#endif
     }
 
     return Lo.ToRGB(lambda);

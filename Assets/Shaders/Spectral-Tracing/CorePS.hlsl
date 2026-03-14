@@ -131,7 +131,7 @@ float4 PSMain(VsOut input) : SV_Target0
         gAccum[pixelCoord].rgb = average;
 
     if (cGammaCorrection)
-        average = pow(average, 1.0f/2.2f);
+        average = LRGB_to_SRGB(average);
 
     return float4(average, 1);
 }

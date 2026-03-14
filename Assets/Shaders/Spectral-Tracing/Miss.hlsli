@@ -6,11 +6,11 @@
 SpectralValue Miss(float3 origin, float3 direction, uint bounceIdx, float lambda)
 {
     if (cFurnaceTestHHE)
-        return BlackSpectralValue();
+        return CreateBlackSpectralValue();
     if (cFurnaceTestHDR)
-        return WhiteSpectralValue();
+        return CreateWhiteSpectralValue();
 
-    SpectralValue Li = BlackSpectralValue();
+    SpectralValue Li = CreateBlackSpectralValue();
 
     if (cEnvMapEnabled)
     {
@@ -21,11 +21,7 @@ SpectralValue Miss(float3 origin, float3 direction, uint bounceIdx, float lambda
             uv = PanoSphereToSquare(direction);
 
         float3 envMapSampleRGB = saturate(gEnvMap.Sample(gSampler, uv).rgb);
-#ifdef SINGLE_LAMBDA_RENDERING
-        Li += RgbToSpectrumSample(envMapSampleRGB, eIlluminant, lambda);
-#else
-        Li.InitFromRGB(envMapSampleRGB, eIlluminant);
-#endif
+        Li.FromRGB(envMapSampleRGB, eIlluminant, lambda);
     }
 
     if (cDirLightEnabled && bounceIdx >= 1)
@@ -39,13 +35,7 @@ SpectralValue Miss(float3 origin, float3 direction, uint bounceIdx, float lambda
         else
             return Li;
 
-#ifdef SINGLE_LAMBDA_RENDERING
-        Li += RgbToSpectrumSample(dirLightRGB, eIlluminant, lambda);
-#else
-        Spectrum spectrumDirLight;
-        spectrumDirLight.InitFromRGB(dirLightRGB, eIlluminant);
-        Li.Add(spectrumDirLight);
-#endif
+        Li.AddRGB(dirLightRGB, eIlluminant, lambda);
     }
 
     return Li;

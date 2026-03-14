@@ -18,18 +18,9 @@ void Model_Glass_Spectral(
     if (!entering)
     {
         SpectralValue sigmaASpectral;
-#ifdef SINGLE_LAMBDA_RENDERING
-        sigmaASpectral = RgbToSpectrumSample(sigmaA, eReflectance, lambda);
-#else
-        sigmaASpectral.InitFromRGB(sigmaA, eReflectance);
-#endif
-#ifdef SINGLE_LAMBDA_RENDERING // TODO: Make SpectralValue a struct with the same pattern as Spectrum maybe? Use polymorphism technique
-        throughput *= exp(-sigmaASpectral * hitDist);
-#else
+        sigmaASpectral.FromRGB(sigmaA, eReflectance, lambda);
         sigmaASpectral.Mul(-hitDist);
-        sigmaASpectral.Exp();
-        throughput.Mul(sigmaASpectral);
-#endif
+        throughput.Mul(Exp(sigmaASpectral));
     }
 
     float iorCurrent = entering ? IOR_AIR : ior;
@@ -50,18 +41,9 @@ void Model_Glass_Spectral(
     bool reflect = rSpecProb <= res.reflectWeight;
     wi = reflect ? res.reflectDir : res.refractDir;
 
-#ifdef SINGLE_LAMBDA_RENDERING // TODO: Make SpectralValue a struct with the same pattern as Spectrum maybe? Use polymorphism technique
-    if (!reflect)
-        throughput *= albedo;
-#else
     if (!reflect)
         throughput.Mul(albedo);
-#endif
 
-    L_sample = BlackSpectralValue();
-#ifdef SINGLE_LAMBDA_RENDERING // TODO: Make SpectralValue a struct with the same pattern as Spectrum maybe? Use polymorphism technique
-    throughput *= reflect ? res.reflectWeight : (1.0 - res.reflectWeight);
-#else
+    L_sample = CreateBlackSpectralValue();
     throughput.Mul(reflect ? res.reflectWeight : (1.0 - res.reflectWeight));
-#endif
 }

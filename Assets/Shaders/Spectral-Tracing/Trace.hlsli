@@ -1,9 +1,9 @@
 #ifndef H_TRACE_H
 #define H_TRACE_H
 
-#include "Path-Tracing/Spectral-Tracing/Hit.hlsli"
-#include "Path-Tracing/Spectral-Tracing/Miss.hlsli"
-#include "Path-Tracing/Spectral-Tracing/SpectrumToRGB2019.hlsli"
+#include "Spectral-Tracing/Hit.hlsli"
+#include "Spectral-Tracing/Miss.hlsli"
+#include "Spectral-Tracing/Spectrum/SpectrumToRGB2019.hlsli"
 #include "MathUtils.hlsli"
 
 #include "LightingModels/AllSpectralModels.hlsli"
@@ -15,8 +15,8 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             float lambda,
             inout RngInfo rngInfo)
 {
-    SpectralValue Lo = BlackSpectralValue();
-    SpectralValue throughput = WhiteSpectralValue();
+    SpectralValue Lo = CreateBlackSpectralValue();
+    SpectralValue throughput = CreateWhiteSpectralValue();
 
     for (uint i = 0; i <= cbvPathTracing.NumBounces; i++)
     {
@@ -26,11 +26,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         if (q.CommittedStatus() != COMMITTED_TRIANGLE_HIT)
         {
             SpectralValue L_sample = Mul(throughput, Miss(ray.Origin, ray.Direction, i, lambda));
-#ifdef SINGLE_LAMBDA_RENDERING
-            Lo += L_sample;
-#else
             Lo.Add(L_sample);
-#endif
             break;
         }
 
@@ -62,22 +58,13 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         else
             Model_LambertionDiffuse_Spectral(rngInfo, throughput, Ns, Li, albedo, wi, L_sample);
 
-#ifdef SINGLE_LAMBDA_RENDERING
-        Lo += L_sample;
-#else
         Lo.Add(L_sample);
-#endif
 
         ray.Direction = wi;
         ray.Origin = hitPos + Ng * EPSILON * sign(dot(Ng, ray.Direction));
     }
 
-#ifdef SINGLE_LAMBDA_RENDERING
-    float pdf = 1.0f / (float)VISIBLE_LIGHT_SPECTRUM_SIZE; // Assuming uniform sampling
-    return SpectrumSampleToRGB(Lo, lambda, pdf);
-#else
-    return SpectrumToRGB(Lo);
-#endif
+    return Lo.ToRGB(lambda);
 }
 
 #endif

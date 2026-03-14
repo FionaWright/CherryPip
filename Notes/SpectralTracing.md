@@ -48,6 +48,40 @@ I'll need to specify a whitepoint as well as the primaries, this is determined b
 
 Suspicious of multiplication between spectra being simple component-wise but...idk?
 
+## SpectralValue:
+
+Add RGB
+```
+#ifdef SINGLE_LAMBDA_RENDERING
+        Li += RgbToSpectrumSample(envMapSampleRGB, eIlluminant, lambda);
+#else
+        Li.InitFromRGB(envMapSampleRGB, eIlluminant);
+#endif```
+```
+#ifdef SINGLE_LAMBDA_RENDERING
+        Li += RgbToSpectrumSample(dirLightRGB, eIlluminant, lambda);
+#else
+        Spectrum spectrumDirLight;
+        spectrumDirLight.InitFromRGB(dirLightRGB, eIlluminant);
+        Li.Add(spectrumDirLight);
+#endif```
+
+Multiply
+```
+#ifdef SINGLE_LAMBDA_RENDERING
+        throughput *= albedo;
+#else
+        throughput.Mul(albedo); // Terms cancel out
+#endif```
+
+SpectralValue s;
+s.Mul(s2);
+s.Mul(myFloat);
+
+s.InitFromRGB(float3, type, lambda);
+
+
+
 ## CIE XYZ Output:
 
 ![alt text](image-1.png)

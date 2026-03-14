@@ -4,17 +4,14 @@
 float ReflectanceRgbToSpectrumSample(float3 rgb, float lambda);
 float IlluminantRgbToSpectrumSample(float3 rgb, float lambda);
 
-// TODO: Implement this and see if that works
 // https://graphics.geometrian.com/research/spectral-primaries.html
 // https://github.com/geometrian/simple-spectral
-//float srgbToSpectrum(vec3 color, float wavelength) {
-//    return dot(color, texelFetch(CIE_BT709_Basis, int(clamp(wavelength - 390.0, 0.0, 390.0)), 0).rgb);
-//}
 
 // https://rgl.epfl.ch/publications/Jakob2019Spectral
 
-#include "Path-Tracing/Spectral-Tracing/Spectrum.hlsli"
-#include "Path-Tracing/Spectral-Tracing/SpectralData/CIE2006.hlsli"
+#include "Spectral-Tracing/Spectrum/Spectrum.hlsli"
+#include "Spectral-Tracing/SpectralData/CIE2006.hlsli"
+#include "Spectral-Tracing/Spectrum/ColorSpectrums.hlsli"
 
 // Reflectance Spectrum:
 // Incoming light reflected at each wavelength [0, 1]

@@ -46,7 +46,7 @@ void Hit(inout RayQuery<RAY_FLAGS> q, // TODO: Why inout?
 
     // TODO: Albedo Alpha
     float4 albedoSRGB = gTextures[mat.TexIdxAlbedo].Sample(gSampler, uv);
-    float3 albedoRGB = pow(albedoSRGB.xyz, 2.2f); // TODO: WRONG
+    float3 albedoRGB = SRGB_to_LRGB(albedoSRGB.xyz);
     albedoRGB *= mat.BaseColorFactor;
     albedo.FromRGB(albedoRGB, eReflectance, lambda);
 

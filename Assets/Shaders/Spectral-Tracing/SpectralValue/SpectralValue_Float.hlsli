@@ -59,9 +59,19 @@ void SpectralValue::Add(SpectralValue v)
     Value += v.Value;
 }
 
+void SpectralValue::Add(float scalar)
+{
+    Value += scalar;
+}
+
 void SpectralValue::Sub(SpectralValue v)
 {
     Value -= v.Value;
+}
+
+void SpectralValue::Sub(float scalar)
+{
+    Value -= scalar;
 }
 
 void SpectralValue::Mul(SpectralValue v)
@@ -111,10 +121,31 @@ SpectralValue Add(SpectralValue a, SpectralValue b)
     return r;
 }
 
+SpectralValue Add(SpectralValue a, float scalar)
+{
+    SpectralValue r;
+    r.Value = a.Value + scalar;
+    return r;
+}
+
 SpectralValue Sub(SpectralValue a, SpectralValue b)
 {
     SpectralValue r;
     r.Value = a.Value - b.Value;
+    return r;
+}
+
+SpectralValue Sub(SpectralValue a, float scalar)
+{
+    SpectralValue r;
+    r.Value = a.Value - scalar;
+    return r;
+}
+
+SpectralValue Sub(float scalar, SpectralValue a)
+{
+    SpectralValue r;
+    r.Value = scalar - a.Value;
     return r;
 }
 
@@ -146,6 +177,13 @@ SpectralValue Div(SpectralValue a, float scalar)
     return r;
 }
 
+SpectralValue Div(float scalar, SpectralValue a)
+{
+    SpectralValue r;
+    r.Value = scalar / a.Value;
+    return r;
+}
+
 SpectralValue Clamp(SpectralValue a, float lo, float hi)
 {
     SpectralValue r;
@@ -174,10 +212,15 @@ SpectralValue Exp(SpectralValue a)
     return r;
 }
 
-float Add(float a, float b) { return a + b; }
-float Sub(float a, float b) { return a - b; }
-float Mul(float a, float b) { return a * b; }
-float Div(float a, float b) { return a / b; }
-float Sqrt(float a) { return sqrt(a); }
+SpectralValue Lerp(SpectralValue a, SpectralValue b, float t) { return CreateSpectralValue(lerp(a.Value, b.Value, t)); }
+SpectralValue LerpToEnd(SpectralValue a, float end, float t) { return CreateSpectralValue(lerp(a.Value, end, t)); }
+SpectralValue LerpFromStart(float start, SpectralValue a, float t) { return CreateSpectralValue(lerp(start, a.Value, t)); }
+
+float Luminance(SpectralValue a, float lambda)
+{
+    float pdf = 1.0f / (float)VISIBLE_LIGHT_SPECTRUM_SIZE; // Assuming uniform sampling
+    float cieY = SampleCIE(lambda).y;
+    return a.Value * cieY / pdf;
+}
 
 #endif

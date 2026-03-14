@@ -4,7 +4,9 @@ void InitBlack();
 void InitWhite();
 
 void Add(SpectralValue v);
+void Add(float scalar);
 void Sub(SpectralValue v);
+void Sub(float scalar);
 void Mul(SpectralValue v);
 void Mul(float scalar);
 void Div(SpectralValue v);

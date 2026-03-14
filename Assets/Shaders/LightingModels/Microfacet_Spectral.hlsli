@@ -13,7 +13,7 @@ void Model_Microfacet_Spectral(
     float3 wo,        // V
     out float3 wi,    // L
     out SpectralValue L_sample,
-    inout SpectralValue debug,
+    inout float3 debug,
     inout bool hasDebugOutput)
 {
     float3 T, B;
@@ -79,9 +79,9 @@ void Model_Microfacet_Spectral(
         float k = NdL / max(0.001f, pdf) / max(0.001f, specProb);
         throughput.Mul(Mul(specularBrdf, k));
 
-//#ifdef DEBUG_PT_INFO_OUTPUT
-//#     include "Debug/DebugInfoOutputMicrofacetSpec.hlsli"
-//#endif
+#ifdef DEBUG_PT_INFO_OUTPUT
+#     include "Spectral-Tracing/Debug/DebugInfoOutputMicrofacetSpec.hlsli"
+#endif
         return;
     }
 
@@ -116,7 +116,7 @@ void Model_Microfacet_Spectral(
     E.Div(max(0.001f, 1.0 - specProb));
     throughput.Mul(E);
 
-//#ifdef DEBUG_PT_INFO_OUTPUT
-//#     include "Debug/DebugInfoOutputMicrofacetDiff.hlsli"
-//#endif
+#ifdef DEBUG_PT_INFO_OUTPUT
+#     include "Spectral-Tracing/Debug/DebugInfoOutputMicrofacetDiff.hlsli"
+#endif
 }

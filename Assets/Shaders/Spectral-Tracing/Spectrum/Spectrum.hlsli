@@ -295,7 +295,7 @@ Spectrum Lerp(Spectrum a, Spectrum b, float t)
     return newSpectrum;
 }
 
-Spectrum LerpToEnd(Spectrum a, float end, float t)
+Spectrum Lerp(Spectrum a, float end, float t)
 {
     Spectrum newSpectrum;
     [unroll]
@@ -304,7 +304,7 @@ Spectrum LerpToEnd(Spectrum a, float end, float t)
     return newSpectrum;
 }
 
-Spectrum LerpFromStart(float start, Spectrum a, float t)
+Spectrum Lerp(float start, Spectrum a, float t)
 {
     Spectrum newSpectrum;
     [unroll]

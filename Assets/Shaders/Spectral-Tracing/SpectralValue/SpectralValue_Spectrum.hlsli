@@ -82,8 +82,8 @@ SpectralValue Normalize(SpectralValue a) { return CreateSpectralValue(Normalize(
 SpectralValue Exp(SpectralValue a) { return CreateSpectralValue(Exp(a.Value)); }
 
 SpectralValue Lerp(SpectralValue a, SpectralValue b, float t) { return CreateSpectralValue(Lerp(a.Value, b.Value, t)); }
-SpectralValue LerpToEnd(SpectralValue a, float end, float t) { return CreateSpectralValue(LerpToEnd(a.Value, end, t)); }
-SpectralValue LerpFromStart(float start, SpectralValue a, float t) { return CreateSpectralValue(LerpFromStart(start, a.Value, t)); }
+SpectralValue Lerp(SpectralValue a, float end, float t) { return CreateSpectralValue(Lerp(a.Value, end, t)); }
+SpectralValue Lerp(float start, SpectralValue a, float t) { return CreateSpectralValue(Lerp(start, a.Value, t)); }
 
 float Luminance(SpectralValue a, float _) { return Luminance(a.Value); }
 

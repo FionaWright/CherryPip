@@ -2,7 +2,7 @@
 
 #include "CBV.h"
 #include "PtBuffers.h"
-//#include "DebugPalette.hlsli"
+#include "DebugPalette.hlsli"
 #include "DebugWindow.hlsli"
 #include "MathUtils.hlsli"
 #include "Path-Tracing/MacroConstants.hlsli"

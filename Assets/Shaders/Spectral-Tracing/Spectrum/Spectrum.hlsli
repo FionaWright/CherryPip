@@ -24,7 +24,9 @@ struct Spectrum
     float Sample(float lambda);
 
     void Add(Spectrum spectrum);
+    void Add(float scalar);
     void Sub(Spectrum spectrum);
+    void Sub(float scalar);
     void Mul(Spectrum spectrum);
     void Mul(float scalar);
     void Div(Spectrum spectrum);
@@ -69,6 +71,13 @@ void Spectrum::Add(Spectrum spectrum)
         Samples[i] += spectrum.Samples[i];
 }
 
+void Spectrum::Add(float scalar)
+{
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+        Samples[i] += scalar;
+}
+
 Spectrum Add(Spectrum spectrumA, Spectrum spectrumB)
 {
     Spectrum newSpectrum;
@@ -78,11 +87,27 @@ Spectrum Add(Spectrum spectrumA, Spectrum spectrumB)
     return newSpectrum;
 }
 
+Spectrum Add(Spectrum spectrumA, float scalar)
+{
+    Spectrum newSpectrum;
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+        newSpectrum.Samples[i] = spectrumA.Samples[i] + scalar;
+    return newSpectrum;
+}
+
 void Spectrum::Sub(Spectrum spectrum)
 {
     [unroll]
     for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
         Samples[i] -= spectrum.Samples[i];
+}
+
+void Spectrum::Sub(float scalar)
+{
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+        Samples[i] -= scalar;
 }
 
 Spectrum Sub(Spectrum spectrumA, Spectrum spectrumB)
@@ -94,7 +119,25 @@ Spectrum Sub(Spectrum spectrumA, Spectrum spectrumB)
     return newSpectrum;
 }
 
-void Spectrum::Mul(Spectrum spectrum) // TODO: ?
+Spectrum Sub(Spectrum spectrumA, float scalar)
+{
+    Spectrum newSpectrum;
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+        newSpectrum.Samples[i] = spectrumA.Samples[i] - scalar;
+    return newSpectrum;
+}
+
+Spectrum Sub(float scalar, Spectrum spectrumA)
+{
+    Spectrum newSpectrum;
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+        newSpectrum.Samples[i] = scalar - spectrumA.Samples[i];
+    return newSpectrum;
+}
+
+void Spectrum::Mul(Spectrum spectrum)
 {
     [unroll]
     for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
@@ -126,7 +169,7 @@ Spectrum Mul(Spectrum spectrumA, float scalar)
     return newSpectrum;
 }
 
-void Spectrum::Div(Spectrum spectrum) // TODO: ?
+void Spectrum::Div(Spectrum spectrum)
 {
     [unroll]
     for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
@@ -155,6 +198,15 @@ Spectrum Div(Spectrum spectrumA, float scalar)
     [unroll]
     for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
         newSpectrum.Samples[i] = spectrumA.Samples[i] / scalar;
+    return newSpectrum;
+}
+
+Spectrum Div(float scalar, Spectrum spectrumA)
+{
+    Spectrum newSpectrum;
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+        newSpectrum.Samples[i] = scalar / spectrumA.Samples[i];
     return newSpectrum;
 }
 
@@ -231,6 +283,33 @@ Spectrum Exp(Spectrum spectrum)
     [unroll]
     for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
         newSpectrum.Samples[i] = exp(spectrum.Samples[i]);
+    return newSpectrum;
+}
+
+Spectrum Lerp(Spectrum a, Spectrum b, float t)
+{
+    Spectrum newSpectrum;
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+        newSpectrum.Samples[i] = lerp(a.Samples[i], b.Samples[i], t);
+    return newSpectrum;
+}
+
+Spectrum LerpToEnd(Spectrum a, float end, float t)
+{
+    Spectrum newSpectrum;
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+        newSpectrum.Samples[i] = lerp(a.Samples[i], end, t);
+    return newSpectrum;
+}
+
+Spectrum LerpFromStart(float start, Spectrum a, float t)
+{
+    Spectrum newSpectrum;
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+        newSpectrum.Samples[i] = lerp(start, a.Samples[i], t);
     return newSpectrum;
 }
 

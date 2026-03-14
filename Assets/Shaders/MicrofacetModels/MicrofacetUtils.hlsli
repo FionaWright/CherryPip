@@ -214,6 +214,14 @@ float3 F_Schlick(float VdH, float3 F0)
     return F0 + (1.0f - F0) * pow(1.0f - VdH, 5);
 }
 
+#ifdef SPECTRAL
+SpectralValue F_Schlick_Spectral(float VdH, SpectralValue F0)
+{
+    float k = pow(1.0f - VdH, 5);
+    return Mul(Add(F0, Sub(1.0f, F0)), k);
+}
+#endif
+
 // ================================
 //  Geometry Masking Functions
 // ================================

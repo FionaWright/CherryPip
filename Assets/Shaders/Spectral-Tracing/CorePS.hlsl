@@ -1,3 +1,5 @@
+#define SPECTRAL
+
 #include "CBV.h"
 #include "PtBuffers.h"
 //#include "DebugPalette.hlsli"

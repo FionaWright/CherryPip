@@ -9,6 +9,8 @@
 #define CIE_XYZBAR_LAMBDA_DELTA 1
 #define CIE_XYZBAR_COUNT 441
 
+static const float cCIE_Y_integral = 118.5180915321789;
+
 static const float3 cCIE_XYZbar[CIE_XYZBAR_COUNT] = {
     float3(0.00295242f, 0.0004076779f, 0.01318752f),
     float3(0.003577275f, 0.0004977769f, 0.01597879f),

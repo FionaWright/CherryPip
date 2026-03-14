@@ -55,8 +55,28 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
                     roughness, entering, q.CommittedRayT(), mat.IoR,
                     mat.GlassSigmaA, Ns, Li, albedo, lambda, wo, wi, L_sample);
         }
-        else
+        else if (cLightingModel == eLambert)
+        {
             Model_LambertionDiffuse_Spectral(rngInfo, throughput, Ns, Li, albedo, wi, L_sample);
+        }
+        else if (cLightingModel == eMicrofacet)
+        {
+            SpectralValue debug = CreateBlackSpectralValue();
+            bool hasDebugOutput = false;
+
+            float3 anisoDirAndStrength = 0;
+
+            Model_Microfacet_Spectral(rngInfo, throughput, roughness,
+            	metalness, Ns, Li, albedo, lambda, anisoDirAndStrength, wo, wi, L_sample,
+                debug, hasDebugOutput);
+
+            //if (cDebugInfoOutputEnabled && hasDebugOutput)
+            //    return debug;
+        }
+
+        // TODO:
+        //if (!cDebugInfoOutputEnabled && throughput.x <= 0 && throughput.y <= 0 && throughput.z <= 0)
+        //    break;
 
         Lo.Add(L_sample);
 

@@ -18,8 +18,6 @@ float3 SampleCIE(float lambda)
     return lerp(cCIE_XYZbar[i0], cCIE_XYZbar[i1], t);
 }
 
-static const float cCIE_Y_integral = 118.5180915321789;
-
 // Reimann Sum Approximation
 float3 SpectrumToXYZ(Spectrum spectrum)
 {
@@ -71,6 +69,21 @@ float3 SpectrumSampleToRGB(float energy, float lambda, float pdf)
     float3 xyz = SpectrumSampleToXYZ(energy, lambda, pdf);
     float3 rgb = mul(cMatXyzToRgb, xyz);
     return rgb;
+}
+
+float Luminance(Spectrum a)
+{
+    float lum = 0.0f;
+
+    [unroll]
+    for (int i = 0; i <= NUM_SPECTRUM_SAMPLES; i++)
+    {
+        float lambda = IndexToLambda(i);
+        float cieY = SampleCIE(lambda).y;
+        lum += cieY * a.Samples[i];
+    }
+
+    return lum * SPECTRUM_DELTA_LAMBDA;
 }
 
 #endif

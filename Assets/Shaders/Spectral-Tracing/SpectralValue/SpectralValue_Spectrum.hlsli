@@ -52,7 +52,9 @@ float3 SpectralValue::ToRGB(float _)
 }
 
 void SpectralValue::Add(SpectralValue v) { Value.Add(v.Value); }
+void SpectralValue::Add(float scalar) { Value.Add(scalar); }
 void SpectralValue::Sub(SpectralValue v) { Value.Sub(v.Value); }
+void SpectralValue::Sub(float scalar) { Value.Sub(scalar); }
 void SpectralValue::Mul(SpectralValue v) { Value.Mul(v.Value); }
 void SpectralValue::Mul(float scalar) { Value.Mul(scalar); }
 void SpectralValue::Div(SpectralValue v) { Value.Div(v.Value); }
@@ -64,15 +66,25 @@ void SpectralValue::Normalize() { Value.Normalize(); }
 void SpectralValue::Exp() { Value.Exp(); }
 
 SpectralValue Add(SpectralValue a, SpectralValue b) { return CreateSpectralValue(Add(a.Value, b.Value)); }
+SpectralValue Add(SpectralValue a, float scalar) { return CreateSpectralValue(Add(a.Value, scalar)); }
 SpectralValue Sub(SpectralValue a, SpectralValue b) { return CreateSpectralValue(Sub(a.Value, b.Value)); }
+SpectralValue Sub(SpectralValue a, float scalar) { return CreateSpectralValue(Sub(a.Value, scalar)); }
+SpectralValue Sub(float scalar, SpectralValue a) { return CreateSpectralValue(Sub(scalar, a.Value)); }
 SpectralValue Mul(SpectralValue a, SpectralValue b) { return CreateSpectralValue(Mul(a.Value, b.Value)); }
 SpectralValue Mul(SpectralValue a, float scalar) { return CreateSpectralValue(Mul(a.Value, scalar)); }
 SpectralValue Div(SpectralValue a, SpectralValue b) { return CreateSpectralValue(Div(a.Value, b.Value)); }
 SpectralValue Div(SpectralValue a, float scalar) { return CreateSpectralValue(Div(a.Value, scalar)); }
+SpectralValue Div(float scalar, SpectralValue a) { return CreateSpectralValue(Div(scalar, a.Value)); }
 
 SpectralValue Clamp(SpectralValue a, float lo, float hi) { return CreateSpectralValue(Clamp(a.Value, lo, hi)); }
 SpectralValue Sqrt(SpectralValue a) { return CreateSpectralValue(Sqrt(a.Value)); }
 SpectralValue Normalize(SpectralValue a) { return CreateSpectralValue(Normalize(a.Value)); }
 SpectralValue Exp(SpectralValue a) { return CreateSpectralValue(Exp(a.Value)); }
+
+SpectralValue Lerp(SpectralValue a, SpectralValue b, float t) { return CreateSpectralValue(Lerp(a.Value, b.Value, t)); }
+SpectralValue LerpToEnd(SpectralValue a, float end, float t) { return CreateSpectralValue(LerpToEnd(a.Value, end, t)); }
+SpectralValue LerpFromStart(float start, SpectralValue a, float t) { return CreateSpectralValue(LerpFromStart(start, a.Value, t)); }
+
+float Luminance(SpectralValue a, float _) { return Luminance(a.Value); }
 
 #endif

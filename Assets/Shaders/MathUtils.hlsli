@@ -73,6 +73,15 @@ float3 Refract(float3 wo, float3 Ns, float iorA, float iorB)
     return normalize(wo * relIor + Ns * (relIor * cosI - sqrt(1 - sin2T)));
 }
 
+float3 Refract(float3 V, float3 N, float eta)
+{
+    float cosI = -dot(V, N);
+    float sin2T = eta * eta * (1 - cosI * cosI);
+    if (sin2T > 1) return float3(0,0,0); // Fully reflected, no refraction
+
+    return normalize(V * eta + N * (eta * cosI - sqrt(1 - sin2T)));
+}
+
 float3 Reflect(float3 wo, float3 Ns)
 {
     return wo - 2 * dot(wo, Ns) * Ns;

@@ -1,10 +1,14 @@
 #include "MicrofacetModels/AllModels.hlsli"
+#include "Spectral-Tracing/Fresnel.hlsli"
 
 void Model_Microfacet_Spectral(
     inout RngInfo rngInfo,
     inout SpectralValue throughput,
     float roughness,
     float metalness,
+    bool entering,
+    float3 sigmaA,
+    float hitDist,
     float3 Ns,
     SpectralValue Li,
     SpectralValue albedo,
@@ -21,6 +25,14 @@ void Model_Microfacet_Spectral(
 
     L_sample = Mul(throughput, Li);
 
+    if (!entering && false)
+    {
+        SpectralValue sigmaASpectral;
+        sigmaASpectral.FromRGB(sigmaA, eReflectance, lambda);
+        sigmaASpectral.Mul(-hitDist);
+        throughput.Mul(Exp(sigmaASpectral));
+    }
+
     // Convert world to shading space
     // forall X in R^3, X.z = dot(N, X)
     float3 N_s = float3(0, 0, 1);
@@ -28,10 +40,27 @@ void Model_Microfacet_Spectral(
 
     float NdV = SSpaceCosTheta(V_s);
 
-    SpectralValue F0 = LerpFromStart(0.04, albedo, metalness);
-    SpectralValue F_select = F_Schlick_Spectral(NdV, F0);
+    //SpectralValue F0 = LerpFromStart(0.04, albedo, metalness);
+    //SpectralValue F_select = F_Schlick_Spectral(NdV, F0);
 
-    float specProb = clamp(Luminance(F_select, lambda), 0.05f, 0.95f); // kS
+    // TODO: Full spectrum
+    float eta = SampleEta(lambda, entering);
+    float R = Dielectric_Unpolarized(eta * eta, NdV);
+
+    bool isReflect = R > PcgRand01(rngInfo.IndependentRngState);
+    //isReflect = true;
+    float reflectWeight = isReflect ? (1.0f / max(1e-6f, R)) : (1.0f / max(1e-6f, 1.0f - R));
+    throughput.Mul(reflectWeight);
+
+    if (!isReflect)
+    {
+        float3 L_s = Refract(V_s, N_s, eta);
+        wi = InvToDefinedSpace(L_s, T, B, Ns);
+        L_sample = CreateBlackSpectralValue();
+        return;
+    }
+
+    float specProb = R * (1.0f - roughness);
 
     if (cDebugForceSpecular)
         specProb = 1.0f;
@@ -67,7 +96,8 @@ void Model_Microfacet_Spectral(
         float NdH = SSpaceCosTheta(H_s);
         float VdH = dot(H_s, V_s);
 
-        SpectralValue F = F_Schlick_Spectral(VdH, F0);
+        // TODO: Full spectrum
+        SpectralValue F = CreateSpectralValue(Dielectric_Unpolarized(eta * eta, VdH));
 
         float D = mm.D(H_s);
         float G = mm.G2(L_s, V_s);

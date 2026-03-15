@@ -53,9 +53,10 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
         SpectralValue L_sample;
 
+        bool entering = q.CommittedTriangleFrontFace()!=0;
+
         if (cLightingGlassEnabled && mat.Flags & PtMaterialFlags::eIsGlass)
         {
-            bool entering = q.CommittedTriangleFrontFace()!=0;
             Model_Glass_Spectral(rngInfo, throughput, mat.DiffuseProbability,
                     roughness, entering, q.CommittedRayT(), mat.IoR,
                     mat.GlassSigmaA, Ns, Li, albedo, lambda, wo, wi, L_sample);
@@ -72,7 +73,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             float3 anisoDirAndStrength = 0;
 
             Model_Microfacet_Spectral(rngInfo, throughput, roughness,
-            	metalness, Ns, Li, albedo, lambda, anisoDirAndStrength, wo, wi, L_sample,
+            	metalness, entering, mat.GlassSigmaA, q.CommittedRayT(), Ns, Li, albedo, lambda, anisoDirAndStrength, wo, wi, L_sample,
                 debug, hasDebugOutput);
 
             if (cDebugInfoOutputEnabled && hasDebugOutput)

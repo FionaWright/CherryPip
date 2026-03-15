@@ -28,7 +28,8 @@ inline ComPtr<IDxcBlob> CompileShaderDXC(
     // Get DxcCreateInstance function
     auto DxcCreateInstanceFn = reinterpret_cast<HRESULT(__stdcall*)(REFCLSID, REFIID, LPVOID*)>(
         GetProcAddress(dxCompilerDLL, "DxcCreateInstance"));
-    if (!DxcCreateInstanceFn) {
+    if (!DxcCreateInstanceFn)
+    {
         std::cerr << "Failed to get DxcCreateInstance\n";
     }
 
@@ -61,11 +62,18 @@ inline ComPtr<IDxcBlob> CompileShaderDXC(
     buffer.Size = shaderBytes.size();
     buffer.Encoding = DXC_CP_UTF8; // or DXC_CP_ACP if ASCII
 
+    const std::wstring dataPath = FileHelper::GetAssetsPath() + L"Data/";
     const std::wstring shadersPath = FileHelper::GetShadersPath();
     const std::wstring dualIncludePath = FileHelper::GetShadersPath() + L"DualIncludes/";
 
     ComPtr<IDxcResult> result;
-    const std::vector<const wchar_t*> stdArgs = { L"-E", entryPoint, L"-T", targetProfile, L"-I", dualIncludePath.c_str(), L"-I", shadersPath.c_str() };
+    const std::vector<const wchar_t*> stdArgs = {
+        L"-E", entryPoint,
+        L"-T", targetProfile,
+        L"-I", dataPath.c_str(),
+        L"-I", dualIncludePath.c_str(),
+        L"-I", shadersPath.c_str()
+    };
     args.insert(args.end(), stdArgs.begin(), stdArgs.end());
     if (FAILED(compiler->Compile(&buffer, args.data(), args.size(), includeHandler.Get(), IID_PPV_ARGS(&result))))
     {
@@ -95,7 +103,9 @@ inline ComPtr<IDxcBlob> CompileShaderDXC(
     return vertexShaderBlob;
 }
 
-void Shader::InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D12Device* device, ID3D12RootSignature* rootSig, const bool dsvEnabled, const std::vector<const WCHAR*>& args, const uint32_t numRTVs, const D3D12_PRIMITIVE_TOPOLOGY_TYPE topology)
+void Shader::InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D12Device* device,
+                      ID3D12RootSignature* rootSig, const bool dsvEnabled, const std::vector<const WCHAR*>& args,
+                      const uint32_t numRTVs, const D3D12_PRIMITIVE_TOPOLOGY_TYPE topology)
 {
 #if defined(_DEBUG)
     UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
@@ -113,12 +123,12 @@ void Shader::InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D1
 
     ComPtr<IDxcBlob> vertexShader = CompileShaderDXC(vsPath.c_str(), L"VSMain", L"vs_6_6", compileFlags, args);
     ComPtr<IDxcBlob> pixelShader = CompileShaderDXC(psPath.c_str(), L"PSMain", L"ps_6_6", compileFlags, args);
-    
+
     D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
     psoDesc.InputLayout = ild;
     psoDesc.pRootSignature = rootSig;
-    psoDesc.VS = { vertexShader->GetBufferPointer(), vertexShader->GetBufferSize() };
-    psoDesc.PS = { pixelShader->GetBufferPointer(), pixelShader->GetBufferSize() };
+    psoDesc.VS = {vertexShader->GetBufferPointer(), vertexShader->GetBufferSize()};
+    psoDesc.PS = {pixelShader->GetBufferPointer(), pixelShader->GetBufferSize()};
     psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
     psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
     psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
@@ -146,7 +156,8 @@ void Shader::InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D1
 #endif
 }
 
-void Shader::InitCs(const LPCWSTR cs, ID3D12Device* device, ID3D12RootSignature* rootSig, const std::vector<const WCHAR*>& args)
+void Shader::InitCs(const LPCWSTR cs, ID3D12Device* device, ID3D12RootSignature* rootSig,
+                    const std::vector<const WCHAR*>& args)
 {
 #if defined(_DEBUG)
     UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
@@ -159,7 +170,7 @@ void Shader::InitCs(const LPCWSTR cs, ID3D12Device* device, ID3D12RootSignature*
 
     D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
     psoDesc.pRootSignature = rootSig;
-    psoDesc.CS = { computeShader->GetBufferPointer(), computeShader->GetBufferSize() };
+    psoDesc.CS = {computeShader->GetBufferPointer(), computeShader->GetBufferSize()};
     V(device->CreateComputePipelineState(&psoDesc, IID_PPV_ARGS(&m_pso)));
 
 #ifdef _DEBUG

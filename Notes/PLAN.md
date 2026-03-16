@@ -73,7 +73,8 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ## PT-TODO:
 
 ### Main Tasks
-- SPECTRAL RENDERING TIME! 
+- Proper BTDF / BSDF system. (Transmission)
+- THEN I can try again to implement the microfacet/glass model into spectral
 
 ### Bugs 
 - Camera movement gets messed up sometimes

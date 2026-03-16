@@ -62,20 +62,37 @@ void BuildBasisFrisvad(float3 N, out float3 T, out float3 B)
     B = float3(b, 1.0 - N.y * N.y * a, -N.y);
 }
 
-// Caller must flip normals + swap IoRs if exiting
-float3 Refract(float3 wo, float3 Ns, float iorA, float iorB)
+bool CheckTIR(float n1, float n2, float cosTi)
 {
-    float relIor = iorA / iorB;
-    float cosI = -dot(wo, Ns);
-    float sin2T = relIor * relIor * (1 - cosI * cosI);
-    if (sin2T > 1) return float3(0,0,0); // Fully reflected, no refraction
-
-    return normalize(wo * relIor + Ns * (relIor * cosI - sqrt(1 - sin2T)));
+    float sin2Ti = 1.0f - cosTi * cosTi;
+    float sinTi = sqrt(max(0.0f, sin2Ti));
+    return (n1 > n2) && (sinTi > n2 / n1);
 }
 
-float3 Reflect(float3 wo, float3 Ns)
+// Caller must flip normals + swap IoRs if exiting
+float3 Refract(float3 wo, float3 N, float iorA, float iorB)
 {
-    return wo - 2 * dot(wo, Ns) * Ns;
+    float eta = iorA / iorB;
+    float cosI = -dot(wo, N);
+    if (cosI < 0.0f)
+    {
+        eta = 1.0f / eta;
+        cosI = -cosI;
+        N = -N;
+    }
+
+    float sin2I = (1 - cosI * cosI);
+    float sin2T = eta * eta * sin2I;
+    if (sin2T >= 1) // TIR
+        return float3(0,0,0);
+
+    float cosT = sqrt(max(0.0f, 1.0f - sin2T * sin2T));
+    return normalize(wo * eta + N * (eta * cosI - cosT));
+}
+
+float3 Reflect(float3 wo, float3 N)
+{
+    return wo - 2 * dot(wo, N) * N;
 }
 
 #define IOR_AIR 1.0f

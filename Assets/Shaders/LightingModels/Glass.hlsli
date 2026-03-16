@@ -14,6 +14,8 @@ void Model_Glass(
     out float3 wi,
     out float3 L_sample)
 {
+    L_sample = 0;
+
     if (!entering)
     {
         throughput *= exp(-sigmaA * hitDist);
@@ -21,7 +23,14 @@ void Model_Glass(
 
     float iorCurrent = entering ? IOR_AIR : ior;
     float iorNext = entering ? ior : IOR_AIR;
+
     GlassResponse res = CalcReflectRefract(-wo, Ns, iorCurrent, iorNext);
+
+    if (CheckTIR(iorCurrent, iorNext, abs(dot(-wo, Ns)))) // Force reflect
+    {
+        wi = res.reflectDir;
+        return;
+    }
 
     float3 T, B;
     BuildBasisFrisvad(Ns, T, B);
@@ -33,6 +42,11 @@ void Model_Glass(
     res.reflectDir = normalize(lerp(res.reflectDir, diffuseDir, diffuseProbability)); // Why diffuseprobability and not roughness?
     res.refractDir = normalize(lerp(res.refractDir, -diffuseDir, roughness));
 
+    if (cDebugForceReflect)
+        res.reflectWeight = 1.0f;
+    else if (cDebugForceRefract)
+        res.reflectWeight = 0.0f;
+
     float rSpecProb = Rand01_Bounce(DIM_D_SPECULAR_PROB, rngInfo);
     bool reflect = rSpecProb <= res.reflectWeight;
     wi = reflect ? res.reflectDir : res.refractDir;
@@ -40,6 +54,5 @@ void Model_Glass(
     if (!reflect)
         throughput *= albedo;
 
-    L_sample = 0;
     throughput *= reflect ? res.reflectWeight : (1.0 - res.reflectWeight);
 }

@@ -1,3 +1,5 @@
+/*
+
 void Model_Glass_Spectral(
     inout RngInfo rngInfo,
     inout SpectralValue throughput,
@@ -25,7 +27,9 @@ void Model_Glass_Spectral(
 
     float iorCurrent = entering ? IOR_AIR : ior;
     float iorNext = entering ? ior : IOR_AIR;
-    GlassResponse res = CalcReflectRefract(-wo, Ns, iorCurrent, iorNext);
+
+    bool isTIR;
+    GlassResponse res = CalcReflectRefract(-wo, Ns, iorCurrent, iorNext, isTIR);
 
     float3 T, B;
     BuildBasisFrisvad(Ns, T, B);
@@ -47,3 +51,5 @@ void Model_Glass_Spectral(
     L_sample = CreateBlackSpectralValue();
     throughput.Mul(reflect ? res.reflectWeight : (1.0 - res.reflectWeight));
 }
+
+*/

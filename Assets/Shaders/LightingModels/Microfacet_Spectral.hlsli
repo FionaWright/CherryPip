@@ -21,10 +21,12 @@ void Model_Microfacet_Spectral(
     inout float3 debug,
     inout bool hasDebugOutput)
 {
+    L_sample = Mul(throughput, Li);
+
     float3 T, B;
     BuildBasisFrisvad(Ns, T, B);
 
-    if (!entering && false)
+    if (!entering)
     {
         SpectralValue sigmaASpectral;
         sigmaASpectral.FromRGB(sigmaA, eReflectance, lambda);
@@ -32,17 +34,12 @@ void Model_Microfacet_Spectral(
         throughput.Mul(Exp(sigmaASpectral));
     }
 
-    // Convert world to shading space
-    // forall X in R^3, X.z = dot(N, X)
     float3 N_s = float3(0, 0, 1);
     float3 V_s = ToDefinedSpace(wo, T, B, Ns);
-
     float NdV = SSpaceCosTheta(V_s);
 
     float nCurrent = entering ? IOR_AIR : DebugSampleIorN(lambda);
     float nNext = entering ? DebugSampleIorN(lambda) : IOR_AIR;
-
-    float F_Select = Dielectric_Unpolarized(nCurrent, nNext, NdV);
 
     if (CheckTIR(nCurrent, nNext, abs(NdV)))
     {
@@ -51,6 +48,8 @@ void Model_Microfacet_Spectral(
         L_sample = CreateBlackSpectralValue();
         return;
     }
+
+    float F_Select = Dielectric_Unpolarized(nCurrent, nNext, NdV);
 
     float reflectProb = F_Select;
     reflectProb = clamp(reflectProb, 0.05f, 0.95f);
@@ -65,14 +64,19 @@ void Model_Microfacet_Spectral(
     {
         float3 L_s = Refract(-V_s, N_s, nCurrent, nNext);
         wi = InvToDefinedSpace(L_s, T, B, Ns);
-        L_sample = CreateBlackSpectralValue();
         throughput.Div(max(1e-6f, 1.0f - reflectProb));
+        L_sample = CreateBlackSpectralValue();
         return;
     }
     else
         throughput.Div(max(1e-6f, reflectProb));
 
-    L_sample = Mul(throughput, Li);
+    if (isGlass)
+    {
+        wi = reflect(-wo, Ns);
+        L_sample = CreateBlackSpectralValue();
+        return;
+    }
 
     float specProb = F_Select;
     specProb = clamp(specProb, 0.05f, 0.95f);

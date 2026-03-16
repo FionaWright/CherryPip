@@ -102,6 +102,9 @@ float4 PSMain(VsOut input) : SV_Target0
 
         float lambda = SampleVisibleWavelength(rngInfo.IndependentRngState);
 
+        if (cDebugForceWavelength)
+            lambda = cDebugForcedWavelength;
+
         colorSum += Trace(q,
                           flags,
                           instanceMask,

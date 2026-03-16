@@ -87,4 +87,13 @@ SpectralValue Lerp(float start, SpectralValue a, float t) { return CreateSpectra
 
 float Luminance(SpectralValue a, float _) { return Luminance(a.Value); }
 
+bool SpectralValue::IsBlack()
+{
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+        if (Value.Samples[i] > 0.0f)
+            return false;
+    return true;
+}
+
 #endif

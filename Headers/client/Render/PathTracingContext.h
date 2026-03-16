@@ -70,6 +70,8 @@ struct PtConfig
     alignas(4) bool DebugInfoOutputEnabled = false;
     alignas(4) bool DebugForceSpecular = false;
     alignas(4) bool DebugForceDiffuse = false;
+    alignas(4) bool DebugForceReflect = false;
+    alignas(4) bool DebugForceRefract = false;
     alignas(4) bool DebugPathVisualization = false;
     alignas(4) bool AccumulationEnabled = true;
     alignas(4) bool JitterEnabled = true;

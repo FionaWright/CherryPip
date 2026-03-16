@@ -30,7 +30,8 @@ void Model_Microfacet(
     float3 F0 = lerp(float3(0.04, 0.04, 0.04), albedo, metalness);
     float3 F_select = F_Schlick(NdV, F0);
 
-    float specProb = clamp(Luminance(F_select), 0.05f, 0.95f); // kS
+    float specProb = Luminance(F_select); // kS
+    specProb = clamp(specProb, 0.05f, 0.95f);
 
     if (cDebugForceSpecular)
         specProb = 1.0f;

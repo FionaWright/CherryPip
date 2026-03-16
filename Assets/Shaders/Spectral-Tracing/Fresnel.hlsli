@@ -16,6 +16,7 @@
 //     Wavelength is in micrometers, multiply by 1000 to get nm
 //     Not all materials contain data in the visible light spectrum
 // https://refractiveindex.info/
+// https://en.wikipedia.org/wiki/Sellmeier_equation
 
 /*
 
@@ -61,50 +62,120 @@ n is the phase velocity, k is the extinction coefficient describing absorption
 
 */
 
-// TODO: Move data to CPU / Structured Buffer / Material Index
-#include "IOR Tables/TiO2.h"
+#ifndef IOR_AIR
+#define IOR_AIR 1.0f
+#endif
+
+struct SellmeierEquation
+{
+    float Constant;
+    float B[5];
+    float C[5];
+    bool MulLambda[5];
+
+    float SampleN(float lambda_nano)
+    {
+        float lambda_micro = lambda_nano / 1000.0f;
+        float lambda2 = lambda_micro * lambda_micro;
+
+        float n2 = Constant;
+        [unroll]
+        for (int i = 0; i < 5; i++)
+        {
+            float term = B[i] / (lambda2 - C[i]);
+            if (MulLambda[i])
+                term *= lambda2;
+            n2 += term;
+        }
+        return sqrt(n2);
+    }
+};
+
+static const SellmeierEquation cSellmeier_TiO2 = {
+    5.913f,
+    { 0.2441f, 0, 0, 0, 0 },
+    { 0.0803f, 0, 0, 0, 0 },
+    { false, false, false, false, false }
+};
+
+static const SellmeierEquation cSellmeier_FusedSilica = {
+    1.0f,
+    { 0.6961663, 0.4079426, 0.8974794, 0, 0 },
+    { 4.679148e-3, 0.01351206, 97.93400254, 0, 0 },
+    { true, true, true, false, false }
+};
+
 float DebugSampleIorN(float lambda)
 {
-    float fIdx = (lambda - IOR_TABLE_TIO2_LAMBDA_MIN) / IOR_TABLE_TIO2_LAMBDA_DELTA;
-    fIdx = clamp(fIdx, 0.0f, IOR_TABLE_TIO2_COUNT-1);
-    int i0 = (int)floor(fIdx);
-    int i1 = min(i0+1, IOR_TABLE_TIO2_COUNT-1);
-    float t = fIdx - i0;
-
-    float sampleN0 = cIorTable_TiO2[i0].N;
-    float sampleN1 = cIorTable_TiO2[i1].N;
-    return lerp(sampleN0, sampleN1, t);
+    return cSellmeier_FusedSilica.SampleN(lambda);
 }
 
 float SampleEta(float lambda, bool entering)
 {
-    float nCurrent = entering ? 1.5f : DebugSampleIorN(lambda);
-    float nNext = entering ? DebugSampleIorN(lambda) : 1.5f;
+    float nCurrent = entering ? IOR_AIR : DebugSampleIorN(lambda);
+    float nNext = entering ? DebugSampleIorN(lambda) : IOR_AIR;
     return nCurrent / nNext;
 }
 
-void Dielectric_Polarized(float eta2, float cosTheta, out float rp2, out float rs2)
+//void Dielectric_Polarized_X(float eta2, float cosTi, out float rp2, out float rs2)
+//{
+//    float sin2Ti = 1.0f - cosTi * cosTi;
+//
+//    // sin2Tt = eta2 * sin2Ti
+//    // cosTt = sqrt(1 - sinTt)
+//
+//    // the max() clamping can handle TIR when eta2<1.0
+//    float t0 = sqrt(max(0.0f, eta2 - sin2Ti));
+//    float t2 = eta2 * cosTi;
+//
+//    float rp = (t0 - t2) / max(1e-6f, t0 + t2);
+//    rp2 = rp * rp;
+//
+//    float rs = (cosTi - t0) / max(1e-6f, cosTi + t0);
+//    rs2 = rs * rs;
+//}
+
+void Dielectric_Polarized(float n1, float n2, float cosTi, out float rp2, out float rs2)
 {
-    float sinTheta2 = 1.0f - cosTheta * cosTheta;
+    float sin2Ti = 1.0f - cosTi * cosTi;
 
-    // the max() clamping can handle TIR when eta2<1.0
-    float t0 = sqrt(max(0.0f, eta2 - sinTheta2));
-    float t2 = eta2 * cosTheta;
+    float eta = n1 / n2;
+    float eta2 = eta * eta;
 
-    float rp = (t0 - t2) / max(1e-6f, t0 + t2);
+    float sin2Tt = eta2 * sin2Ti;
+    float cosTt = sqrt(1 - sin2Tt);
+
+    if (sin2Tt >= 1.0f)
+    {
+        rp2 = rs2 = 1.0f;
+        return;
+    }
+
+    float rp = (n1*cosTt - n2*cosTi) / max(1e-6f, n1*cosTt + n2*cosTi);
     rp2 = rp * rp;
 
-    float rs = (cosTheta - t0) / max(1e-6f, cosTheta + t0);
+    float rs = (n1*cosTi - n2*cosTt) / max(1e-6f, n1*cosTi + n2*cosTt);
     rs2 = rs * rs;
 }
 
 // Assumes eta is already flipped if entering
-float Dielectric_Unpolarized(float eta2, float cosTheta)
+//float Dielectric_Unpolarized_X(float eta2, float cosTheta)
+//{
+//    cosTheta = saturate(cosTheta);
+//
+//    float rp2, rs2;
+//    Dielectric_Polarized(eta2, cosTheta, rp2, rs2);
+//
+//    float reflectanceProb = (rp2 + rs2) * 0.5f;
+//    return reflectanceProb;
+//}
+
+float Dielectric_Unpolarized(float n1, float n2, float cosTheta)
 {
     cosTheta = saturate(cosTheta);
 
     float rp2, rs2;
-    Dielectric_Polarized(eta2, cosTheta, rp2, rs2);
+    Dielectric_Polarized(n1, n2, cosTheta, rp2, rs2);
 
     float reflectanceProb = (rp2 + rs2) * 0.5f;
     return reflectanceProb;

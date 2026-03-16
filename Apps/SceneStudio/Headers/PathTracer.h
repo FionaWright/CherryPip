@@ -17,6 +17,8 @@ class D3D;
 struct SpectralConfig
 {
     bool SingleLambdaRendering = true; // Turn to enum when I introduce hero sampling
+    bool DebugForceWavelengthEnabled = false;
+    float DebugForcedWavelength = 500.0f;
 };
 
 class PathTracer

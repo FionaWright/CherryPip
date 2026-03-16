@@ -223,4 +223,9 @@ float Luminance(SpectralValue a, float lambda)
     return a.Value * cieY / pdf;
 }
 
+bool SpectralValue::IsBlack()
+{
+    return Value <= 0.0f;
+}
+
 #endif

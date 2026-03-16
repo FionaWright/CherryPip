@@ -7,4 +7,12 @@ static const bool cSingleLambda = true;
 static const bool cSingleLambda = false;
 #endif
 
+#ifdef DEBUG_FORCE_WAVELENGTH
+static const bool cDebugForceWavelength = true;
+static const float cDebugForcedWavelength = DEBUG_FORCED_WAVELENGTH;
+#else
+static const bool cDebugForceWavelength = false;
+static const float cDebugForcedWavelength = -1;
+#endif
+
 #endif

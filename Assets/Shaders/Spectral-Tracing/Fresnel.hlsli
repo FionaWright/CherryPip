@@ -105,35 +105,18 @@ static const SellmeierEquation cSellmeier_FusedSilica = {
     { true, true, true, false, false }
 };
 
+static const SellmeierEquation cSellmeier_BGG = {
+    1.0f,
+    { 0.82725, 1.14635, 1.53923, 0, 0 },
+    { 0.02978, 0.005117, 272.657, 0, 0 },
+    { true, true, true, false, false }
+};
+
+// TODO: Temp
 float DebugSampleIorN(float lambda)
 {
-    return cSellmeier_FusedSilica.SampleN(lambda);
+    return cSellmeier_BGG.SampleN(lambda);
 }
-
-float SampleEta(float lambda, bool entering)
-{
-    float nCurrent = entering ? IOR_AIR : DebugSampleIorN(lambda);
-    float nNext = entering ? DebugSampleIorN(lambda) : IOR_AIR;
-    return nCurrent / nNext;
-}
-
-//void Dielectric_Polarized_X(float eta2, float cosTi, out float rp2, out float rs2)
-//{
-//    float sin2Ti = 1.0f - cosTi * cosTi;
-//
-//    // sin2Tt = eta2 * sin2Ti
-//    // cosTt = sqrt(1 - sinTt)
-//
-//    // the max() clamping can handle TIR when eta2<1.0
-//    float t0 = sqrt(max(0.0f, eta2 - sin2Ti));
-//    float t2 = eta2 * cosTi;
-//
-//    float rp = (t0 - t2) / max(1e-6f, t0 + t2);
-//    rp2 = rp * rp;
-//
-//    float rs = (cosTi - t0) / max(1e-6f, cosTi + t0);
-//    rs2 = rs * rs;
-//}
 
 void Dielectric_Polarized(float n1, float n2, float cosTi, out float rp2, out float rs2)
 {
@@ -143,7 +126,7 @@ void Dielectric_Polarized(float n1, float n2, float cosTi, out float rp2, out fl
     float eta2 = eta * eta;
 
     float sin2Tt = eta2 * sin2Ti;
-    float cosTt = sqrt(1 - sin2Tt);
+    float cosTt = sqrt(max(0.0f, 1 - sin2Tt));
 
     if (sin2Tt >= 1.0f)
     {
@@ -158,18 +141,6 @@ void Dielectric_Polarized(float n1, float n2, float cosTi, out float rp2, out fl
     rs2 = rs * rs;
 }
 
-// Assumes eta is already flipped if entering
-//float Dielectric_Unpolarized_X(float eta2, float cosTheta)
-//{
-//    cosTheta = saturate(cosTheta);
-//
-//    float rp2, rs2;
-//    Dielectric_Polarized(eta2, cosTheta, rp2, rs2);
-//
-//    float reflectanceProb = (rp2 + rs2) * 0.5f;
-//    return reflectanceProb;
-//}
-
 float Dielectric_Unpolarized(float n1, float n2, float cosTheta)
 {
     cosTheta = saturate(cosTheta);
@@ -179,6 +150,13 @@ float Dielectric_Unpolarized(float n1, float n2, float cosTheta)
 
     float reflectanceProb = (rp2 + rs2) * 0.5f;
     return reflectanceProb;
+}
+
+bool CheckTIR(float n1, float n2, float cosTi)
+{
+    float sin2Ti = 1.0f - cosTi * cosTi;
+    float sinTi = sqrt(max(0.0f, sin2Ti));
+    return (n1 > n2) && (sinTi > n2 / n1);
 }
 
 #endif

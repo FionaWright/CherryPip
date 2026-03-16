@@ -73,6 +73,7 @@ C++, HLSL and Python are the main languages.
 - Many different spectra tests
 - Zero round-trip error
 - Full spectrum or Wavelength-per-ray modes
+- Lambert, Microfacet and Glass Lighting Models
 
 ## History 
 

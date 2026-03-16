@@ -152,11 +152,4 @@ float Dielectric_Unpolarized(float n1, float n2, float cosTheta)
     return reflectanceProb;
 }
 
-bool CheckTIR(float n1, float n2, float cosTi)
-{
-    float sin2Ti = 1.0f - cosTi * cosTi;
-    float sinTi = sqrt(max(0.0f, sin2Ti));
-    return (n1 > n2) && (sinTi > n2 / n1);
-}
-
 #endif

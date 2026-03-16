@@ -142,6 +142,18 @@ static const bool cDebugForceDiffuse = true;
 static const bool cDebugForceDiffuse = false;
 #endif
 
+#ifdef DEBUG_FORCE_REFLECT
+static const bool cDebugForceReflect = true;
+#else
+static const bool cDebugForceReflect = false;
+#endif
+
+#ifdef DEBUG_FORCE_REFRACT
+static const bool cDebugForceRefract = true;
+#else
+static const bool cDebugForceRefract = false;
+#endif
+
 #ifdef LIGHTING_GLASS_ENABLED
 static const bool cLightingGlassEnabled = true;
 #else

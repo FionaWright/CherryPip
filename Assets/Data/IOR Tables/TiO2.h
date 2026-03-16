@@ -3,6 +3,10 @@
 
 #include "IorTable.h"
 
+static const SellmeierEquation cSellmeier_TiO2 = {
+
+};
+
 #define IOR_TABLE_TIO2_COUNT 101
 #define IOR_TABLE_TIO2_LAMBDA_MIN 430.0f
 #define IOR_TABLE_TIO2_LAMBDA_MAX 1530.0f

@@ -165,13 +165,17 @@ void PathTracer::compilePtShader(const D3D* d3d, bool isSpectral, bool envMapEna
 
     CherryPrint("Loading Path-Tracing Shader");
 
-    std::vector<const WCHAR*> args = {};
+    std::vector<std::wstring> args = {};
     if (m_config.DebugInfoOutputEnabled)
         args.push_back(L"-DDEBUG_PT_INFO_OUTPUT");
     if (m_config.DebugForceSpecular)
         args.push_back(L"-DDEBUG_FORCE_SPECULAR");
     if (m_config.DebugForceDiffuse)
         args.push_back(L"-DDEBUG_FORCE_DIFFUSE");
+    if (m_config.DebugForceReflect)
+        args.push_back(L"-DDEBUG_FORCE_REFLECT");
+    if (m_config.DebugForceRefract)
+        args.push_back(L"-DDEBUG_FORCE_REFRACT");
 
     if (envMapEnabled)
         args.push_back(L"-DENV_MAP_ENABLED");
@@ -228,6 +232,12 @@ void PathTracer::compilePtShader(const D3D* d3d, bool isSpectral, bool envMapEna
 
     if (m_spectralConfig.SingleLambdaRendering)
         args.push_back(L"-DSINGLE_LAMBDA_RENDERING");
+
+    if (m_spectralConfig.DebugForceWavelengthEnabled)
+    {
+        args.push_back(L"-DDEBUG_FORCE_WAVELENGTH");
+        args.push_back(L"-DDEBUG_FORCED_WAVELENGTH=" + std::to_wstring(m_spectralConfig.DebugForcedWavelength));
+    }
 
     if (m_config.LightingModel == PathTracerLightingModel::eMicrofacet)
     {

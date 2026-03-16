@@ -17,7 +17,7 @@ inline ComPtr<IDxcBlob> CompileShaderDXC(
     const LPCWSTR entryPoint,
     LPCWSTR targetProfile,
     UINT compileFlags,
-    std::vector<const WCHAR*> args)
+    const std::vector<std::wstring>& extraArgs)
 {
     HMODULE dxCompilerDLL = LoadLibrary("dxcompiler.dll");
     if (!dxCompilerDLL)
@@ -67,14 +67,15 @@ inline ComPtr<IDxcBlob> CompileShaderDXC(
     const std::wstring dualIncludePath = FileHelper::GetShadersPath() + L"DualIncludes/";
 
     ComPtr<IDxcResult> result;
-    const std::vector<const wchar_t*> stdArgs = {
+    std::vector<const wchar_t*> args = {
         L"-E", entryPoint,
         L"-T", targetProfile,
         L"-I", dataPath.c_str(),
         L"-I", dualIncludePath.c_str(),
         L"-I", shadersPath.c_str()
     };
-    args.insert(args.end(), stdArgs.begin(), stdArgs.end());
+    for (int i = 0; i < extraArgs.size(); i++)
+        args.push_back(extraArgs[i].c_str());
     if (FAILED(compiler->Compile(&buffer, args.data(), args.size(), includeHandler.Get(), IID_PPV_ARGS(&result))))
     {
         CherryPrint("Shader compile failed");
@@ -104,7 +105,7 @@ inline ComPtr<IDxcBlob> CompileShaderDXC(
 }
 
 void Shader::InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D12Device* device,
-                      ID3D12RootSignature* rootSig, const bool dsvEnabled, const std::vector<const WCHAR*>& args,
+                      ID3D12RootSignature* rootSig, const bool dsvEnabled, const std::vector<std::wstring>& args,
                       const uint32_t numRTVs, const D3D12_PRIMITIVE_TOPOLOGY_TYPE topology)
 {
 #if defined(_DEBUG)
@@ -157,7 +158,7 @@ void Shader::InitVsPs(LPCWSTR vs, LPCWSTR ps, D3D12_INPUT_LAYOUT_DESC ild, ID3D1
 }
 
 void Shader::InitCs(const LPCWSTR cs, ID3D12Device* device, ID3D12RootSignature* rootSig,
-                    const std::vector<const WCHAR*>& args)
+                    const std::vector<std::wstring>& args)
 {
 #if defined(_DEBUG)
     UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;

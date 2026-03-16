@@ -27,7 +27,7 @@ std::time_t getTimestamp(const std::wstring& path)
 
 void HotReloader::AssignShaderVsPs(const std::wstring& vs, const std::wstring& ps, Shader* shader,
                                    const D3D12_INPUT_LAYOUT_DESC& ild, ID3D12RootSignature* rootSig, bool dsvEnabled,
-                                   const std::vector<const WCHAR*>& args, uint32_t numRTVs, D3D12_PRIMITIVE_TOPOLOGY_TYPE topologyType)
+                                   const std::vector<std::wstring>& args, uint32_t numRTVs, D3D12_PRIMITIVE_TOPOLOGY_TYPE topologyType)
 {
     const std::wstring vsPath = FileHelper::GetAssetShaderFullPath(vs.c_str());
     const std::wstring psPath = FileHelper::GetAssetShaderFullPath(ps.c_str());
@@ -64,7 +64,7 @@ void HotReloader::AssignShaderCs(const std::wstring& cs, Shader* shader,
 
 void HotReloader::UpdateShaderVsPs(const std::wstring& vs, const std::wstring& ps, Shader* shader,
                                    const D3D12_INPUT_LAYOUT_DESC& ild, ID3D12RootSignature* rootSig, bool dsvEnabled,
-                                   const std::vector<const WCHAR*>& args, uint32_t numRTVs, D3D12_PRIMITIVE_TOPOLOGY_TYPE topologyType)
+                                   const std::vector<std::wstring>& args, uint32_t numRTVs, D3D12_PRIMITIVE_TOPOLOGY_TYPE topologyType)
 {
     const std::wstring vsPath = FileHelper::GetAssetShaderFullPath(vs.c_str());
     const std::wstring psPath = FileHelper::GetAssetShaderFullPath(ps.c_str());

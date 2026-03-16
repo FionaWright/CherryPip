@@ -7,6 +7,7 @@ void Model_Microfacet_Spectral(
     float roughness,
     float metalness,
     bool entering,
+    bool isGlass,
     float3 sigmaA,
     float hitDist,
     float3 Ns,
@@ -25,7 +26,7 @@ void Model_Microfacet_Spectral(
 
     L_sample = Mul(throughput, Li);
 
-    if (!entering && false)
+    if (!entering)
     {
         SpectralValue sigmaASpectral;
         sigmaASpectral.FromRGB(sigmaA, eReflectance, lambda);
@@ -43,24 +44,39 @@ void Model_Microfacet_Spectral(
     //SpectralValue F0 = LerpFromStart(0.04, albedo, metalness);
     //SpectralValue F_select = F_Schlick_Spectral(NdV, F0);
 
-    // TODO: Full spectrum
-    float eta = SampleEta(lambda, entering);
-    float R = Dielectric_Unpolarized(eta * eta, NdV);
+    float nCurrent = entering ? IOR_AIR : DebugSampleIorN(lambda);
+    float nNext = entering ? DebugSampleIorN(lambda) : IOR_AIR;
+    //nNext = 1.5f;
 
-    bool isReflect = R > PcgRand01(rngInfo.IndependentRngState);
-    //isReflect = true;
-    float reflectWeight = isReflect ? (1.0f / max(1e-6f, R)) : (1.0f / max(1e-6f, 1.0f - R));
-    throughput.Mul(reflectWeight);
+    // TODO: Full spectrum
+    //float eta = SampleEta(lambda, entering);
+    //eta = isGlass ? 0.9f : 1.5f; // TODO DEBUG
+    //eta = cbvPathTracing.FireflyThreshold;
+    //float F_Select = Dielectric_Unpolarized(eta * eta, NdV);
+    float F_Select = Dielectric_Unpolarized(nCurrent, nNext, NdV);
+
+    float reflectProb = F_Select;
+    if (cDebugForceReflect || !isGlass)
+        reflectProb = 1.0f;
+    else if (cDebugForceRefract)
+        reflectProb = 0.0f;
+
+    bool isReflect = reflectProb > PcgRand01(rngInfo.IndependentRngState);
 
     if (!isReflect)
     {
-        float3 L_s = Refract(V_s, N_s, eta);
+        float eta = nCurrent / nNext;
+        float3 L_s = Refract(-V_s, N_s, eta);
         wi = InvToDefinedSpace(L_s, T, B, Ns);
         L_sample = CreateBlackSpectralValue();
+        throughput.Div(max(1e-6f, 1.0f - reflectProb));
         return;
     }
 
-    float specProb = R * (1.0f - roughness);
+    throughput.Div(max(1e-6f, reflectProb));
+
+    float specProb = F_Select; // Pretty sure this is correct
+    specProb = clamp(specProb, 0.05f, 0.95f);
 
     if (cDebugForceSpecular)
         specProb = 1.0f;
@@ -83,13 +99,6 @@ void Model_Microfacet_Spectral(
         float3 H_s = normalize(mm.Sample(u1, u2));
         float3 L_s = NormalizeSafe(reflect(-V_s, H_s), N_s);
 
-        // Terminate ray if wi ends up inside surface
-        if (L_s.z <= 0.0f)
-        {
-            throughput.Mul(0.0f);
-            return;
-        }
-
         wi = InvToDefinedSpace(L_s, T, B, Ns);
 
         float NdL = SSpaceCosTheta(L_s);
@@ -97,7 +106,8 @@ void Model_Microfacet_Spectral(
         float VdH = dot(H_s, V_s);
 
         // TODO: Full spectrum
-        SpectralValue F = CreateSpectralValue(Dielectric_Unpolarized(eta * eta, VdH));
+        //SpectralValue F = CreateSpectralValue(Dielectric_Unpolarized(eta * eta, VdH));
+        SpectralValue F = CreateSpectralValue(Dielectric_Unpolarized(nCurrent, nNext, VdH));
 
         float D = mm.D(H_s);
         float G = mm.G2(L_s, V_s);
@@ -107,7 +117,12 @@ void Model_Microfacet_Spectral(
         float fSpecularBrdf = (D * G) / max(0.001f, 4 * NdV * NdL);
         SpectralValue specularBrdf = Mul(F, fSpecularBrdf);
         float k = NdL / max(0.001f, pdf) / max(0.001f, specProb);
-        throughput.Mul(Mul(specularBrdf, k));
+        SpectralValue throughputMul = Mul(specularBrdf, k);
+
+        if (L_s.z <= 0.0f && false) // Terminate ray if wi ends up inside surface
+            throughputMul = CreateBlackSpectralValue();
+
+        throughput.Mul(throughputMul);
 
 #ifdef DEBUG_PT_INFO_OUTPUT
 #     include "Spectral-Tracing/Debug/DebugInfoOutputMicrofacetSpec.hlsli"

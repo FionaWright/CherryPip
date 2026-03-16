@@ -26,7 +26,15 @@ void PathTracer::RenderGUI(bool& outPtDirty, bool& outShaderDirty, bool& outScen
 
         outShaderDirty |= ImGui::Checkbox("Single Lambda Rendering", &m_spectralConfig.SingleLambdaRendering);
 
+        if (m_spectralConfig.SingleLambdaRendering)
+        {
+            outShaderDirty |= ImGui::Checkbox("Force Wavelength", &m_spectralConfig.DebugForceWavelengthEnabled);
+            if (m_spectralConfig.DebugForceWavelengthEnabled)
+                outShaderDirty |= ImGui::InputFloat("Wavelength", &m_spectralConfig.DebugForcedWavelength);
+        }
+
         ImGui::Unindent(IM_GUI_INDENTATION);
+        ImGui::Spacing();
         ImGui::Spacing();
     }
 
@@ -230,6 +238,17 @@ void PathTracer::RenderGUI(bool& outPtDirty, bool& outShaderDirty, bool& outScen
     if (ImGui::Checkbox("Force Diffuse", &m_config.DebugForceDiffuse))
     {
         m_config.DebugForceSpecular = false;
+        outShaderDirty = true;
+    }
+
+    if (ImGui::Checkbox("Force Reflect", &m_config.DebugForceReflect))
+    {
+        m_config.DebugForceRefract = false;
+        outShaderDirty = true;
+    }
+    if (ImGui::Checkbox("Force Refract", &m_config.DebugForceRefract))
+    {
+        m_config.DebugForceReflect = false;
         outShaderDirty = true;
     }
 

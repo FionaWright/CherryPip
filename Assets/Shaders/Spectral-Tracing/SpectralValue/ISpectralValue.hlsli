@@ -20,3 +20,5 @@ void Exp();
 void FromRGB(float3 rgb, SpectrumType type, float lambda);
 void AddRGB(float3 rgb, SpectrumType type, float lambda);
 float3 ToRGB(float lambda);
+
+bool IsBlack();

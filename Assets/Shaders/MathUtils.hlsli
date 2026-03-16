@@ -87,7 +87,7 @@ float3 Reflect(float3 wo, float3 Ns)
     return wo - 2 * dot(wo, Ns) * Ns;
 }
 
-#define IOR_AIR 1
+#define IOR_AIR 1.0f
 
 struct GlassResponse
 {

@@ -12,11 +12,11 @@ class HotReloader
 public:
     static void AssignShaderVsPs(const std::wstring& vs, const std::wstring& ps, Shader* shader,
                                  const D3D12_INPUT_LAYOUT_DESC& ild, ID3D12RootSignature* rootSig, bool dsvEnabled,
-                                 const std::vector<const WCHAR*>& args, uint32_t numRTVs, D3D12_PRIMITIVE_TOPOLOGY_TYPE topologyType);
+                                 const std::vector<std::wstring>& args, uint32_t numRTVs, D3D12_PRIMITIVE_TOPOLOGY_TYPE topologyType);
     static void AssignShaderCs(const std::wstring& cs, Shader* shader, ID3D12RootSignature* rootSig);
     static void UpdateShaderVsPs(const std::wstring& vs, const std::wstring& ps, Shader* shader,
                                  const D3D12_INPUT_LAYOUT_DESC& ild, ID3D12RootSignature* rootSig, bool dsvEnabled,
-                                 const std::vector<const WCHAR*>& args, uint32_t numRTVs, D3D12_PRIMITIVE_TOPOLOGY_TYPE topologyType);
+                                 const std::vector<std::wstring>& args, uint32_t numRTVs, D3D12_PRIMITIVE_TOPOLOGY_TYPE topologyType);
     static void UpdateShaderCs(const std::wstring& cs, Shader* shader, ID3D12RootSignature* rootSig);
     static void CheckFiles(D3D* d3d);
     static void PendFullReload() { m_pendingFullReload = true; }
@@ -32,7 +32,7 @@ private:
 
         ID3D12RootSignature* RootSig;
         bool DsvEnabled;
-        std::vector<const WCHAR*> Args;
+        std::vector<std::wstring> Args;
         uint32_t NumRTVs;
         D3D12_PRIMITIVE_TOPOLOGY_TYPE TopologyType;
 

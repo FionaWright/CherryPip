@@ -54,14 +54,9 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         SpectralValue L_sample;
 
         bool entering = q.CommittedTriangleFrontFace()!=0;
+        bool isGlass = cLightingGlassEnabled && mat.Flags & PtMaterialFlags::eIsGlass;
 
-        if (cLightingGlassEnabled && mat.Flags & PtMaterialFlags::eIsGlass)
-        {
-            Model_Glass_Spectral(rngInfo, throughput, mat.DiffuseProbability,
-                    roughness, entering, q.CommittedRayT(), mat.IoR,
-                    mat.GlassSigmaA, Ns, Li, albedo, lambda, wo, wi, L_sample);
-        }
-        else if (cLightingModel == eLambert)
+        if (cLightingModel == eLambert)
         {
             Model_LambertionDiffuse_Spectral(rngInfo, throughput, Ns, Li, albedo, wi, L_sample);
         }
@@ -73,16 +68,15 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             float3 anisoDirAndStrength = 0;
 
             Model_Microfacet_Spectral(rngInfo, throughput, roughness,
-            	metalness, entering, mat.GlassSigmaA, q.CommittedRayT(), Ns, Li, albedo, lambda, anisoDirAndStrength, wo, wi, L_sample,
+            	metalness, entering, isGlass, mat.GlassSigmaA, q.CommittedRayT(), Ns, Li, albedo, lambda, anisoDirAndStrength, wo, wi, L_sample,
                 debug, hasDebugOutput);
 
             if (cDebugInfoOutputEnabled && hasDebugOutput)
                 return debug;
         }
 
-        // TODO:
-        //if (!cDebugInfoOutputEnabled && throughput.x <= 0 && throughput.y <= 0 && throughput.z <= 0)
-        //    break;
+        if (!cDebugInfoOutputEnabled && throughput.IsBlack())
+            break;
 
         Lo.Add(L_sample);
 

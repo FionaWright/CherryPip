@@ -34,19 +34,19 @@ void SpectralValue::Init(Spectrum v) { Value = v; }
 void SpectralValue::InitBlack() { Value = BlackSpectrum(); }
 void SpectralValue::InitWhite() { Value = WhiteSpectrum_E(); }
 
-void SpectralValue::FromRGB(float3 rgb, SpectrumType type, float _)
+void SpectralValue::FromRGB(float3 rgb, SpectrumType type, SpectralContext _)
 {
     Value.InitFromRGB(rgb, type);
 }
 
-void SpectralValue::AddRGB(float3 rgb, SpectrumType type, float _)
+void SpectralValue::AddRGB(float3 rgb, SpectrumType type, SpectralContext _)
 {
     Spectrum s;
     s.InitFromRGB(rgb, type);
     Value.Add(s);
 }
 
-float3 SpectralValue::ToRGB(float _)
+float3 SpectralValue::ToRGB(SpectralContext _)
 {
     return SpectrumToRGB(Value);
 }
@@ -85,7 +85,7 @@ SpectralValue Lerp(SpectralValue a, SpectralValue b, float t) { return CreateSpe
 SpectralValue Lerp(SpectralValue a, float end, float t) { return CreateSpectralValue(Lerp(a.Value, end, t)); }
 SpectralValue Lerp(float start, SpectralValue a, float t) { return CreateSpectralValue(Lerp(start, a.Value, t)); }
 
-float Luminance(SpectralValue a, float _) { return Luminance(a.Value); }
+float Luminance(SpectralValue a, SpectralContext _) { return Luminance(a.Value); }
 
 bool SpectralValue::IsBlack()
 {

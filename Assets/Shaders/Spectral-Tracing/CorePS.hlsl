@@ -13,6 +13,7 @@
 #include "Spectral-Tracing/Spectrum/ColorSpectrums.hlsli"
 #include "Spectral-Tracing/Spectrum/SpectralUtils.hlsli"
 #include "Spectral-Tracing/Spectrum/RgbToSpectrum2019.hlsli"
+#include "Spectral-Tracing/SpectralContext/SpectralContext.hlsli"
 
 #define EPSILON 1e-2
 #define RAY_FLAGS RAY_FLAG_CULL_NON_OPAQUE|RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES
@@ -100,7 +101,8 @@ float4 PSMain(VsOut input) : SV_Target0
             ray.Direction = normalize(focalPoint - ray.Origin);
         }
 
-        float lambda = SampleVisibleWavelength(rngInfo.IndependentRngState);
+        SpectralContext lambda;
+        lambda.Create(rngInfo.IndependentRngState);
 
         if (cDebugForceWavelength)
             lambda = cDebugForcedWavelength;

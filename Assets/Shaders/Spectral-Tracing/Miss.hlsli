@@ -3,7 +3,7 @@
 
 #include "DualIncludes/HlslMath.h"
 
-SpectralValue Miss(float3 origin, float3 direction, uint bounceIdx, float lambda)
+SpectralValue Miss(float3 origin, float3 direction, uint bounceIdx, SpectralContext ctx)
 {
     if (cFurnaceTestHHE)
         return CreateBlackSpectralValue();
@@ -21,7 +21,7 @@ SpectralValue Miss(float3 origin, float3 direction, uint bounceIdx, float lambda
             uv = PanoSphereToSquare(direction);
 
         float3 envMapSampleRGB = saturate(gEnvMap.Sample(gSampler, uv).rgb);
-        Li.FromRGB(envMapSampleRGB, eIlluminant, lambda);
+        Li.FromRGB(envMapSampleRGB, eIlluminant, ctx);
     }
 
     if (cDirLightEnabled && bounceIdx >= 1)

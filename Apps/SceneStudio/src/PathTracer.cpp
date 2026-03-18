@@ -230,13 +230,20 @@ void PathTracer::compilePtShader(const D3D* d3d, bool isSpectral, bool envMapEna
     if (m_config.DebugPathVisualization)
         args.push_back(L"-DDEBUG_PATH_VISUALIZATION");
 
-    if (m_spectralConfig.SingleLambdaRendering)
-        args.push_back(L"-DSINGLE_LAMBDA_RENDERING");
-
-    if (m_spectralConfig.DebugForceWavelengthEnabled)
+    if (isSpectral)
     {
-        args.push_back(L"-DDEBUG_FORCE_WAVELENGTH");
-        args.push_back(L"-DDEBUG_FORCED_WAVELENGTH=" + std::to_wstring(m_spectralConfig.DebugForcedWavelength));
+        static const std::vector<const WCHAR*> c_mapSpectralSampling = {
+            L"-DSPECTRAL_FULL_SPECTRUM_SAMPLING",
+            L"-DSPECTRAL_SINGLE_WAVELENGTH_SAMPLING",
+            L"-DSPECTRAL_HERO_SAMPLING"
+        };
+        args.push_back(c_mapSpectralSampling.at(m_spectralConfig.SamplingMode));
+
+        if (m_spectralConfig.DebugForceWavelengthEnabled)
+        {
+            args.push_back(L"-DDEBUG_FORCE_WAVELENGTH");
+            args.push_back(L"-DDEBUG_FORCED_WAVELENGTH=" + std::to_wstring(m_spectralConfig.DebugForcedWavelength));
+        }
     }
 
     if (m_config.LightingModel == PathTracerLightingModel::eMicrofacet)

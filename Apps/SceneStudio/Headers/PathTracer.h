@@ -14,9 +14,16 @@
 struct DirLightConfig;
 class D3D;
 
+enum SpectralSamplingMode
+{
+    eFullSpectrum,
+    eSingleWavelength,
+    eHero
+};
+
 struct SpectralConfig
 {
-    bool SingleLambdaRendering = true; // Turn to enum when I introduce hero sampling
+    SpectralSamplingMode SamplingMode = eSingleWavelength;
     bool DebugForceWavelengthEnabled = false;
     float DebugForcedWavelength = 500.0f;
 };

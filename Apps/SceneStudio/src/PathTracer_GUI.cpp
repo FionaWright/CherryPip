@@ -24,7 +24,15 @@ void PathTracer::RenderGUI(bool& outPtDirty, bool& outShaderDirty, bool& outScen
         ImGui::SeparatorText("Spectral Settings##xx");
         ImGui::Indent(IM_GUI_INDENTATION);
 
-        outShaderDirty |= ImGui::Checkbox("Single Lambda Rendering", &m_spectralConfig.SingleLambdaRendering);
+        static int e = m_spectralConfig.SamplingMode;
+        ImGui::Text("%s", "Sampling Mode:");
+        int idx = 0;
+        ImGui::Indent(IM_GUI_INDENTATION);
+        outShaderDirty |= ImGui::RadioButton("Full Spectrum", &e, idx++);
+        outShaderDirty |= ImGui::RadioButton("Single Wavelength", &e, idx++);
+        outShaderDirty |= ImGui::RadioButton("Hero", &e, idx++);
+        ImGui::Unindent(IM_GUI_INDENTATION);
+        m_spectralConfig.SamplingMode = static_cast<SpectralSamplingMode>(e);
 
         if (m_spectralConfig.SingleLambdaRendering)
         {

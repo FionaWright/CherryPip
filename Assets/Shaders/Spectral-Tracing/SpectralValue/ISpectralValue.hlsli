@@ -17,8 +17,8 @@ void Clamp(float lo, float hi);
 void Normalize();
 void Exp();
 
-void FromRGB(float3 rgb, SpectrumType type, float lambda);
-void AddRGB(float3 rgb, SpectrumType type, float lambda);
-float3 ToRGB(float lambda);
+void FromRGB(float3 rgb, SpectrumType type, SpectralContext ctx);
+void AddRGB(float3 rgb, SpectrumType type, SpectralContext ctx);
+float3 ToRGB(SpectralContext ctx);
 
 bool IsBlack();

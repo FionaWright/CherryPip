@@ -1,19 +1,20 @@
-#ifndef H_SPECTRAL_VALUE_FLOAT_H
-#define H_SPECTRAL_VALUE_FLOAT_H
+#ifndef H_SPECTRAL_VALUE_HERO_H
+#define H_SPECTRAL_VALUE_HERO_H
 
 #include "Spectral-Tracing/Spectrum/RgbToSpectrum2019.hlsli"
 #include "Spectral-Tracing/Spectrum/SpectrumToRGB2019.hlsli"
+#include "Spectral-Tracing/SpectralValue/HeroSample.hlsli"
 
 struct SpectralValue
 {
-    void Init(float v);
+    void Init(HeroSample value);
 
 #include "Spectral-Tracing/SpectralValue/ISpectralValue.hlsli"
 
-    float Value;
+    HeroSample Value;
 };
 
-SpectralValue CreateSpectralValue(float v)
+SpectralValue CreateSpectralValue(HeroSample v)
 {
     SpectralValue s;
     s.Value = v;
@@ -34,23 +35,23 @@ SpectralValue CreateWhiteSpectralValue()
     return s;
 }
 
-void SpectralValue::Init(float v) { Value = v; }
-void SpectralValue::InitBlack() { Value = 0.0f; }
-void SpectralValue::InitWhite() { Value = 1.0f; }
+void SpectralValue::Init(HeroSample v) { Value = v; }
+void SpectralValue::InitBlack() { Value.InitBlack(); }
+void SpectralValue::InitWhite() { Value.InitWhite(); }
 
 void SpectralValue::FromRGB(float3 rgb, SpectrumType type, SpectralContext ctx)
 {
-    Value = RgbToSpectrumSample(rgb, type, ctx.Lambda);
+    Value = RgbToSpectrumSample(rgb, type, ctx);
 }
 
 void SpectralValue::AddRGB(float3 rgb, SpectrumType type, SpectralContext ctx)
 {
-    Value += RgbToSpectrumSample(rgb, type, ctx.Lambda);
+    Value += RgbToSpectrumSample(rgb, type, ctx);
 }
 
 float3 SpectralValue::ToRGB(SpectralContext ctx)
 {
-    return SpectrumSampleToRGB(Value, ctx.Lambda, ctx.GetPDF());
+    return SpectrumSampleToRGB(Value, ctx, pdf);
 }
 
 void SpectralValue::Add(SpectralValue v)
@@ -217,8 +218,9 @@ SpectralValue Lerp(float start, SpectralValue a, float t) { return CreateSpectra
 
 float Luminance(SpectralValue a, SpectralContext ctx)
 {
-    float cieY = SampleCIE(ctx.Lambda).y;
-    return a.Value * cieY / ctx.GetPDF();
+    float pdf = 1.0f / (float)VISIBLE_LIGHT_SPECTRUM_SIZE; // Assuming uniform sampling
+    float cieY = SampleCIE(ctx).y;
+    return a.Value * cieY / pdf;
 }
 
 bool SpectralValue::IsBlack()

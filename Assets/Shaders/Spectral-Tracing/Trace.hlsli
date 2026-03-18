@@ -12,7 +12,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             uint flags,
             uint instanceMask,
             RayDesc ray,
-            float lambda,
+            SpectralContext ctx,
             inout RngInfo rngInfo)
 {
     SpectralValue Lo = CreateBlackSpectralValue();
@@ -25,7 +25,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
         if (q.CommittedStatus() != COMMITTED_TRIANGLE_HIT)
         {
-            SpectralValue L_sample = Mul(throughput, Miss(ray.Origin, ray.Direction, i, lambda));
+            SpectralValue L_sample = Mul(throughput, Miss(ray.Origin, ray.Direction, i, ctx));
             Lo.Add(L_sample);
 
 #ifdef DEBUG_PT_INFO_OUTPUT
@@ -42,7 +42,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         SpectralValue Li;
         float3 Ng = -1, Ns = -1;
         float2 uv = -1;
-        Hit(q, lambda, albedo, Ng, Ns, Li, mat, uv);
+        Hit(q, ctx, albedo, Ng, Ns, Li, mat, uv);
 
         float2 roughMet = gTextures[mat.TexIdxRoughMet].Sample(gSampler, uv).gb;
         float roughness = mat.Roughness * roughMet.r;
@@ -68,7 +68,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             float3 anisoDirAndStrength = 0;
 
             Model_Microfacet_Spectral(rngInfo, throughput, roughness,
-            	metalness, entering, isGlass, mat.GlassSigmaA, q.CommittedRayT(), Ns, Li, albedo, lambda, anisoDirAndStrength, wo, wi, L_sample,
+            	metalness, entering, isGlass, mat.GlassSigmaA, q.CommittedRayT(), Ns, Li, albedo, ctx, anisoDirAndStrength, wo, wi, L_sample,
                 debug, hasDebugOutput);
 
             if (cDebugInfoOutputEnabled && hasDebugOutput)
@@ -88,7 +88,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 #endif
     }
 
-    return Lo.ToRGB(lambda);
+    return Lo.ToRGB(ctx);
 }
 
 #endif

@@ -26,9 +26,9 @@ SpectralValue Lerp(SpectralValue a, SpectralValue b, float t);
 SpectralValue Lerp(SpectralValue a, float end, float t);
 SpectralValue Lerp(float start, SpectralValue a, float t);
 
-float Luminance(SpectralValue a, float lambda);
+float Luminance(SpectralValue a, SpectralContext ctx);
 
-#ifdef SINGLE_LAMBDA_RENDERING
+#ifdef SPECTRAL_SINGLE_WAVELENGTH_SAMPLING
 #    include "Spectral-Tracing/SpectralValue/SpectralValue_Float.hlsli"
 #else
 #    include "Spectral-Tracing/SpectralValue/SpectralValue_Spectrum.hlsli"

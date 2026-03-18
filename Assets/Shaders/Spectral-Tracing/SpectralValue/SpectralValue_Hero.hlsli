@@ -3,18 +3,18 @@
 
 #include "Spectral-Tracing/Spectrum/RgbToSpectrum2019.hlsli"
 #include "Spectral-Tracing/Spectrum/SpectrumToRGB2019.hlsli"
-#include "Spectral-Tracing/SpectralValue/HeroSample.hlsli"
+#include "Spectral-Tracing/SpectralValue/HeroSpectrum.hlsli"
 
 struct SpectralValue
 {
-    void Init(HeroSample value);
+    void Init(HeroSpectrum value);
 
 #include "Spectral-Tracing/SpectralValue/ISpectralValue.hlsli"
 
-    HeroSample Value;
+    HeroSpectrum Value;
 };
 
-SpectralValue CreateSpectralValue(HeroSample v)
+SpectralValue CreateSpectralValue(HeroSpectrum v)
 {
     SpectralValue s;
     s.Value = v;
@@ -35,197 +35,132 @@ SpectralValue CreateWhiteSpectralValue()
     return s;
 }
 
-void SpectralValue::Init(HeroSample v) { Value = v; }
+void SpectralValue::Init(HeroSpectrum v) { Value = v; }
 void SpectralValue::InitBlack() { Value.InitBlack(); }
 void SpectralValue::InitWhite() { Value.InitWhite(); }
 
 void SpectralValue::FromRGB(float3 rgb, SpectrumType type, SpectralContext ctx)
 {
-    Value = RgbToSpectrumSample(rgb, type, ctx);
+    Value.InitBlack();
+
+    if (type == eReflectance)
+        Value.ReflectanceRgbToSpectrum(rgb, ctx);
+    else if (type == eIlluminant)
+        Value.IlluminantRgbToSpectrum(rgb, ctx);
 }
 
 void SpectralValue::AddRGB(float3 rgb, SpectrumType type, SpectralContext ctx)
 {
-    Value += RgbToSpectrumSample(rgb, type, ctx);
+    SpectralValue s2;
+    s2.FromRGB(rgb, type, ctx);
+    Value.Add(s2.Value);
 }
 
 float3 SpectralValue::ToRGB(SpectralContext ctx)
 {
-    return SpectrumSampleToRGB(Value, ctx, pdf);
+    return HeroToRGB(Value, ctx);
 }
 
 void SpectralValue::Add(SpectralValue v)
 {
-    Value += v.Value;
+    Value.Add(v.Value);
 }
 
 void SpectralValue::Add(float scalar)
 {
-    Value += scalar;
+    Value.Add(scalar);
 }
 
 void SpectralValue::Sub(SpectralValue v)
 {
-    Value -= v.Value;
+    Value.Sub(v.Value);
 }
 
 void SpectralValue::Sub(float scalar)
 {
-    Value -= scalar;
+    Value.Sub(scalar);
 }
 
 void SpectralValue::Mul(SpectralValue v)
 {
-    Value *= v.Value;
+    Value.Mul(v.Value);
 }
 
 void SpectralValue::Mul(float scalar)
 {
-    Value *= scalar;
+    Value.Mul(scalar);
 }
 
 void SpectralValue::Div(SpectralValue v)
 {
-    Value /= v.Value;
+    Value.Div(v.Value);
 }
 
 void SpectralValue::Div(float scalar)
 {
-    Value /= scalar;
+    Valu.Div(scalar);
 }
+
+SpectralValue Add(SpectralValue a, SpectralValue b) { return CreateSpectralValue(Add(a.Value, b.Value)); }
+SpectralValue Add(SpectralValue a, float scalar) { return CreateSpectralValue(Add(a.Value, scalar)); }
+SpectralValue Sub(SpectralValue a, SpectralValue b) { return CreateSpectralValue(Sub(a.Value, b.Value)); }
+SpectralValue Sub(SpectralValue a, float scalar) { return CreateSpectralValue(Sub(a.Value, scalar)); }
+SpectralValue Sub(float scalar, SpectralValue a) { return CreateSpectralValue(Sub(scalar, a.Value)); }
+SpectralValue Mul(SpectralValue a, SpectralValue b) { return CreateSpectralValue(Mul(a.Value, b.Value)); }
+SpectralValue Mul(SpectralValue a, float scalar) { return CreateSpectralValue(Mul(a.Value, scalar)); }
+SpectralValue Div(SpectralValue a, SpectralValue b) { return CreateSpectralValue(Div(a.Value, b.Value)); }
+SpectralValue Div(SpectralValue a, float scalar) { return CreateSpectralValue(Div(a.Value, scalar)); }
+SpectralValue Div(float scalar, SpectralValue a) { return CreateSpectralValue(Div(scalar, a.Value)); }
+
+SpectralValue Clamp(SpectralValue a, float lo, float hi) { return CreateSpectralValue(Clamp(a.Value, lo, hi)); }
+SpectralValue Sqrt(SpectralValue a) { return CreateSpectralValue(Sqrt(a.Value)); }
+SpectralValue Normalize(SpectralValue a) { return CreateSpectralValue(Normalize(a.Value)); }
+SpectralValue Exp(SpectralValue a) { return CreateSpectralValue(Exp(a.Value)); }
+
+SpectralValue Lerp(SpectralValue a, SpectralValue b, float t) { return CreateSpectralValue(Lerp(a.Value, b.Value, t)); }
+SpectralValue Lerp(SpectralValue a, float end, float t) { return CreateSpectralValue(Lerp(a.Value, end, t)); }
+SpectralValue Lerp(float start, SpectralValue a, float t) { return CreateSpectralValue(Lerp(start, a.Value, t)); }
 
 void SpectralValue::Sqrt()
 {
-    Value = sqrt(Value);
+    [unroll]
+    for (int i = 0; i < NUM_HERO_SAMPLES; i++)
+        Value.Samples[i] = sqrt(Value.Samples[i]);
 }
 
 void SpectralValue::Clamp(float lo, float hi)
 {
-    Value = clamp(Value, lo, hi);
+    [unroll]
+    for (int i = 0; i < NUM_HERO_SAMPLES; i++)
+        Value.Samples[i] = clamp(Value.Samples[i], lo, hi);
 }
 
 void SpectralValue::Normalize()
 {
-    Value = saturate(Value); // clamps between 0 and 1
+    [unroll]
+    for (int i = 0; i < NUM_HERO_SAMPLES; i++)
+        Value.Samples[i] = saturate(Value.Samples[i]);
 }
 
 void SpectralValue::Exp()
 {
-    Value = exp(Value);
+    [unroll]
+    for (int i = 0; i < NUM_HERO_SAMPLES; i++)
+        Value.Samples[i] = exp(Value.Samples[i]);
 }
-
-SpectralValue Add(SpectralValue a, SpectralValue b)
-{
-    SpectralValue r;
-    r.Value = a.Value + b.Value;
-    return r;
-}
-
-SpectralValue Add(SpectralValue a, float scalar)
-{
-    SpectralValue r;
-    r.Value = a.Value + scalar;
-    return r;
-}
-
-SpectralValue Sub(SpectralValue a, SpectralValue b)
-{
-    SpectralValue r;
-    r.Value = a.Value - b.Value;
-    return r;
-}
-
-SpectralValue Sub(SpectralValue a, float scalar)
-{
-    SpectralValue r;
-    r.Value = a.Value - scalar;
-    return r;
-}
-
-SpectralValue Sub(float scalar, SpectralValue a)
-{
-    SpectralValue r;
-    r.Value = scalar - a.Value;
-    return r;
-}
-
-SpectralValue Mul(SpectralValue a, SpectralValue b)
-{
-    SpectralValue r;
-    r.Value = a.Value * b.Value;
-    return r;
-}
-
-SpectralValue Mul(SpectralValue a, float scalar)
-{
-    SpectralValue r;
-    r.Value = a.Value * scalar;
-    return r;
-}
-
-SpectralValue Div(SpectralValue a, SpectralValue b)
-{
-    SpectralValue r;
-    r.Value = a.Value / b.Value;
-    return r;
-}
-
-SpectralValue Div(SpectralValue a, float scalar)
-{
-    SpectralValue r;
-    r.Value = a.Value / scalar;
-    return r;
-}
-
-SpectralValue Div(float scalar, SpectralValue a)
-{
-    SpectralValue r;
-    r.Value = scalar / a.Value;
-    return r;
-}
-
-SpectralValue Clamp(SpectralValue a, float lo, float hi)
-{
-    SpectralValue r;
-    r.Value = clamp(a.Value, lo, hi);
-    return r;
-}
-
-SpectralValue Sqrt(SpectralValue a)
-{
-    SpectralValue r;
-    r.Value = sqrt(a.Value);
-    return r;
-}
-
-SpectralValue Normalize(SpectralValue a)
-{
-    SpectralValue r;
-    r.Value = saturate(a.Value);
-    return r;
-}
-
-SpectralValue Exp(SpectralValue a)
-{
-    SpectralValue r;
-    r.Value = exp(a.Value);
-    return r;
-}
-
-SpectralValue Lerp(SpectralValue a, SpectralValue b, float t) { return CreateSpectralValue(lerp(a.Value, b.Value, t)); }
-SpectralValue Lerp(SpectralValue a, float end, float t) { return CreateSpectralValue(lerp(a.Value, end, t)); }
-SpectralValue Lerp(float start, SpectralValue a, float t) { return CreateSpectralValue(lerp(start, a.Value, t)); }
 
 float Luminance(SpectralValue a, SpectralContext ctx)
 {
-    float pdf = 1.0f / (float)VISIBLE_LIGHT_SPECTRUM_SIZE; // Assuming uniform sampling
-    float cieY = SampleCIE(ctx).y;
-    return a.Value * cieY / pdf;
+    return -1;
 }
 
 bool SpectralValue::IsBlack()
 {
-    return Value <= 0.0f;
+    [unroll]
+    for (int i = 0; i < NUM_HERO_SAMPLES; i++)
+        if (Value.Samples[i] > 0.0f)
+            return false;
+    return true;
 }
 
 #endif

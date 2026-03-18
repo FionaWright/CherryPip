@@ -1,29 +1,39 @@
 #ifndef H_SPECTRALCONTEXT_HERO_H
 #define H_SPECTRALCONTEXT_HERO_H
 
-#include "Spectral-Tracing/SpectralValue/HeroSample.hlsli"
+#include "Spectral-Tracing/SpectralValue/HeroSpectrum.hlsli"
 
 struct SpectralContext
 {
     void Init(float lambdas[NUM_HERO_SAMPLES]);
+    void GetHeroLambda();
+    void GetLambda(int i);
 
 #include "Spectral-Tracing/SpectralContext/ISpectralContext.hlsli"
 
-    float HeroLambda;
-    float NonHeroLambdas[NUM_HERO_SAMPLES-1];
+    float Lambdas[NUM_HERO_SAMPLES];
 };
 
 void SpectralContext::Init(float lambdas[NUM_HERO_SAMPLES])
 {
-    HeroLambda = lambdas[0];
     [unroll]
-    for (int i = 0; i < NUM_HERO_SAMPLES-1; i++)
-        NonHeroLambdas[i] = lambdas[i+1];
+    for (int i = 0; i < NUM_HERO_SAMPLES; i++)
+        Lambdas[i] = lambdas[i];
 }
 
 void SpectralContext::Create(inout RngInfo rngInfo)
 {
     // TODO
+}
+
+void SpectralContext::GetHeroLambda()
+{
+    return Lambdas[0];
+}
+
+void SpectralContext::GetLambda(int i)
+{
+    return Lambdas[i];
 }
 
 #endif

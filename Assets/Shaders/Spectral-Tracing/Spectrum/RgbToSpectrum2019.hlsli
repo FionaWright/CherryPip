@@ -69,4 +69,37 @@ float IlluminantRgbToSpectrumSample(float3 rgb, float lambda)
     return energy * d65Sample;
 }
 
+void HeroSpectrum::ReflectanceRgbToSpectrum(float3 rgb, SpectralContext ctx)
+{
+    [unroll]
+    for (int i = 0; i < NUM_HERO_SAMPLES; i++)
+    {
+        float lambda = ctx.GetLambda(i);
+        float fIdx = (lambda - CIE_BASIS_LAMBDA_MIN) / (float)CIE_BASIS_LAMBDA_DELTA;
+        int i0 = floor(fIdx);
+        int i1 = i0 + 1;
+        i0 = clamp(i0, 0, 390);
+        i1 = clamp(i1, 0, 390);
+
+        float t = fIdx - i0;
+
+        float3 energies = lerp(cCIE_BasisBT709[i0], cCIE_BasisBT709[i1], t);
+
+        Samples[i] = max(0.0f, dot(energies, rgb));
+    }
+}
+
+void HeroSpectrum::IlluminantRgbToSpectrum(float3 rgb, SpectralContext ctx)
+{
+    ReflectanceRgbToSpectrum(rgb, ctx);
+
+    [unroll]
+    for (int i = 0; i < NUM_HERO_SAMPLES; i++)
+    {
+        float lambda = ctx.GetLambda(i);
+        float d65 = SampleD65(lambda);
+        Samples[i] *= d65;
+    }
+}
+
 #endif

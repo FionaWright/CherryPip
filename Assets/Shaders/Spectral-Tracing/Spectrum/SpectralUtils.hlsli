@@ -155,4 +155,19 @@ float3 RoundTripTest(float3 lrgb)
     return SpectrumToRGB(s);
 }
 
+float Luminance(Spectrum a)
+{
+    float lum = 0.0f;
+
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+    {
+        float lambda = IndexToLambda(i);
+        float cieY = SampleCIE(lambda).y;
+        lum += cieY * a.Samples[i];
+    }
+
+    return lum * SPECTRUM_DELTA_LAMBDA / cCIE_Y_integral;
+}
+
 #endif

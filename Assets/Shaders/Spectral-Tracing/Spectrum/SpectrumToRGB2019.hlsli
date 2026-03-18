@@ -3,10 +3,19 @@
 
 float3 SpectrumToXYZ(Spectrum spectrum);
 float3 SpectrumToRGB(Spectrum spectrum);
+float3 HeroToXYZ(Spectrum spectrum, SpectralContext ctx);
+float3 HeroToRGB(Spectrum spectrum, SpectralContext ctx);
 
 #include "Spectral-Tracing/Spectrum/Spectrum.hlsli"
 #include "Spectral-Tracing/Spectrum/SpectralUtils.hlsli"
 #include "Spectral-Tracing/SpectralData/CIE2006.hlsli"
+
+static const float3x3 cMatXyzToRgb =
+    {
+        3.240479f, -1.537150f, -0.498535f,
+        -0.969256f, 1.875991f, 0.041556f,
+        0.055648f, -0.204043f, 1.057311f
+    };
 
 float3 SampleCIE(float lambda)
 {
@@ -39,13 +48,6 @@ float3 SpectrumToXYZ(Spectrum spectrum)
 
 float3 SpectrumToRGB(Spectrum spectrum)
 {
-    static const float3x3 cMatXyzToRgb =
-    {
-        3.240479f, -1.537150f, -0.498535f,
-        -0.969256f, 1.875991f, 0.041556f,
-        0.055648f, -0.204043f, 1.057311f
-    };
-
     float3 xyz = SpectrumToXYZ(spectrum);
     float3 rgb = mul(cMatXyzToRgb, xyz);
     return rgb;
@@ -59,31 +61,34 @@ float3 SpectrumSampleToXYZ(float energy, float lambda, float pdf)
 
 float3 SpectrumSampleToRGB(float energy, float lambda, float pdf)
 {
-    static const float3x3 cMatXyzToRgb =
-    {
-        3.240479f, -1.537150f, -0.498535f,
-        -0.969256f, 1.875991f, 0.041556f,
-        0.055648f, -0.204043f, 1.057311f
-    };
-
     float3 xyz = SpectrumSampleToXYZ(energy, lambda, pdf);
     float3 rgb = mul(cMatXyzToRgb, xyz);
     return rgb;
 }
 
-float Luminance(Spectrum a)
+float3 HeroToXYZ(HeroSpectrum spectrum, SpectralContext ctx)
 {
-    float lum = 0.0f;
+    float3 xyz = 0.0f;
 
     [unroll]
-    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+    for (int i = 0; i < NUM_HERO_SAMPLES; i++)
     {
-        float lambda = IndexToLambda(i);
-        float cieY = SampleCIE(lambda).y;
-        lum += cieY * a.Samples[i];
+        float lambda = ctx.GetLambda(i);
+        float3 cie = SampleCIE(lambda);
+        xyz += spectrum.Samples[i] * cie;
     }
 
-    return lum * SPECTRUM_DELTA_LAMBDA / cCIE_Y_integral;
+    // Normalization
+    xyz *= (float)HERO_DELTA_LAMBDA;
+    xyz /= cCIE_Y_integral;
+    return xyz;
+}
+
+float3 HeroToRGB(HeroSpectrum spectrum, SpectralContext ctx)
+{
+    float3 xyz = HeroToXYZ(spectrum, ctx);
+    float3 rgb = mul(cMatXyzToRgb, xyz);
+    return rgb;
 }
 
 #endif

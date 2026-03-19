@@ -113,9 +113,14 @@ static const SellmeierEquation cSellmeier_BGG = {
 };
 
 // TODO: Temp
-float DebugSampleIorN(float lambda)
+float DebugSampleIorN(SpectralContext ctx)
 {
-    return cSellmeier_BGG.SampleN(lambda);
+#if defined(SPECTRAL_SINGLE_WAVELENGTH_SAMPLING)
+    return cSellmeier_BGG.SampleN(ctx.Lambda);
+#elif defined(SPECTRAL_HERO_SAMPLING)
+    return 1;
+#endif
+    return -1;
 }
 
 void Dielectric_Polarized(float n1, float n2, float cosTi, out float rp2, out float rs2)

@@ -41,10 +41,11 @@ SamplerState gSampler : register(s0);
 
 #include "Random.h"
 #include "Spectral-Tracing/Trace.hlsli"
+#include "Path-Tracing/Accumulate.hlsli"
 
 float4 PSMain(VsOut input) : SV_Target0
 {
-//#include "Spectral-Tracing/Tests.hlsli"
+//#include "Spectral-Tracing/Debug/Tests.hlsli"
 
     RayQuery<RAY_FLAGS> q;
 
@@ -108,35 +109,26 @@ float4 PSMain(VsOut input) : SV_Target0
         ctx.Lambda = cDebugForcedWavelength;
 #endif
 
-        colorSum += Trace(q,
-                          flags,
-                          instanceMask,
-                          ray,
-                          ctx,
-                          rngInfo);
+        SpectralValue s1 = CreateBlackSpectralValue();
+        SpectralValue s2 = CreateWhiteSpectralValue();
+        s2.FromRGB(float3(1, 0, 0), eIlluminant, ctx);
+        s1.Add(s2);
+        float3 rgb = s1.ToRGB(ctx);
+        colorSum += rgb;
+
+        //colorSum += Trace(q,
+        //                  flags,
+        //                  instanceMask,
+        //                  ray,
+        //                  ctx,
+        //                  rngInfo);
     }
 
     colorSum /= float(cbvPathTracing.SPP);
 
-    if (!cbvPathTracing.AccumulationEnabled)
-        return float4(colorSum, 1);
-
     uint2 pixelCoord = uint2(input.position.xy);
 
-    float3 accumColor = gAccum.Load(pixelCoord).rgb;
-    if (IsNaN3(accumColor) && false) // Disabled due to false positives
-        //return float4(1, 0, 1, 1);
-        return float4(PcgRand01(rngInfo.IndependentRngState), PcgRand01(rngInfo.IndependentRngState), PcgRand01(rngInfo.IndependentRngState), 1);
-
-    float3 newSum = accumColor + colorSum;
-
-    float accumFrameCount = (float)cbvPathTracing.FrameIdx;
-    float totalFrames = accumFrameCount + 1.0f;
-
-    float3 average = (accumColor * accumFrameCount + colorSum) / totalFrames;
-
-    if (cbvPathTracing.UpdateAccumulation)
-        gAccum[pixelCoord].rgb = average;
+    float3 average = AccumulateAndFetch(pixelCoord, colorSum, false);
 
     if (cGammaCorrection)
         average = LRGB_to_SRGB(average);

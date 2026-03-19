@@ -1,9 +1,7 @@
 #ifndef H_SPECTRAL_VALUE_HERO_H
 #define H_SPECTRAL_VALUE_HERO_H
 
-#include "Spectral-Tracing/Spectrum/RgbToSpectrum2019.hlsli"
-#include "Spectral-Tracing/Spectrum/SpectrumToRGB2019.hlsli"
-#include "Spectral-Tracing/SpectralValue/HeroSpectrum.hlsli"
+#include "Spectral-Tracing/Spectrum/HeroSpectrum.hlsli"
 
 struct SpectralValue
 {
@@ -13,6 +11,10 @@ struct SpectralValue
 
     HeroSpectrum Value;
 };
+
+#include "Spectral-Tracing/SpectralContext/SpectralContext.hlsli"
+#include "Spectral-Tracing/Spectrum/RgbToSpectrum2019.hlsli"
+#include "Spectral-Tracing/Spectrum/SpectrumToRGB2019.hlsli"
 
 SpectralValue CreateSpectralValue(HeroSpectrum v)
 {
@@ -61,45 +63,14 @@ float3 SpectralValue::ToRGB(SpectralContext ctx)
     return HeroToRGB(Value, ctx);
 }
 
-void SpectralValue::Add(SpectralValue v)
-{
-    Value.Add(v.Value);
-}
-
-void SpectralValue::Add(float scalar)
-{
-    Value.Add(scalar);
-}
-
-void SpectralValue::Sub(SpectralValue v)
-{
-    Value.Sub(v.Value);
-}
-
-void SpectralValue::Sub(float scalar)
-{
-    Value.Sub(scalar);
-}
-
-void SpectralValue::Mul(SpectralValue v)
-{
-    Value.Mul(v.Value);
-}
-
-void SpectralValue::Mul(float scalar)
-{
-    Value.Mul(scalar);
-}
-
-void SpectralValue::Div(SpectralValue v)
-{
-    Value.Div(v.Value);
-}
-
-void SpectralValue::Div(float scalar)
-{
-    Valu.Div(scalar);
-}
+void SpectralValue::Add(SpectralValue v) { Value.Add(v.Value); }
+void SpectralValue::Add(float scalar) { Value.Add(scalar); }
+void SpectralValue::Sub(SpectralValue v) { Value.Sub(v.Value); }
+void SpectralValue::Sub(float scalar) { Value.Sub(scalar); }
+void SpectralValue::Mul(SpectralValue v) { Value.Mul(v.Value); }
+void SpectralValue::Mul(float scalar) { Value.Mul(scalar); }
+void SpectralValue::Div(SpectralValue v) { Value.Div(v.Value); }
+void SpectralValue::Div(float scalar) { Value.Div(scalar); }
 
 SpectralValue Add(SpectralValue a, SpectralValue b) { return CreateSpectralValue(Add(a.Value, b.Value)); }
 SpectralValue Add(SpectralValue a, float scalar) { return CreateSpectralValue(Add(a.Value, scalar)); }

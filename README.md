@@ -70,9 +70,11 @@ C++, HLSL and Python are the main languages.
 
 ### Spectral Tracer Render Backend
 - CIE2006 + Mallet&Yuksel2019 spectral primary decomposition
-- Many different spectra tests
+- Multi-Lobe gaussian curve fitting for CIE curves
+- Sellmeier curve fitting for material reflective index spectra
+- Many different debug spectra tests
 - Zero round-trip error
-- Full spectrum or Wavelength-per-ray modes
+- Full-Spectrum, Single-Wavelength and Hero-Sampling spectral sampling modes
 - Lambert, Microfacet and Glass Lighting Models
 
 ## History 

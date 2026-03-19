@@ -69,6 +69,7 @@ float IlluminantRgbToSpectrumSample(float3 rgb, float lambda)
     return energy * d65Sample;
 }
 
+#ifdef SPECTRAL_HERO_SPECTRAL_SAMPLING
 void HeroSpectrum::ReflectanceRgbToSpectrum(float3 rgb, SpectralContext ctx)
 {
     [unroll]
@@ -101,5 +102,6 @@ void HeroSpectrum::IlluminantRgbToSpectrum(float3 rgb, SpectralContext ctx)
         Samples[i] *= d65;
     }
 }
+#endif
 
 #endif

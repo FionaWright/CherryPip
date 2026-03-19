@@ -101,17 +101,18 @@ float4 PSMain(VsOut input) : SV_Target0
             ray.Direction = normalize(focalPoint - ray.Origin);
         }
 
-        SpectralContext lambda;
-        lambda.Create(rngInfo.IndependentRngState);
+        SpectralContext ctx;
+        ctx.Create(rngInfo);
 
-        if (cDebugForceWavelength)
-            lambda = cDebugForcedWavelength;
+#if defined(DEBUG_FORCE_WAVELENGTH) && defined(SPECTRAL_SINGLE_WAVELENGTH_SAMPLING)
+        ctx.Lambda = cDebugForcedWavelength;
+#endif
 
         colorSum += Trace(q,
                           flags,
                           instanceMask,
                           ray,
-                          lambda,
+                          ctx,
                           rngInfo);
     }
 

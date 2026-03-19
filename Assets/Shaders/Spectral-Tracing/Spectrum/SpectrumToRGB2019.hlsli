@@ -8,6 +8,7 @@ float3 HeroToRGB(Spectrum spectrum, SpectralContext ctx);
 
 #include "Spectral-Tracing/Spectrum/Spectrum.hlsli"
 #include "Spectral-Tracing/Spectrum/SpectralUtils.hlsli"
+#include "Spectral-Tracing/Spectrum/HeroSpectrum.hlsli"
 #include "Spectral-Tracing/SpectralData/CIE2006.hlsli"
 
 static const float3x3 cMatXyzToRgb =
@@ -66,6 +67,7 @@ float3 SpectrumSampleToRGB(float energy, float lambda, float pdf)
     return rgb;
 }
 
+#ifdef SPECTRAL_HERO_SPECTRAL_SAMPLING
 float3 HeroToXYZ(HeroSpectrum spectrum, SpectralContext ctx)
 {
     float3 xyz = 0.0f;
@@ -90,5 +92,6 @@ float3 HeroToRGB(HeroSpectrum spectrum, SpectralContext ctx)
     float3 rgb = mul(cMatXyzToRgb, xyz);
     return rgb;
 }
+#endif
 
 #endif

@@ -34,7 +34,7 @@ void PathTracer::RenderGUI(bool& outPtDirty, bool& outShaderDirty, bool& outScen
         ImGui::Unindent(IM_GUI_INDENTATION);
         m_spectralConfig.SamplingMode = static_cast<SpectralSamplingMode>(e);
 
-        if (m_spectralConfig.SingleLambdaRendering)
+        if (m_spectralConfig.SamplingMode == eSingleWavelength)
         {
             outShaderDirty |= ImGui::Checkbox("Force Wavelength", &m_spectralConfig.DebugForceWavelengthEnabled);
             if (m_spectralConfig.DebugForceWavelengthEnabled)

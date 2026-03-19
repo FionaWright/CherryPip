@@ -33,7 +33,7 @@ float SampleD65(float lambda)
     int i0 = (int)clamp(floor(fIdx), 0, WHITE_D65_COUNT-1);
     int i1 = min(i0+1, WHITE_D65_COUNT-1);
     float t = fIdx - i0;
-    return = lerp(cWhiteD65[i0], cWhiteD65[i1], t) * 0.01f; // Normalize
+    return lerp(cWhiteD65[i0], cWhiteD65[i1], t) * 0.01f; // Normalize
 }
 
 Spectrum WhiteSpectrum_D65()

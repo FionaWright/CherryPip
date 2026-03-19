@@ -13,7 +13,7 @@ void Model_Microfacet_Spectral(
     float3 Ns,
     SpectralValue Li,
     SpectralValue albedo,
-    float lambda,
+    SpectralContext ctx,
     float3 anisoDirAndStrength,
     float3 wo,        // V
     out float3 wi,    // L
@@ -29,7 +29,7 @@ void Model_Microfacet_Spectral(
     if (!entering)
     {
         SpectralValue sigmaASpectral;
-        sigmaASpectral.FromRGB(sigmaA, eReflectance, lambda);
+        sigmaASpectral.FromRGB(sigmaA, eReflectance, ctx);
         sigmaASpectral.Mul(-hitDist);
         throughput.Mul(Exp(sigmaASpectral));
     }
@@ -38,8 +38,8 @@ void Model_Microfacet_Spectral(
     float3 V_s = ToDefinedSpace(wo, T, B, Ns);
     float NdV = SSpaceCosTheta(V_s);
 
-    float nCurrent = entering ? IOR_AIR : DebugSampleIorN(lambda);
-    float nNext = entering ? DebugSampleIorN(lambda) : IOR_AIR;
+    float nCurrent = entering ? IOR_AIR : DebugSampleIorN(ctx.Lambda);
+    float nNext = entering ? DebugSampleIorN(ctx.Lambda) : IOR_AIR;
 
     if (CheckTIR(nCurrent, nNext, abs(NdV)))
     {

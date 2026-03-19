@@ -1,9 +1,6 @@
 #ifndef H_SPECTRALCONTEXT_FLOAT_H
 #define H_SPECTRALCONTEXT_FLOAT_H
 
-#include "Random.h"
-#include "Spectral-Tracing/Spectrum/SpectralUtils.hlsli"
-
 struct SpectralContext
 {
     void Init(float lambda);
@@ -12,6 +9,8 @@ struct SpectralContext
 
     float Lambda;
 };
+
+#include "Spectral-Tracing/Spectrum/SpectralUtils.hlsli"
 
 void SpectralContext::Init(float lambda)
 {

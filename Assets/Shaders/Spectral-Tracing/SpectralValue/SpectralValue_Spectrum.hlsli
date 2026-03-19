@@ -1,9 +1,6 @@
 #ifndef H_SPECTRAL_VALUE_SPECTRUM_H
 #define H_SPECTRAL_VALUE_SPECTRUM_H
 
-#include "Spectral-Tracing/Spectrum/RgbToSpectrum2019.hlsli"
-#include "Spectral-Tracing/Spectrum/SpectrumToRGB2019.hlsli"
-
 struct SpectralValue
 {
     void Init(Spectrum v);
@@ -12,6 +9,10 @@ struct SpectralValue
 
     Spectrum Value;
 };
+
+#include "Spectral-Tracing/SpectralContext/SpectralContext.hlsli"
+#include "Spectral-Tracing/Spectrum/RgbToSpectrum2019.hlsli"
+#include "Spectral-Tracing/Spectrum/SpectrumToRGB2019.hlsli"
 
 SpectralValue CreateSpectralValue(Spectrum v)
 {

@@ -12,6 +12,7 @@ float IlluminantRgbToSpectrumSample(float3 rgb, float lambda);
 #include "Spectral-Tracing/Spectrum/Spectrum.hlsli"
 #include "Spectral-Tracing/SpectralData/CIE2006.hlsli"
 #include "Spectral-Tracing/Spectrum/ColorSpectrums.hlsli"
+#include "Spectral-Tracing/SpectralContext/SpectralContext.hlsli"
 
 // Reflectance Spectrum:
 // Incoming light reflected at each wavelength [0, 1]
@@ -69,7 +70,8 @@ float IlluminantRgbToSpectrumSample(float3 rgb, float lambda)
     return energy * d65Sample;
 }
 
-#ifdef SPECTRAL_HERO_SPECTRAL_SAMPLING
+#ifdef SPECTRAL_HERO_SAMPLING
+#include "Spectral-Tracing/Spectrum/HeroSpectrum.hlsli"
 void HeroSpectrum::ReflectanceRgbToSpectrum(float3 rgb, SpectralContext ctx)
 {
     [unroll]

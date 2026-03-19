@@ -18,6 +18,7 @@ float IndexToLambda(float idx);
 #include "Spectral-Tracing/Spectrum/RgbToSpectrum2019.hlsli"
 #include "Spectral-Tracing/Spectrum/SpectrumToRGB2019.hlsli"
 #include "Spectral-Tracing/Spectrum/ColorSpectrums.hlsli"
+#include "Spectral-Tracing/SpectralValue/SpectralValue.hlsli"
 #include "Random.h"
 
 #define CONSTANT_BOLTZMANN 1.38064852e-23f
@@ -153,6 +154,14 @@ float3 RoundTripTest(float3 lrgb)
     s.Mul(whiteD65); // Reflectance -> Radiance
 
     return SpectrumToRGB(s);
+}
+
+[noinline] // Prevent inlining as it would otherwise explode compile time
+float3 RoundTripTest_v2(float3 lrgb, SpectralContext ctx)
+{
+    SpectralValue s;
+    s.FromRGB(lrgb, eIlluminant, ctx);
+    return s.ToRGB(ctx);
 }
 
 float Luminance(Spectrum a)

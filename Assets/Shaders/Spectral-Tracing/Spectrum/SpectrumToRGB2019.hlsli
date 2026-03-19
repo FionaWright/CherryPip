@@ -67,7 +67,7 @@ float3 SpectrumSampleToRGB(float energy, float lambda, float pdf)
     return rgb;
 }
 
-#ifdef SPECTRAL_HERO_SPECTRAL_SAMPLING
+#ifdef SPECTRAL_HERO_SAMPLING
 float3 HeroToXYZ(HeroSpectrum spectrum, SpectralContext ctx)
 {
     float3 xyz = 0.0f;

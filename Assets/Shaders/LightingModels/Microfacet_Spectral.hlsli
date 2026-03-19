@@ -38,8 +38,8 @@ void Model_Microfacet_Spectral(
     float3 V_s = ToDefinedSpace(wo, T, B, Ns);
     float NdV = SSpaceCosTheta(V_s);
 
-    float nCurrent = entering ? IOR_AIR : DebugSampleIorN(ctx.Lambda);
-    float nNext = entering ? DebugSampleIorN(ctx.Lambda) : IOR_AIR;
+    float nCurrent = entering ? IOR_AIR : DebugSampleIorN(ctx);
+    float nNext = entering ? DebugSampleIorN(ctx) : IOR_AIR;
 
     if (CheckTIR(nCurrent, nNext, abs(NdV)))
     {
@@ -108,7 +108,15 @@ void Model_Microfacet_Spectral(
         float NdH = SSpaceCosTheta(H_s);
         float VdH = dot(H_s, V_s);
 
+#if defined(SPECTRAL_SINGLE_WAVELENGTH_SAMPLING)
         SpectralValue F = CreateSpectralValue(Dielectric_Unpolarized(nCurrent, nNext, VdH));
+#elif defined(SPECTRAL_HERO_SAMPLING)
+        SpectralValue F;
+        F.InitBlack();
+#else
+        SpectralValue F;
+        F.InitBlack();
+#endif
 
         float D = mm.D(H_s);
         float G = mm.G2(L_s, V_s);

@@ -130,8 +130,6 @@ void HotReloader::CheckFiles(D3D* d3d)
     return;
 #endif
 
-    std::cout << "\n\n\n";
-
     for (int i = 0; i < s_shadersVsPs.size(); i++)
     {
         if (!s_shadersVsPs[i].ShaderPtr || !s_shadersVsPs[i].RootSig)

@@ -66,7 +66,7 @@ float ReflectanceRgbToSpectrumSample(float3 rgb, float lambda)
 float IlluminantRgbToSpectrumSample(float3 rgb, float lambda)
 {
     float energy = ReflectanceRgbToSpectrumSample(rgb, lambda);
-    float d65Sample = WhiteSpectrum_D65().Sample(lambda);
+    float d65Sample = SampleD65_MLG(lambda);
     return energy * d65Sample;
 }
 
@@ -100,7 +100,7 @@ void HeroSpectrum::IlluminantRgbToSpectrum(float3 rgb, SpectralContext ctx)
     for (int i = 0; i < NUM_HERO_SAMPLES; i++)
     {
         float lambda = ctx.GetLambda(i);
-        float d65 = SampleD65(lambda);
+        float d65 = SampleD65_MLG(lambda);
         Samples[i] *= d65;
     }
 }

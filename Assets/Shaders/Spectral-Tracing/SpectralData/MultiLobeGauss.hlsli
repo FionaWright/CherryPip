@@ -1,7 +1,7 @@
 #ifndef H_MULTI_LOBE_GAUSS_H
 #define H_MULTI_LOBE_GAUSS_H
 
-#define MAX_NUM_GAUSSIANS 5
+#define MAX_NUM_GAUSSIANS 7
 
 struct Gaussian
 {

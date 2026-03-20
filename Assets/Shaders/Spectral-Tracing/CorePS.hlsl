@@ -45,28 +45,7 @@ SamplerState gSampler : register(s0);
 
 float4 PSMain(VsOut input) : SV_Target0
 {
-//#include "Spectral-Tracing/Debug/Tests.hlsli"
-
-    //RngInfo rngInfo2;
-    //float3 rgb = 0;
-    //for (uint i = 0; i < cbvPathTracing.SPP; i++)
-    //{
-    //    rngInfo2.IndependentRngState = PrngSeed((uint2)input.position.xy, i, cbvPathTracing.FrameIdx);
-    //    //rngInfo2.IndependentRngState = i;
-    //    SpectralContext ctx2;
-    //    ctx2.Create(rngInfo2);
-//
-    //    SpectralValue s1 = CreateBlackSpectralValue();
-    //    s1.Add(0.01f); // This line PLUMMETS performance
-    //    rgb += s1.ToRGB(ctx2);
-    //    //rgb += s1.Value.Samples[0];
-//
-    //    //float3 cie = SampleCIE(ctx2.Lambda);
-    //    //float3 cie = 1;
-    //    //float3 xyz = s1.Value * cie / cCIE_Y_integral / max(1e-6f, ctx2.PDF);
-    //    //rgb += mul(cMatXyzToRgb, xyz);
-    //}
-    //return float4(rgb, 1.0f);
+#include "Spectral-Tracing/Debug/Tests.hlsli"
 
     RayQuery<RAY_FLAGS> q;
 

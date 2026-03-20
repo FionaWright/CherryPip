@@ -156,8 +156,8 @@ float3 RoundTripTest(float3 lrgb)
     return SpectrumToRGB(s);
 }
 
-[noinline] // Prevent inlining as it would otherwise explode compile time
-float3 RoundTripTest_v2(float3 lrgb, SpectralContext ctx)
+//[noinline] // Prevent inlining as it would otherwise explode compile time
+float3 RoundTripTest_v2(float3 lrgb, in SpectralContext ctx)
 {
     SpectralValue s;
     s.FromRGB(lrgb, eIlluminant, ctx);

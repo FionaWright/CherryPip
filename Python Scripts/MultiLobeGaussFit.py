@@ -6,10 +6,11 @@ from bokeh.plotting import figure, show, output_file
 from bokeh.models import Legend
 
 # -------- CONFIG --------
-NUM_GAUSSIANS = 5  # per channel
+NUM_GAUSSIANS = 2  # per channel
+NUM_SIGMOIDS = 2
 LAMBDA_MIN = 390
-LAMBDA_MAX = 830
-LAMBDA_COUNT = 441
+LAMBDA_MAX = 780
+LAMBDA_COUNT = 391
 LAMBDA_DELTA = 1
 
 # -------- LOAD CSV --------
@@ -30,29 +31,82 @@ wl_norm = (wavelengths - LAMBDA_MIN) / (LAMBDA_MAX - LAMBDA_MIN)
 def gaussian(x, mu, sigma):
     return np.exp(-0.5 * ((x - mu) / sigma) ** 2)
 
+def sigmoid(x, k, x0):
+    return 1.0 / (1.0 + np.exp(-k * (x - x0)))
+
 def multi_gaussian(x, *params):
-    result = np.zeros_like(x)
-    for i in range(0, len(params), 3):
+    c = params[0]  # baseline
+    result = np.full_like(x, c)
+
+    for i in range(1, len(params), 3):
         a = params[i]
         mu = params[i + 1]
         sigma = params[i + 2]
         result += a * gaussian(x, mu, sigma)
+
+    return result
+
+def model(x, *params):
+    idx = 0
+
+    # baseline
+    c = params[idx]
+    idx += 1
+    result = np.full_like(x, c)
+
+    # gaussians
+    for _ in range(NUM_GAUSSIANS):
+        a = params[idx]
+        mu = params[idx + 1]
+        sigma = params[idx + 2]
+        result += a * gaussian(x, mu, sigma)
+        idx += 3
+
+    # sigmoids
+    for _ in range(NUM_SIGMOIDS):
+        b = params[idx]
+        k = params[idx + 1]
+        x0 = params[idx + 2]
+        result += b * sigmoid(x, k, x0)
+        idx += 3
+
     return result
 
 # -------- FIT FUNCTION --------
 def fit_channel(y_data, name):
-    params_init = []
-    for i in range(NUM_GAUSSIANS):
-        mu_guess = (i + 0.5) / NUM_GAUSSIANS
-        sigma_guess = 0.15
-        a_guess = np.max(y_data) / NUM_GAUSSIANS
-        params_init += [a_guess, mu_guess, sigma_guess]
+    params_init = [np.min(y_data)]
 
-    lower = [0.0, 0.0, 0.01] * NUM_GAUSSIANS
-    upper = [np.inf, 1.0, 0.5] * NUM_GAUSSIANS
+    # gaussians
+    for i in range(NUM_GAUSSIANS):
+        params_init += [
+            (np.max(y_data) - np.min(y_data)) / NUM_GAUSSIANS,
+            (i + 0.5) / NUM_GAUSSIANS,
+            0.2
+        ]
+
+    # sigmoids
+    for i in range(NUM_SIGMOIDS):
+        params_init += [
+            0.1,   # amplitude
+            10.0,  # steepness
+            0.5    # center
+        ]
+
+    lower = [0.0]
+    upper = [1.0]
+
+    # gaussians
+    for _ in range(NUM_GAUSSIANS):
+        lower += [0.0, 0.0, 0.01]
+        upper += [np.inf, 1.0, 1.0]
+
+    # sigmoids
+    for _ in range(NUM_SIGMOIDS):
+        lower += [-1.0, 0.1, 0.0]   # b, k, x0
+        upper += [1.0, 50.0, 1.0]
 
     params, _ = curve_fit(
-        multi_gaussian,
+        model,
         wl_norm,
         y_data,
         p0=params_init,
@@ -60,13 +114,24 @@ def fit_channel(y_data, name):
         maxfev=50000
     )
 
-    fitted = multi_gaussian(wl_norm, *params)
+    fitted = model(wl_norm, *params)
     rmse = np.sqrt(np.mean((fitted - y_data) ** 2))
 
     print(f"\n{name} channel:")
     print(f"RMSE: {rmse:.6f}")
-    for i in range(0, len(params), 3):
-        print(f"  {params[i]:.6f}, {params[i+1]:.6f}, {params[i+2]:.6f}")
+    idx = 0
+    print(f"  baseline: {params[idx]:.6f}")
+    idx += 1
+
+    print("  Gaussians:")
+    for _ in range(NUM_GAUSSIANS):
+        print(f"    a={params[idx]:.6f}, mu={params[idx+1]:.6f}, sigma={params[idx+2]:.6f}")
+        idx += 3
+
+    print("  Sigmoids:")
+    for _ in range(NUM_SIGMOIDS):
+        print(f"    b={params[idx]:.6f}, k={params[idx+1]:.6f}, x0={params[idx+2]:.6f}")
+        idx += 3
 
     return params, fitted
 
@@ -78,7 +143,7 @@ params_Z, rmse_Z = fit_channel(Z_data, "Z")
 # -------- SIMPLE VALIDATION --------
 print("\n--- Validation ---")
 def validate_channel(y_data, params, name):
-    fitted = multi_gaussian(wl_norm, *params)
+    fitted = model(wl_norm, *params)
     max_error = np.max(np.abs(fitted - y_data))
     mean_error = np.mean(np.abs(fitted - y_data))
     print(f"{name}: Max error = {max_error:.6f}, Mean error = {mean_error:.6f}")

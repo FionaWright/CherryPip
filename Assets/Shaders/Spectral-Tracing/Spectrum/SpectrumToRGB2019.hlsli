@@ -33,7 +33,7 @@ float3 SampleCIE(float lambda)
 // Better for spectral sampling modes that don't know lambda at comptime
 float3 SampleCIE_MLG(float lambda)
 {
-    float normalizedLambda = (lambda - VISIBLE_LIGHT_SPECTRUM_MIN) / (830.0f - 390.0f); // CIE Range
+    float normalizedLambda = (lambda - VISIBLE_LIGHT_SPECTRUM_MIN) / float(CIE_XYZBAR_LAMBDA_SIZE);
     float x = cCIE_XYZbar_MLG_X.Sample(normalizedLambda);
     float y = cCIE_XYZbar_MLG_Y.Sample(normalizedLambda);
     float z = cCIE_XYZbar_MLG_Z.Sample(normalizedLambda);

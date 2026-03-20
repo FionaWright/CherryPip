@@ -70,7 +70,7 @@ C++, HLSL and Python are the main languages.
 
 ### Spectral Tracer Render Backend
 - CIE2006 + Mallet&Yuksel2019 spectral primary decomposition
-- Multi-Lobe gaussian curve fitting for CIE curves
+- Multi-Lobe gaussian curve fitting for CIE & D65 curves
 - Sellmeier curve fitting for material reflective index spectra
 - Many different debug spectra tests
 - Zero round-trip error

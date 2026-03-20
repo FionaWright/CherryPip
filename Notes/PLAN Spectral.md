@@ -7,7 +7,8 @@
 - [ ] Hero wavelength sampling
 - [ ] Finish reading PBRT section on specular
 - [ ] Implement proper BTDF transmission into the path-tracer first, deprecate glass model?
-- [ ] Implement Fresnel + BTDF into the spectral-tracer 
+- [ ] Fix Fresnel + BTDF
+- [ ] Add conductors to fresnel
 - [ ] Implement other random stuff like Russian Roulette, etc
 - [ ] Rayleigh/Mie scattering, Mist
 - [ ] Thin-film interference

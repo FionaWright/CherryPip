@@ -33,7 +33,7 @@ float3 SampleCIE(float lambda)
 // Better for spectral sampling modes that don't know lambda at comptime
 float3 SampleCIE_MLG(float lambda)
 {
-    float normalizedLambda = (lambda - VISIBLE_LIGHT_SPECTRUM_MIN) / float(VISIBLE_LIGHT_SPECTRUM_SIZE);
+    float normalizedLambda = (lambda - VISIBLE_LIGHT_SPECTRUM_MIN) / (830.0f - 390.0f); // CIE Range
     float x = cCIE_XYZbar_MLG_X.Sample(normalizedLambda);
     float y = cCIE_XYZbar_MLG_Y.Sample(normalizedLambda);
     float z = cCIE_XYZbar_MLG_Z.Sample(normalizedLambda);
@@ -93,8 +93,8 @@ float3 HeroToXYZ(HeroSpectrum spectrum, SpectralContext ctx)
     }
 
     // Normalization
-    xyz *= (float)HERO_DELTA_LAMBDA;
     xyz /= cCIE_Y_integral;
+    xyz /= max(1e-6f, ctx.GetPDF());
     return xyz;
 }
 

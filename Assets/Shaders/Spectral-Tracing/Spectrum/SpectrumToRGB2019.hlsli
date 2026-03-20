@@ -95,6 +95,7 @@ float3 HeroToXYZ(HeroSpectrum spectrum, SpectralContext ctx)
     // Normalization
     xyz /= cCIE_Y_integral;
     xyz /= max(1e-6f, ctx.GetPDF());
+    xyz /= float(NUM_HERO_SAMPLES);
     return xyz;
 }
 

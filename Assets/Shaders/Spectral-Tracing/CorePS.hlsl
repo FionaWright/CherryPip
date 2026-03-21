@@ -45,7 +45,7 @@ SamplerState gSampler : register(s0);
 
 float4 PSMain(VsOut input) : SV_Target0
 {
-#include "Spectral-Tracing/Debug/Tests.hlsli"
+//#include "Spectral-Tracing/Debug/Tests.hlsli"
 
     RayQuery<RAY_FLAGS> q;
 

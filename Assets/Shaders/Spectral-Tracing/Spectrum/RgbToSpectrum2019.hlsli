@@ -12,6 +12,7 @@ float IlluminantRgbToSpectrumSample(float3 rgb, float lambda);
 #include "Spectral-Tracing/Spectrum/Spectrum.hlsli"
 #include "Spectral-Tracing/SpectralData/CIE2006.hlsli"
 #include "Spectral-Tracing/SpectralData/CIE2006_Cheb.hlsli"
+#include "Spectral-Tracing/SpectralData/CIE2006_Logistic.hlsli"
 #include "Spectral-Tracing/Spectrum/ColorSpectrums.hlsli"
 #include "Spectral-Tracing/SpectralContext/SpectralContext.hlsli"
 
@@ -37,17 +38,17 @@ float3 SampleCIEBasis(float lambda)
 
 float3 SampleCIEBasis_Chebyshev(float lambda)
 {
-    //float x = cCIE_BasisBT709_Cheb_X.Sample(lambda);
     float x = cCIE_BasisBT709_ChebPiecewise_X.Sample(lambda);
-    //float y = cCIE_BasisBT709_Cheb_Y.Sample(lambda);
     float y = cCIE_BasisBT709_ChebPiecewise_Y.Sample(lambda);
-    //float z = cCIE_BasisBT709_Cheb_Z.Sample(lambda);
     float z = cCIE_BasisBT709_ChebPiecewise_Z.Sample(lambda);
-    //return float3(0, 0, SampleCIEBasis(lambda).z);
-    //return float3(0, 0, z);
-    //return float3(0, 0, cCIE_BasisBT709_Cheb_Z.Sample(lambda));
-    //return float3(0, y, 0);
-    //return float3(0, SampleCIEBasis(lambda).y, 0);
+    return float3(x, y, z);
+}
+
+float3 SampleCIEBasis_Logistic(float lambda)
+{
+    float x = CIEBasis_Logistic_X(lambda);
+    float y = CIEBasis_Logistic_Y(lambda);
+    float z = CIEBasis_Logistic_Z(lambda);
     return float3(x, y, z);
 }
 
@@ -70,7 +71,7 @@ void Spectrum::IlluminantRgbToSpectrum(float3 rgb)
 
 float ReflectanceRgbToSpectrumSample(float3 rgb, float lambda)
 {
-    float3 basis = SampleCIEBasis_Chebyshev(lambda);
+    float3 basis = SampleCIEBasis_Logistic(lambda);
     return max(0.0f, dot(basis, rgb));
 }
 
@@ -89,7 +90,7 @@ void HeroSpectrum::ReflectanceRgbToSpectrum(float3 rgb, SpectralContext ctx)
     for (int i = 0; i < NUM_HERO_SAMPLES; i++)
     {
         float lambda = ctx.GetLambda(i);
-        float3 basis = SampleCIEBasis_Chebyshev(lambda);
+        float3 basis = SampleCIEBasis_Logistic(lambda);
         Samples[i] = max(0.0f, dot(basis, rgb));
     }
 }

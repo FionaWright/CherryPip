@@ -19,6 +19,7 @@ float IndexToLambda(float idx);
 #include "Spectral-Tracing/Spectrum/SpectrumToRGB2019.hlsli"
 #include "Spectral-Tracing/Spectrum/ColorSpectrums.hlsli"
 #include "Spectral-Tracing/SpectralValue/SpectralValue.hlsli"
+#include "Spectral-Tracing/Fresnel.hlsli"
 #include "Random.h"
 
 #define CONSTANT_BOLTZMANN 1.38064852e-23f
@@ -178,5 +179,41 @@ float Luminance(Spectrum a)
 
     return lum * SPECTRUM_DELTA_LAMBDA / cCIE_Y_integral;
 }
+
+#if defined(SPECTRAL_HERO_SAMPLING)
+HeroSpectrum ComputeHeroReflectWeights(float NdV, SpectralContext ctx, bool entering)
+{
+    HeroSpectrum s;
+    s.Samples[0] = 1.0f;
+
+    [unroll]
+    for (int i = 1; i < NUM_HERO_SAMPLES; i++)
+    {
+        float nCurrent_i = entering ? IOR_AIR : DebugSampleIorN(ctx.GetLambda(i));
+        float nNext_i = entering ? DebugSampleIorN(ctx.GetLambda(i)) : IOR_AIR;
+        float F_i = Dielectric_Unpolarized(nCurrent_i, nNext_i, NdV);
+        s.Samples[i] = F_i;
+    }
+    return s;
+}
+
+HeroSpectrum ComputeHeroRefractWeights(float NdV, SpectralContext ctx, bool entering)
+{
+    HeroSpectrum s;
+    s.Samples[0] = 1.0f;
+
+    [unroll]
+    for (int i = 1; i < NUM_HERO_SAMPLES; i++)
+    {
+        float nCurrent_i = entering ? IOR_AIR : DebugSampleIorN(ctx.GetLambda(i));
+        float nNext_i = entering ? DebugSampleIorN(ctx.GetLambda(i)) : IOR_AIR;
+        float F_i = Dielectric_Unpolarized(nCurrent_i, nNext_i, NdV);
+        float eta = nNext_i / nCurrent_i;
+        float eta2 = eta * eta;
+        s.Samples[i] = eta2 * (1.0f - F_i);
+    }
+    return s;
+}
+#endif
 
 #endif

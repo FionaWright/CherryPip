@@ -1,5 +1,5 @@
 #include "MicrofacetModels/AllModels.hlsli"
-#include "Spectral-Tracing/Fresnel.hlsli"
+#include "Path-Tracing/Fresnel.hlsli"
 
 void Model_Microfacet_Spectral(
     inout RngInfo rngInfo,
@@ -26,7 +26,7 @@ void Model_Microfacet_Spectral(
     float3 T, B;
     BuildBasisFrisvad(Ns, T, B);
 
-    if (!entering)
+    if (!entering && isGlass)
     {
         SpectralValue sigmaASpectral;
         sigmaASpectral.FromRGB(sigmaA, eReflectance, ctx);

@@ -85,26 +85,26 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         float3 wo = -ray.Direction;
         float3 wi, L_sample;
 
-        if (cLightingGlassEnabled && mat.Flags & PtMaterialFlags::eIsGlass)
+        bool entering = q.CommittedTriangleFrontFace()!=0;
+        bool isGlass = mat.Flags & PtMaterialFlags::eIsGlass && cLightingGlassEnabled;
+        float hitDist = q.CommittedRayT();
+
+        if (cLightingModel == eLambert)
         {
-            bool entering = q.CommittedTriangleFrontFace()!=0;
-            Model_Glass(rngInfo, throughput, mat.DiffuseProbability, roughness, entering, q.CommittedRayT(), mat.IoR, mat.GlassSigmaA, Ns, Li, albedo.rgb, wo, wi, L_sample);
-        }
-        else if (cLightingModel == eLambert)
-        {
+            if (isGlass)
+            {
+                Model_Glass(rngInfo, throughput, mat.DiffuseProbability, roughness, entering, hitDist, mat.IoR, mat.GlassSigmaA, Ns, Li, albedo.rgb, wo, wi, L_sample);
+            }
             Model_LambertionDiffuse(rngInfo, throughput, Ns, Li, albedo.rgb, wi, L_sample);
-        }
-        else if (cLightingModel == eGlossy)
-        {
-            Model_Glossy(rngInfo, throughput, mat.DiffuseProbability, roughness, Ns, Li, albedo.rgb, wo, wi, L_sample);
         }
         else if (cLightingModel == eMicrofacet)
         {
             float3 debug = 0;
             bool hasDebugOutput = false;
 
-            Model_Microfacet(rngInfo, throughput, roughness,
-            	metalness, Ns, Li, albedo.rgb, anisoDirAndStrength, wo, wi, L_sample,
+            Model_BSDF(rngInfo, throughput, roughness, metalness,
+                entering, isGlass, mat.GlassSigmaA, hitDist, mat.IoR,
+            	Ns, Li, albedo.rgb, anisoDirAndStrength, wo, wi, L_sample,
                 debug, hasDebugOutput);
 
             if (cDebugInfoOutputEnabled && hasDebugOutput)

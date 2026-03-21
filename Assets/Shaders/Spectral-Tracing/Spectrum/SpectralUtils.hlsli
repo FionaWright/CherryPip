@@ -19,7 +19,7 @@ float IndexToLambda(float idx);
 #include "Spectral-Tracing/Spectrum/SpectrumToRGB2019.hlsli"
 #include "Spectral-Tracing/Spectrum/ColorSpectrums.hlsli"
 #include "Spectral-Tracing/SpectralValue/SpectralValue.hlsli"
-#include "Spectral-Tracing/Fresnel.hlsli"
+#include "Path-Tracing/Fresnel.hlsli"
 #include "Random.h"
 
 #define CONSTANT_BOLTZMANN 1.38064852e-23f

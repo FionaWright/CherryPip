@@ -3,6 +3,8 @@
 
 // https://en.wikipedia.org/wiki/Logistic_function
 
+// https://www.desmos.com/calculator/z5hagmfpus
+
 float Logistic(float x, float L, float k, float x0)
 {
     return L / (1.0f + exp(-k * (x - x0)));

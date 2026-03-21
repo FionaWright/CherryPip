@@ -112,13 +112,18 @@ static const SellmeierEquation cSellmeier_BGG = {
     { true, true, true, false, false }
 };
 
+float DebugSampleIorN(float lambda)
+{
+    return cSellmeier_BGG.SampleN(lambda);
+}
+
 // TODO: Temp
-float DebugSampleIorN(SpectralContext ctx)
+float DebugSampleIorN_Hero(SpectralContext ctx)
 {
 #if defined(SPECTRAL_SINGLE_WAVELENGTH_SAMPLING)
-    return cSellmeier_BGG.SampleN(ctx.Lambda);
+    return DebugSampleIorN(ctx.Lambda);
 #elif defined(SPECTRAL_HERO_SAMPLING)
-    return 1;
+    return DebugSampleIorN(ctx.GetHeroLambda());
 #endif
     return -1;
 }

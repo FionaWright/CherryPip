@@ -332,26 +332,33 @@ void SceneStudio::initCustomScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     {
         t.SetScale(2.0f);
         args.CullingWhiteList = {
-            "Object_0", "Object_1", "Object_2", "Object_3", "Object_4", "Object_5", "Object_6", "Object_7", "Object_8"
+            "Object_0", "Object_1", "Object_2", "Object_3", "Object_4", "Object_5", "Object_6", "Object_7" //, "Object_8"
         };
         ModelLoaderGLTF::LoadSplitModel(d3d, cmdList, &m_heap, L"Cornell/scene.gltf", args, t);
-        args.OutObjects.back()->GetTransform()->SetPosition(0.25f, 0.02f, -0.5f);
-        args.OutObjects.back()->GetTransform()->SetRotationE(-1.57f, 0.5f, 0.0f);
-        args.OutObjects.back()->GetTransform()->SetScale(2.5f);
-        args.OutObjects.back()->GetMaterialForward()->GetData()->DiffuseProbability = 0.0f;
+        //args.OutObjects.back()->GetTransform()->SetPosition(0.25f, 0.02f, -0.5f);
+        //args.OutObjects.back()->GetTransform()->SetRotationE(-1.57f, 0.5f, 0.0f);
+        //args.OutObjects.back()->GetTransform()->SetScale(2.5f);
+        //args.OutObjects.back()->GetMaterialForward()->GetData()->DiffuseProbability = 0.0f;
         args.CullingWhiteList.clear();
         t = {};
     }
 
     // Sphere
-    if (false)
+    if (true)
     {
-        t.SetPosition(0, 1, 0);
+        t.SetPosition(0, 1.5f, 0);
         ModelLoaderGLTF::LoadSplitModel(d3d, cmdList, &m_heap, L"Sphere/Sphere.gltf", args, t);
         args.OutObjects.back()->GetMaterialForward()->GetData()->BindlessTexDiffuse = 0;
         args.OutObjects.back()->GetMaterialForward()->GetData()->Metalness = 0;
         args.OutObjects.back()->GetMaterialForward()->GetData()->Roughness = 0;
         args.OutObjects.back()->GetMaterialForward()->GetData()->Flags = PtMaterialFlags::eIsGlass;
+
+        t.SetPosition(0, 1.5f, -1.8f);
+        t.SetScale(0.5f);
+        ModelLoaderGLTF::LoadSplitModel(d3d, cmdList, &m_heap, L"Sphere/Sphere.gltf", args, t);
+        //args.OutObjects.back()->GetMaterialForward()->GetData()->BindlessTexDiffuse = 0;
+        args.OutObjects.back()->GetMaterialForward()->GetData()->Metalness = 0;
+        args.OutObjects.back()->GetMaterialForward()->GetData()->Roughness = 1;
         t = {};
     }
 

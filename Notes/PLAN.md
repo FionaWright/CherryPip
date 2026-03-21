@@ -38,12 +38,12 @@
 - [x] Proper distant light using bounding sphere of plane (No singular sun-point) (PBRT)
 - [ ] Oren-Nayers Lighting Model (https://blog.selfshadow.com/publications/s2012-shading-course/gotanda/s2012_pbs_beyond_blinn_slides_v3.pdf)
 - [ ] Microfacet Beckmann (PBRT)
-- [ ] Microfacet Glass
+- [x] Microfacet Glass
 - [ ] Point Lights
 - [ ] Ray Bundles / Ray Buffers(?). See Embre? (https://www.jp.square-enix.com/tech/library/pdf/Global%20Illumination%20Using%20Ray-Bundle%20Tracing%20(AFDS2012).pdf)
 - [ ] SpecularTint, Clearcoat, Sheen PBR parameters
 - [x] Firefly threshold
-- [ ] BTDFs (VNDF whitepaper has some good stuff)
+- [x] BTDFs (VNDF whitepaper has some good stuff)
 - [ ] Sobel RNG Sampler
 - [ ] Ray pipelines
 - [x] Spectral Path-Tracing 
@@ -73,8 +73,10 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ## PT-TODO:
 
 ### Main Tasks
-- Proper BTDF / BSDF system. (Transmission)
-- THEN I can try again to implement the microfacet/glass model into spectral
+- Fix D/G/Factor/PDF parts of BTDF
+- Reimplement BSDF into spectral
+- Implement hero-sampling for BTDFs
+- Put all Microfacet + Glossy models into Junk 
 
 ### Bugs 
 - Camera movement gets messed up sometimes

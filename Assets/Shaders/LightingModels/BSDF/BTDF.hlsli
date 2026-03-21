@@ -28,23 +28,34 @@ void BTDF(
 
     MicrofacetModel mm;
     InitializeMM(mm, roughness, rngInfo, V_s);
-    //if (cAnisotropyEnabled)
-    //    InitializeMMAniso(mm, T, B, N, anisoDirAndStrength);
 
     float3 H_s = normalize(mm.Sample(u1, u2));
     L_s = Refract(-V_s, H_s, nCurrent, nNext);
 
-    float VdH = dot(H_s, V_s);
+    //float3 diffuseDir = RandHemisphereUniformSSpace(u1, u2);
+    //L_s = normalize(lerp(L_s, -diffuseDir, roughness));
 
-    float3 F = Dielectric_Unpolarized(nCurrent, nNext, abs(VdH));
+    float VdH = dot(H_s, V_s);
+    float LdH = dot(L_s, H_s);
+
+    float F = Dielectric_Unpolarized(nCurrent, nNext, abs(VdH));
+
+    float denom = nCurrent * VdH + nNext * LdH;
+    denom = denom * denom;
+    float factor = abs(VdH * LdH) / max(1e-6f, denom);
 
     float D = mm.D(H_s);
     float G = mm.G2(L_s, V_s);
     float pdf = mm.PDF(D, H_s, V_s);
-    //throughput *= D * F * G / max(0.001f, pdf);
+    //pdf *= abs(LdH) / max(1e-6f, denom);
 
     float eta = nCurrent / nNext;
     float eta2 = eta * eta;
+
+    throughput *= (1 - F);
+    //throughput *= D * G;
+    //throughput /= max(1e-6f, pdf);
+    //throughput *= factor;
     throughput *= eta2 * albedo;
 }
 

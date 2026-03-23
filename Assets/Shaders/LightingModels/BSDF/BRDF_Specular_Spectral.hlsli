@@ -4,6 +4,7 @@
 void BRDF_Specular_Spectral(
     inout RngInfo rngInfo,
     inout SpectralValue throughput,
+    SpectralContext ctx,
     out float3 L_s,
 
     float roughness,
@@ -18,6 +19,7 @@ void BRDF_Specular_Spectral(
 
     float nCurrent,
     float nNext,
+    bool entering,
 
     inout float3 debug,
     inout bool hasDebugOutput)
@@ -63,6 +65,11 @@ void BRDF_Specular_Spectral(
         specularBrdf = (D * G * F) / max(0.001f, 4 * NdV * NdL);
         throughput.Mul(specularBrdf * NdL / max(0.001f, pdf));
     }
+
+#if defined(SPECTRAL_HERO_SAMPLING)
+    HeroSpectrum reflectWeights = ComputeHeroReflectWeights(VdH, ctx, entering);
+    throughput.Value.Mul(reflectWeights);
+#endif
 
 //#ifdef DEBUG_PT_INFO_OUTPUT
 //#     include "Debug/DebugInfoOutputBRDFSpec.hlsli"

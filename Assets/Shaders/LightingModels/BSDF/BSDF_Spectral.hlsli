@@ -81,13 +81,18 @@ void Model_BSDF_Spectral(
 
         if (isReflect)
         {
-            BRDF_Specular_Spectral(rngInfo, throughput, L_s, roughness, metalness, albedo, V_s, N_s, anisoDirAndStrength, T, B, Ns, nCurrent, nNext, debug, hasDebugOutput);
+            BRDF_Specular_Spectral(rngInfo, throughput, ctx, L_s, roughness, metalness, albedo, V_s, N_s, anisoDirAndStrength, T, B, Ns, nCurrent, nNext, entering, debug, hasDebugOutput);
             throughput.Div(max(0.001f, reflectProb));
         }
         else
         {
             BTDF_Spectral(rngInfo, throughput, ctx, L_s, roughness, albedo, V_s, L_s, entering, nCurrent, nNext, sigmaA, hitDist, debug, hasDebugOutput);
             throughput.Div(max(0.001f, 1.0f - reflectProb));
+
+#if defined(SPECTRAL_HERO_SAMPLING)
+            HeroSpectrum refractWeights = ComputeHeroRefractWeights(NdV, ctx, entering);
+            throughput.Value.Mul(refractWeights);
+#endif
         }
 
         wi = InvToDefinedSpace(L_s, T, B, Ns);
@@ -101,7 +106,7 @@ void Model_BSDF_Spectral(
 
     if (isSpecular)
     {
-        BRDF_Specular_Spectral(rngInfo, throughput, L_s, roughness, metalness, albedo, V_s, N_s, anisoDirAndStrength, T, B, Ns, nCurrent, nNext, debug, hasDebugOutput);
+        BRDF_Specular_Spectral(rngInfo, throughput, ctx, L_s, roughness, metalness, albedo, V_s, N_s, anisoDirAndStrength, T, B, Ns, nCurrent, nNext, entering, debug, hasDebugOutput);
         throughput.Div(max(0.001f, specProb));
     }
     else

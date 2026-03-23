@@ -216,4 +216,40 @@ HeroSpectrum ComputeHeroRefractWeights(float NdV, SpectralContext ctx, bool ente
 }
 #endif
 
+#define RAYLEIGH_CONSTANT 5.8e-6 // Assuming IOR air is ~1
+
+float RayleighSigma(float lambda)
+{
+    float lambda2 = lambda * lambda;
+    float lambda4 = lambda2 * lambda2;
+    lambda4 = lambda4 / 1000.0f / 1000.0f / 1000.0f; // nm -> um -> cm -> m
+
+    return RAYLEIGH_CONSTANT / lambda4;
+}
+
+float RayleighPhase(float cosTheta)
+{
+    return (3.0f / (16.0f * PI)) * (1.0f + cosTheta * cosTheta);
+}
+
+float SampleRayleighCosTheta(float u)
+{
+    // Invert CDF approximation
+    float z = 2.0f * u - 1.0f;
+
+    float g = sqrt(1.0f + z * z);
+    return z / g; // approximation
+}
+
+float SampleRayleighMediumT(inout RngInfo rngInfo, float lambda)
+{
+    float sigma_s = RayleighSigma(lambda);
+    return -log(1.0f - PcgRand01(rngInfo.IndependentRngState)) / sigma_s;
+}
+
+float RayleighPhasePDF(float cosTheta)
+{
+    return 3.0f / (16.0f * PI) * (1.0f + cosTheta * cosTheta);
+}
+
 #endif

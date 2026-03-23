@@ -57,10 +57,10 @@ void BTDF(
     float eta2 = eta * eta;
 
     throughput *= (1 - F);
-    throughput *= D * G;
+    //throughput *= D * G;
     //throughput /= max(1e-6f, pdf);
-    throughput *= factor;
-    throughput *= nNext * nNext * albedo;
+    //throughput *= factor;
+    throughput *= eta2 * albedo;
     //throughput *= 100;
 
     //throughput *= nNext * nNext * D * G * (1.0f - F) * factor / max(1e-6f, pdf);

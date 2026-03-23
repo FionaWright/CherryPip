@@ -195,4 +195,16 @@ void SceneStudio::InitializeScenes()
         false
     };
     m_sceneConfigs.emplace_back(sceneLoneMonk);
+
+    t = {};
+    t.SetScale(2.0f);
+    SceneConfig sceneBottleShip = {
+        "(" + std::to_string(m_sceneConfigs.size()) +") " + "Bottle Ship",
+        L"BottleShip/scene.gltf",
+        t,
+        XMFLOAT3(1.339f, 1.728f, 0.989f),
+        XMFLOAT2(0.12f, 3.997f),
+        false
+    };
+    m_sceneConfigs.emplace_back(sceneBottleShip);
 }

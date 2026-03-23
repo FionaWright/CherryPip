@@ -25,6 +25,9 @@ void BTDF(
     float u1 = Rand01_Bounce(DIM_D_BSDF_U1, rngInfo);
     float u2 = Rand01_Bounce(DIM_D_BSDF_U2, rngInfo);
 
+    float eta = nCurrent / nNext;
+    float eta2 = eta * eta;
+
     if (!entering)
         throughput *= exp(-sigmaA * hitDist);
 
@@ -32,7 +35,7 @@ void BTDF(
     InitializeMM(mm, roughness, rngInfo, V_s);
 
     float3 H_s = normalize(mm.Sample(u1, u2));
-    L_s = Refract(-V_s, H_s, nCurrent, nNext);
+    L_s = refract(-V_s, H_s, eta);
 
     // Recompute H_s
     //H_s = normalize(nCurrent * V_s + nNext * L_s);
@@ -53,9 +56,6 @@ void BTDF(
     float G = mm.G2(L_s, V_s);
     float pdf = D * NdH * abs(LdH) / max(1e-6f, denom2);
 
-    float eta = nCurrent / nNext;
-    float eta2 = eta * eta;
-
     // TODO
     if (roughness < 0.001f)
     {
@@ -75,6 +75,10 @@ void BTDF(
         //throughput *= G;
         //throughput *= nNext * nNext * (1 - F) * G * abs(VdH) / max(1e-6f, NdV * NdH);
     }
+
+#ifdef DEBUG_PT_INFO_OUTPUT
+#     include "Debug/DebugInfoOutputBTDF.hlsli"
+#endif
 }
 
 #endif

@@ -13,6 +13,7 @@ foreach(DIR ${TEXTURE_DIRS})
     file(GLOB_RECURSE IMG_FILES
             "${DIR}/*.png"
             "${DIR}/*.jpg"
+            "${DIR}/*.jpeg"
             "${DIR}/*.tga")
 
     foreach(IMG ${IMG_FILES})
@@ -29,7 +30,7 @@ foreach(DIR ${TEXTURE_DIRS})
 
         add_custom_command(
                 OUTPUT "${DDS_OUT}"
-                COMMAND "${TEXCONV_EXE}" -ft dds -f BC7_UNORM -o "${DDS_DIR}" "${IMG}"
+                COMMAND "${TEXCONV_EXE}" -y -ft dds -f BC7_UNORM -o "${DDS_DIR}" "${IMG}"
                 DEPENDS "${IMG}"
                 COMMENT "Converting ${IMG} → ${DDS_OUT}"
                 VERBATIM
@@ -60,6 +61,9 @@ foreach(f ${MODEL_FILES})
         continue()
     endif()
     if(f MATCHES "\\.jpg$")
+        continue()
+    endif()
+    if(f MATCHES "\\.jpeg$")
         continue()
     endif()
 

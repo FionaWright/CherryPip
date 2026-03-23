@@ -344,7 +344,7 @@ void SceneStudio::initCustomScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     }
 
     // Sphere
-    if (true)
+    if (false)
     {
         t.SetPosition(0, 1.5f, 0);
         ModelLoaderGLTF::LoadSplitModel(d3d, cmdList, &m_heap, L"Sphere/Sphere.gltf", args, t);
@@ -360,6 +360,29 @@ void SceneStudio::initCustomScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         args.OutObjects.back()->GetMaterialForward()->GetData()->Metalness = 0;
         args.OutObjects.back()->GetMaterialForward()->GetData()->Roughness = 1;
         t = {};
+    }
+
+    if (false)
+    {
+        t.SetScale(0.5f);
+        t.SetPosition(0, 1.0f, 0);
+        ModelLoaderGLTF::LoadSplitModel(d3d, cmdList, &m_heap, L"BottleShip/scene.gltf", args, t);
+        t = {};
+    }
+
+    if (true)
+    {
+        args.CullingWhiteList = {
+            "Queen_W",
+        };
+        ModelLoaderGLTF::LoadSplitModel(d3d, cmdList, &m_heap, L"Chess/Chess.gltf", args, t);
+        args.OutObjects.back()->GetMaterialForward()->GetData()->Metalness = 0;
+        args.OutObjects.back()->GetMaterialForward()->GetData()->Roughness = 0;
+        args.OutObjects.back()->GetMaterialForward()->GetData()->Flags = PtMaterialFlags::eIsGlass;
+        args.OutObjects.back()->GetTransform()->SetPosition(0, 0, 0);
+        args.OutObjects.back()->GetTransform()->SetScale(20.0f);
+        t = {};
+        args.CullingWhiteList.clear();
     }
 
     constexpr auto initialCamPos = XMFLOAT3(0, 1.5f, 4.5f);

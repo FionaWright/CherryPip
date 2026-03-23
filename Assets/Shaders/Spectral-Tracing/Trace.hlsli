@@ -31,7 +31,6 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 #ifdef DEBUG_PT_INFO_OUTPUT
 #    include "Spectral-Tracing/Debug/DebugInfoOutputOnMiss.hlsli"
 #endif
-
             break;
         }
 
@@ -67,8 +66,10 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
             float3 anisoDirAndStrength = 0;
 
-            Model_Microfacet_Spectral(rngInfo, throughput, roughness,
-            	metalness, entering, isGlass, mat.GlassSigmaA, q.CommittedRayT(), Ns, Li, albedo, ctx, anisoDirAndStrength, wo, wi, L_sample,
+            Model_BSDF_Spectral(rngInfo, throughput, ctx, roughness, metalness,
+                entering, isGlass, mat.GlassSigmaA, q.CommittedRayT(),
+                Ns, Li, albedo, anisoDirAndStrength,
+                wo, wi, L_sample,
                 debug, hasDebugOutput);
 
             if (cDebugInfoOutputEnabled && hasDebugOutput)

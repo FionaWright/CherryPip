@@ -7,6 +7,7 @@
 #include "LightingModels/Lambert_Spectral.hlsli"
 //#include "LightingModels/Glossy.hlsli"
 #include "LightingModels/Glass_Spectral.hlsli"
-#include "LightingModels/Microfacet_Spectral.hlsli"
+//#include "LightingModels/Microfacet_Spectral.hlsli"
+#include "LightingModels/BSDF/BSDF_Spectral.hlsli"
 
 #endif

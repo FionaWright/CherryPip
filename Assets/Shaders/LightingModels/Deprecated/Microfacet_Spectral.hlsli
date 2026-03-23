@@ -62,7 +62,7 @@ void Model_Microfacet_Spectral(
 
     if (!isReflect)
     {
-        float3 L_s = Refract(-V_s, N_s, nCurrent, nNext);
+        float3 L_s = refract(-V_s, N_s, nCurrent / nNext);
         wi = InvToDefinedSpace(L_s, T, B, Ns);
         L_sample = CreateBlackSpectralValue();
 

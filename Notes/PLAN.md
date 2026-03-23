@@ -74,9 +74,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 ### Main Tasks
 - Fix D/G/Factor/PDF parts of BTDF
-- Reimplement BSDF into spectral
 - Implement hero-sampling for BTDFs
-- Put all Microfacet + Glossy models into Junk 
 
 ### Bugs 
 - Camera movement gets messed up sometimes

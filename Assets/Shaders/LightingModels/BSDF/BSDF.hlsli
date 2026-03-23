@@ -95,6 +95,10 @@ void Model_BSDF(
         }
 
         wi = InvToDefinedSpace(L_s, T, B, Ns);
+
+#ifdef DEBUG_PT_INFO_OUTPUT
+#     include "Debug/DebugInfoOutputBSDFT.hlsli"
+#endif
         return;
     }
 

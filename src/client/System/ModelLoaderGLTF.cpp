@@ -364,6 +364,9 @@ std::shared_ptr<Texture> ModelLoaderGLTF::loadTextureResource(const D3D* d3d, ID
         const auto jpgIdx = texPath.find("jpg");
         if (jpgIdx != std::string::npos)
             texPath = texPath.replace(jpgIdx, 3, "dds");
+        const auto jpegIdx = texPath.find("jpeg");
+        if (jpegIdx != std::string::npos)
+            texPath = texPath.replace(jpegIdx, 4, "dds");
 
         if (ResourceSharer::TryGetFromDatabaseTex(texPath, pTex))
             return pTex;
@@ -651,7 +654,7 @@ void ModelLoaderGLTF::LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
 
     if (data.error() == fastgltf::Error::InvalidPath)
     {
-        CherryPrint("Error loading GLTF model (path=\"" + path + "\")");
+        CherryPrint("Error loading GLTF model due to invalid path: (path=\"" + path + "\")");
         return;
     }
 

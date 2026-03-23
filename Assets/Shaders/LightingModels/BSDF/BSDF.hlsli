@@ -71,11 +71,11 @@ void Model_BSDF(
 
     float3 F0 = lerp(float3(0.04, 0.04, 0.04), albedo, metalness);
 
-    float3 L_s;
+    float3 L_s = 0.0f;
 
     if (isGlass)
     {
-        L_sample = 0.0f;
+        L_sample = 0.0f; // TODO ?
 
         float nCurrent = entering ? IOR_AIR : ior;
         float nNext = entering ? ior : IOR_AIR;

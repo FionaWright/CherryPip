@@ -49,9 +49,18 @@ void BRDF_Specular(
     float G = mm.G2(L_s, V_s);
     float pdf = mm.PDF(D, H_s, V_s);
 
-    // Torrence-Sparrow BRDF
-    float3 specularBrdf = (D * G * F) / max(0.001f, 4 * NdV * NdL);
-    throughput *= specularBrdf * NdL / max(0.001f, pdf);
+    float3 specularBrdf = 0.0f;
+    if (roughness < 0.001f)
+    {
+        L_s = reflect(-V_s, N_s);
+        specularBrdf = F;
+        throughput *= specularBrdf;
+    }
+    else
+    {
+        specularBrdf = (D * G * F) / max(0.001f, 4 * NdV * NdL);
+        throughput *= specularBrdf * NdL / max(0.001f, pdf);
+    }
 
 #ifdef DEBUG_PT_INFO_OUTPUT
 #     include "Debug/DebugInfoOutputBRDFSpec.hlsli"

@@ -15,6 +15,8 @@ if (!hasDebugOutput)
         debug = pdf.xxx;
     else if (cbvDebug.DebugIdx == DebugInfoOutput::eMicrofacetVecHalf)
         debug = H_s;
+    else if (cbvDebug.DebugIdx == DebugInfoOutput::eMicrofacetVecLightSSpace)
+        debug = L_s;
 #ifdef ANISOTROPY_ENABLED
     else if (cbvDebug.DebugIdx == DebugInfoOutput::eMicrofacetAnisoDir)
         debug = float3(anisoDirAndStrength.xy, 0);

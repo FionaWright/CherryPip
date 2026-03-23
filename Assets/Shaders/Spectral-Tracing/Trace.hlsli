@@ -8,6 +8,8 @@
 
 #include "LightingModels/AllSpectralModels.hlsli"
 
+#define RAYLEIGH_SCATTERING
+
 float3 Trace(inout RayQuery<RAY_FLAGS> q,
             uint flags,
             uint instanceMask,
@@ -25,6 +27,11 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
         if (q.CommittedStatus() != COMMITTED_TRIANGLE_HIT)
         {
+#ifdef RAYLEIGH_SCATTERING // TODO
+            float sigma_t = RayleighSigma(ctx.Lambda);
+            throughput.Mul(exp(-sigma_t * 1000000));
+#endif
+
             SpectralValue L_sample = Mul(throughput, Miss(ray.Origin, ray.Direction, i, ctx));
             Lo.Add(L_sample);
 
@@ -34,7 +41,25 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             break;
         }
 
-		float3 hitPos = ray.Origin + ray.Direction * q.CommittedRayT();
+        float hitDist = q.CommittedRayT();
+		float3 hitPos = ray.Origin + ray.Direction * hitDist;
+
+#ifdef RAYLEIGH_SCATTERING // TODO
+        float mediumT = SampleRayleighMediumT(rngInfo, ctx.Lambda);
+        if (mediumT < hitDist)
+        {
+            hitPos = ray.Origin + ray.Direction * mediumT;
+            float cosT = SampleRayleighCosTheta(PcgRand01(rngInfo.IndependentRngState));
+            float phi = 2.0f * PI * PcgRand01(rngInfo.IndependentRngState);
+            float phase = (3.0f / (16.0f * PI)) * (1.0f + cosT * cosT);
+            throughput.Mul(phase / RayleighPhasePDF(cosT));
+
+            ray.Direction = normalize(SampleAround(ray.Direction, cosT, phi));
+            continue;
+        }
+        float sigma_t = RayleighSigma(ctx.Lambda);
+        throughput.Mul(exp(-sigma_t * hitDist));
+#endif
 
         PtMaterialData mat;
 		SpectralValue albedo;
@@ -67,7 +92,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             float3 anisoDirAndStrength = 0;
 
             Model_BSDF_Spectral(rngInfo, throughput, ctx, roughness, metalness,
-                entering, isGlass, mat.GlassSigmaA, q.CommittedRayT(),
+                entering, isGlass, mat.GlassSigmaA, hitDist,
                 Ns, Li, albedo, anisoDirAndStrength,
                 wo, wi, L_sample,
                 debug, hasDebugOutput);

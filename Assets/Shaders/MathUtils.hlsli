@@ -193,4 +193,24 @@ float3 SRGB_to_LRGB(float3 srgb)
     );
 }
 
+float3 SampleAround(float3 dir, float cosTheta, float phi)
+{
+    float sinTheta = sqrt(max(0.0f, 1.0f - cosTheta * cosTheta));
+
+    float3 localDir = float3(
+        sinTheta * cos(phi),
+        sinTheta * sin(phi),
+        cosTheta
+    );
+
+    float3 T, B;
+    BuildBasisFrisvad(dir, T, B);
+
+    return normalize(
+        localDir.x * T +
+        localDir.y * B +
+        localDir.z * dir
+    );
+}
+
 #endif

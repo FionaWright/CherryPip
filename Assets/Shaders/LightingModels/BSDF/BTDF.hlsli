@@ -34,13 +34,14 @@ void BTDF(
     float3 H_s = normalize(mm.Sample(u1, u2));
     L_s = Refract(-V_s, H_s, nCurrent, nNext);
 
-    //float3 diffuseDir = RandHemisphereUniformSSpace(u1, u2);
-    //L_s = normalize(lerp(L_s, -diffuseDir, roughness));
+    // Recompute H_s
+    H_s = normalize(nCurrent * V_s + nNext * L_s);
 
     float VdH = dot(H_s, V_s);
     float LdH = dot(L_s, H_s);
     float NdL = SSpaceCosTheta(L_s);
     float NdV = SSpaceCosTheta(V_s);
+    float NdH = SSpaceCosTheta(H_s);
 
     float F = Dielectric_Unpolarized(nCurrent, nNext, abs(VdH));
 
@@ -50,17 +51,30 @@ void BTDF(
 
     float D = mm.D(H_s);
     float G = mm.G2(L_s, V_s);
-    //float pdf = mm.PDF(D, H_s, V_s);
-    //pdf *= abs(LdH) / max(1e-6f, denom);
+    float pdf = D * NdH * abs(LdH) / max(1e-6f, denom2);
 
     float eta = nCurrent / nNext;
     float eta2 = eta * eta;
 
-    throughput *= (1 - F);
-    //throughput *= D * G;
-    //throughput /= max(1e-6f, pdf);
-    //throughput *= factor;
-    throughput *= eta2 * albedo;
+    // TODO
+    if (roughness < 0.001f)
+    {
+        throughput *= (1 - F) * eta;
+    }
+    else
+    {
+        throughput *= (1 - F);
+        //throughput *= D * G;
+        //throughput /= max(1e-6f, pdf);
+        //throughput *= factor;
+        throughput *= nNext * nNext * albedo;
+
+        throughput *= abs(VdH);
+        //throughput *= G;
+        //throughput /= max(1e-6f, NdV * NdH);
+        //throughput *= G;
+        //throughput *= nNext * nNext * (1 - F) * G * abs(VdH) / max(1e-6f, NdV * NdH);
+    }
     //throughput *= 100;
 
     //throughput *= nNext * nNext * D * G * (1.0f - F) * factor / max(1e-6f, pdf);

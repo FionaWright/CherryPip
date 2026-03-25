@@ -89,6 +89,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Try make Halton work better, reimplement for bounces
 - Fix firefly threshold when I start noticing actual fireflies, none yet. Maybe after MIS or NEE?
 - Debug: Ability to run two different versions of the PT at once, split-screen.
+- Refactor TBN into a new struct called ShadingFrame with .ToLocal() sorta functions
 
 ## Raster/Laptop-TODO
 

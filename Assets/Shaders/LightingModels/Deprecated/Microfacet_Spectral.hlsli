@@ -1,5 +1,5 @@
 #include "MicrofacetModels/AllModels.hlsli"
-#include "Spectral-Tracing/Fresnel.hlsli"
+#include "Path-Tracing/Fresnel.hlsli"
 
 void Model_Microfacet_Spectral(
     inout RngInfo rngInfo,
@@ -13,7 +13,7 @@ void Model_Microfacet_Spectral(
     float3 Ns,
     SpectralValue Li,
     SpectralValue albedo,
-    float lambda,
+    SpectralContext ctx,
     float3 anisoDirAndStrength,
     float3 wo,        // V
     out float3 wi,    // L
@@ -26,10 +26,10 @@ void Model_Microfacet_Spectral(
     float3 T, B;
     BuildBasisFrisvad(Ns, T, B);
 
-    if (!entering)
+    if (!entering && isGlass)
     {
         SpectralValue sigmaASpectral;
-        sigmaASpectral.FromRGB(sigmaA, eReflectance, lambda);
+        sigmaASpectral.FromRGB(sigmaA, eReflectance, ctx);
         sigmaASpectral.Mul(-hitDist);
         throughput.Mul(Exp(sigmaASpectral));
     }
@@ -38,8 +38,8 @@ void Model_Microfacet_Spectral(
     float3 V_s = ToDefinedSpace(wo, T, B, Ns);
     float NdV = SSpaceCosTheta(V_s);
 
-    float nCurrent = entering ? IOR_AIR : DebugSampleIorN(lambda);
-    float nNext = entering ? DebugSampleIorN(lambda) : IOR_AIR;
+    float nCurrent = entering ? IOR_AIR : DebugSampleIorN_Hero(ctx);
+    float nNext = entering ? DebugSampleIorN_Hero(ctx) : IOR_AIR;
 
     if (CheckTIR(nCurrent, nNext, abs(NdV)))
     {
@@ -62,10 +62,15 @@ void Model_Microfacet_Spectral(
 
     if (!isReflect)
     {
-        float3 L_s = Refract(-V_s, N_s, nCurrent, nNext);
+        float3 L_s = refract(-V_s, N_s, nCurrent / nNext);
         wi = InvToDefinedSpace(L_s, T, B, Ns);
-        throughput.Div(max(1e-6f, 1.0f - reflectProb));
         L_sample = CreateBlackSpectralValue();
+
+        throughput.Div(max(1e-6f, 1.0f - reflectProb));
+#if defined(SPECTRAL_HERO_SAMPLING)
+        HeroSpectrum refractWeights = ComputeHeroRefractWeights(NdV, ctx, entering);
+        throughput.Value.Mul(refractWeights);
+#endif
         return;
     }
     else
@@ -108,22 +113,26 @@ void Model_Microfacet_Spectral(
         float NdH = SSpaceCosTheta(H_s);
         float VdH = dot(H_s, V_s);
 
-        SpectralValue F = CreateSpectralValue(Dielectric_Unpolarized(nCurrent, nNext, VdH));
+        float F = Dielectric_Unpolarized(nCurrent, nNext, VdH);
 
         float D = mm.D(H_s);
         float G = mm.G2(L_s, V_s);
         float pdf = mm.PDF(D, H_s, V_s);
 
         // Torrence-Sparrow BRDF
-        float fSpecularBrdf = (D * G) / max(0.001f, 4 * NdV * NdL);
-        SpectralValue specularBrdf = Mul(F, fSpecularBrdf);
+        float specularBrdf = (D * F * G) / max(0.001f, 4 * NdV * NdL);
         float k = NdL / max(0.001f, pdf) / max(0.001f, specProb);
-        SpectralValue throughputMul = Mul(specularBrdf, k);
+        float throughputMul = specularBrdf * k;
 
         if (L_s.z <= 0.0f) // Terminate ray if wi ends up inside surface
-            throughputMul = CreateBlackSpectralValue();
+            throughputMul = 0.0f;
 
         throughput.Mul(throughputMul);
+
+#if defined(SPECTRAL_HERO_SAMPLING)
+        HeroSpectrum reflectWeights = ComputeHeroReflectWeights(VdH, ctx, entering);
+        throughput.Value.Mul(reflectWeights);
+#endif
 
 #ifdef DEBUG_PT_INFO_OUTPUT
 #     include "Spectral-Tracing/Debug/DebugInfoOutputMicrofacetSpec.hlsli"

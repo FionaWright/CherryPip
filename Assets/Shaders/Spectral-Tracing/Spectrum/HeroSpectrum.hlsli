@@ -1,7 +1,7 @@
 #ifndef H_HERO_SAMPLE_H
 #define H_HERO_SAMPLE_H
 
-#define NUM_HERO_SAMPLES 3
+#define NUM_HERO_SAMPLES 4
 #define HERO_DELTA_LAMBDA (VISIBLE_LIGHT_SPECTRUM_SIZE / float(NUM_HERO_SAMPLES-1)) 
 
 struct HeroSpectrum
@@ -140,6 +140,15 @@ HeroSpectrum Sub(HeroSpectrum a, float s)
     return r;
 }
 
+HeroSpectrum Sub(float s, HeroSpectrum a)
+{
+    HeroSpectrum r;
+    [unroll]
+    for (int i = 0; i < NUM_HERO_SAMPLES; i++)
+        r.Samples[i] = s - a.Samples[i];
+    return r;
+}
+
 HeroSpectrum Mul(HeroSpectrum a, HeroSpectrum b)
 {
     HeroSpectrum r;
@@ -175,6 +184,15 @@ HeroSpectrum Div(HeroSpectrum a, float s)
     [unroll]
     for (int i = 0; i < NUM_HERO_SAMPLES; i++)
         r.Samples[i] = a.Samples[i] * inv;
+    return r;
+}
+
+HeroSpectrum Div(float s, HeroSpectrum a)
+{
+    HeroSpectrum r;
+    [unroll]
+    for (int i = 0; i < NUM_HERO_SAMPLES; i++)
+        r.Samples[i] = s / a.Samples[i];
     return r;
 }
 

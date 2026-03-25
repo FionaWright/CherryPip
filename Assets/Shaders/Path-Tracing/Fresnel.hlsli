@@ -66,6 +66,8 @@ n is the phase velocity, k is the extinction coefficient describing absorption
 #define IOR_AIR 1.0f
 #endif
 
+// TODO: Move this elsewhere
+#ifdef SPECTRAL
 struct SellmeierEquation
 {
     float Constant;
@@ -112,11 +114,22 @@ static const SellmeierEquation cSellmeier_BGG = {
     { true, true, true, false, false }
 };
 
-// TODO: Temp
 float DebugSampleIorN(float lambda)
 {
     return cSellmeier_BGG.SampleN(lambda);
 }
+
+// TODO: Temp
+float DebugSampleIorN_Hero(SpectralContext ctx)
+{
+#if defined(SPECTRAL_SINGLE_WAVELENGTH_SAMPLING)
+    return DebugSampleIorN(ctx.Lambda);
+#elif defined(SPECTRAL_HERO_SAMPLING)
+    return DebugSampleIorN(ctx.GetHeroLambda());
+#endif
+    return -1;
+}
+#endif
 
 void Dielectric_Polarized(float n1, float n2, float cosTi, out float rp2, out float rs2)
 {

@@ -7,6 +7,7 @@ Spectrum WhiteSpectrum_D65();
 
 #include "Spectral-Tracing/Spectrum/SpectralUtils.hlsli"
 #include "Spectral-Tracing/SpectralData/D65StandardIlluminant.hlsli"
+#include "Spectral-Tracing/SpectralData/D65_MLG.hlsli"
 
 Spectrum BlackSpectrum()
 {
@@ -33,7 +34,13 @@ float SampleD65(float lambda)
     int i0 = (int)clamp(floor(fIdx), 0, WHITE_D65_COUNT-1);
     int i1 = min(i0+1, WHITE_D65_COUNT-1);
     float t = fIdx - i0;
-    return = lerp(cWhiteD65[i0], cWhiteD65[i1], t) * 0.01f; // Normalize
+    return lerp(cWhiteD65[i0], cWhiteD65[i1], t) * 0.01f; // Normalize
+}
+
+float SampleD65_MLG(float lambda)
+{
+    float normalizedLambda = (lambda - WHITE_D65_LAMBDA_MIN) / float(WHITE_D65_LAMBDA_SIZE);
+    return cWhiteD65_MLG.Sample(normalizedLambda) * 0.01f;
 }
 
 Spectrum WhiteSpectrum_D65()

@@ -364,6 +364,9 @@ std::shared_ptr<Texture> ModelLoaderGLTF::loadTextureResource(const D3D* d3d, ID
         const auto jpgIdx = texPath.find("jpg");
         if (jpgIdx != std::string::npos)
             texPath = texPath.replace(jpgIdx, 3, "dds");
+        const auto jpegIdx = texPath.find("jpeg");
+        if (jpegIdx != std::string::npos)
+            texPath = texPath.replace(jpegIdx, 4, "dds");
 
         if (ResourceSharer::TryGetFromDatabaseTex(texPath, pTex))
             return pTex;
@@ -430,23 +433,34 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
     // TODO: Refactor
     if ((*asset)->materials.empty())
     {
-        std::string diffuseTexInput = assetDirectory + "Textures/TestTex.dds";
         std::shared_ptr<Texture> diffuseTex = std::make_shared<Texture>();
-        diffuseTex->Init(d3d->GetDevice(), cmdList, diffuseTexInput, 1);
+        std::string diffuseTexInput = assetDirectory + "Textures/TestTex.dds";
+        if (!ResourceSharer::TryGetFromDatabaseTex(diffuseTexInput, diffuseTex))
+        {
+            diffuseTex->Init(d3d->GetDevice(), cmdList, diffuseTexInput, 1);
+            ResourceSharer::AddToDatabaseTex(diffuseTexInput, diffuseTex);
+        }
 
         std::shared_ptr<Material> materialForward = std::make_shared<Material>();
         materialForward->Init(heap);
         materialForward->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices), "CBV Matrices (Forward)");
         materialForward->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterVS), "CBV Raster Vertex (Forward)");
+        materialForward->AddCBV(d3d->GetDevice(), heap, sizeof(CbvForwardLighting), "CBV Forward Lighting (Forward)");
         materialForward->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterDebug), "CBV Raster Debug (Forward)");
-        materialForward->SetTex(d3d->GetDevice(), 0, heap, diffuseTex);
+        materialForward->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterMaterial), "CBV Material (Forward)");
+        materialForward->SetTex(d3d->GetDevice(), 0, heap, args.BrdfIntegrationMap);
+
+        std::shared_ptr<Material> materialDeferred = std::make_shared<Material>();
+        materialDeferred->Init(heap);
+        materialDeferred->AddCBV(d3d->GetDevice(), heap, sizeof(CbvMatrices), "CBV Matrices (Deferred)");
+        materialDeferred->AddCBV(d3d->GetDevice(), heap, sizeof(CbvRasterMaterial), "CBV Raster Material (Deferred)");
 
         MaterialData materialData = {};
         materialData.BindlessTexDiffuse = heap->AddBindlessTexture(d3d->GetDevice(), diffuseTex);
         materialForward->SetData(materialData);
 
         auto obj = std::make_shared<Object>();
-        obj->Init(node.name.c_str(), t, shaderUsed, args.Root, model, materialForward, nullptr);
+        obj->Init(node.name.c_str(), t, shaderUsed, args.Root, model, materialForward, materialDeferred);
         args.OutObjects.emplace_back(obj);
         return;
     }
@@ -640,7 +654,7 @@ void ModelLoaderGLTF::LoadSplitModel(D3D* d3d, ID3D12GraphicsCommandList* cmdLis
 
     if (data.error() == fastgltf::Error::InvalidPath)
     {
-        CherryPrint("Error loading GLTF model (path=\"" + path + "\")");
+        CherryPrint("Error loading GLTF model due to invalid path: (path=\"" + path + "\")");
         return;
     }
 

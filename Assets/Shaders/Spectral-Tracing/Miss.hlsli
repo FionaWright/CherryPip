@@ -35,7 +35,7 @@ SpectralValue Miss(float3 origin, float3 direction, uint bounceIdx, SpectralCont
         else
             return Li;
 
-        Li.AddRGB(dirLightRGB, eIlluminant, lambda);
+        Li.AddRGB(dirLightRGB, eIlluminant, ctx);
     }
 
     return Li;

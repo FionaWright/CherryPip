@@ -36,6 +36,7 @@ RWStructuredBuffer<DebugPathVisualizationStruct> gDebugPathVisualization : regis
 SamplerState gSampler : register(s0);
 
 #include "Path-Tracing/Trace.hlsli"
+#include "Path-Tracing/Accumulate.hlsli"
 
 float4 PSMain(VsOut input) : SV_Target0
 {
@@ -117,19 +118,7 @@ float4 PSMain(VsOut input) : SV_Target0
 
     uint2 pixelCoord = uint2(input.position.xy);
 
-    float3 accumColor = gAccum.Load(pixelCoord).rgb;
-    if (IsNaN3(accumColor))
-        return float4(1, 0, 1, 1);
-
-    float3 newSum = accumColor + colorSum;
-
-    float accumFrameCount = (float)cbvPathTracing.FrameIdx;
-    float totalFrames = accumFrameCount + 1.0f;
-
-    float3 average = (accumColor * accumFrameCount + colorSum) / totalFrames;
-
-    if (cbvPathTracing.UpdateAccumulation)
-        gAccum[pixelCoord].rgb = average;
+    float3 average = AccumulateAndFetch(pixelCoord, colorSum, true);
 
     if (cGammaCorrection)
         average = pow(average, 1.0f/2.2f);

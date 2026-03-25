@@ -1,0 +1,11 @@
+Model Information:
+* title:	Ship in a bottle
+* source:	https://sketchfab.com/3d-models/ship-in-a-bottle-9ddbc5b32da94bafbfdb56e1f6be9a38
+* author:	Loïc Norgeot (https://sketchfab.com/norgeotloic)
+
+Model License:
+* license type:	CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)
+* requirements:	Author must be credited. No commercial use.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Ship in a bottle" (https://sketchfab.com/3d-models/ship-in-a-bottle-9ddbc5b32da94bafbfdb56e1f6be9a38) by Loïc Norgeot (https://sketchfab.com/norgeotloic) licensed under CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)

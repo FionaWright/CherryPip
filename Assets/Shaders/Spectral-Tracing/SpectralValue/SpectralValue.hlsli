@@ -2,6 +2,7 @@
 #define H_SPECTRAL_VALUE_H
 
 struct SpectralValue;
+struct SpectralContext;
 
 SpectralValue CreateBlackSpectralValue();
 SpectralValue CreateWhiteSpectralValue();
@@ -28,8 +29,10 @@ SpectralValue Lerp(float start, SpectralValue a, float t);
 
 float Luminance(SpectralValue a, SpectralContext ctx);
 
-#ifdef SPECTRAL_SINGLE_WAVELENGTH_SAMPLING
+#if defined(SPECTRAL_SINGLE_WAVELENGTH_SAMPLING)
 #    include "Spectral-Tracing/SpectralValue/SpectralValue_Float.hlsli"
+#elif defined(SPECTRAL_HERO_SAMPLING)
+#    include "Spectral-Tracing/SpectralValue/SpectralValue_Hero.hlsli"
 #else
 #    include "Spectral-Tracing/SpectralValue/SpectralValue_Spectrum.hlsli"
 #endif

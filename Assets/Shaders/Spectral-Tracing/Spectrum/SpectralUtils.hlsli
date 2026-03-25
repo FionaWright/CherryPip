@@ -18,6 +18,8 @@ float IndexToLambda(float idx);
 #include "Spectral-Tracing/Spectrum/RgbToSpectrum2019.hlsli"
 #include "Spectral-Tracing/Spectrum/SpectrumToRGB2019.hlsli"
 #include "Spectral-Tracing/Spectrum/ColorSpectrums.hlsli"
+#include "Spectral-Tracing/SpectralValue/SpectralValue.hlsli"
+#include "Path-Tracing/Fresnel.hlsli"
 #include "Random.h"
 
 #define CONSTANT_BOLTZMANN 1.38064852e-23f
@@ -155,6 +157,14 @@ float3 RoundTripTest(float3 lrgb)
     return SpectrumToRGB(s);
 }
 
+//[noinline] // Prevent inlining as it would otherwise explode compile time
+float3 RoundTripTest_v2(float3 lrgb, in SpectralContext ctx)
+{
+    SpectralValue s;
+    s.FromRGB(lrgb, eIlluminant, ctx);
+    return s.ToRGB(ctx);
+}
+
 float Luminance(Spectrum a)
 {
     float lum = 0.0f;
@@ -168,6 +178,78 @@ float Luminance(Spectrum a)
     }
 
     return lum * SPECTRUM_DELTA_LAMBDA / cCIE_Y_integral;
+}
+
+#if defined(SPECTRAL_HERO_SAMPLING)
+HeroSpectrum ComputeHeroReflectWeights(float NdV, SpectralContext ctx, bool entering)
+{
+    HeroSpectrum s;
+    s.Samples[0] = 1.0f;
+
+    [unroll]
+    for (int i = 1; i < NUM_HERO_SAMPLES; i++)
+    {
+        float nCurrent_i = entering ? IOR_AIR : DebugSampleIorN(ctx.GetLambda(i));
+        float nNext_i = entering ? DebugSampleIorN(ctx.GetLambda(i)) : IOR_AIR;
+        float F_i = Dielectric_Unpolarized(nCurrent_i, nNext_i, NdV);
+        s.Samples[i] = F_i;
+    }
+    return s;
+}
+
+HeroSpectrum ComputeHeroRefractWeights(float NdV, SpectralContext ctx, bool entering)
+{
+    HeroSpectrum s;
+    s.Samples[0] = 1.0f;
+
+    [unroll]
+    for (int i = 1; i < NUM_HERO_SAMPLES; i++)
+    {
+        float nCurrent_i = entering ? IOR_AIR : DebugSampleIorN(ctx.GetLambda(i));
+        float nNext_i = entering ? DebugSampleIorN(ctx.GetLambda(i)) : IOR_AIR;
+        float F_i = Dielectric_Unpolarized(nCurrent_i, nNext_i, NdV);
+        float eta = nNext_i / nCurrent_i;
+        float eta2 = eta * eta;
+        s.Samples[i] = eta2 * (1.0f - F_i);
+    }
+    return s;
+}
+#endif
+
+#define RAYLEIGH_CONSTANT 5.8e-6 // Assuming IOR air is ~1
+
+float RayleighSigma(float lambda)
+{
+    float lambda2 = lambda * lambda;
+    float lambda4 = lambda2 * lambda2;
+    lambda4 = lambda4 / 1000.0f / 1000.0f / 1000.0f; // nm -> um -> cm -> m
+
+    return RAYLEIGH_CONSTANT / lambda4;
+}
+
+float RayleighPhase(float cosTheta)
+{
+    return (3.0f / (16.0f * PI)) * (1.0f + cosTheta * cosTheta);
+}
+
+float SampleRayleighCosTheta(float u)
+{
+    // Invert CDF approximation
+    float z = 2.0f * u - 1.0f;
+
+    float g = sqrt(1.0f + z * z);
+    return z / g; // approximation
+}
+
+float SampleRayleighMediumT(inout RngInfo rngInfo, float lambda)
+{
+    float sigma_s = RayleighSigma(lambda);
+    return -log(1.0f - PcgRand01(rngInfo.IndependentRngState)) / sigma_s;
+}
+
+float RayleighPhasePDF(float cosTheta)
+{
+    return 3.0f / (16.0f * PI) * (1.0f + cosTheta * cosTheta);
 }
 
 #endif

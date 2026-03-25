@@ -8,7 +8,9 @@ float3 HeroToRGB(Spectrum spectrum, SpectralContext ctx);
 
 #include "Spectral-Tracing/Spectrum/Spectrum.hlsli"
 #include "Spectral-Tracing/Spectrum/SpectralUtils.hlsli"
+#include "Spectral-Tracing/Spectrum/HeroSpectrum.hlsli"
 #include "Spectral-Tracing/SpectralData/CIE2006.hlsli"
+#include "Spectral-Tracing/SpectralData/CIE2006_MLG.hlsli"
 
 static const float3x3 cMatXyzToRgb =
     {
@@ -17,6 +19,7 @@ static const float3x3 cMatXyzToRgb =
         0.055648f, -0.204043f, 1.057311f
     };
 
+// Better for Full-Spectrum, values are hardcoded at comptime
 float3 SampleCIE(float lambda)
 {
     float fIdx = (lambda - CIE_XYZBAR_LAMBDA_MIN) / CIE_XYZBAR_LAMBDA_DELTA;
@@ -25,6 +28,16 @@ float3 SampleCIE(float lambda)
     int i1 = min(i0+1, CIE_XYZBAR_COUNT-1);
     float t = fIdx - i0;
     return lerp(cCIE_XYZbar[i0], cCIE_XYZbar[i1], t);
+}
+
+// Better for spectral sampling modes that don't know lambda at comptime
+float3 SampleCIE_MLG(float lambda)
+{
+    float normalizedLambda = (lambda - VISIBLE_LIGHT_SPECTRUM_MIN) / float(CIE_XYZBAR_LAMBDA_SIZE);
+    float x = cCIE_XYZbar_MLG_X.Sample(normalizedLambda);
+    float y = cCIE_XYZbar_MLG_Y.Sample(normalizedLambda);
+    float z = cCIE_XYZbar_MLG_Z.Sample(normalizedLambda);
+    return float3(x, y, z);
 }
 
 // Reimann Sum Approximation
@@ -55,7 +68,7 @@ float3 SpectrumToRGB(Spectrum spectrum)
 
 float3 SpectrumSampleToXYZ(float energy, float lambda, float pdf)
 {
-    float3 cie = SampleCIE(lambda);
+    float3 cie = SampleCIE_MLG(lambda);
     return energy * cie / cCIE_Y_integral / max(1e-6f, pdf);
 }
 
@@ -66,6 +79,7 @@ float3 SpectrumSampleToRGB(float energy, float lambda, float pdf)
     return rgb;
 }
 
+#ifdef SPECTRAL_HERO_SAMPLING
 float3 HeroToXYZ(HeroSpectrum spectrum, SpectralContext ctx)
 {
     float3 xyz = 0.0f;
@@ -74,13 +88,14 @@ float3 HeroToXYZ(HeroSpectrum spectrum, SpectralContext ctx)
     for (int i = 0; i < NUM_HERO_SAMPLES; i++)
     {
         float lambda = ctx.GetLambda(i);
-        float3 cie = SampleCIE(lambda);
+        float3 cie = SampleCIE_MLG(lambda);
         xyz += spectrum.Samples[i] * cie;
     }
 
     // Normalization
-    xyz *= (float)HERO_DELTA_LAMBDA;
     xyz /= cCIE_Y_integral;
+    xyz /= max(1e-6f, ctx.GetPDF());
+    xyz /= float(NUM_HERO_SAMPLES);
     return xyz;
 }
 
@@ -90,5 +105,6 @@ float3 HeroToRGB(HeroSpectrum spectrum, SpectralContext ctx)
     float3 rgb = mul(cMatXyzToRgb, xyz);
     return rgb;
 }
+#endif
 
 #endif

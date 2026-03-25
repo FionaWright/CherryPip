@@ -1,17 +1,21 @@
 #include "MicrofacetModels/AllModels.hlsli"
+#include "Path-Tracing/Fresnel.hlsli"
 
 void Model_Microfacet(
     inout RngInfo rngInfo,
     inout float3 throughput,
     float roughness,
     float metalness,
+
     float3 Ns,
     float3 Li,
     float3 albedo,
     float3 anisoDirAndStrength,
+
     float3 wo,        // V
     out float3 wi,    // L
     out float3 L_sample,
+
     inout float3 debug,
     inout bool hasDebugOutput)
 {

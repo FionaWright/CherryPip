@@ -69,27 +69,6 @@ bool CheckTIR(float n1, float n2, float cosTi)
     return (n1 > n2) && (sinTi > n2 / n1);
 }
 
-// Caller must flip normals + swap IoRs if exiting
-float3 Refract(float3 wo, float3 N, float iorA, float iorB)
-{
-    float eta = iorA / iorB;
-    float cosI = -dot(wo, N);
-    if (cosI < 0.0f)
-    {
-        eta = 1.0f / eta;
-        cosI = -cosI;
-        N = -N;
-    }
-
-    float sin2I = (1 - cosI * cosI);
-    float sin2T = eta * eta * sin2I;
-    if (sin2T >= 1) // TIR
-        return float3(0,0,0);
-
-    float cosT = sqrt(max(0.0f, 1.0f - sin2T * sin2T));
-    return normalize(wo * eta + N * (eta * cosI - cosT));
-}
-
 float3 Reflect(float3 wo, float3 N)
 {
     return wo - 2 * dot(wo, N) * N;
@@ -132,7 +111,7 @@ GlassResponse CalcReflectRefract(float3 wo, float3 Ns, float iorA, float iorB)
     GlassResponse res;
     res.reflectDir = Reflect(wo, Ns);
     res.reflectWeight = ReflectanceProportion(wo, Ns, iorA, iorB);
-    res.refractDir = Refract(wo, Ns, iorA, iorB);
+    res.refractDir = refract(wo, Ns, iorA / iorB);
     return res;
 }
 
@@ -211,6 +190,26 @@ float3 SRGB_to_LRGB(float3 srgb)
         srgb.r < 0.04045 ? low.r  : high.r,
         srgb.g < 0.04045 ? low.g  : high.g,
         srgb.b < 0.04045 ? low.b  : high.b
+    );
+}
+
+float3 SampleAround(float3 dir, float cosTheta, float phi)
+{
+    float sinTheta = sqrt(max(0.0f, 1.0f - cosTheta * cosTheta));
+
+    float3 localDir = float3(
+        sinTheta * cos(phi),
+        sinTheta * sin(phi),
+        cosTheta
+    );
+
+    float3 T, B;
+    BuildBasisFrisvad(dir, T, B);
+
+    return normalize(
+        localDir.x * T +
+        localDir.y * B +
+        localDir.z * dir
     );
 }
 

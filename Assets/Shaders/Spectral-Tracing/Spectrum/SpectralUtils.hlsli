@@ -20,6 +20,7 @@ float IndexToLambda(float idx);
 #include "Spectral-Tracing/Spectrum/ColorSpectrums.hlsli"
 #include "Spectral-Tracing/SpectralValue/SpectralValue.hlsli"
 #include "Path-Tracing/Fresnel.hlsli"
+#include "Path-Tracing/Sellmeier.hlsli"
 #include "Random.h"
 
 #define CONSTANT_BOLTZMANN 1.38064852e-23f
@@ -180,8 +181,31 @@ float Luminance(Spectrum a)
     return lum * SPECTRUM_DELTA_LAMBDA / cCIE_Y_integral;
 }
 
+float SampleIorN_Lambda(float lambda, bool isGlass, bool isConductor)
+{
+    if (isGlass)
+		return SampleIorN_Glass(lambda);
+	else if (isConductor)
+		return SampleIorN_Conductor(lambda);
+	else
+		return SampleIorN_Dielectric(lambda);
+}
+
+float SampleIorN(SpectralContext ctx, bool isGlass, bool isConductor)
+{
+#if defined(SPECTRAL_SINGLE_WAVELENGTH_SAMPLING)
+    float lambda = ctx.Lambda;
+#elif defined(SPECTRAL_HERO_SAMPLING)
+    float lambda = ctx.GetHeroLambda();
+#else
+	float lambda = -1;
+#endif
+
+    return SampleIorN_Lambda(lambda, isGlass, isConductor);
+}
+
 #if defined(SPECTRAL_HERO_SAMPLING)
-HeroSpectrum ComputeHeroReflectWeights(float NdV, SpectralContext ctx, bool entering)
+HeroSpectrum ComputeHeroReflectWeights(float NdV, SpectralContext ctx, bool entering, bool isGlass, bool isConductor)
 {
     HeroSpectrum s;
     s.Samples[0] = 1.0f;
@@ -189,15 +213,17 @@ HeroSpectrum ComputeHeroReflectWeights(float NdV, SpectralContext ctx, bool ente
     [unroll]
     for (int i = 1; i < NUM_HERO_SAMPLES; i++)
     {
-        float nCurrent_i = entering ? IOR_AIR : DebugSampleIorN(ctx.GetLambda(i));
-        float nNext_i = entering ? DebugSampleIorN(ctx.GetLambda(i)) : IOR_AIR;
+		float nMat = SampleIorN_Lambda(ctx.GetLambda(i), isGlass, isConductor);
+        float nCurrent_i = entering ? IOR_AIR : nMat;
+        float nNext_i = entering ? nMat : IOR_AIR;
+
         float F_i = Dielectric_Unpolarized(nCurrent_i, nNext_i, NdV);
         s.Samples[i] = F_i;
     }
     return s;
 }
 
-HeroSpectrum ComputeHeroRefractWeights(float NdV, SpectralContext ctx, bool entering)
+HeroSpectrum ComputeHeroRefractWeights(float NdV, SpectralContext ctx, bool entering, bool isGlass, bool isConductor)
 {
     HeroSpectrum s;
     s.Samples[0] = 1.0f;
@@ -205,8 +231,10 @@ HeroSpectrum ComputeHeroRefractWeights(float NdV, SpectralContext ctx, bool ente
     [unroll]
     for (int i = 1; i < NUM_HERO_SAMPLES; i++)
     {
-        float nCurrent_i = entering ? IOR_AIR : DebugSampleIorN(ctx.GetLambda(i));
-        float nNext_i = entering ? DebugSampleIorN(ctx.GetLambda(i)) : IOR_AIR;
+		float nMat = SampleIorN_Lambda(ctx.GetLambda(i), isGlass, isConductor);
+        float nCurrent_i = entering ? IOR_AIR : nMat;
+        float nNext_i = entering ? nMat : IOR_AIR;
+
         float F_i = Dielectric_Unpolarized(nCurrent_i, nNext_i, NdV);
         float eta = nNext_i / nCurrent_i;
         float eta2 = eta * eta;

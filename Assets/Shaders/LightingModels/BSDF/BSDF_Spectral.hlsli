@@ -67,8 +67,11 @@ void Model_BSDF_Spectral(
 
     float NdV = SSpaceCosTheta(V_s);
 
-    float nCurrent = entering ? IOR_AIR : DebugSampleIorN_Hero(ctx);
-    float nNext = entering ? DebugSampleIorN_Hero(ctx) : IOR_AIR;
+	bool isConductor = metalness > 0.001f;
+
+	float nMat = SampleIorN(ctx, isGlass, isConductor);
+    float nCurrent = entering ? IOR_AIR : nMat;
+    float nNext = entering ? nMat : IOR_AIR;
 
     float3 L_s = 0.0f;
 
@@ -83,6 +86,13 @@ void Model_BSDF_Spectral(
         {
             BRDF_Specular_Spectral(rngInfo, throughput, ctx, L_s, roughness, metalness, albedo, V_s, N_s, anisoDirAndStrength, T, B, Ns, nCurrent, nNext, entering, debug, hasDebugOutput);
             throughput.Div(max(0.001f, reflectProb));
+
+#if defined(SPECTRAL_HERO_SAMPLING)
+	float3 H_s = normalize(L_s + V_s);
+	float VdH = dot(V_s, H_s);
+    HeroSpectrum reflectWeights = ComputeHeroReflectWeights(VdH, ctx, entering, isGlass, isConductor);
+    throughput.Value.Mul(reflectWeights);
+#endif
         }
         else
         {
@@ -90,7 +100,7 @@ void Model_BSDF_Spectral(
             throughput.Div(max(0.001f, 1.0f - reflectProb));
 
 #if defined(SPECTRAL_HERO_SAMPLING)
-            HeroSpectrum refractWeights = ComputeHeroRefractWeights(NdV, ctx, entering);
+            HeroSpectrum refractWeights = ComputeHeroRefractWeights(NdV, ctx, entering, isGlass, isConductor);
             throughput.Value.Mul(refractWeights);
 #endif
         }

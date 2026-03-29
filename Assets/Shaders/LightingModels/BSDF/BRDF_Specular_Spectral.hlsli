@@ -66,11 +66,6 @@ void BRDF_Specular_Spectral(
         throughput.Mul(specularBrdf * NdL / max(0.001f, pdf));
     }
 
-#if defined(SPECTRAL_HERO_SAMPLING)
-    HeroSpectrum reflectWeights = ComputeHeroReflectWeights(VdH, ctx, entering);
-    throughput.Value.Mul(reflectWeights);
-#endif
-
 //#ifdef DEBUG_PT_INFO_OUTPUT
 //#     include "Debug/DebugInfoOutputBRDFSpec.hlsli"
 //#endif

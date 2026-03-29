@@ -344,7 +344,7 @@ void SceneStudio::initCustomScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     }
 
     // Sphere
-    if (false)
+    if (true)
     {
         t.SetPosition(0, 1.5f, 0);
         ModelLoaderGLTF::LoadSplitModel(d3d, cmdList, &m_heap, L"Sphere/Sphere.gltf", args, t);
@@ -370,7 +370,7 @@ void SceneStudio::initCustomScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         t = {};
     }
 
-    if (true)
+    if (false)
     {
         args.CullingWhiteList = {
             "Queen_W",

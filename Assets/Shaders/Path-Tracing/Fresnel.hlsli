@@ -10,14 +10,6 @@
 // https://pbr-book.org/4ed/Reflection_Models/Specular_Reflection_and_Transmission
 // https://scispace.com/pdf/handbook-of-optical-materials-3e2ukwmx2l.pdf
 
-// Eta Tables:
-// https://github.com/polyanskiy/refractiveindex.info-database/tree/main/database
-//     Data Columns: λ, n(λ), k(λ)
-//     Wavelength is in micrometers, multiply by 1000 to get nm
-//     Not all materials contain data in the visible light spectrum
-// https://refractiveindex.info/
-// https://en.wikipedia.org/wiki/Sellmeier_equation
-
 /*
 
 E = Electric Field
@@ -64,71 +56,6 @@ n is the phase velocity, k is the extinction coefficient describing absorption
 
 #ifndef IOR_AIR
 #define IOR_AIR 1.0f
-#endif
-
-// TODO: Move this elsewhere
-#ifdef SPECTRAL
-struct SellmeierEquation
-{
-    float Constant;
-    float B[5];
-    float C[5];
-    bool MulLambda[5];
-
-    float SampleN(float lambda_nano)
-    {
-        float lambda_micro = lambda_nano / 1000.0f;
-        float lambda2 = lambda_micro * lambda_micro;
-
-        float n2 = Constant;
-        [unroll]
-        for (int i = 0; i < 5; i++)
-        {
-            float term = B[i] / (lambda2 - C[i]);
-            if (MulLambda[i])
-                term *= lambda2;
-            n2 += term;
-        }
-        return sqrt(n2);
-    }
-};
-
-static const SellmeierEquation cSellmeier_TiO2 = {
-    5.913f,
-    { 0.2441f, 0, 0, 0, 0 },
-    { 0.0803f, 0, 0, 0, 0 },
-    { false, false, false, false, false }
-};
-
-static const SellmeierEquation cSellmeier_FusedSilica = {
-    1.0f,
-    { 0.6961663, 0.4079426, 0.8974794, 0, 0 },
-    { 4.679148e-3, 0.01351206, 97.93400254, 0, 0 },
-    { true, true, true, false, false }
-};
-
-static const SellmeierEquation cSellmeier_BGG = {
-    1.0f,
-    { 0.82725, 1.14635, 1.53923, 0, 0 },
-    { 0.02978, 0.005117, 272.657, 0, 0 },
-    { true, true, true, false, false }
-};
-
-float DebugSampleIorN(float lambda)
-{
-    return cSellmeier_BGG.SampleN(lambda);
-}
-
-// TODO: Temp
-float DebugSampleIorN_Hero(SpectralContext ctx)
-{
-#if defined(SPECTRAL_SINGLE_WAVELENGTH_SAMPLING)
-    return DebugSampleIorN(ctx.Lambda);
-#elif defined(SPECTRAL_HERO_SAMPLING)
-    return DebugSampleIorN(ctx.GetHeroLambda());
-#endif
-    return -1;
-}
 #endif
 
 void Dielectric_Polarized(float n1, float n2, float cosTi, out float rp2, out float rs2)

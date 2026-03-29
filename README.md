@@ -113,6 +113,10 @@ Progress as of 11/03/26 (Spectral-tracing working!):
 Progress as of 23/03/26:
 <img width="1689" height="574" alt="image" src="https://github.com/user-attachments/assets/54a8dba0-0828-40f3-88ee-d81cc7866ee8" />
 
+Progress as of 29/03/26:
+<img width="1020" height="575" alt="Spectral" src="https://github.com/user-attachments/assets/8decdfe4-96ae-48c9-8887-fcff8cbeeab0" />
+
+
 
 
 

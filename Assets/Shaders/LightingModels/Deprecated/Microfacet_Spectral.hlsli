@@ -49,7 +49,7 @@ void Model_Microfacet_Spectral(
         return;
     }
 
-    float F_Select = Dielectric_Unpolarized(nCurrent, nNext, NdV);
+    float F_Select = Fresnel_Dielectric_Unpolarized(nCurrent, nNext, NdV);
 
     float reflectProb = F_Select;
     reflectProb = clamp(reflectProb, 0.05f, 0.95f);
@@ -113,7 +113,7 @@ void Model_Microfacet_Spectral(
         float NdH = SSpaceCosTheta(H_s);
         float VdH = dot(H_s, V_s);
 
-        float F = Dielectric_Unpolarized(nCurrent, nNext, VdH);
+        float F = Fresnel_Dielectric_Unpolarized(nCurrent, nNext, VdH);
 
         float D = mm.D(H_s);
         float G = mm.G2(L_s, V_s);

@@ -8,11 +8,13 @@
 #include "LightingModels/BSDF/BRDF_Specular.hlsli"
 #include "LightingModels/BSDF/BTDF.hlsli"
 
-float IsReflect(inout RngInfo rngInfo, float nCurrent, float nNext, float NdV, out float reflectProb)
+float IsReflect(inout RngInfo rngInfo, Complex iorCurrent, Complex iorNext, float NdV, bool isConductor, out float reflectProb)
 {
-    reflectProb = Dielectric_Unpolarized(nCurrent, nNext, abs(NdV));
+    reflectProb = Fresnel_Maxwell(iorCurrent, iorNext, abs(NdV), isConductor);
 
-    if (cDebugForceReflect || CheckTIR(nCurrent, nNext, abs(NdV)))
+    if (cDebugForceReflect)
+        reflectProb = 1.0f;
+    else if (!isConductor && CheckTIR(iorCurrent.Re, iorNext.Re, abs(NdV)))
         reflectProb = 1.0f;
     else if (cDebugForceRefract)
         reflectProb = 0.0f;
@@ -77,11 +79,14 @@ void Model_BSDF(
     {
         L_sample = 0.0f; // TODO ?
 
-        float nCurrent = entering ? IOR_AIR : ior;
-        float nNext = entering ? ior : IOR_AIR;
+        Complex iorMat = CreateComplex(ior, 0.0f);
+        Complex iorCurrent = Ternary(entering, IOR_AIR, iorMat);
+        Complex iorNext = Ternary(entering, iorMat, IOR_AIR);
+
+        bool isConductor = false; // Metal glass not supported
 
         float reflectProb;
-        float isReflect = IsReflect(rngInfo, nCurrent, nNext, NdV, reflectProb);
+        float isReflect = IsReflect(rngInfo, iorCurrent, iorNext, NdV, isConductor, reflectProb);
 
         if (isReflect)
         {
@@ -90,7 +95,7 @@ void Model_BSDF(
         }
         else
         {
-            BTDF(rngInfo, throughput, L_s, roughness, albedo, V_s, L_s, entering, nCurrent, nNext, sigmaA, hitDist, debug, hasDebugOutput);
+            BTDF(rngInfo, throughput, L_s, roughness, albedo, V_s, L_s, entering, iorCurrent.Re, iorNext.Re, sigmaA, hitDist, debug, hasDebugOutput);
             throughput /= max(0.001f, 1.0f - reflectProb);
         }
 

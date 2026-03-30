@@ -49,7 +49,7 @@ void BTDF_Spectral(
     float NdV = SSpaceCosTheta(V_s);
     float NdH = SSpaceCosTheta(H_s);
 
-    float F = Dielectric_Unpolarized(nCurrent, nNext, abs(VdH));
+    float F = Fresnel_Dielectric_Unpolarized(nCurrent, nNext, abs(VdH));
 
     if (roughness < 0.001f)
     {

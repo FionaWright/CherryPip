@@ -47,7 +47,7 @@ void BRDF_Specular_Spectral(
     float NdH = SSpaceCosTheta(H_s);
     float VdH = dot(H_s, V_s);
 
-    bool isConductor = metalness > 0.001f;
+    bool isConductor = IsConductor(metalness);
     float F = Fresnel_Maxwell(iorCurrent, iorNext, VdH, isConductor);
 
     float D = mm.D(H_s);

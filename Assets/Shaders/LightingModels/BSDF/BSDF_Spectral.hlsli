@@ -69,7 +69,7 @@ void Model_BSDF_Spectral(
 
     float NdV = SSpaceCosTheta(V_s);
 
-	bool isConductor = metalness > 0.001f;
+	bool isConductor = IsConductor(metalness);
 
 	Complex iorMat = SampleIor(ctx, isGlass, isConductor);
     Complex iorCurrent = Ternary(entering, IOR_AIR, iorMat);

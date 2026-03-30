@@ -88,8 +88,8 @@ Complex Mul(Complex c1, float x)
 void Complex::Div(Complex c)
 {
     float k = Im * Im + c.Im * c.Im;
-    Re = (Re * c.Re + Im * c.Im) / k;
-    Im = (c.Re * Im - Re * c.Im) / k;
+    Re = (Re * c.Re + Im * c.Im) / max(1e-6, k);
+    Im = (c.Re * Im - Re * c.Im) / max(1e-6, k);
 }
 
 Complex Div(Complex c1, Complex c2)

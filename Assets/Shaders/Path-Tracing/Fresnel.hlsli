@@ -61,6 +61,10 @@ n is the phase velocity, k is the extinction coefficient describing absorption
 #define IOR_AIR CreateComplex(1.0f, 0.0f);
 #endif
 
+#define METALNESS_CONDUCTOR_THRESHOLD 0.5f
+
+bool IsConductor(float metalness) { return metalness > METALNESS_CONDUCTOR_THRESHOLD; }
+
 void Fresnel_Dielectric_Polarized(float n1, float n2, float cosTi, out float rp2, out float rs2)
 {
     float sin2Ti = 1.0f - cosTi * cosTi;

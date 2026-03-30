@@ -61,8 +61,11 @@ Complex Sub(Complex c1, Complex c2)
 
 void Complex::Mul(Complex c)
 {
-    Re = Re * c.Re - Im * c.Im;
-    Im = Re * c.Im + c.Re * Im;
+    float a = Re;
+    float b = Im;
+
+    Re = a * c.Re - b * c.Im;
+    Im = a * c.Im + b * c.Re;
 }
 
 void Complex::Mul(float x)
@@ -87,9 +90,12 @@ Complex Mul(Complex c1, float x)
 
 void Complex::Div(Complex c)
 {
-    float k = Im * Im + c.Im * c.Im;
-    Re = (Re * c.Re + Im * c.Im) / max(1e-6, k);
-    Im = (c.Re * Im - Re * c.Im) / max(1e-6, k);
+    float a = Re;
+    float b = Im;
+
+    float k = c.Re * c.Re + c.Im * c.Im;
+    Re = (a * c.Re + b * c.Im) / max(1e-6, k);
+    Im = (c.Re * b - a * c.Im) / max(1e-6, k);
 }
 
 Complex Div(Complex c1, Complex c2)

@@ -103,7 +103,6 @@ static const ConductorIOR cComplex_Ag[COMPLEX_AG_SIZE] = {
 };
 
 // Gold
-// TODO: Causing issues at grazing angles for some reason?
 #define COMPLEX_AU_SIZE 23
 static const ConductorIOR cComplex_Au[COMPLEX_AU_SIZE] = {
     { 300.9, 1.53, 1.889 },
@@ -181,12 +180,12 @@ Complex SampleIor_Conductor(float lambda)
     int size = COMPLEX_CU_SIZE;
 
     int i = 1;
-    while (lambda < data[i].Wavelength && i < size)
+    while (lambda <= data[i].Wavelength && i < size)
         i++;
 
     float minLambda = data[i-1].Wavelength;
     float maxLambda = data[i].Wavelength;
-    float t = lambda - minLambda / max(1e-6, maxLambda - minLambda);
+    float t = (lambda - minLambda) / max(1e-6, maxLambda - minLambda);
 
     float n = lerp(data[i-1].N, data[i].N, t);
     float k = lerp(data[i-1].K, data[i].K, t);

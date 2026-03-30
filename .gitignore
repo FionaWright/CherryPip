@@ -1,4 +1,5 @@
 .idea/*
+.vs/*
 .venv/*
 Data/*
 !Data/.gitkeep
@@ -8,3 +9,4 @@ Python Scripts/BokehData/*
 Assets/Models/GitIgnored/*
 !Assets/Models/GitIgnored/.gitkeep
 build/*
+out/*

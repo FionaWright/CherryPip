@@ -18,7 +18,7 @@
 #include <dxgiformat.h>
 
 // D3D12 extension library.
-#include "d3dx12.h"
+#include <d3dx12/d3dx12.h>
 
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;

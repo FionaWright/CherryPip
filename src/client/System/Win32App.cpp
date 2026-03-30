@@ -9,7 +9,7 @@
 #include "System/FileHelper.h"
 #include "System/Input.h"
 
-#include "imgui/backends/imgui_impl_win32.h"
+#include "imgui_impl_win32.h"
 #include "System/Config.h"
 #include "System/TextureLoader.h"
 #include "System/Engine.h"

@@ -2,7 +2,7 @@
 #include "Apps/SceneStudio/Headers/SceneStudio.h"
 #include "System/Win32App.h"
 
-#include "ThirdParty/imgui/imgui.h"
+#include "imgui.h"
 #include "Debug/GPUEventScoped.h"
 #include "Helper.h"
 #include "HWI/D3D.h"
@@ -344,7 +344,7 @@ void SceneStudio::initCustomScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
     }
 
     // Sphere
-    if (false)
+    if (true)
     {
         t.SetPosition(0, 1.5f, 0);
         ModelLoaderGLTF::LoadSplitModel(d3d, cmdList, &m_heap, L"Sphere/Sphere.gltf", args, t);
@@ -370,7 +370,7 @@ void SceneStudio::initCustomScene(D3D* d3d, ID3D12GraphicsCommandList* cmdList)
         t = {};
     }
 
-    if (true)
+    if (false)
     {
         args.CullingWhiteList = {
             "Queen_W",

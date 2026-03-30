@@ -1,3 +1,8 @@
+#ifndef H_MODEL_GLASS_H
+#define H_MODEL_GLASS_H
+
+#include "Complex.hlsli"
+
 void Model_Glass(
     inout RngInfo rngInfo,
     inout float3 throughput,
@@ -21,8 +26,8 @@ void Model_Glass(
         throughput *= exp(-sigmaA * hitDist);
     }
 
-    float iorCurrent = entering ? IOR_AIR : ior;
-    float iorNext = entering ? ior : IOR_AIR;
+    float iorCurrent = entering ? IOR_AIR.Re : ior;
+    float iorNext = entering ? ior : IOR_AIR.Re;
 
     GlassResponse res = CalcReflectRefract(-wo, Ns, iorCurrent, iorNext);
 
@@ -56,3 +61,5 @@ void Model_Glass(
 
     throughput *= reflect ? res.reflectWeight : (1.0 - res.reflectWeight);
 }
+
+#endif

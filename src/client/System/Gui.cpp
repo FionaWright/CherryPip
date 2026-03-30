@@ -6,8 +6,8 @@
 #include "System/Gui.h"
 #include "../../../Headers/client/Helper.h"
 #include "imgui.h"
-#include "imgui/backends/imgui_impl_win32.h"
-#include "imgui/backends/imgui_impl_dx12.h"
+#include "backends/imgui_impl_win32.h"
+#include "backends/imgui_impl_dx12.h"
 #include "System/Config.h"
 
 ComPtr<ID3D12DescriptorHeap> Gui::ms_cbvSrvUavHeap;

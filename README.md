@@ -43,6 +43,7 @@ C++, HLSL and Python are the main languages.
 - Environment maps with support for Panoramic and Octohedral Equal-Area (Rotatable at runtime)
 - Directional lighting + GPU max parallel search on the EA Environment Map to set automatically direction to where luminance is highest
 - Denoising (Box, Gaussian, Median, Edge-Avoiding A-Trous) using GBuffer pre-pass
+- Proper BSDF / BRDF / BTDF lighting model system
 
 #### Lighting Models
 - Lambertian
@@ -76,7 +77,8 @@ C++, HLSL and Python are the main languages.
 - Many different debug spectra tests
 - Zero round-trip error
 - Full-Spectrum, Single-Wavelength and Hero-Sampling spectral sampling modes
-- Lambert, Microfacet and Glass Lighting Models
+- Lambert and microfacet BSDF lighting models
+- Maxwell fresnell for dielectrics, conductors and glass materials 
 
 ## History 
 
@@ -112,6 +114,10 @@ Progress as of 11/03/26 (Spectral-tracing working!):
 
 Progress as of 23/03/26:
 <img width="1689" height="574" alt="image" src="https://github.com/user-attachments/assets/54a8dba0-0828-40f3-88ee-d81cc7866ee8" />
+
+Progress as of 29/03/26:
+<img width="1020" height="575" alt="Spectral" src="https://github.com/user-attachments/assets/8decdfe4-96ae-48c9-8887-fcff8cbeeab0" />
+
 
 
 

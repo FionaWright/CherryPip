@@ -1,6 +1,8 @@
 #ifndef H_FRESNEL_SPECTRAL_H
 #define H_FRESNEL_SPECTRAL_H
 
+#include "Complex.hlsli"
+
 // Nabla Implementation: (Dielectric only, No Conductor)
 // https://github.com/Devsh-Graphics-Programming/Nabla/blob/82726cbac7e18f702dfebdacd862697216e9b0fd/include/nbl/builtin/hlsl/bxdf/fresnel.hlsl
 
@@ -9,14 +11,7 @@
 // https://em.geosci.xyz/content/maxwell1_fundamentals/reflection_and_refraction/Fresnel_equations.html
 // https://pbr-book.org/4ed/Reflection_Models/Specular_Reflection_and_Transmission
 // https://scispace.com/pdf/handbook-of-optical-materials-3e2ukwmx2l.pdf
-
-// Eta Tables:
-// https://github.com/polyanskiy/refractiveindex.info-database/tree/main/database
-//     Data Columns: λ, n(λ), k(λ)
-//     Wavelength is in micrometers, multiply by 1000 to get nm
-//     Not all materials contain data in the visible light spectrum
-// https://refractiveindex.info/
-// https://en.wikipedia.org/wiki/Sellmeier_equation
+// https://seblagarde.wordpress.com/2013/04/29/memo-on-fresnel-equations/
 
 /*
 
@@ -63,75 +58,14 @@ n is the phase velocity, k is the extinction coefficient describing absorption
 */
 
 #ifndef IOR_AIR
-#define IOR_AIR 1.0f
+#define IOR_AIR CreateComplex(1.0f, 0.0f);
 #endif
 
-// TODO: Move this elsewhere
-#ifdef SPECTRAL
-struct SellmeierEquation
-{
-    float Constant;
-    float B[5];
-    float C[5];
-    bool MulLambda[5];
+#define METALNESS_CONDUCTOR_THRESHOLD 0.5f
 
-    float SampleN(float lambda_nano)
-    {
-        float lambda_micro = lambda_nano / 1000.0f;
-        float lambda2 = lambda_micro * lambda_micro;
+bool IsConductor(float metalness) { return metalness > METALNESS_CONDUCTOR_THRESHOLD; }
 
-        float n2 = Constant;
-        [unroll]
-        for (int i = 0; i < 5; i++)
-        {
-            float term = B[i] / (lambda2 - C[i]);
-            if (MulLambda[i])
-                term *= lambda2;
-            n2 += term;
-        }
-        return sqrt(n2);
-    }
-};
-
-static const SellmeierEquation cSellmeier_TiO2 = {
-    5.913f,
-    { 0.2441f, 0, 0, 0, 0 },
-    { 0.0803f, 0, 0, 0, 0 },
-    { false, false, false, false, false }
-};
-
-static const SellmeierEquation cSellmeier_FusedSilica = {
-    1.0f,
-    { 0.6961663, 0.4079426, 0.8974794, 0, 0 },
-    { 4.679148e-3, 0.01351206, 97.93400254, 0, 0 },
-    { true, true, true, false, false }
-};
-
-static const SellmeierEquation cSellmeier_BGG = {
-    1.0f,
-    { 0.82725, 1.14635, 1.53923, 0, 0 },
-    { 0.02978, 0.005117, 272.657, 0, 0 },
-    { true, true, true, false, false }
-};
-
-float DebugSampleIorN(float lambda)
-{
-    return cSellmeier_BGG.SampleN(lambda);
-}
-
-// TODO: Temp
-float DebugSampleIorN_Hero(SpectralContext ctx)
-{
-#if defined(SPECTRAL_SINGLE_WAVELENGTH_SAMPLING)
-    return DebugSampleIorN(ctx.Lambda);
-#elif defined(SPECTRAL_HERO_SAMPLING)
-    return DebugSampleIorN(ctx.GetHeroLambda());
-#endif
-    return -1;
-}
-#endif
-
-void Dielectric_Polarized(float n1, float n2, float cosTi, out float rp2, out float rs2)
+void Fresnel_Dielectric_Polarized(float n1, float n2, float cosTi, out float rp2, out float rs2)
 {
     float sin2Ti = 1.0f - cosTi * cosTi;
 
@@ -154,15 +88,62 @@ void Dielectric_Polarized(float n1, float n2, float cosTi, out float rp2, out fl
     rs2 = rs * rs;
 }
 
-float Dielectric_Unpolarized(float n1, float n2, float cosTheta)
+float Fresnel_Dielectric_Unpolarized(float n1, float n2, float cosTheta)
 {
     cosTheta = saturate(cosTheta);
 
     float rp2, rs2;
-    Dielectric_Polarized(n1, n2, cosTheta, rp2, rs2);
+    Fresnel_Dielectric_Polarized(n1, n2, cosTheta, rp2, rs2);
 
     float reflectanceProb = (rp2 + rs2) * 0.5f;
     return reflectanceProb;
+}
+
+void Fresnel_Conductor_Polarized(Complex c1, Complex c2, float cosTi, out float rp2, out float rs2)
+{
+    float sin2Ti = 1.0f - cosTi * cosTi;
+
+    Complex eta = Div(c1, c2);
+    Complex eta2 = Mul(eta, eta);
+
+    Complex sin2Tt = Mul(eta2, sin2Ti);
+    sin2Tt = Sub(CreateComplex(1.0f, 0.0f), sin2Tt);
+    Complex cosTt = Sqrt(sin2Tt);
+
+    Complex t1 = Mul(c1, cosTt);
+    Complex t2 = Mul(c2, cosTt);
+    Complex i1 = Mul(c1, cosTi);
+    Complex i2 = Mul(c2, cosTi);
+
+    Complex t1_a_i2 = Add(t1, i2);
+    Complex t1_s_i2 = Sub(t1, i2);
+    Complex i1_a_t2 = Add(i1, t2);
+    Complex i1_s_t2 = Sub(i1, t2);
+
+    Complex rp = Div(t1_s_i2, t1_a_i2);
+    rp2 = rp.Re * rp.Re + rp.Im * rp.Im;
+
+    Complex rs = Div(i1_s_t2, i1_a_t2);
+    rs2 = rs.Re * rs.Re + rs.Im * rs.Im;
+}
+
+float Fresnel_Conductor_Unpolarized(Complex c1, Complex c2, float cosTheta)
+{
+    cosTheta = saturate(cosTheta);
+
+    float rp2, rs2;
+    Fresnel_Conductor_Polarized(c1, c2, cosTheta, rp2, rs2);
+
+    float reflectanceProb = (rp2 + rs2) * 0.5f;
+    return reflectanceProb;
+}
+
+float Fresnel_Maxwell(Complex c1, Complex c2, float cosTheta, bool isConductor)
+{
+    if (isConductor)
+        return Fresnel_Conductor_Unpolarized(c1, c2, cosTheta);
+    else
+        return Fresnel_Dielectric_Unpolarized(c1.Re, c2.Re, cosTheta);
 }
 
 #endif

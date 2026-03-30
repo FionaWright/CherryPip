@@ -17,8 +17,8 @@ void BRDF_Specular_Spectral(
     float3 B,
     float3 N,
 
-    float nCurrent,
-    float nNext,
+    Complex iorCurrent,
+    Complex iorNext,
     bool entering,
 
     inout float3 debug,
@@ -47,7 +47,8 @@ void BRDF_Specular_Spectral(
     float NdH = SSpaceCosTheta(H_s);
     float VdH = dot(H_s, V_s);
 
-    float F = Dielectric_Unpolarized(nCurrent, nNext, VdH);
+    bool isConductor = metalness > 0.001f;
+    float F = Fresnel_Maxwell(iorCurrent, iorNext, VdH, isConductor);
 
     float D = mm.D(H_s);
     float G = mm.G2(L_s, V_s);

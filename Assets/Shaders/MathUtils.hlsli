@@ -74,7 +74,9 @@ float3 Reflect(float3 wo, float3 N)
     return wo - 2 * dot(wo, N) * N;
 }
 
-#define IOR_AIR 1.0f
+#ifndef IOR_AIR
+#define IOR_AIR CreateComplex(1.0f, 0.0f)
+#endif
 
 struct GlassResponse
 {

@@ -181,17 +181,17 @@ float Luminance(Spectrum a)
     return lum * SPECTRUM_DELTA_LAMBDA / cCIE_Y_integral;
 }
 
-float SampleIorN_Lambda(float lambda, bool isGlass, bool isConductor)
+Complex SampleIor_Lambda(float lambda, bool isGlass, bool isConductor)
 {
     if (isGlass)
-		return SampleIorN_Glass(lambda);
+		return SampleIor_Glass(lambda);
 	else if (isConductor)
-		return SampleIorN_Conductor(lambda);
+		return SampleIor_Conductor(lambda);
 	else
-		return SampleIorN_Dielectric(lambda);
+		return SampleIor_Dielectric(lambda);
 }
 
-float SampleIorN(SpectralContext ctx, bool isGlass, bool isConductor)
+Complex SampleIor(SpectralContext ctx, bool isGlass, bool isConductor)
 {
 #if defined(SPECTRAL_SINGLE_WAVELENGTH_SAMPLING)
     float lambda = ctx.Lambda;
@@ -201,7 +201,7 @@ float SampleIorN(SpectralContext ctx, bool isGlass, bool isConductor)
 	float lambda = -1;
 #endif
 
-    return SampleIorN_Lambda(lambda, isGlass, isConductor);
+    return SampleIor_Lambda(lambda, isGlass, isConductor);
 }
 
 #if defined(SPECTRAL_HERO_SAMPLING)
@@ -213,11 +213,11 @@ HeroSpectrum ComputeHeroReflectWeights(float NdV, SpectralContext ctx, bool ente
     [unroll]
     for (int i = 1; i < NUM_HERO_SAMPLES; i++)
     {
-		float nMat = SampleIorN_Lambda(ctx.GetLambda(i), isGlass, isConductor);
-        float nCurrent_i = entering ? IOR_AIR : nMat;
-        float nNext_i = entering ? nMat : IOR_AIR;
+		Complex iorMat = SampleIor_Lambda(ctx.GetLambda(i), isGlass, isConductor);
+        Complex iorCurrent_i = entering ? IOR_AIR : iorMat;
+        Complex iorNext_i = entering ? iorMat : IOR_AIR;
 
-        float F_i = Dielectric_Unpolarized(nCurrent_i, nNext_i, NdV);
+        float F_i = Fresnel_Maxwell(iorCurrent_i, iorNext_i, NdV, isConductor);
         s.Samples[i] = F_i;
     }
     return s;
@@ -231,14 +231,15 @@ HeroSpectrum ComputeHeroRefractWeights(float NdV, SpectralContext ctx, bool ente
     [unroll]
     for (int i = 1; i < NUM_HERO_SAMPLES; i++)
     {
-		float nMat = SampleIorN_Lambda(ctx.GetLambda(i), isGlass, isConductor);
-        float nCurrent_i = entering ? IOR_AIR : nMat;
-        float nNext_i = entering ? nMat : IOR_AIR;
+		Complex iorMat = SampleIor_Lambda(ctx.GetLambda(i), isGlass, isConductor);
+        Complex iorCurrent_i = entering ? IOR_AIR : iorMat;
+        Complex iorNext_i = entering ? iorMat : IOR_AIR;
 
-        float F_i = Dielectric_Unpolarized(nCurrent_i, nNext_i, NdV);
-        float eta = nNext_i / nCurrent_i;
-        float eta2 = eta * eta;
-        s.Samples[i] = eta2 * (1.0f - F_i);
+        float F_i = Fresnel_Maxwell(iorCurrent_i, iorNext_i, NdV, isConductor);
+        Complex eta = Div(iorNext_i, iorCurrent_i);
+        Complex eta2 = Mul(eta, eta);
+        float eta2f = eta2.Re * eta2.Re + eta2.Im * eta2.Im;
+        s.Samples[i] = eta2f * (1.0f - F_i);
     }
     return s;
 }

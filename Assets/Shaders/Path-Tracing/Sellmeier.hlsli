@@ -74,8 +74,9 @@ struct ConductorIOR
     float K;
 };
 
-#define COMPLEX_AL_SIZE 23
-static const ConductorIOR cComplex_Al[COMPLEX_AL_SIZE] = {
+// Silver
+#define COMPLEX_AG_SIZE 23
+static const ConductorIOR cComplex_Ag[COMPLEX_AG_SIZE] = {
     { 300.9, 1.34, 0.964 },
     { 310.7, 1.13, 0.616 },
     { 320.4, 0.81, 0.392 },
@@ -101,6 +102,63 @@ static const ConductorIOR cComplex_Al[COMPLEX_AL_SIZE] = {
     { 892.0, 0.04, 6.312 },
 };
 
+// Gold
+// TODO: Causing issues at grazing angles for some reason?
+#define COMPLEX_AU_SIZE 23
+static const ConductorIOR cComplex_Au[COMPLEX_AU_SIZE] = {
+    { 300.9, 1.53, 1.889 },
+    { 310.7, 1.53, 1.893 },
+    { 320.4, 1.54, 1.898 },
+    { 331.5, 1.48, 1.883 },
+    { 342.5, 1.48, 1.871 },
+    { 354.2, 1.50, 1.866 },
+    { 367.9, 1.48, 1.895 },
+    { 381.5, 1.46, 1.933 },
+    { 397.4, 1.47, 1.952 },
+    { 413.3, 1.46, 1.958 },
+    { 430.5, 1.45, 1.948 },
+    { 450.9, 1.38, 1.914 },
+    { 471.4, 1.31, 1.849 },
+    { 495.9, 1.04, 1.833 },
+    { 520.9, 0.62, 2.081 },
+    { 548.6, 0.43, 2.455 },
+    { 582.1, 0.29, 2.863 },
+    { 616.8, 0.21, 3.272 },
+    { 659.5, 0.14, 3.697 },
+    { 704.5, 0.13, 4.103 },
+    { 756.0, 0.14, 4.542 },
+    { 821.1, 0.16, 5.083 },
+    { 892.0, 0.17, 5.663 }
+};
+
+// Copper
+#define COMPLEX_CU_SIZE 23
+static const ConductorIOR cComplex_Cu[COMPLEX_CU_SIZE] = {
+    { 300.9, 1.40, 1.679 },
+    { 310.7, 1.38, 1.729 },
+    { 320.4, 1.38, 1.783 },
+    { 331.5, 1.34, 1.821 },
+    { 342.5, 1.36, 1.864 },
+    { 354.2, 1.37, 1.916 },
+    { 367.9, 1.36, 1.975 },
+    { 381.5, 1.33, 2.045 },
+    { 397.4, 1.32, 2.116 },
+    { 413.3, 1.28, 2.207 },
+    { 430.5, 1.25, 2.305 },
+    { 450.9, 1.24, 2.397 },
+    { 471.4, 1.25, 2.483 },
+    { 495.9, 1.22, 2.564 },
+    { 520.9, 1.18, 2.608 },
+    { 548.6, 1.02, 2.577 },
+    { 582.1, 0.70, 2.704 },
+    { 616.8, 0.30, 3.205 },
+    { 659.5, 0.22, 3.747 },
+    { 704.5, 0.21, 4.205 },
+    { 756.0, 0.24, 4.665 },
+    { 821.1, 0.26, 5.180 },
+    { 892.0, 0.30, 5.768 }
+};
+
 Complex SampleIor_Glass(float lambda)
 {
     float n = cSellmeier_BGG.SampleN(lambda);
@@ -115,8 +173,12 @@ Complex SampleIor_Dielectric(float lambda)
 
 Complex SampleIor_Conductor(float lambda)
 {
-    ConductorIOR data[COMPLEX_AL_SIZE] = cComplex_Al;
-    int size = COMPLEX_AL_SIZE;
+    //ConductorIOR data[COMPLEX_AG_SIZE] = cComplex_Ag;
+    //int size = COMPLEX_AG_SIZE;
+    //ConductorIOR data[COMPLEX_AU_SIZE] = cComplex_Au;
+    //int size = COMPLEX_AU_SIZE;
+    ConductorIOR data[COMPLEX_CU_SIZE] = cComplex_Cu;
+    int size = COMPLEX_CU_SIZE;
 
     int i = 1;
     while (lambda < data[i].Wavelength && i < size)

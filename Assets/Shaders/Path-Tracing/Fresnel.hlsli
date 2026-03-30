@@ -107,11 +107,8 @@ void Fresnel_Conductor_Polarized(Complex c1, Complex c2, float cosTi, out float 
     Complex eta2 = Mul(eta, eta);
 
     Complex sin2Tt = Mul(eta2, sin2Ti);
-    sin2Tt.Re = 1.0f - sin2Tt.Re;
+    sin2Tt = Sub(CreateComplex(1.0f, 0.0f), sin2Tt);
     Complex cosTt = Sqrt(sin2Tt);
-
-    if (cosTt.Im < 0.0f)
-        cosTt.Neg();
 
     Complex t1 = Mul(c1, cosTt);
     Complex t2 = Mul(c2, cosTt);

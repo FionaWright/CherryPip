@@ -77,12 +77,19 @@ void Model_BSDF_Spectral(
 
     float3 L_s = 0.0f;
 
+    float reflectProb;
+    float isReflect = IsReflect(rngInfo, iorCurrent, iorNext, NdV, isConductor, reflectProb);
+
+    if (isConductor && !isReflect)
+    {
+        throughput.Mul(0.0f);
+        L_sample = CreateBlackSpectralValue();
+        return;
+    }
+
     if (isGlass)
     {
         L_sample = CreateBlackSpectralValue(); // TODO ?
-
-        float reflectProb;
-        float isReflect = IsReflect(rngInfo, iorCurrent, iorNext, NdV, isConductor, reflectProb);
 
         if (isReflect)
         {

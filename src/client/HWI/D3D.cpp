@@ -14,7 +14,6 @@
 #include "Debug/DebugOutputRedirector.h"
 #endif
 
-extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = "/D3D12/"; } // IMPORTANT!
 
 // Helper function for acquiring the first available hardware adapter that supports Direct3D 12.
 // If no such adapter can be found, *ppAdapter will be set to nullptr.

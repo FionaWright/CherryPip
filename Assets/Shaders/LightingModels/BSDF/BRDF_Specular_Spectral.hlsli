@@ -17,8 +17,8 @@ void BRDF_Specular_Spectral(
     float3 B,
     float3 N,
 
-    float nCurrent,
-    float nNext,
+    Complex iorCurrent,
+    Complex iorNext,
     bool entering,
 
     inout float3 debug,
@@ -47,7 +47,8 @@ void BRDF_Specular_Spectral(
     float NdH = SSpaceCosTheta(H_s);
     float VdH = dot(H_s, V_s);
 
-    float F = Dielectric_Unpolarized(nCurrent, nNext, VdH);
+    bool isConductor = IsConductor(metalness);
+    float F = Fresnel_Maxwell(iorCurrent, iorNext, VdH, isConductor);
 
     float D = mm.D(H_s);
     float G = mm.G2(L_s, V_s);
@@ -65,11 +66,6 @@ void BRDF_Specular_Spectral(
         specularBrdf = (D * G * F) / max(0.001f, 4 * NdV * NdL);
         throughput.Mul(specularBrdf * NdL / max(0.001f, pdf));
     }
-
-#if defined(SPECTRAL_HERO_SAMPLING)
-    HeroSpectrum reflectWeights = ComputeHeroReflectWeights(VdH, ctx, entering);
-    throughput.Value.Mul(reflectWeights);
-#endif
 
 //#ifdef DEBUG_PT_INFO_OUTPUT
 //#     include "Debug/DebugInfoOutputBRDFSpec.hlsli"

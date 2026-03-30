@@ -20,6 +20,7 @@ float IndexToLambda(float idx);
 #include "Spectral-Tracing/Spectrum/ColorSpectrums.hlsli"
 #include "Spectral-Tracing/SpectralValue/SpectralValue.hlsli"
 #include "Path-Tracing/Fresnel.hlsli"
+#include "Path-Tracing/Sellmeier.hlsli"
 #include "Random.h"
 
 #define CONSTANT_BOLTZMANN 1.38064852e-23f
@@ -180,8 +181,31 @@ float Luminance(Spectrum a)
     return lum * SPECTRUM_DELTA_LAMBDA / cCIE_Y_integral;
 }
 
+Complex SampleIor_Lambda(float lambda, bool isGlass, bool isConductor)
+{
+    if (isGlass)
+		return SampleIor_Glass(lambda);
+	else if (isConductor)
+		return SampleIor_Conductor(lambda);
+	else
+		return SampleIor_Dielectric(lambda);
+}
+
+Complex SampleIor(SpectralContext ctx, bool isGlass, bool isConductor)
+{
+#if defined(SPECTRAL_SINGLE_WAVELENGTH_SAMPLING)
+    float lambda = ctx.Lambda;
+#elif defined(SPECTRAL_HERO_SAMPLING)
+    float lambda = ctx.GetHeroLambda();
+#else
+	float lambda = -1;
+#endif
+
+    return SampleIor_Lambda(lambda, isGlass, isConductor);
+}
+
 #if defined(SPECTRAL_HERO_SAMPLING)
-HeroSpectrum ComputeHeroReflectWeights(float NdV, SpectralContext ctx, bool entering)
+HeroSpectrum ComputeHeroReflectWeights(float NdV, SpectralContext ctx, bool entering, bool isGlass, bool isConductor)
 {
     HeroSpectrum s;
     s.Samples[0] = 1.0f;
@@ -189,15 +213,17 @@ HeroSpectrum ComputeHeroReflectWeights(float NdV, SpectralContext ctx, bool ente
     [unroll]
     for (int i = 1; i < NUM_HERO_SAMPLES; i++)
     {
-        float nCurrent_i = entering ? IOR_AIR : DebugSampleIorN(ctx.GetLambda(i));
-        float nNext_i = entering ? DebugSampleIorN(ctx.GetLambda(i)) : IOR_AIR;
-        float F_i = Dielectric_Unpolarized(nCurrent_i, nNext_i, NdV);
+		Complex iorMat = SampleIor_Lambda(ctx.GetLambda(i), isGlass, isConductor);
+        Complex iorCurrent_i = entering ? IOR_AIR : iorMat;
+        Complex iorNext_i = entering ? iorMat : IOR_AIR;
+
+        float F_i = Fresnel_Maxwell(iorCurrent_i, iorNext_i, NdV, isConductor);
         s.Samples[i] = F_i;
     }
     return s;
 }
 
-HeroSpectrum ComputeHeroRefractWeights(float NdV, SpectralContext ctx, bool entering)
+HeroSpectrum ComputeHeroRefractWeights(float NdV, SpectralContext ctx, bool entering, bool isGlass, bool isConductor)
 {
     HeroSpectrum s;
     s.Samples[0] = 1.0f;
@@ -205,12 +231,15 @@ HeroSpectrum ComputeHeroRefractWeights(float NdV, SpectralContext ctx, bool ente
     [unroll]
     for (int i = 1; i < NUM_HERO_SAMPLES; i++)
     {
-        float nCurrent_i = entering ? IOR_AIR : DebugSampleIorN(ctx.GetLambda(i));
-        float nNext_i = entering ? DebugSampleIorN(ctx.GetLambda(i)) : IOR_AIR;
-        float F_i = Dielectric_Unpolarized(nCurrent_i, nNext_i, NdV);
-        float eta = nNext_i / nCurrent_i;
-        float eta2 = eta * eta;
-        s.Samples[i] = eta2 * (1.0f - F_i);
+		Complex iorMat = SampleIor_Lambda(ctx.GetLambda(i), isGlass, isConductor);
+        Complex iorCurrent_i = entering ? IOR_AIR : iorMat;
+        Complex iorNext_i = entering ? iorMat : IOR_AIR;
+
+        float F_i = Fresnel_Maxwell(iorCurrent_i, iorNext_i, NdV, isConductor);
+        Complex eta = Div(iorNext_i, iorCurrent_i);
+        Complex eta2 = Mul(eta, eta);
+        float eta2f = eta2.Re * eta2.Re + eta2.Im * eta2.Im;
+        s.Samples[i] = eta2f * (1.0f - F_i);
     }
     return s;
 }

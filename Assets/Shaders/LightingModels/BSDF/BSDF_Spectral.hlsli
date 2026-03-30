@@ -8,11 +8,13 @@
 #include "LightingModels/BSDF/BRDF_Specular_Spectral.hlsli"
 #include "LightingModels/BSDF/BTDF_Spectral.hlsli"
 
-float IsReflect(inout RngInfo rngInfo, float nCurrent, float nNext, float NdV, out float reflectProb)
+float IsReflect(inout RngInfo rngInfo, Complex iorCurrent, Complex iorNext, float NdV, bool isConductor, out float reflectProb)
 {
-    reflectProb = Dielectric_Unpolarized(nCurrent, nNext, abs(NdV));
+    reflectProb = Fresnel_Maxwell(iorCurrent, iorNext, abs(NdV), isConductor);
 
-    if (cDebugForceReflect || CheckTIR(nCurrent, nNext, abs(NdV)))
+    if (cDebugForceReflect)
+        reflectProb = 1.0f;
+    else if (!isConductor && CheckTIR(iorCurrent.Re, iorNext.Re, abs(NdV)))
         reflectProb = 1.0f;
     else if (cDebugForceRefract)
         reflectProb = 0.0f;
@@ -21,9 +23,9 @@ float IsReflect(inout RngInfo rngInfo, float nCurrent, float nNext, float NdV, o
     return reflectProb > rReflectProb;
 }
 
-float IsSpecular(inout RngInfo rngInfo, float nCurrent, float nNext, float NdV, out float specProb)
+float IsSpecular(inout RngInfo rngInfo, Complex iorCurrent, Complex iorNext, float NdV, bool isConductor, out float specProb)
 {
-    specProb = Dielectric_Unpolarized(nCurrent, nNext, abs(NdV));
+    specProb = Fresnel_Maxwell(iorCurrent, iorNext, abs(NdV), isConductor);
     specProb = clamp(specProb, 0.05f, 0.95f);
 
     if (cDebugForceSpecular)
@@ -67,30 +69,47 @@ void Model_BSDF_Spectral(
 
     float NdV = SSpaceCosTheta(V_s);
 
-    float nCurrent = entering ? IOR_AIR : DebugSampleIorN_Hero(ctx);
-    float nNext = entering ? DebugSampleIorN_Hero(ctx) : IOR_AIR;
+	bool isConductor = IsConductor(metalness);
+
+	Complex iorMat = SampleIor(ctx, isGlass, isConductor);
+    Complex iorCurrent = Ternary(entering, IOR_AIR, iorMat);
+    Complex iorNext = Ternary(entering, iorMat, IOR_AIR);
 
     float3 L_s = 0.0f;
+
+    float reflectProb;
+    float isReflect = IsReflect(rngInfo, iorCurrent, iorNext, NdV, isConductor, reflectProb);
+
+    if (isConductor && !isReflect)
+    {
+        throughput.Mul(0.0f);
+        L_sample = CreateBlackSpectralValue();
+        return;
+    }
 
     if (isGlass)
     {
         L_sample = CreateBlackSpectralValue(); // TODO ?
 
-        float reflectProb;
-        float isReflect = IsReflect(rngInfo, nCurrent, nNext, NdV, reflectProb);
-
         if (isReflect)
         {
-            BRDF_Specular_Spectral(rngInfo, throughput, ctx, L_s, roughness, metalness, albedo, V_s, N_s, anisoDirAndStrength, T, B, Ns, nCurrent, nNext, entering, debug, hasDebugOutput);
+            BRDF_Specular_Spectral(rngInfo, throughput, ctx, L_s, roughness, metalness, albedo, V_s, N_s, anisoDirAndStrength, T, B, Ns, iorCurrent, iorNext, entering, debug, hasDebugOutput);
             throughput.Div(max(0.001f, reflectProb));
+
+#if defined(SPECTRAL_HERO_SAMPLING)
+	float3 H_s = normalize(L_s + V_s);
+	float VdH = dot(V_s, H_s);
+    HeroSpectrum reflectWeights = ComputeHeroReflectWeights(VdH, ctx, entering, isGlass, isConductor);
+    throughput.Value.Mul(reflectWeights);
+#endif
         }
         else
         {
-            BTDF_Spectral(rngInfo, throughput, ctx, L_s, roughness, albedo, V_s, L_s, entering, nCurrent, nNext, sigmaA, hitDist, debug, hasDebugOutput);
+            BTDF_Spectral(rngInfo, throughput, ctx, L_s, roughness, albedo, V_s, L_s, entering, iorCurrent.Re, iorNext.Re, sigmaA, hitDist, debug, hasDebugOutput);
             throughput.Div(max(0.001f, 1.0f - reflectProb));
 
 #if defined(SPECTRAL_HERO_SAMPLING)
-            HeroSpectrum refractWeights = ComputeHeroRefractWeights(NdV, ctx, entering);
+            HeroSpectrum refractWeights = ComputeHeroRefractWeights(NdV, ctx, entering, isGlass, isConductor);
             throughput.Value.Mul(refractWeights);
 #endif
         }
@@ -102,11 +121,11 @@ void Model_BSDF_Spectral(
     L_sample = Mul(throughput, Li);
 
     float specProb;
-    float isSpecular = IsSpecular(rngInfo, nCurrent, nNext, NdV, specProb);
+    float isSpecular = IsSpecular(rngInfo, iorCurrent, iorNext, NdV, isConductor, specProb);
 
     if (isSpecular)
     {
-        BRDF_Specular_Spectral(rngInfo, throughput, ctx, L_s, roughness, metalness, albedo, V_s, N_s, anisoDirAndStrength, T, B, Ns, nCurrent, nNext, entering, debug, hasDebugOutput);
+        BRDF_Specular_Spectral(rngInfo, throughput, ctx, L_s, roughness, metalness, albedo, V_s, N_s, anisoDirAndStrength, T, B, Ns, iorCurrent, iorNext, entering, debug, hasDebugOutput);
         throughput.Div(max(0.001f, specProb));
     }
     else

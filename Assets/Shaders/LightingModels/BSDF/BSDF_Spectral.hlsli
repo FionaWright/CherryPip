@@ -8,7 +8,7 @@
 #include "LightingModels/BSDF/BRDF_Specular_Spectral.hlsli"
 #include "LightingModels/BSDF/BTDF_Spectral.hlsli"
 
-float IsReflect(inout RngInfo rngInfo, Complex iorCurrent, Complex iorNext, float NdV, bool isConductor, out float reflectProb)
+bool IsReflect(inout RngInfo rngInfo, Complex iorCurrent, Complex iorNext, float NdV, bool isConductor, out float reflectProb)
 {
     reflectProb = Fresnel_Maxwell(iorCurrent, iorNext, abs(NdV), isConductor);
 
@@ -23,7 +23,7 @@ float IsReflect(inout RngInfo rngInfo, Complex iorCurrent, Complex iorNext, floa
     return reflectProb > rReflectProb;
 }
 
-float IsSpecular(inout RngInfo rngInfo, Complex iorCurrent, Complex iorNext, float NdV, bool isConductor, out float specProb)
+bool IsSpecular(inout RngInfo rngInfo, Complex iorCurrent, Complex iorNext, float NdV, bool isConductor, out float specProb)
 {
     specProb = Fresnel_Maxwell(iorCurrent, iorNext, abs(NdV), isConductor);
     specProb = clamp(specProb, 0.05f, 0.95f);
@@ -78,7 +78,7 @@ void Model_BSDF_Spectral(
     float3 L_s = 0.0f;
 
     float reflectProb;
-    float isReflect = IsReflect(rngInfo, iorCurrent, iorNext, NdV, isConductor, reflectProb);
+    bool isReflect = IsReflect(rngInfo, iorCurrent, iorNext, NdV, isConductor, reflectProb);
 
     if (isConductor && !isReflect)
     {
@@ -121,7 +121,7 @@ void Model_BSDF_Spectral(
     L_sample = Mul(throughput, Li);
 
     float specProb;
-    float isSpecular = IsSpecular(rngInfo, iorCurrent, iorNext, NdV, isConductor, specProb);
+    bool isSpecular = IsSpecular(rngInfo, iorCurrent, iorNext, NdV, isConductor, specProb);
 
     if (isSpecular)
     {

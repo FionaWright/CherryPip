@@ -8,7 +8,7 @@
 #include "LightingModels/BSDF/BRDF_Specular.hlsli"
 #include "LightingModels/BSDF/BTDF.hlsli"
 
-float IsReflect(inout RngInfo rngInfo, Complex iorCurrent, Complex iorNext, float NdV, bool isConductor, out float reflectProb)
+bool IsReflect(inout RngInfo rngInfo, Complex iorCurrent, Complex iorNext, float NdV, bool isConductor, out float reflectProb)
 {
     reflectProb = Fresnel_Maxwell(iorCurrent, iorNext, abs(NdV), isConductor);
 
@@ -23,7 +23,7 @@ float IsReflect(inout RngInfo rngInfo, Complex iorCurrent, Complex iorNext, floa
     return reflectProb > rReflectProb;
 }
 
-float IsSpecular(inout RngInfo rngInfo, float NdV, float3 F0, out float specProb)
+bool IsSpecular(inout RngInfo rngInfo, float NdV, float3 F0, out float specProb)
 {
     float3 F_select = F_Schlick(NdV, F0);
 
@@ -86,7 +86,7 @@ void Model_BSDF(
         bool isConductor = false; // Metal glass not supported
 
         float reflectProb;
-        float isReflect = IsReflect(rngInfo, iorCurrent, iorNext, NdV, isConductor, reflectProb);
+        bool isReflect = IsReflect(rngInfo, iorCurrent, iorNext, NdV, isConductor, reflectProb);
 
         if (isReflect)
         {
@@ -110,7 +110,7 @@ void Model_BSDF(
     L_sample = throughput * Li;
 
     float specProb;
-    float isSpecular = IsSpecular(rngInfo, NdV, F0, specProb);
+    bool isSpecular = IsSpecular(rngInfo, NdV, F0, specProb);
 
     if (isSpecular)
     {

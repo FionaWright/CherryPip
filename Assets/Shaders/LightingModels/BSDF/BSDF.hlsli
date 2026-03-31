@@ -89,7 +89,7 @@ void Model_BSDF(
 
         if (isReflect)
         {
-            BRDF_Specular(rngInfo, throughput, L_s, roughness, metalness, albedo, V_s, N_s, anisoDirAndStrength, T, B, Ns, F0, debug, hasDebugOutput);
+            BRDF_Specular(rngInfo, throughput, L_s, roughness, metalness, albedo, V_s, N_s, anisoDirAndStrength, sframe, F0, debug, hasDebugOutput);
             throughput /= max(0.001f, reflectProb);
         }
         else
@@ -113,7 +113,7 @@ void Model_BSDF(
 
     if (isSpecular)
     {
-        BRDF_Specular(rngInfo, throughput, L_s, roughness, metalness, albedo, V_s, N_s, anisoDirAndStrength, T, B, Ns, F0, debug, hasDebugOutput);
+        BRDF_Specular(rngInfo, throughput, L_s, roughness, metalness, albedo, V_s, N_s, anisoDirAndStrength, sframe, F0, debug, hasDebugOutput);
         throughput /= max(0.001f, specProb);
     }
     else

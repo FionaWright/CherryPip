@@ -114,6 +114,11 @@ void SpectralValue::Exp()
     Value = exp(Value);
 }
 
+float SpectralValue::Max()
+{
+    return Value;
+}
+
 SpectralValue Add(SpectralValue a, SpectralValue b)
 {
     SpectralValue r;

@@ -79,7 +79,6 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 ### Final Tasks:
 - Release mode is probably broken, fix
-- Refactor TBN into a new struct called ShadingFrame with .ToLocal() sorta functions
 - MIS if I have time
 
 ### Bugs 

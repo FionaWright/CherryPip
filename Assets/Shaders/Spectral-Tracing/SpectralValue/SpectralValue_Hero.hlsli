@@ -120,6 +120,17 @@ void SpectralValue::Exp()
         Value.Samples[i] = exp(Value.Samples[i]);
 }
 
+float SpectralValue::Max()
+{
+    float maxVal = -9999999999f;
+
+    [unroll]
+    for (int i = 0; i < NUM_HERO_SAMPLES; i++)
+        maxVal = max(maxVal, Value.Samples[i]);
+
+    return maxVal;
+}
+
 float Luminance(SpectralValue a, SpectralContext ctx)
 {
     return -1;

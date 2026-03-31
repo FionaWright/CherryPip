@@ -10,6 +10,7 @@ void Hit(inout RayQuery<RAY_FLAGS> q, // TODO: Why inout?
         out float3 Ns,
         out SpectralValue Li,
         out PtMaterialData mat,
+		out float albedoAlpha,
         out float2 uv)
 {
     PtInstanceData instance = gInstances[q.CommittedInstanceIndex()];
@@ -48,6 +49,8 @@ void Hit(inout RayQuery<RAY_FLAGS> q, // TODO: Why inout?
     float3 albedoRGB = SRGB_to_LRGB(albedoSRGB.xyz);
     albedoRGB *= mat.BaseColorFactor;
     albedo.FromRGB(albedoRGB, eReflectance, ctx);
+
+	albedoAlpha = albedoSRGB.a;
 
     float3 emissionSample = gTextures[mat.TexIdxEmissive].Sample(gSampler, uv).rgb;
     float3 emissionRGB = mat.EmissiveStrength * mat.EmissiveColor * emissionSample;

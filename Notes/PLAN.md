@@ -72,13 +72,10 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 ## PT-TODO:
 
-### Main Tasks
-- Fix D/G/Factor/PDF parts of BTDF
-- Fix hero sampling brightness
-
-### Final Tasks:
+### Main Tasks (if I have time)
+- MIS
+- NEE
 - Release mode is probably broken, fix
-- MIS if I have time
 
 ### Bugs 
 - Camera movement gets messed up sometimes
@@ -92,6 +89,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Build basis with N and V when not aligned instead of using frisvad? 
 - Try make Halton work better, reimplement for bounces
 - Debug: Ability to run two different versions of the PT at once, split-screen.
+- Fix D/G/Factor/PDF parts of BTDF
 
 ## Raster/Laptop-TODO
 

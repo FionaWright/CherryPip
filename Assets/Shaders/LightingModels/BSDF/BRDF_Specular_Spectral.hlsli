@@ -28,7 +28,7 @@ void BRDF_Specular_Spectral(
     MicrofacetModel mm;
     InitializeMM(mm, roughness, rngInfo, V_s);
     if (cAnisotropyEnabled)
-        InitializeMMAniso(mm, T, B, N, anisoDirAndStrength);
+        InitializeMMAniso(mm, anisoDirAndStrength);
 
     float3 H_s = normalize(mm.Sample(u1, u2));
     L_s = NormalizeSafe(reflect(-V_s, H_s), N_s);

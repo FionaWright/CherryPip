@@ -68,7 +68,7 @@ void SpectralValue::Exp() { Value.Exp(); }
 
 float SpectralValue::Max()
 {
-    float maxVal = -9999999999f;
+    float maxVal = -9999999999.0f;
     [unroll]
     for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
         maxVal = max(maxVal, Value.Samples[i]);

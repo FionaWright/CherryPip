@@ -122,7 +122,7 @@ void SpectralValue::Exp()
 
 float SpectralValue::Max()
 {
-    float maxVal = -9999999999f;
+    float maxVal = -9999999999.0f;
 
     [unroll]
     for (int i = 0; i < NUM_HERO_SAMPLES; i++)

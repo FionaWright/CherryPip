@@ -44,28 +44,33 @@
 - [ ] SpecularTint, Clearcoat, Sheen PBR parameters
 - [x] Firefly threshold
 - [x] BTDFs (VNDF whitepaper has some good stuff)
+- [ ] Volumes
 - [ ] Sobel RNG Sampler
 - [ ] Ray pipelines
 - [x] Spectral Path-Tracing 
 - [ ] Rayleigh scattering (Mist, See Seb Lague)
+- [ ] Thin-Film Interference
+- [ ] Diffraction (Iridescence, CDs)
+- [ ] Fluorescence + Neon
 - [ ] BSSDFs (Subsurface Scattering)
 - [ ] Water
 - [x] GBuffer pre-pass
 - [x] Denoising (Box/Gauss/A-Trous)
 - [x] Denoising Median
 - [ ] Denoising NRD
+- [ ] Temporal denoising
 - [x] Maxwell "True" Fresnel (Requires eta/k tables)
 - [x] RMSE tests for different lighting models + denoisers
 - [ ] Resevoir Light Sampling
 - [ ] ReSTIR
 - [ ] GPU Memory Profiler (Track memory usage, find leaks/waste)
+- [ ] Hair
 
 https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d12-raytracing-samples-win32/
 
 ## Optimizations-TODO:
 
 - Frustum Culling
-- Descriptor heap sharing (Wait to see if it's worth it)
 - Check for memory leaks, there's probably a lot 
 - Add support for root constants in Material and RootSig and apply to ATrous filter
 - Temporary heap which gets cleared at the end of each frame? Or maybe just clear all unused data from heaps every few frames
@@ -73,9 +78,12 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ## PT-TODO:
 
 ### Main Tasks (if I have time)
-- MIS
-- NEE
+- Prepare project for 5+ month break. Write a markdown file for what state certain things have been left in, areas to refactor when coming back, etc
+- Volumes (More fun)
+- Thin-Film Interference (Easier)
 - Release mode is probably broken, fix
+- NEE (Most valuable)
+- MIS 
 
 ### Bugs 
 - Camera movement gets messed up sometimes

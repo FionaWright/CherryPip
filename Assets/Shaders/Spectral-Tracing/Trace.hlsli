@@ -44,7 +44,19 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         SpectralValue Li;
         float3 Ng = -1, Ns = -1;
         float2 uv = -1;
-        Hit(q, ctx, albedo, Ng, Ns, Li, mat, uv);
+        float albedoAlpha = -1;
+        Hit(q, ctx, albedo, Ng, Ns, Li, mat, albedoAlpha, uv);
+
+        if (cAlphaTestingEnabled)
+        {
+            float rAlpha = Rand01_Bounce(DIM_D_ALPHA, rngInfo);
+            bool cutout = albedoAlpha < 0.001f || rAlpha > albedoAlpha;
+            if (cutout)
+            {
+                ray.Origin = hitPos + Ng * EPSILON * sign(dot(Ng, ray.Direction));
+                continue;
+            }
+        }
 
         float2 roughMet = gTextures[mat.TexIdxRoughMet].Sample(gSampler, uv).gb;
         float roughness = mat.Roughness * roughMet.r;
@@ -83,6 +95,16 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             break;
 
         Lo.Add(L_sample);
+
+        if (cRussianRouletteEnabled && i >= cbvPathTracing.RussianRouletteMinBounces)
+        {
+            float p = saturate(throughput.Max());
+            p = max(p, 0.05f);
+            float rRR = PcgRand01(rngInfo.IndependentRngState);
+            if (rRR > p)
+                break;
+            throughput /= p;
+        }
 
         ray.Direction = wi;
         ray.Origin = hitPos + Ng * EPSILON * sign(dot(Ng, ray.Direction));

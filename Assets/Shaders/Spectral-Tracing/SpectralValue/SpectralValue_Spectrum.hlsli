@@ -66,6 +66,15 @@ void SpectralValue::Clamp(float lo, float hi) { Value.Clamp(lo, hi); }
 void SpectralValue::Normalize() { Value.Normalize(); }
 void SpectralValue::Exp() { Value.Exp(); }
 
+float SpectralValue::Max()
+{
+    float maxVal = -9999999999f;
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+        maxVal = max(maxVal, Value.Samples[i]);
+    return maxVal;
+}
+
 SpectralValue Add(SpectralValue a, SpectralValue b) { return CreateSpectralValue(Add(a.Value, b.Value)); }
 SpectralValue Add(SpectralValue a, float scalar) { return CreateSpectralValue(Add(a.Value, scalar)); }
 SpectralValue Sub(SpectralValue a, SpectralValue b) { return CreateSpectralValue(Sub(a.Value, b.Value)); }

@@ -17,6 +17,8 @@ void Clamp(float lo, float hi);
 void Normalize();
 void Exp();
 
+float Max();
+
 void FromRGB(float3 rgb, SpectrumType type, SpectralContext ctx);
 void AddRGB(float3 rgb, SpectrumType type, SpectralContext ctx);
 float3 ToRGB(SpectralContext ctx);

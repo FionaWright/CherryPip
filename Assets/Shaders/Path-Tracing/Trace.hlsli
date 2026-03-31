@@ -51,7 +51,6 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 #ifdef DEBUG_PT_INFO_OUTPUT
 #    include "Debug/DebugInfoOutputOnMiss.hlsli"
 #endif
-
             break;
         }
 

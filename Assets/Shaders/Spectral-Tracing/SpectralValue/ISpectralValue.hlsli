@@ -1,4 +1,4 @@
-// Interface for SpectralValue super-class
+// Interface for SpectralValue base class
 
 void InitBlack();
 void InitWhite();

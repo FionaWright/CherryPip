@@ -1,5 +1,6 @@
 #include "CBV.h"
 #include "MathUtils.hlsli"
+#include "ShadingFrame.hlsli"
 
 struct VsOut
 {
@@ -32,9 +33,8 @@ GBufferOut PSMain(VsOut input)
 	bumpSample.y = -bumpSample.y; // DX convention
 
     float3 N = normalize(input.normal);
-    float3 T, B;
-    BuildBasisFrisvad(N, T, B);
-	float3 N_w = normalize(bumpSample.x * T + bumpSample.y * B + bumpSample.z * N);
+    ShadingFrame bumpFrame = CreateShadingFrame(N);
+	float3 N_w = bumpFrame.ToWorld(bumpSample);
 
     output.RgbNormal_ADepth.rgb = N_w * 0.5f + 0.5f; // [-1,1] -> [0,1]
     output.RgbNormal_ADepth.a = input.position.z / input.position.w;

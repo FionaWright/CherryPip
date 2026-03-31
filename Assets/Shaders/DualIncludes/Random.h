@@ -166,16 +166,18 @@ float Rand01_Bounce(int dimension, GLUE_INOUT(RngInfo) rngInfo)
 
 #ifndef __cplusplus
 
-float3 RandHemisphereCosineWorld(float u1, float u2, float3 T, float3 B, float3 N)
+#include "ShadingFrame.hlsli"
+
+float3 RandHemisphereCosineWorld(float u1, float u2, ShadingFrame frame)
 {
     float3 L_s = RandHemisphereCosineSSpace(u1, u2);
-    return glueNormalize(L_s.x * T + L_s.y * B + L_s.z * N);
+    return frame.ToWorld(L_s);
 }
 
-float3 RandHemisphereUniformWorld(float u1, float u2, float3 T, float3 B, float3 N)
+float3 RandHemisphereUniformWorld(float u1, float u2, ShadingFrame frame)
 {
     float3 L_s = RandHemisphereUniformSSpace(u1, u2);
-    return glueNormalize(L_s.x * T + L_s.y * B + L_s.z * N);
+    return frame.ToWorld(L_s);
 }
 
 #endif

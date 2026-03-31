@@ -12,9 +12,7 @@ void BRDF_Specular(
     float3 V_s,
     float3 N_s,
     float3 anisoDirAndStrength,
-    float3 T,
-    float3 B,
-    float3 N,
+    ShadingFrame sframe,
     float3 F0,
 
     inout float3 debug,

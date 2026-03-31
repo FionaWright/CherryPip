@@ -35,12 +35,11 @@ void Hit(inout RayQuery<RAY_FLAGS> q, // TODO: Why inout?
     Ns = normalize(mul((float3x3)instance.MTI, Ns));
     if (cNormalMapsEnabled)
     {
-        float3 T, B;
-        BuildBasisFrisvad(Ns, T, B);
+    	float3 bumpSample = gTextures[mat.TexIdxNormal].Sample(gSampler, uv).rgb * 2.0f - 1.0f;
+    	bumpSample.y = -bumpSample.y; // DX-convention
 
-        float3 bumpSample = gTextures[mat.TexIdxNormal].Sample(gSampler, uv).rgb * 2.0f - 1.0f;
-        bumpSample.y = -bumpSample.y; // DX-convention
-        Ns = normalize(bumpSample.x * T + bumpSample.y * B + bumpSample.z * Ns);
+    	ShadingFrame bumpFrame = CreateShadingFrame(Ns);
+    	Ns = bumpFrame.ToWorld(bumpSample);
     }
     Ns = q.CommittedTriangleFrontFace() == 0 ? -Ns : Ns;
 

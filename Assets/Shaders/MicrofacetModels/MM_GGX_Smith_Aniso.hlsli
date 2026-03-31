@@ -120,26 +120,6 @@ float MicrofacetModel::G2(float3 L, float3 V)
 {
     if (m_isAniso)
     {
-        // Changed L_a, idk
-        //float3 L_a = ToDefinedSpace(L, m_anisoT, m_anisoB, m_anisoN);
-        //float3 V_a = ToDefinedSpace(V, m_anisoT, m_anisoB, m_anisoN);
-        //float alphaL = AnisoAlphaToMaskingAlpha(L, m_alphaX, m_alphaY);
-        //float alphaV = AnisoAlphaToMaskingAlpha(V, m_alphaX, m_alphaY);
-        //return G1CustomAlpha(L, alphaL) * G1CustomAlpha(V, alphaV);
-
-        //float NdL = L.z;
-        //float NdV = V.z;
-        //float TdV = dot(m_anisoT, V);
-        //float TdL = dot(m_anisoT, L);
-        //float BdV = dot(m_anisoB, V);
-        //float BdL = dot(m_anisoB, L);
-        //float aT2 = m_alphaX * m_alphaX;
-        //float aB2 = m_alphaY * m_alphaY;
-        //float lambdaV = NdL * sqrt(aT2 * TdV * TdV + aB2 * BdV * BdV + NdV * NdV);
-        //float lambdaL = NdV * sqrt(aT2 * TdL * TdL + aB2 * BdL * BdL + NdL * NdL);
-        //return 0.5f / (lambdaV + lambdaL);
-
-        // Trust in this G
         return 1.0f / max(0.001f, 1 + Lambda(V, m_alphaX, m_alphaY) + Lambda(L, m_alphaX, m_alphaY));
     }
 

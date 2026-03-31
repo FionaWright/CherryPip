@@ -41,6 +41,8 @@ struct Spectrum
     void IlluminantRgbToSpectrum(float3 rgb);
 };
 
+#include "Spectral-Tracing/Spectrum/SpectrumUtils.hlsli"
+
 void Spectrum::InitFromRGB(float3 rgb, SpectrumType type)
 {
     // Initialize samples to 0
@@ -311,6 +313,21 @@ Spectrum Lerp(float start, Spectrum a, float t)
     for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
         newSpectrum.Samples[i] = lerp(start, a.Samples[i], t);
     return newSpectrum;
+}
+
+float Luminance(Spectrum a)
+{
+    float lum = 0.0f;
+
+    [unroll]
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++)
+    {
+        float lambda = IndexToLambda(i);
+        float cieY = SampleCIE(lambda).y;
+        lum += cieY * a.Samples[i];
+    }
+
+    return lum * SPECTRUM_DELTA_LAMBDA / cCIE_Y_integral;
 }
 
 #endif

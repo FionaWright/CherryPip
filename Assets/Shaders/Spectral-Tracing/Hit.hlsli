@@ -44,7 +44,6 @@ void Hit(inout RayQuery<RAY_FLAGS> q, // TODO: Why inout?
     }
     Ns = q.CommittedTriangleFrontFace() == 0 ? -Ns : Ns;
 
-    // TODO: Albedo Alpha
     float4 albedoSRGB = gTextures[mat.TexIdxAlbedo].Sample(gSampler, uv);
     float3 albedoRGB = SRGB_to_LRGB(albedoSRGB.xyz);
     albedoRGB *= mat.BaseColorFactor;

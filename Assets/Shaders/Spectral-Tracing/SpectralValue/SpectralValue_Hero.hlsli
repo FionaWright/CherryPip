@@ -3,6 +3,9 @@
 
 #include "Spectral-Tracing/Spectrum/HeroSpectrum.hlsli"
 
+float3 SpectrumSampleToRGB(float energy, float lambda, float pdf);
+float3 HeroToRGB(HeroSpectrum spectrum, SpectralContext ctx);
+
 struct SpectralValue
 {
     void Init(HeroSpectrum value);
@@ -10,16 +13,18 @@ struct SpectralValue
 #include "Spectral-Tracing/SpectralValue/ISpectralValue.hlsli"
 
     HeroSpectrum Value;
+    bool IsBlanked; // Only hero sample is contributing
 };
 
+#include "Spectral-Tracing/Spectrum/SpectrumToRGB2019.hlsli"
 #include "Spectral-Tracing/SpectralContext/SpectralContext.hlsli"
 #include "Spectral-Tracing/Spectrum/RgbToSpectrum2019.hlsli"
-#include "Spectral-Tracing/Spectrum/SpectrumToRGB2019.hlsli"
 
 SpectralValue CreateSpectralValue(HeroSpectrum v)
 {
     SpectralValue s;
     s.Value = v;
+    s.IsBlanked = false;
     return s;
 }
 
@@ -37,9 +42,9 @@ SpectralValue CreateWhiteSpectralValue()
     return s;
 }
 
-void SpectralValue::Init(HeroSpectrum v) { Value = v; }
-void SpectralValue::InitBlack() { Value.InitBlack(); }
-void SpectralValue::InitWhite() { Value.InitWhite(); }
+void SpectralValue::Init(HeroSpectrum v) { Value = v; IsBlanked = false; }
+void SpectralValue::InitBlack() { Value.InitBlack(); IsBlanked = false; }
+void SpectralValue::InitWhite() { Value.InitWhite(); IsBlanked = false; }
 
 void SpectralValue::FromRGB(float3 rgb, SpectrumType type, SpectralContext ctx)
 {
@@ -60,6 +65,9 @@ void SpectralValue::AddRGB(float3 rgb, SpectrumType type, SpectralContext ctx)
 
 float3 SpectralValue::ToRGB(SpectralContext ctx)
 {
+    if (IsBlanked)
+        return SpectrumSampleToRGB(Value.Samples[0], ctx.GetHeroLambda(), ctx.GetPDF());
+
     return HeroToRGB(Value, ctx);
 }
 

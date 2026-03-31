@@ -11,6 +11,9 @@
 // https://github.com/mmp/pbrt-v3/blob/master/src/core/spectrum.cpp
 // https://github.com/mmp/pbrt-v3/blob/master/src/core/spectrum.h
 
+float SampleVisibleWavelength(inout float rngState);
+float RgbToSpectrumSample(float3 rgb, SpectrumType type, float lambda);
+
 #include "Spectral-Tracing/Spectrum/SpectrumUtils.hlsli"
 #include "Spectral-Tracing/Spectrum/RgbToSpectrum2019.hlsli"
 #include "Spectral-Tracing/Spectrum/SpectrumToRGB2019.hlsli"

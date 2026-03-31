@@ -75,7 +75,6 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 ### Main Tasks
 - Fix D/G/Factor/PDF parts of BTDF
 - Fix hero sampling brightness
-- Implement RR + Firefly threshold to spectral
 
 ### Final Tasks:
 - Release mode is probably broken, fix

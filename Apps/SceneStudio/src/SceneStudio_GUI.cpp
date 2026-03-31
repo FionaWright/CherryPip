@@ -485,6 +485,9 @@ void SceneStudio::guiScene()
 
             m_sceneDirty |= ImGuiUtils::FwInputInt(("Diffuse Tex Idx##xx" + tempID).c_str(), &matData->BindlessTexDiffuse);
             m_sceneDirty |= ImGuiUtils::FwInputInt(("Normal Tex Idx##xx" + tempID).c_str(), &matData->BindlessTexNormal);
+            m_sceneDirty |= ImGuiUtils::FwInputInt(("RoughMet Tex Idx##xx" + tempID).c_str(), &matData->BindlessTexRoughMet);
+            m_sceneDirty |= ImGuiUtils::FwInputInt(("Emissive Tex Idx##xx" + tempID).c_str(), &matData->BindlessTexEmissive);
+            m_sceneDirty |= ImGuiUtils::FwInputInt(("Aniso Tex Idx##xx" + tempID).c_str(), &matData->BindlessTexAniso);
 
             bool isGlass = matData->Flags & PtMaterialFlags::eIsGlass;
             m_sceneDirty |= ImGui::Checkbox(("Is Glass##xx" + tempID).c_str(), &isGlass);

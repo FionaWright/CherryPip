@@ -64,8 +64,14 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         }
 
         float2 roughMet = gTextures[mat.TexIdxRoughMet].Sample(gSampler, uv).gb;
-        float roughness = mat.Roughness * roughMet.r;
+        //float roughness = mat.Roughness * roughMet.r;
+        float roughness = mat.Roughness;
         float metalness = mat.Metalness * roughMet.g;
+
+#if defined(SPECTRAL_HERO_SAMPLING)
+        if (roughness < 0.001f)
+            Lo.IsBlanked = true;
+#endif
 
         float3 wo = -ray.Direction;
         float3 wi;

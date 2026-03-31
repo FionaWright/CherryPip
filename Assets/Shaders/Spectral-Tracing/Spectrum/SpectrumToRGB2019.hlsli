@@ -1,14 +1,18 @@
 #ifndef H_SPECTRUM_TO_RGB2019_H
 #define H_SPECTRUM_TO_RGB2019_H
 
-float3 SpectrumToXYZ(Spectrum spectrum);
+struct HeroSpectrum;
+struct SpectralContext;
+
+float3 SampleCIE(float lambda);
 float3 SpectrumToRGB(Spectrum spectrum);
-float3 HeroToXYZ(Spectrum spectrum, SpectralContext ctx);
-float3 HeroToRGB(Spectrum spectrum, SpectralContext ctx);
+float3 SpectrumSampleToRGB(float energy, float lambda, float pdf);
+float3 HeroToRGB(HeroSpectrum spectrum, SpectralContext ctx);
 
 #include "Spectral-Tracing/Spectrum/Spectrum.hlsli"
-#include "Spectral-Tracing/SpectralUtils.hlsli"
 #include "Spectral-Tracing/Spectrum/HeroSpectrum.hlsli"
+#include "Spectral-Tracing/SpectralContext/SpectralContext.hlsli"
+#include "Spectral-Tracing/SpectralUtils.hlsli"
 #include "Spectral-Tracing/SpectralData/CIE2006.hlsli"
 #include "Spectral-Tracing/SpectralData/CIE2006_MLG.hlsli"
 

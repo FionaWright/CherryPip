@@ -93,7 +93,7 @@ void Model_BSDF_Spectral(
 
         if (isReflect)
         {
-            BRDF_Specular_Spectral(rngInfo, throughput, ctx, L_s, roughness, metalness, albedo, V_s, N_s, anisoDirAndStrength, T, B, Ns, iorCurrent, iorNext, entering, debug, hasDebugOutput);
+            BRDF_Specular_Spectral(rngInfo, throughput, ctx, L_s, roughness, metalness, albedo, V_s, N_s, anisoDirAndStrength, sframe, iorCurrent, iorNext, entering, debug, hasDebugOutput);
             throughput.Div(max(0.001f, reflectProb));
 
 #if defined(SPECTRAL_HERO_SAMPLING)
@@ -125,7 +125,7 @@ void Model_BSDF_Spectral(
 
     if (isSpecular)
     {
-        BRDF_Specular_Spectral(rngInfo, throughput, ctx, L_s, roughness, metalness, albedo, V_s, N_s, anisoDirAndStrength, T, B, Ns, iorCurrent, iorNext, entering, debug, hasDebugOutput);
+        BRDF_Specular_Spectral(rngInfo, throughput, ctx, L_s, roughness, metalness, albedo, V_s, N_s, anisoDirAndStrength, sframe, iorCurrent, iorNext, entering, debug, hasDebugOutput);
         throughput.Div(max(0.001f, specProb));
     }
     else

@@ -98,9 +98,9 @@ float4 PSMain(VsOut input) : SV_TARGET
     case eNormalsBumped:
         return float4(N_w, 1);
     case eTangent:
-        return float4(T, 1);
+        return float4(bumpFrame.T, 1);
     case eBinormal:
-        return float4(B, 1);
+        return float4(bumpFrame.B, 1);
     case eUV:
         return float4(input.uv, 0, 1);
     case eDirLighting:

@@ -1,5 +1,7 @@
 #include "CBV.h"
 
+// https://stackoverflow.com/questions/45453537/optimal-9-element-sorting-network-that-reduces-to-an-optimal-median-of-9-network
+
 struct VsOut
 {
     float4 position : SV_POSITION;
@@ -28,7 +30,6 @@ void Max(inout float3 List[9], uint i, uint j)
     List[j] = max(List[i], List[j]);
 }
 
-// https://stackoverflow.com/questions/45453537/optimal-9-element-sorting-network-that-reduces-to-an-optimal-median-of-9-network
 float3 MedianSelectionNetwork9(inout float3 List[9])
 {
     Sort(List, 0,1); Sort(List, 3,4); Sort(List, 6,7);

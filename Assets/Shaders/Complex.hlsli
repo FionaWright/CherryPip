@@ -1,6 +1,8 @@
 #ifndef H_COMPLEX_H
 #define H_COMPLEX_H
 
+// Represents a complex number (a + bi) where i^2 == -1
+
 struct Complex
 {
     void Init(float re, float im);

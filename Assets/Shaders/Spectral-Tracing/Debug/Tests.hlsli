@@ -1,4 +1,7 @@
 
+// Contains various tests for spectral primary decomposition
+
+// Test to run:
 #define SPECTRAL_TEST_ROUND_TRIP_4
 
 #ifdef SPECTRAL_TEST_CIE

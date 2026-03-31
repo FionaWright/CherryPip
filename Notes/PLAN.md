@@ -54,7 +54,7 @@
 - [x] Denoising (Box/Gauss/A-Trous)
 - [x] Denoising Median
 - [ ] Denoising NRD
-- [ ] Maxwell "True" Fresnel (Requires eta/k tables but doesn't seem too hard)
+- [x] Maxwell "True" Fresnel (Requires eta/k tables)
 - [x] RMSE tests for different lighting models + denoisers
 - [ ] Resevoir Light Sampling
 - [ ] ReSTIR
@@ -74,9 +74,7 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 
 ### Main Tasks
 - Fix D/G/Factor/PDF parts of BTDF
-- Implement hero-sampling for BTDFs
-- Fix glass aliasing issue
-- Implement spectral conductors 
+- Fix hero sampling
 
 ### Bugs 
 - Camera movement gets messed up sometimes
@@ -103,9 +101,3 @@ https://learn.microsoft.com/en-us/samples/microsoft/directx-graphics-samples/d3d
 - Refactor some of the debug classes into the SceneStudio app
 - Make every third-party thing fetched using cmake
 - Make new test which renders nothing to the screen. Should be able to achieve 1000+ FPS. If not then optimize CPU side using profiling. (Plus test which renders white to the screen for each pixel but still uses each draw call)
-
-## Notes
-
-Remember that gamma correction is more complicated than a simple power. See Color.hpp from Mattel+Yuksel or whatever
-
-Convert hard-coded spectral data to CBVs. It's slowing down hot reloading a ton.

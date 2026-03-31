@@ -56,7 +56,8 @@ Add RGB
         Li += RgbToSpectrumSample(envMapSampleRGB, eIlluminant, lambda);
 #else
         Li.InitFromRGB(envMapSampleRGB, eIlluminant);
-#endif```
+#endif
+```
 ```
 #ifdef SINGLE_LAMBDA_RENDERING
         Li += RgbToSpectrumSample(dirLightRGB, eIlluminant, lambda);
@@ -64,7 +65,8 @@ Add RGB
         Spectrum spectrumDirLight;
         spectrumDirLight.InitFromRGB(dirLightRGB, eIlluminant);
         Li.Add(spectrumDirLight);
-#endif```
+#endif
+```
 
 Multiply
 ```
@@ -72,15 +74,14 @@ Multiply
         throughput *= albedo;
 #else
         throughput.Mul(albedo); // Terms cancel out
-#endif```
+#endif
+```
 
-SpectralValue s;
-s.Mul(s2);
-s.Mul(myFloat);
+SpectralValue s;  
+s.Mul(s2);  
+s.Mul(myFloat);  
 
-s.InitFromRGB(float3, type, lambda);
-
-
+s.InitFromRGB(float3, type, lambda);  
 
 ## CIE XYZ Output:
 

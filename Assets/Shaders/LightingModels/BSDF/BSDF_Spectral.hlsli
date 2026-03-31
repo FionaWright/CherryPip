@@ -3,6 +3,7 @@
 
 #include "MicrofacetModels/AllModels.hlsli"
 #include "Path-Tracing/Fresnel.hlsli"
+#include "Spectral-Tracing/SampleIOR.hlsli"
 
 #include "LightingModels/BSDF/BRDF_Diffuse_Spectral.hlsli"
 #include "LightingModels/BSDF/BRDF_Specular_Spectral.hlsli"

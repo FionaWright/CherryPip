@@ -5,7 +5,7 @@ Spectrum BlackSpectrum();
 Spectrum WhiteSpectrum_E();
 Spectrum WhiteSpectrum_D65();
 
-#include "Spectral-Tracing/Spectrum/SpectralUtils.hlsli"
+#include "Spectral-Tracing/SpectralUtils.hlsli"
 #include "Spectral-Tracing/SpectralData/D65StandardIlluminant.hlsli"
 #include "Spectral-Tracing/SpectralData/D65_MLG.hlsli"
 

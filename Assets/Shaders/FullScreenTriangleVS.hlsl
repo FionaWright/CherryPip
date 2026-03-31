@@ -10,6 +10,8 @@ struct VsOut
     float2 uv : TEXCOORD0;
 };
 
+// Renders a triangle that covers the whole screen
+
 VsOut VSMain(VsIn input)
 {
     VsOut output;

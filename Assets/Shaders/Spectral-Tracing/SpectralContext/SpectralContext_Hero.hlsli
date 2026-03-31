@@ -14,7 +14,7 @@ struct SpectralContext
     float Lambdas[NUM_HERO_SAMPLES];
 };
 
-#include "Spectral-Tracing/Spectrum/SpectralUtils.hlsli"
+#include "Spectral-Tracing/SpectralUtils.hlsli"
 
 void SpectralContext::Init(float lambdas[NUM_HERO_SAMPLES])
 {

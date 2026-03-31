@@ -5,6 +5,9 @@ float LambdaToIndex(float lambda);
 float IndexToLambda(float idx);
 
 #include "Spectral-Tracing/Spectrum/Spectrum.hlsli"
+#include "Spectral-Tracing/SpectralData/CIE2006.hlsli"
+#include "Spectral-Tracing/Spectrum/SpectrumToRGB2019.hlsli"
+#include "Spectral-Tracing/SampleIOR.hlsli"
 
 float LambdaToIndex(float lambda)
 {
@@ -43,8 +46,8 @@ HeroSpectrum ComputeHeroReflectWeights(float NdV, SpectralContext ctx, bool ente
     for (int i = 1; i < NUM_HERO_SAMPLES; i++)
     {
 		Complex iorMat = SampleIor_Lambda(ctx.GetLambda(i), isGlass, isConductor);
-        Complex iorCurrent_i = entering ? IOR_AIR : iorMat;
-        Complex iorNext_i = entering ? iorMat : IOR_AIR;
+        Complex iorCurrent_i = Ternary(entering, IOR_AIR, iorMat);
+        Complex iorNext_i = Ternary(entering, iorMat, IOR_AIR);
 
         float F_i = Fresnel_Maxwell(iorCurrent_i, iorNext_i, NdV, isConductor);
         s.Samples[i] = F_i;
@@ -61,8 +64,8 @@ HeroSpectrum ComputeHeroRefractWeights(float NdV, SpectralContext ctx, bool ente
     for (int i = 1; i < NUM_HERO_SAMPLES; i++)
     {
 		Complex iorMat = SampleIor_Lambda(ctx.GetLambda(i), isGlass, isConductor);
-        Complex iorCurrent_i = entering ? IOR_AIR : iorMat;
-        Complex iorNext_i = entering ? iorMat : IOR_AIR;
+        Complex iorCurrent_i = Ternary(entering, IOR_AIR, iorMat);
+        Complex iorNext_i = Ternary(entering, iorMat, IOR_AIR);
 
         float F_i = Fresnel_Maxwell(iorCurrent_i, iorNext_i, NdV, isConductor);
         Complex eta = Div(iorNext_i, iorCurrent_i);

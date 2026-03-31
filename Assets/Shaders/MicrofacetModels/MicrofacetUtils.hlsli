@@ -10,16 +10,6 @@
 //  Shading Space Math Utils
 // ================================
 
-float3 ToDefinedSpace(float3 X, float3 T, float3 B, float3 N)
-{
-    return normalize(float3(dot(X, T), dot(X, B), dot(X, N)));
-}
-
-float3 InvToDefinedSpace(float3 X, float3 T, float3 B, float3 N)
-{
-    return normalize(X.x * T + X.y * B + X.z * N);
-}
-
 float SSpaceCosTheta(float3 X) { return X.z; }
 float SSpaceCos2Theta(float3 X) { return X.z * X.z; }
 float SSpaceSin2Theta(float3 X) { return max(0.0f, 1.0f - SSpaceCos2Theta(X)); }

@@ -1,6 +1,7 @@
 #include "DualIncludes/Cbv.h"
 #include "MicrofacetModels/MicrofacetUtils.hlsli"
 #include "MathUtils.hlsli"
+#include "ShadingFrame.hlsli"
 
 struct VsOut
 {
@@ -38,9 +39,8 @@ float4 PSMain(VsOut input) : SV_TARGET
     float3 emission = gTextures[c_mat.TexIdxEmissive].Sample(gSampler, input.uv).rgb;
 
     float3 N = normalize(input.normal);
-    float3 T, B;
-    BuildBasisFrisvad(N, T, B);
-    float3 N_w = normalize(bumpSample.x * T + bumpSample.y * B + bumpSample.z * N);
+    ShadingFrame bumpFrame = CreateShadingFrame(N);
+    float3 N_w = bumpFrame.ToWorld(bumpSample);
 
     float3 irradianceIblSample = gIrradiance.SampleLevel(gSampler, N_w, 0).rgb;
 

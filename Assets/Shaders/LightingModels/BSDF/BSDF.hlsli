@@ -63,11 +63,10 @@ void Model_BSDF(
     inout float3 debug,
     inout bool hasDebugOutput)
 {
-    float3 T, B;
-    BuildBasisFrisvad(Ns, T, B);
+    ShadingFrame sframe = CreateShadingFrame(Ns);
 
     float3 N_s = float3(0, 0, 1);
-    float3 V_s = ToDefinedSpace(wo, T, B, Ns);
+    float3 V_s = sframe.ToLocal(wo);
 
     float NdV = SSpaceCosTheta(V_s);
 
@@ -99,7 +98,7 @@ void Model_BSDF(
             throughput /= max(0.001f, 1.0f - reflectProb);
         }
 
-        wi = InvToDefinedSpace(L_s, T, B, Ns);
+        wi = sframe.ToWorld(L_s);
 
 #ifdef DEBUG_PT_INFO_OUTPUT
 #     include "Debug/DebugInfoOutputBSDFT.hlsli"
@@ -123,7 +122,7 @@ void Model_BSDF(
         throughput /= max(0.001f, 1.0 - specProb);
     }
 
-    wi = InvToDefinedSpace(L_s, T, B, Ns);
+    wi = sframe.ToWorld(L_s);
 
 #ifdef DEBUG_PT_INFO_OUTPUT
 #     include "Debug/DebugInfoOutputBSDF.hlsli"

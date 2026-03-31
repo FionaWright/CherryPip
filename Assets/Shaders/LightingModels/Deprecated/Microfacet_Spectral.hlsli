@@ -23,8 +23,7 @@ void Model_Microfacet_Spectral(
 {
     L_sample = Mul(throughput, Li);
 
-    float3 T, B;
-    BuildBasisFrisvad(Ns, T, B);
+    ShadingFrame sframe = CreateShadingFrame(Ns);
 
     if (!entering && isGlass)
     {
@@ -44,7 +43,7 @@ void Model_Microfacet_Spectral(
     if (CheckTIR(nCurrent, nNext, abs(NdV)))
     {
         float3 L_s = normalize(reflect(-V_s, N_s));
-        wi = InvToDefinedSpace(L_s, T, B, Ns);
+        wi = sframe.ToWorld(L_s);
         L_sample = CreateBlackSpectralValue();
         return;
     }
@@ -63,7 +62,7 @@ void Model_Microfacet_Spectral(
     if (!isReflect)
     {
         float3 L_s = refract(-V_s, N_s, nCurrent / nNext);
-        wi = InvToDefinedSpace(L_s, T, B, Ns);
+        wi = sframe.ToWorld(L_s);
         L_sample = CreateBlackSpectralValue();
 
         throughput.Div(max(1e-6f, 1.0f - reflectProb));
@@ -107,7 +106,7 @@ void Model_Microfacet_Spectral(
         float3 H_s = normalize(mm.Sample(u1, u2));
         float3 L_s = NormalizeSafe(reflect(-V_s, H_s), N_s);
 
-        wi = InvToDefinedSpace(L_s, T, B, Ns);
+        wi = sframe.ToWorld(L_s);
 
         float NdL = SSpaceCosTheta(L_s);
         float NdH = SSpaceCosTheta(H_s);
@@ -149,7 +148,7 @@ void Model_Microfacet_Spectral(
     if (cImportanceSamplingEnabled)
     {
         L_s = RandHemisphereCosineSSpace(u1, u2);
-        wi = InvToDefinedSpace(L_s, T, B, Ns);
+        wi = sframe.ToWorld(L_s);
 
         float NdL = SSpaceCosTheta(L_s);
         pdf = NdL / PI;
@@ -160,7 +159,7 @@ void Model_Microfacet_Spectral(
     else
     {
         L_s = RandHemisphereUniformSSpace(u1, u2);
-        wi = InvToDefinedSpace(L_s, T, B, Ns);
+        wi = sframe.ToWorld(L_s);
 
         float NdL = SSpaceCosTheta(L_s);
         pdf = 1.0f / (2.0f * PI);

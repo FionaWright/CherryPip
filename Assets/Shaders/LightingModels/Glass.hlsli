@@ -2,6 +2,7 @@
 #define H_MODEL_GLASS_H
 
 #include "Complex.hlsli"
+#include "ShadingFrame.hlsli"
 
 void Model_Glass(
     inout RngInfo rngInfo,
@@ -37,13 +38,11 @@ void Model_Glass(
         return;
     }
 
-    float3 T, B;
-    BuildBasisFrisvad(Ns, T, B);
-
     float u1 = Rand01_Bounce(DIM_D_BSDF_U1, rngInfo);
     float u2 = Rand01_Bounce(DIM_D_BSDF_U2, rngInfo);
 
-    float3 diffuseDir = RandHemisphereUniformWorld(u1, u2, T, B, Ns);
+    ShadingFrame sframe = CreateShadingFrame(Ns);
+    float3 diffuseDir = RandHemisphereUniformWorld(u1, u2, sframe);
     res.reflectDir = normalize(lerp(res.reflectDir, diffuseDir, diffuseProbability)); // Why diffuseprobability and not roughness?
     res.refractDir = normalize(lerp(res.refractDir, -diffuseDir, roughness));
 

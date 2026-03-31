@@ -97,10 +97,10 @@ void Model_BSDF_Spectral(
             throughput.Div(max(0.001f, reflectProb));
 
 #if defined(SPECTRAL_HERO_SAMPLING)
-	float3 H_s = normalize(L_s + V_s);
-	float VdH = dot(V_s, H_s);
-    HeroSpectrum reflectWeights = ComputeHeroReflectWeights(VdH, ctx, entering, isGlass, isConductor);
-    throughput.Value.Mul(reflectWeights);
+	        float3 H_s = normalize(L_s + V_s);
+	        float VdH = dot(V_s, H_s);
+            HeroSpectrum reflectWeights = ComputeHeroReflectWeights(VdH, ctx, entering, isGlass, isConductor);
+            throughput.Value.Mul(reflectWeights);
 #endif
         }
         else

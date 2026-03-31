@@ -440,6 +440,20 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
             diffuseTex->Init(d3d->GetDevice(), cmdList, diffuseTexInput, 1);
             ResourceSharer::AddToDatabaseTex(diffuseTexInput, diffuseTex);
         }
+        std::shared_ptr<Texture> normalTex = std::make_shared<Texture>();
+        std::string normalTexInput = assetDirectory + "Textures/DefaultNormal.dds";
+        if (!ResourceSharer::TryGetFromDatabaseTex(normalTexInput, normalTex))
+        {
+            normalTex->Init(d3d->GetDevice(), cmdList, normalTexInput, 1);
+            ResourceSharer::AddToDatabaseTex(normalTexInput, normalTex);
+        }
+        std::shared_ptr<Texture> whiteTex = std::make_shared<Texture>();
+        std::string whiteTexInput = assetDirectory + "Textures/WhitePOT.dds";
+        if (!ResourceSharer::TryGetFromDatabaseTex(whiteTexInput, whiteTex))
+        {
+            whiteTex->Init(d3d->GetDevice(), cmdList, whiteTexInput, 1);
+            ResourceSharer::AddToDatabaseTex(whiteTexInput, whiteTex);
+        }
 
         std::shared_ptr<Material> materialForward = std::make_shared<Material>();
         materialForward->Init(heap);
@@ -457,6 +471,9 @@ void ModelLoaderGLTF::loadPrimitive(D3D* d3d, ID3D12GraphicsCommandList* cmdList
 
         MaterialData materialData = {};
         materialData.BindlessTexDiffuse = heap->AddBindlessTexture(d3d->GetDevice(), diffuseTex);
+        materialData.BindlessTexNormal = heap->AddBindlessTexture(d3d->GetDevice(), normalTex);
+        materialData.BindlessTexRoughMet = heap->AddBindlessTexture(d3d->GetDevice(), whiteTex);
+        materialData.BindlessTexEmissive = heap->AddBindlessTexture(d3d->GetDevice(), whiteTex);
         materialForward->SetData(materialData);
 
         auto obj = std::make_shared<Object>();

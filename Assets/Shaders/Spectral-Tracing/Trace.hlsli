@@ -28,6 +28,11 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         if (q.CommittedStatus() != COMMITTED_TRIANGLE_HIT)
         {
             SpectralValue L_sample = Mul(throughput, Miss(ray.Origin, ray.Direction, i, ctx));
+
+            float maxVal = L_sample.Max();
+            if (maxVal > cbvPathTracing.FireflyThreshold)
+                L_sample.Mul(cbvPathTracing.FireflyThreshold / maxVal);
+
             Lo.Add(L_sample);
 
 #ifdef DEBUG_PT_INFO_OUTPUT
@@ -93,6 +98,10 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
 
         if (!cDebugInfoOutputEnabled && throughput.IsBlack())
             break;
+
+        float maxVal = L_sample.Max();
+        if (maxVal > cbvPathTracing.FireflyThreshold)
+            L_sample.Mul(cbvPathTracing.FireflyThreshold / maxVal);
 
         Lo.Add(L_sample);
 

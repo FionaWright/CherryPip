@@ -36,9 +36,9 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         {
             float3 L_sample = throughput * Miss(ray.Origin, ray.Direction, i);
 
-            //float L_lum = Luminance(L_sample);
-            //if (L_lum > cbvPathTracing.FireflyThreshold)
-            //    L_sample *= cbvPathTracing.FireflyThreshold / L_lum;
+            float L_lum = Luminance(L_sample);
+            if (L_lum > cbvPathTracing.FireflyThreshold)
+                L_sample *= cbvPathTracing.FireflyThreshold / L_lum;
 
             Lo += L_sample;
 
@@ -113,10 +113,9 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
         if (!cDebugInfoOutputEnabled && throughput.x <= 0 && throughput.y <= 0 && throughput.z <= 0)
             break;
 
-        // TODO: Reimplement firefly threshold
-        //float L_lum = Luminance(L_sample);
-        //if (L_lum > cbvPathTracing.FireflyThreshold)
-        //    L_sample *= cbvPathTracing.FireflyThreshold / L_lum;
+        float L_lum = Luminance(L_sample);
+        if (L_lum > cbvPathTracing.FireflyThreshold)
+            L_sample *= cbvPathTracing.FireflyThreshold / L_lum;
 
         Lo += L_sample;
 

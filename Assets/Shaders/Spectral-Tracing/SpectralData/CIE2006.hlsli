@@ -3,6 +3,8 @@
 
 // Sourced from Mallet + Yuksel
 
+// Note: CIE 2006 can be less accurate as most code/maths is designed for the 1931 dataset, despite 2006 being technically more physically accurate
+
 #define CIE_XYZBAR_LAMBDA_MIN 390
 #define CIE_XYZBAR_LAMBDA_MAX 830
 #define CIE_XYZBAR_LAMBDA_SIZE (CIE_XYZBAR_LAMBDA_MAX-CIE_XYZBAR_LAMBDA_MIN)

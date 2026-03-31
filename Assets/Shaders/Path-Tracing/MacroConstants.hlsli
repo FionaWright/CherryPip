@@ -1,6 +1,8 @@
 #ifndef H_MACRO_CONSTANTS_H
 #define H_MACRO_CONSTANTS_H
 
+// Converts most macros to static constants as they make code much cleaner
+
 enum RngSamplingStrategy
 {
 	eInvalidRngSampling,

@@ -1,44 +1,10 @@
-#ifndef H_SELLMEIER_H
-#define H_SELLMEIER_H
+#ifndef H_SPECTRAL_DATA_IOR_H
+#define H_SPECTRAL_DATA_IOR_H
 
+#include "Spectral-Tracing/SpectralData/Sellmeier.hlsli"
 #include "Complex.hlsli"
 
-// Curve fitting for material refractive index spectra
-
-// Eta Tables:
-// https://github.com/polyanskiy/refractiveindex.info-database/tree/main/database
-//     Data Columns: λ, n(λ), k(λ)
-//     Wavelength is in micrometers, multiply by 1000 to get nm
-//     Not all materials contain data in the visible light spectrum
-// https://refractiveindex.info/
-// https://en.wikipedia.org/wiki/Sellmeier_equation
-
-// N = Constant + B_0 λ^2 / (λ^2 - C_0) + ...
-struct SellmeierEquation
-{
-    float Constant;
-    float B[5];
-    float C[5];
-    bool MulLambda[5];
-
-    float SampleN(float lambda_nano)
-    {
-        float lambda_micro = lambda_nano / 1000.0f;
-        float lambda2 = lambda_micro * lambda_micro;
-
-        float n2 = Constant;
-        [unroll]
-        for (int i = 0; i < 5; i++)
-        {
-            float term = B[i] / (lambda2 - C[i]);
-            if (MulLambda[i])
-                term *= lambda2;
-            n2 += term;
-        }
-        return sqrt(n2);
-    }
-};
-
+// Titanium Dioxide 
 static const SellmeierEquation cSellmeier_TiO2 = {
     5.913f,
     { 0.2441f, 0, 0, 0, 0 },
@@ -46,6 +12,7 @@ static const SellmeierEquation cSellmeier_TiO2 = {
     { false, false, false, false, false }
 };
 
+// Fused Silica Glass
 static const SellmeierEquation cSellmeier_FusedSilica = {
     1.0f,
     { 0.6961663, 0.4079426, 0.8974794, 0, 0 },
@@ -53,6 +20,7 @@ static const SellmeierEquation cSellmeier_FusedSilica = {
     { true, true, true, false, false }
 };
 
+// Barium Gallogermanate Glass 
 static const SellmeierEquation cSellmeier_BGG = {
     1.0f,
     { 0.82725, 1.14635, 1.53923, 0, 0 },
@@ -60,12 +28,15 @@ static const SellmeierEquation cSellmeier_BGG = {
     { true, true, true, false, false }
 };
 
+// PVP Plastic 
 static const SellmeierEquation cSellmeier_PVP = {
     1.5151f,
     { 0.00279, 5.0756e-4, 0, 0, 0 },
     { 0, 0, 0, 0, 0 },
     { false, false, false, false, false }
 };
+
+// =======================================================
 
 struct ConductorIOR
 {
@@ -74,7 +45,7 @@ struct ConductorIOR
     float K;
 };
 
-// Silver
+// Silver (Ag)
 #define COMPLEX_AG_SIZE 23
 static const ConductorIOR cComplex_Ag[COMPLEX_AG_SIZE] = {
     { 300.9, 1.34, 0.964 },
@@ -102,7 +73,7 @@ static const ConductorIOR cComplex_Ag[COMPLEX_AG_SIZE] = {
     { 892.0, 0.04, 6.312 },
 };
 
-// Gold
+// Gold (Au)
 #define COMPLEX_AU_SIZE 23
 static const ConductorIOR cComplex_Au[COMPLEX_AU_SIZE] = {
     { 300.9, 1.53, 1.889 },
@@ -130,7 +101,7 @@ static const ConductorIOR cComplex_Au[COMPLEX_AU_SIZE] = {
     { 892.0, 0.17, 5.663 }
 };
 
-// Copper
+// Copper (Cu)
 #define COMPLEX_CU_SIZE 23
 static const ConductorIOR cComplex_Cu[COMPLEX_CU_SIZE] = {
     { 300.9, 1.40, 1.679 },
@@ -157,39 +128,5 @@ static const ConductorIOR cComplex_Cu[COMPLEX_CU_SIZE] = {
     { 821.1, 0.26, 5.180 },
     { 892.0, 0.30, 5.768 }
 };
-
-Complex SampleIor_Glass(float lambda)
-{
-    float n = cSellmeier_BGG.SampleN(lambda);
-    return CreateComplex(n, 0);
-}
-
-Complex SampleIor_Dielectric(float lambda)
-{
-    float n = cSellmeier_PVP.SampleN(lambda);
-    return CreateComplex(n, 0);
-}
-
-Complex SampleIor_Conductor(float lambda)
-{
-    //ConductorIOR data[COMPLEX_AG_SIZE] = cComplex_Ag;
-    //int size = COMPLEX_AG_SIZE;
-    //ConductorIOR data[COMPLEX_AU_SIZE] = cComplex_Au;
-    //int size = COMPLEX_AU_SIZE;
-    ConductorIOR data[COMPLEX_CU_SIZE] = cComplex_Cu;
-    int size = COMPLEX_CU_SIZE;
-
-    int i = 1;
-    while (lambda <= data[i].Wavelength && i < size)
-        i++;
-
-    float minLambda = data[i-1].Wavelength;
-    float maxLambda = data[i].Wavelength;
-    float t = (lambda - minLambda) / max(1e-6, maxLambda - minLambda);
-
-    float n = lerp(data[i-1].N, data[i].N, t);
-    float k = lerp(data[i-1].K, data[i].K, t);
-    return CreateComplex(n, -k);
-}
 
 #endif

@@ -11,7 +11,7 @@
 #include "Spectral-Tracing/Spectrum/Spectrum.hlsli"
 #include "Spectral-Tracing/SpectralValue/SpectralValue.hlsli"
 #include "Spectral-Tracing/Spectrum/ColorSpectrums.hlsli"
-#include "Spectral-Tracing/Spectrum/SpectralUtils.hlsli"
+#include "Spectral-Tracing/SpectralUtils.hlsli"
 #include "Spectral-Tracing/Spectrum/RgbToSpectrum2019.hlsli"
 #include "Spectral-Tracing/SpectralContext/SpectralContext.hlsli"
 

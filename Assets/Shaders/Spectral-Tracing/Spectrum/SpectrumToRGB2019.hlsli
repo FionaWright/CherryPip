@@ -7,7 +7,7 @@ float3 HeroToXYZ(Spectrum spectrum, SpectralContext ctx);
 float3 HeroToRGB(Spectrum spectrum, SpectralContext ctx);
 
 #include "Spectral-Tracing/Spectrum/Spectrum.hlsli"
-#include "Spectral-Tracing/Spectrum/SpectralUtils.hlsli"
+#include "Spectral-Tracing/SpectralUtils.hlsli"
 #include "Spectral-Tracing/Spectrum/HeroSpectrum.hlsli"
 #include "Spectral-Tracing/SpectralData/CIE2006.hlsli"
 #include "Spectral-Tracing/SpectralData/CIE2006_MLG.hlsli"

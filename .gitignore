@@ -10,3 +10,5 @@ Assets/Models/GitIgnored/*
 !Assets/Models/GitIgnored/.gitkeep
 build/*
 out/*
+
+*.html

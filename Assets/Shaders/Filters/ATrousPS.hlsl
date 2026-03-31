@@ -1,5 +1,7 @@
 #include "CBV.h"
 
+// https://jo.dreggn.org/home/2010_atrous.pdf
+
 struct VsOut
 {
     float4 position : SV_POSITION;
@@ -35,7 +37,6 @@ float3 SampleNormal(float2 uv)
     return normalSample * 2.0f - 1.0f; // [0,1] -> [-1,1]
 }
 
-// https://jo.dreggn.org/home/2010_atrous.pdf
 float4 PSMain(VsOut input) : SV_Target
 {
     float KernelB3Weights[25] = {

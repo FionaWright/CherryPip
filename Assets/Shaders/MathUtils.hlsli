@@ -1,12 +1,28 @@
 #ifndef H_MATH_UTILS_H
 #define H_MATH_UTILS_H
 
+#ifndef NAN
 #define NAN 0.0f/0.0f;
+#endif
+
+#ifndef IOR_AIR
+#define IOR_AIR CreateComplex(1.0f, 0.0f)
+#endif
+
+#ifndef CONSTANT_BOLTZMANN
+#define CONSTANT_BOLTZMANN 1.38064852e-23f
+#endif
+
+#ifndef CONSTANT_PLANK
+#define CONSTANT_PLANK 6.62607015e-34f
+#endif
+
+#ifndef CONSTANT_SPEED_OF_LIGHT
+#define CONSTANT_SPEED_OF_LIGHT 299792458.0f
+#endif
 
 // https://sakibsaikia.github.io/graphics/2022/01/04/Nan-Checks-In-HLSL.html
-
-// WARNING: This may be giving false positives? See mul(cMatXyzToRgb, float3(0.04491435,4.6650298,2.231335))
-bool IsNaN(float x)
+bool IsNaN(float x) // WARNING: This may be giving false positives? See mul(cMatXyzToRgb, float3(0.04491435,4.6650298,2.231335))
 {
     return (int(x) & 0x7fffffff) > 0x7f800000;
 }
@@ -73,10 +89,6 @@ float3 Reflect(float3 wo, float3 N)
 {
     return wo - 2 * dot(wo, N) * N;
 }
-
-#ifndef IOR_AIR
-#define IOR_AIR CreateComplex(1.0f, 0.0f)
-#endif
 
 struct GlassResponse
 {
@@ -195,6 +207,7 @@ float3 SRGB_to_LRGB(float3 srgb)
     );
 }
 
+// I assume I wrote this for debugging at some point, it seems very slow otherwise 
 float3 SampleAround(float3 dir, float cosTheta, float phi)
 {
     float sinTheta = sqrt(max(0.0f, 1.0f - cosTheta * cosTheta));

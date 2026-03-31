@@ -53,7 +53,7 @@ void Model_Microfacet(
         MicrofacetModel mm;
         InitializeMM(mm, roughness, rngInfo, V_s);
         if (cAnisotropyEnabled)
-            InitializeMMAniso(mm, T, B, Ns, anisoDirAndStrength);
+            InitializeMMAniso(mm, anisoDirAndStrength);
 
         float3 H_s = normalize(mm.Sample(u1, u2));
         float3 L_s = NormalizeSafe(reflect(-V_s, H_s), N_s);

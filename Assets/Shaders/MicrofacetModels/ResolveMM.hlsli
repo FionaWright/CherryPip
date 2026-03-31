@@ -36,8 +36,7 @@ void InitializeMM(
     inout MicrofacetModel mm,
     float roughness,
     RngInfo rngInfo, // For computing U3
-    float3 V
-)
+    float3 V)
 {
 #ifdef NDF_TYPE_GGX
 #   ifdef SAMPLE_VISIBLE_NORMALS
@@ -50,12 +49,10 @@ void InitializeMM(
 
 void InitializeMMAniso(
     inout MicrofacetModel mm,
-    float3 T, float3 B, float3 N,
-    float3 anisoDirAndStrength
-)
+    float3 anisoDirAndStrength)
 {
 #ifdef ANISOTROPY_ENABLED
-    mm.InitAniso(T, B, N, anisoDirAndStrength);
+    mm.InitAniso(anisoDirAndStrength);
 #endif
 }
 

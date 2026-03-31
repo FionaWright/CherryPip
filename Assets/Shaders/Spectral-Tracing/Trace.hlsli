@@ -103,7 +103,7 @@ float3 Trace(inout RayQuery<RAY_FLAGS> q,
             float rRR = PcgRand01(rngInfo.IndependentRngState);
             if (rRR > p)
                 break;
-            throughput /= p;
+            throughput.Div(p);
         }
 
         ray.Direction = wi;

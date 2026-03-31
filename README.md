@@ -46,14 +46,13 @@ C++, HLSL and Python are the main languages.
 - Proper BSDF / BRDF / BTDF lighting model system
 
 #### Lighting Models
-- Lambertian
-- Glossy
-- Glass
-- GGX Smith
-- GGX Smith Anisotropic
-- GGX VCavity VNDF
-- GGX Smith VNDF
-- GGX Smith Anisotropic VNDF
+- BRDF Diffuse: Lambertian
+- MM: GGX Smith
+- MM: GGX Smith Anisotropic
+- MM: GGX VCavity VNDF
+- MM: GGX Smith VNDF
+- MM: GGX Smith Anisotropic VNDF
+- All MMs work for both BRDF Specular & BTDF
 
 #### Debug Tools
 ##### Readback System
@@ -91,7 +90,7 @@ Progress as of 08/11/25:
 Progress as of 09/11/25:  
 <img width="1699" height="604" alt="image" src="https://github.com/user-attachments/assets/ac64c41a-92c5-4159-b324-cfad17abffa0" />
 
-Progress as of 10/01/26 (Took a long break):  
+Progress as of 10/01/26:  
 <img width="1020" height="573" alt="image" src="https://github.com/user-attachments/assets/f13adf28-8360-4225-a2ab-e718a83e969b" />
 
 Progress as of 18/01/26:  
@@ -109,7 +108,7 @@ Progress as of 18/02/26:
 Progress as of 21/02/26:
 <img width="1020" height="575" alt="Chess DOF" src="https://github.com/user-attachments/assets/a6b0518d-efac-41c1-a811-cda16036083c" />
 
-Progress as of 11/03/26 (Spectral-tracing working!):
+Progress as of 11/03/26:
 <img width="1019" height="574" alt="image" src="https://github.com/user-attachments/assets/04f6d1d7-9451-4115-bd07-c17b5f6730f0" />
 
 Progress as of 23/03/26:

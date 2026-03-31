@@ -26,7 +26,7 @@ Complex SampleIor_Conductor(float lambda)
     int size = COMPLEX_CU_SIZE;
 
     int i = 1;
-    while (lambda <= data[i].Wavelength && i < size)
+    while (lambda <= data[i].Wavelength && i < size-1)
         i++;
 
     float minLambda = data[i-1].Wavelength;

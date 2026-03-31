@@ -10,7 +10,7 @@ struct SpectralContext
     float Lambda;
 };
 
-#include "Spectral-Tracing/Spectrum/SpectralUtils.hlsli"
+#include "Spectral-Tracing/SpectralUtils.hlsli"
 
 void SpectralContext::Init(float lambda)
 {

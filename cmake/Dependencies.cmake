@@ -72,14 +72,14 @@ CPMADDPACKAGE(
 
 # SPNG
 add_library(spng STATIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/spng/spng.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/spng/spng.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/spng/spng.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/spng/spng.h
 )
 target_include_directories(spng 
     PUBLIC 
-        ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/spng
+        ${CMAKE_CURRENT_SOURCE_DIR}/third_party/spng
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty
+        ${CMAKE_CURRENT_SOURCE_DIR}/third_party
 )
 target_compile_definitions(spng PUBLIC SPNG_STATIC)
 target_link_libraries(spng PUBLIC ZLIB::ZLIBSTATIC)
@@ -89,7 +89,7 @@ add_library(tinyddsloader STATIC)
 
 # generate tinyddsloader.cpp as simple #include "tinyddsloader.h"
 target_compile_definitions(tinyddsloader PRIVATE TINYDDSLOADER_IMPLEMENTATION)
-target_include_directories(tinyddsloader PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/tinyddsloader)
+target_include_directories(tinyddsloader PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/third_party/tinyddsloader)
 
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/tinyddsloader.cpp "#include \"tinyddsloader.h\"\n")
 

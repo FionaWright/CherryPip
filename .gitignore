@@ -6,8 +6,8 @@ Data/*
 Python Scripts/BokehData/*
 !Python Scripts/BokehData/.gitkeep
 *.pyc
-Assets/Models/GitIgnored/*
-!Assets/Models/GitIgnored/.gitkeep
+assets/Models/GitIgnored/*
+!assets/Models/GitIgnored/.gitkeep
 build/*
 out/*
 

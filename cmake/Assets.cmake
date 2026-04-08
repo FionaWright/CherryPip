@@ -3,8 +3,8 @@ set(TEXCONV_EXE ${CMAKE_SOURCE_DIR}/ThirdParty/texconv/texconv.exe)
 
 # Directories containing textures
 set(TEXTURE_DIRS
-    "${CMAKE_SOURCE_DIR}/Assets/Textures"
-    "${CMAKE_SOURCE_DIR}/Assets/Models"
+    "${CMAKE_SOURCE_DIR}/assets/Textures"
+    "${CMAKE_SOURCE_DIR}/assets/Models"
 )
 
 set(GENERATED_DDS_FILES "")
@@ -47,10 +47,10 @@ add_dependencies(client GenerateDDS)
 
 # All files under Assets/Models
 file(GLOB_RECURSE MODEL_FILES
-        "${CMAKE_SOURCE_DIR}/Assets/Models/*"
-        "${CMAKE_SOURCE_DIR}/Assets/Resources/*"
-        "${CMAKE_SOURCE_DIR}/Assets/Data/*"
-        "${CMAKE_SOURCE_DIR}/Assets/Textures/*.hdr"
+        "${CMAKE_SOURCE_DIR}/assets/Models/*"
+        "${CMAKE_SOURCE_DIR}/assets/Resources/*"
+        "${CMAKE_SOURCE_DIR}/assets/Data/*"
+        "${CMAKE_SOURCE_DIR}/assets/Textures/*.hdr"
 )
 
 set(FILES_TO_COPY "")
@@ -74,8 +74,8 @@ set(COPIED_OUTPUTS "")
 
 foreach(src ${FILES_TO_COPY})
     # Compute relative path under Assets/Models
-    file(RELATIVE_PATH rel "${CMAKE_SOURCE_DIR}/Assets/Models" "${src}")
-    set(dst "${CMAKE_BINARY_DIR}/Assets/Models/${rel}")
+    file(RELATIVE_PATH rel "${CMAKE_SOURCE_DIR}/assets/Models" "${src}")
+    set(dst "${CMAKE_BINARY_DIR}/assets/Models/${rel}")
 
     # Ensure destination directory exists
     get_filename_component(dst_dir "${dst}" DIRECTORY)
@@ -99,24 +99,24 @@ add_dependencies(client CopyModels)
 if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_CONFIGURATION_TYPES MATCHES "Release")
     add_custom_target(CopyShaders ALL
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_SOURCE_DIR}/Assets/Shaders"
-        "${CMAKE_BINARY_DIR}/Assets/Shaders"
+        "${CMAKE_SOURCE_DIR}/assets/Shaders"
+        "${CMAKE_BINARY_DIR}/assets/Shaders"
         COMMENT "Copying shaders for Release"
     )
     add_dependencies(client CopyShaders)
 
     target_compile_definitions(client PUBLIC
-            SHADERS_SOURCE_DIR=L"${CMAKE_SOURCE_DIR}/Assets/Shaders"
+            SHADERS_SOURCE_DIR=L"${CMAKE_SOURCE_DIR}/assets/Shaders"
     )
-    set(CHERRYPIP_SHADERS_DIR "${CMAKE_SOURCE_DIR}/Assets/Shaders" CACHE INTERNAL "")
+    set(CHERRYPIP_SHADERS_DIR "${CMAKE_SOURCE_DIR}/assets/Shaders" CACHE INTERNAL "")
 else()
     target_compile_definitions(client PUBLIC
-        SHADERS_SOURCE_DIR=L"${CMAKE_SOURCE_DIR}/Assets/Shaders"
+        SHADERS_SOURCE_DIR=L"${CMAKE_SOURCE_DIR}/assets/Shaders"
     )
-    set(CHERRYPIP_SHADERS_DIR "${CMAKE_SOURCE_DIR}/Assets/Shaders" CACHE INTERNAL "")
+    set(CHERRYPIP_SHADERS_DIR "${CMAKE_SOURCE_DIR}/assets/Shaders" CACHE INTERNAL "")
 endif()
 
 target_compile_definitions(client PUBLIC
-        ASSETS_SOURCE_DIR=L"${CMAKE_BINARY_DIR}/Assets"
+        ASSETS_SOURCE_DIR=L"${CMAKE_BINARY_DIR}/assets"
 )
-set(CHERRYPIP_ASSETS_DIR "${CMAKE_BINARY_DIR}/Assets" CACHE INTERNAL "")
+set(CHERRYPIP_ASSETS_DIR "${CMAKE_BINARY_DIR}/assets" CACHE INTERNAL "")

@@ -1,0 +1,174 @@
+//
+// Created by fiona on 30/09/2025.
+//
+
+
+#include "HWI/D12Resource.h"
+#include "client/Helper.h"
+
+D12Resource::~D12Resource()
+{
+}
+
+void D12Resource::Init(const LPCWSTR name, ID3D12Device* device, const D3D12_RESOURCE_DESC& resourceDesc,
+                       const D3D12_RESOURCE_STATES& initialState, const D3D12_CLEAR_VALUE* clearValue)
+{
+    const auto defaultHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+    V(device->CreateCommittedResource(&defaultHeapProp, D3D12_HEAP_FLAG_NONE, &resourceDesc, initialState, clearValue,
+                                      IID_PPV_ARGS(&m_resource)));
+    V(m_resource->SetName(name));
+    m_currentState = initialState;
+    m_desc = resourceDesc;
+
+#ifdef _DEBUG
+    m_name = name;
+#endif
+}
+
+void D12Resource::Fill(const ComPtr<ID3D12Resource>& resource, const D3D12_RESOURCE_STATES& initialState)
+{
+    m_resource = resource;
+    m_currentState = initialState;
+}
+
+void D12Resource::InitBuffer(const LPCWSTR name, ID3D12Device* device, const size_t size,
+                             const D3D12_RESOURCE_FLAGS flags, const bool readbackHeap)
+{
+    m_desc = CD3DX12_RESOURCE_DESC::Buffer(size, flags);
+    const auto heapProp = readbackHeap ? CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK) : CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+    V(device->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &m_desc, D3D12_RESOURCE_STATE_COMMON, nullptr,
+                                      IID_PPV_ARGS(&m_resource)));
+    V(m_resource->SetName(name));
+    m_currentState = D3D12_RESOURCE_STATE_COMMON;
+
+#ifdef _DEBUG
+    m_name = name;
+#endif
+}
+
+void D12Resource::InitRTAS(const LPCWSTR name, ID3D12Device* device, const size_t size,
+                             const D3D12_RESOURCE_FLAGS flags)
+{
+    m_desc = CD3DX12_RESOURCE_DESC::Buffer(size, flags);
+    const auto defaultHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+    V(device->CreateCommittedResource(&defaultHeapProp, D3D12_HEAP_FLAG_NONE, &m_desc, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE, nullptr,
+                                      IID_PPV_ARGS(&m_resource)));
+    V(m_resource->SetName(name));
+    m_currentState = D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
+
+#ifdef _DEBUG
+    m_name = name;
+#endif
+}
+
+void D12Resource::CreateHeap(ID3D12Device* device)
+{
+    // TODO: Shared upload heap?
+
+    const UINT64 uploadBufferSize = GetRequiredIntermediateSize(m_resource.Get(), 0, 1) * m_desc.DepthOrArraySize;
+
+    const auto uploadHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+    const auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
+    V(device->CreateCommittedResource(&uploadHeapProp, D3D12_HEAP_FLAG_NONE, &bufferDesc,
+                                      D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_uploadResource)));
+}
+
+void D12Resource::UploadBuffer(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const void* pData,
+                             const size_t totalBytes)
+{
+    if (!m_uploadResource)
+    {
+        CreateHeap(device);
+    }
+
+    void* mappedData = nullptr;
+    V(m_uploadResource->Map(0, nullptr, &mappedData));
+    memcpy(mappedData, pData, totalBytes);
+    m_uploadResource->Unmap(0, nullptr);
+
+    Transition(cmdList, D3D12_RESOURCE_STATE_COPY_DEST);
+    cmdList->CopyBufferRegion(m_resource.Get(), 0, m_uploadResource.Get(), 0, totalBytes);
+}
+
+void D12Resource::UploadTexture(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const uint8_t* pData,
+                                const size_t totalBytes,
+                                const size_t rowPitch)
+{
+    assert(m_desc.DepthOrArraySize == 1);
+
+    if (!m_uploadResource)
+    {
+        CreateHeap(device);
+    }
+
+    constexpr int c_mip0 = 0;
+    constexpr int c_slice0 = 0;
+    const UINT subresourceIndex = D3D12CalcSubresource(c_mip0, c_slice0, 0, m_desc.MipLevels, m_desc.DepthOrArraySize);
+
+    D3D12_SUBRESOURCE_DATA subresource = {};
+    subresource.pData = pData;
+    subresource.RowPitch = rowPitch;
+    subresource.SlicePitch = totalBytes;
+
+    constexpr UINT c_intermediateOffset = 0;
+    UpdateSubresources(cmdList, m_resource.Get(), m_uploadResource.Get(), c_intermediateOffset, subresourceIndex, 1,
+                       &subresource);
+}
+
+void D12Resource::UploadTexture(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const uint8_t** pData,
+                                const size_t totalBytes,
+                                const size_t rowPitch)
+{
+    if (!m_uploadResource)
+    {
+        CreateHeap(device);
+    }
+
+    UINT intermediateOffset = 0;
+
+    for (int a = 0; a < m_desc.DepthOrArraySize; a++)
+    {
+        constexpr int c_mip0 = 0;
+        const UINT subresourceIndex = D3D12CalcSubresource(c_mip0, a, 0, m_desc.MipLevels, m_desc.DepthOrArraySize);
+
+        D3D12_SUBRESOURCE_DATA subresource = {};
+        subresource.pData = pData[a];
+        subresource.RowPitch = rowPitch;
+        subresource.SlicePitch = totalBytes;
+
+        UpdateSubresources(cmdList, m_resource.Get(), m_uploadResource.Get(), intermediateOffset, subresourceIndex, 1,
+                           &subresource);
+
+        intermediateOffset += static_cast<UINT>(GetRequiredIntermediateSize(m_resource.Get(), subresourceIndex, 1));
+    }
+
+    for (int a = 0; a < m_desc.DepthOrArraySize; a++)
+        delete[] pData[a];
+}
+
+void D12Resource::Transition(ID3D12GraphicsCommandList* cmdList, const D3D12_RESOURCE_STATES& newState,
+                             const UINT subresourceIdx)
+{
+    if (m_currentState == newState)
+        return;
+
+    const CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+        m_resource.Get(), m_currentState, newState, subresourceIdx);
+    cmdList->ResourceBarrier(1, &barrier);
+    m_currentState = newState;
+}
+
+void D12Resource::CopyTextureInto(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* srcResource, const uint32_t dstX, const uint32_t dstY, const uint32_t dstZ, const D3D12_BOX* srcBox) const
+{
+    D3D12_TEXTURE_COPY_LOCATION srcLocation = {};
+    srcLocation.pResource = srcResource;
+    srcLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+    srcLocation.SubresourceIndex = 0;
+
+    D3D12_TEXTURE_COPY_LOCATION dstLocation = {};
+    dstLocation.pResource = m_resource.Get();
+    dstLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+    dstLocation.SubresourceIndex = 0;
+
+    cmdList->CopyTextureRegion(&dstLocation, dstX, dstY, dstZ, &srcLocation, srcBox);
+}

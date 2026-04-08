@@ -1,3 +1,0 @@
-#include "Resources.h"
-
-IDI_APP_ICON ICON "Assets/Resources/CherryPip.ico"
